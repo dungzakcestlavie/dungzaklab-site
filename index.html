@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DUNGZAK LAB</title>
 
-<!-- 폰트 추가 (한자 지원) -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
@@ -13,52 +12,54 @@ body {
   margin: 0;
   height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* 중앙 → 위로 */
   justify-content: center;
   text-align: center;
 
-  background: radial-gradient(circle at 30% 30%, #ff7a18, transparent 60%),
-              radial-gradient(circle at 70% 70%, #ffb347, transparent 60%),
-              linear-gradient(135deg, #1a0e05, #2b1408);
+  /* 심해 + 중심 광원 */
+  background:
+    radial-gradient(circle at 50% 40%, rgba(0,200,255,0.25), transparent 55%),
+    radial-gradient(circle at 30% 30%, rgba(0,180,255,0.18), transparent 60%),
+    radial-gradient(circle at 70% 70%, rgba(0,90,180,0.28), transparent 60%),
+    linear-gradient(135deg, #041c2c, #0b3a5a, #0e5c8a);
 
-  color: #f3efe7; /* 따뜻한 화이트 */
+  color: #eaf6ff;
   font-family: "Noto Serif KR", serif;
 }
 
 .container {
-  max-width: 720px;
-  padding: 20px;
+  max-width: 760px;
+  padding: 80px 20px 40px; /* 위 여백 추가 */
 }
 
 .title {
-  font-size: 48px;
-  letter-spacing: 6px;
-  margin-bottom: 20px;
+  font-size: 50px;
+  letter-spacing: 7px;
+  margin-bottom: 24px;
+  font-weight: 400;
 }
 
 .subtitle {
-  font-size: 16px;
+  font-size: 15px;
   letter-spacing: 3px;
-  margin-bottom: 50px;
+  margin-bottom: 70px;
   opacity: 0.85;
 }
 
-.brand {
-  font-size: 14px;
-  letter-spacing: 2px;
-  margin-bottom: 40px;
-  opacity: 0.7;
+.block {
+  margin-top: 60px;
 }
 
 .text {
   font-size: 16px;
-  line-height: 1.9;
+  line-height: 2.0; /* 숨 확보 */
 }
 
-.text-en {
-  margin-top: 12px;
-  font-size: 15px;
-  opacity: 0.65;
+.divider {
+  width: 40px;
+  height: 1px;
+  background: rgba(255,255,255,0.25);
+  margin: 70px auto;
 }
 </style>
 </head>
@@ -66,22 +67,73 @@ body {
 <body>
 <div class="container">
 
+  <!-- TITLE -->
   <div class="title">DUNGZAK LAB</div>
 
   <div class="subtitle">
     등작 燈酌 DUNGZAK CESTLAVIE
   </div>
 
-  <div class="brand">
-    燈酌 (DUNGZAK) · CEST LA VIE
+  <!-- KR BLOCK -->
+  <div class="block">
+
+    <div class="text">
+      등작 燈酌 DUNGZAK CESTLAVIE의 구조 사유와<br>
+      해양 에너지 개념을 연구하는 실험실입니다.
+    </div>
+
+    <div class="text" style="margin-top:45px;">
+      DUNGZAK LAB — 개념 · 구조 · 연구
+    </div>
+
+    <div class="text" style="margin-top:12px;">
+      Archive Pro — 시스템 · 데이터 · 아카이브
+    </div>
+
+    <div class="text" style="margin-top:45px; opacity:0.7;">
+      연구와 설계는 현재 진행 중입니다.
+    </div>
+
+    <div class="text" style="margin-top:55px; font-size:14px; opacity:0.6;">
+      2016년 폴란드 바르샤바 법정에서,<br>
+      12년간 유럽과 한국을 오가며 활동해 온 행적과<br>
+      유럽 측 증언을 바탕으로<br>
+      ‘해양 에너지 사업가(Ocean Energy Businessman)’로<br>
+      공식 인정받았다.
+    </div>
+
   </div>
 
-  <div class="text">
-    등작 燈酌 DUNGZAK CESTLAVIE의 모든 것을 연구하고 실험하는 공간입니다.
-  </div>
+  <div class="divider"></div>
 
-  <div class="text-en">
-    A space dedicated to researching and experimenting with everything of DUNGZAK CESTLAVIE.
+  <!-- EN BLOCK -->
+  <div class="block">
+
+    <div class="text">
+      A laboratory dedicated to structural thought<br>
+      and ocean energy concepts by DUNGZAK CESTLAVIE.
+    </div>
+
+    <div class="text" style="margin-top:45px;">
+      DUNGZAK LAB — Concept · Structure · Research
+    </div>
+
+    <div class="text" style="margin-top:12px;">
+      Archive Pro — System · Data · Archive
+    </div>
+
+    <div class="text" style="margin-top:45px; opacity:0.7;">
+      Research and structure are currently in progress.
+    </div>
+
+    <div class="text" style="margin-top:55px; font-size:14px; opacity:0.6;">
+      In 2016, at a court in Warsaw, Poland,<br>
+      based on twelve years of activity between Europe and Korea<br>
+      and supporting testimony from European partners,<br>
+      he was officially recognized as an<br>
+      “Ocean Energy Businessman.”
+    </div>
+
   </div>
 
 </div>

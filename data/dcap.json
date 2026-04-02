@@ -1,0 +1,15 @@
+{
+  "dcap": [
+    {
+      "id": "DCAP-01",
+      "slug": "DCAP-01",
+      "year": "2026",
+      "category": "Platform",
+      "title_kr": "아카이브 구조 플랫폼",
+      "title_en": "Archive Structural Platform",
+      "summary_kr": "데이터를 구조적으로 연결하고 흐름으로 작동시키는 시스템이다.",
+      "summary_en": "A system that structurally connects data and operates it as flow.",
+      "md_path": "archive/DCAP-01.md"
+    }
+  ]
+}

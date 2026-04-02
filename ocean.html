@@ -587,7 +587,7 @@ body.menu-open{
         연구와 설계는 현재 진행 중입니다.
       </div>
 
-      <a id="mainProposalLinkKo" href="/ocean.html?lang=ko" class="link">
+      <a id="mainProposalLinkKo" href="/ocean-proposal.html?lang=ko" class="link">
         Ocean Energy Structure Proposal →
       </a>
     </div>
@@ -652,7 +652,7 @@ body.menu-open{
         Research and structure are currently in progress.
       </div>
 
-      <a id="mainProposalLinkEn" href="/ocean.html?lang=en" class="link">
+      <a id="mainProposalLinkEn" href="/ocean-proposal.html?lang=en" class="link">
         Ocean Energy Structure Proposal →
       </a>
     </div>
@@ -699,7 +699,7 @@ body.menu-open{
 
 <div class="view" id="ocean">
   <div class="structure-wrap">
-    <a id="proposalLink" class="proposal-link" href="/ocean.html?lang=ko">
+    <a id="proposalLink" class="proposal-link" href="/ocean-proposal.html?lang=ko">
       해양 에너지 구조 제안서 →
     </a>
 
@@ -930,10 +930,10 @@ function setLanguage(lang){
   document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
   localStorage.setItem('dzlab_lang', lang);
 
-  if (mainProposalLinkKo) mainProposalLinkKo.href = `/ocean.html?lang=${lang}`;
-  if (mainProposalLinkEn) mainProposalLinkEn.href = `/ocean.html?lang=${lang}`;
+  if (mainProposalLinkKo) mainProposalLinkKo.href = `/ocean-proposal.html?lang=${lang}`;
+  if (mainProposalLinkEn) mainProposalLinkEn.href = `/ocean-proposal.html?lang=${lang}`;
   if (proposalLink) {
-    proposalLink.href = `/ocean.html?lang=${lang}`;
+    proposalLink.href = `/ocean-proposal.html?lang=${lang}`;
     proposalLink.textContent = lang === 'ko'
       ? '해양 에너지 구조 제안서 →'
       : 'Ocean Energy Structure Proposal →';

@@ -183,9 +183,20 @@ body{
 
 /* CONTENT */
 .container{
-  max-width:920px;
+  width:min(100%, 860px);
   margin:0 auto;
-  padding:calc(var(--header-height) + 44px) 20px calc(80px + var(--safe-bottom));
+  padding:calc(var(--header-height) + 44px) 28px calc(80px + var(--safe-bottom));
+}
+
+.lang-panel{
+  display:none;
+  width:100%;
+  max-width:760px;
+  margin:0 auto;
+}
+
+.lang-panel.active{
+  display:block;
 }
 
 h1{
@@ -194,6 +205,7 @@ h1{
   margin:0 0 60px 0;
   font-weight:400;
   color:#8fc4ff;
+  text-align:left;
 }
 
 h2{
@@ -202,12 +214,14 @@ h2{
   font-weight:400;
   color:#9ecbff;
   letter-spacing:0.2px;
+  text-align:left;
 }
 
 .text{
   font-size:16px;
   line-height:2.2;
   letter-spacing:0.2px;
+  text-align:left;
 }
 
 .list{
@@ -215,14 +229,8 @@ h2{
   line-height:2.1;
   opacity:0.85;
   letter-spacing:0.2px;
-}
-
-.lang-panel{
-  display:none;
-}
-
-.lang-panel.active{
-  display:block;
+  font-size:16px;
+  text-align:left;
 }
 
 @media (max-width:640px){
@@ -258,7 +266,9 @@ h2{
   }
 
   .container{
-    padding:calc(var(--header-height) + 30px) 16px calc(64px + var(--safe-bottom));
+    width:min(100%, 860px);
+    margin:0 auto;
+    padding:calc(var(--header-height) + 30px) 18px calc(64px + var(--safe-bottom));
   }
 
   h1{
@@ -440,7 +450,7 @@ h2{
       그것이 어떤 방식으로 존재하는가이다.<br><br>
       이 제안은 그 시작점이다.<br><br>
       등작 燈酌 DUNGZAK CESTLAVIE<br>
-      Contemporary Artist / Structural Thinker
+      동시대 예술가 · 구조 사유가
     </div>
 
   </div>
@@ -550,7 +560,8 @@ h2{
       but how it exists.<br><br>
       This proposal is a beginning.<br><br>
       DUNGZAK CESTLAVIE<br>
-      Contemporary Artist / Structural Thinker
+      Contemporary Artist · Structural Thinker<br>
+      A practitioner of thought as structure
     </div>
 
   </div>

@@ -11,14 +11,16 @@
 :root{
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --header-base: 72px;
-  --header-height: calc(var(--header-base) + var(--safe-top));
+  --header-bar: 72px;
+  --header-height: calc(var(--header-bar) + var(--safe-top));
   --gold: #d6b86a;
   --gold-strong: #f0d79c;
   --line: rgba(214,184,106,0.20);
   --line-soft: rgba(214,184,106,0.12);
   --blue: #8fc4ff;
   --white: #eaf6ff;
+  --left-zone: 72px;
+  --right-zone: 136px;
 }
 
 *{
@@ -28,6 +30,10 @@
 html, body{
   margin:0;
   min-height:100%;
+}
+
+html{
+  -webkit-text-size-adjust:100%;
 }
 
 body{
@@ -76,6 +82,7 @@ body{
   border:1px solid var(--line);
   background:rgba(255,255,255,0.03);
   border-radius:14px;
+  -webkit-tap-highlight-color:transparent;
 }
 
 .menu-btn span{
@@ -94,8 +101,11 @@ body{
   font-weight:400;
   text-align:center;
   line-height:1;
-  padding:0 96px;
   white-space:nowrap;
+  max-width:calc(100vw - var(--left-zone) - var(--right-zone));
+  overflow:hidden;
+  text-overflow:ellipsis;
+  padding:0 4px;
 }
 
 .lang-global{
@@ -119,6 +129,7 @@ body{
   cursor:pointer;
   border-radius:999px;
   font-family:"Noto Serif KR", serif;
+  -webkit-tap-highlight-color:transparent;
 }
 
 .lang-global button.active{
@@ -203,13 +214,6 @@ body{
   margin-top:60px;
 }
 
-.divider{
-  width:40px;
-  height:1px;
-  background:rgba(255,255,255,0.25);
-  margin:70px auto;
-}
-
 .link{
   display:inline-block;
   margin-top:60px;
@@ -246,7 +250,7 @@ body{
   flex-direction:column;
   text-align:center;
   padding:
-    calc(var(--header-height) + 32px)
+    calc(var(--header-height) + 20px)
     24px
     calc(56px + var(--safe-bottom));
 }
@@ -292,10 +296,16 @@ body{
 }
 
 @media (max-width:640px){
+  :root{
+    --header-bar: 68px;
+    --left-zone: 68px;
+    --right-zone: 118px;
+  }
+
   .logo{
-    font-size:14px;
-    letter-spacing:0.8px;
-    padding:0 88px;
+    font-size:13px;
+    letter-spacing:0.5px;
+    max-width:calc(100vw - var(--left-zone) - var(--right-zone));
   }
 
   .menu-btn{
@@ -307,20 +317,20 @@ body{
 
   .lang-global{
     right:14px;
-    gap:6px;
+    gap:5px;
   }
 
   .lang-global button{
-    min-width:46px;
-    height:34px;
-    padding:0 10px;
-    font-size:11px;
-    letter-spacing:0.8px;
+    min-width:40px;
+    height:32px;
+    padding:0 8px;
+    font-size:10px;
+    letter-spacing:0.5px;
   }
 
   .entry{
     padding:
-      calc(var(--header-height) + 28px)
+      calc(var(--header-height) + 16px)
       18px
       calc(52px + var(--safe-bottom));
   }
@@ -354,12 +364,36 @@ body{
     margin-top:28px;
   }
 }
+
+@media (max-width:390px){
+  :root{
+    --left-zone: 64px;
+    --right-zone: 108px;
+  }
+
+  .logo{
+    font-size:12px;
+    letter-spacing:0.3px;
+  }
+
+  .lang-global button{
+    min-width:36px;
+    height:30px;
+    padding:0 7px;
+    font-size:9px;
+    letter-spacing:0.3px;
+  }
+
+  .entry-title{
+    font-size:26px;
+    letter-spacing:2px;
+  }
+}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="menu-btn" onclick="toggleMenu()" aria-label="menu" role="button" tabindex="0">
     <span></span>
@@ -372,15 +406,14 @@ body{
   </a>
 
   <div class="lang-global">
-    <button type="button" class="active" data-lang="ko">KR</button>
+    <button type="button" data-lang="ko">KR</button>
     <button type="button" data-lang="en">EN</button>
   </div>
 </div>
 
-<!-- MENU -->
 <div class="menu" id="menu">
   <a href="#" onclick="goEntry(); return false;">ENTRY</a>
-  <a href="ocean.html" onclick="closeMenu()">OCEAN ENERGY</a>
+  <a href="ocean.html" id="oceanLink" onclick="closeMenu()">OCEAN ENERGY</a>
   <a href="#" onclick="openArchive(); return false;">ARCHIVE</a>
   <a href="#" onclick="openAbout(); return false;">ABOUT</a>
   <a href="https://dungzak.art" target="_blank" rel="noopener" onclick="closeMenu()">DUNGZAK.ART</a>
@@ -388,7 +421,6 @@ body{
 
 <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
 
-<!-- ENTRY -->
 <div class="entry" id="entry">
   <div class="entry-title" onclick="enterSite()">
     DUNGZAK CESTLAVIE LAB
@@ -398,11 +430,9 @@ body{
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="view" id="main">
 
-  <!-- KR -->
-  <div class="lang-content active" data-lang-content="ko">
+  <div class="lang-content" data-lang-content="ko">
     <div class="subtitle">
       등작 燈酌 DUNGZAK CESTLAVIE
     </div>
@@ -433,7 +463,7 @@ body{
         공식 인정받았다.
       </div>
 
-      <a href="ocean.html" class="link">
+      <a href="ocean.html" class="link ocean-link">
         Ocean Energy Structure Proposal →
       </a>
     </div>
@@ -477,7 +507,6 @@ body{
     </div>
   </div>
 
-  <!-- EN -->
   <div class="lang-content" data-lang-content="en">
     <div class="subtitle">
       DUNGZAK CESTLAVIE
@@ -509,7 +538,7 @@ body{
         “Ocean Energy Businessman.”
       </div>
 
-      <a href="ocean.html" class="link">
+      <a href="ocean.html" class="link ocean-link">
         View Proposal →
       </a>
     </div>
@@ -555,11 +584,9 @@ body{
 
 </div>
 
-<!-- ABOUT -->
 <div class="view" id="about">
 
-  <!-- ABOUT KR -->
-  <div class="lang-panel active" data-panel="ko">
+  <div class="lang-panel" data-panel="ko">
     <div class="text">
       등작 燈酌 DUNGZAK CESTLAVIE는<br>
       빛, 기억, 존재를 회화와 구조 사유를 통해 탐구하는 동시대 예술가이다.
@@ -589,7 +616,6 @@ body{
     </div>
   </div>
 
-  <!-- ABOUT EN -->
   <div class="lang-panel" data-panel="en">
     <div class="text">
       DUNGZAK CESTLAVIE is a contemporary artist<br>
@@ -670,18 +696,31 @@ function openArchive(){
 const globalLangBtns = document.querySelectorAll('.lang-global button');
 const mainLangContents = document.querySelectorAll('.lang-content');
 const panels = document.querySelectorAll('.lang-panel');
+const oceanLinks = document.querySelectorAll('.ocean-link, #oceanLink');
+
+function updateOceanLinks(lang){
+  oceanLinks.forEach(link => {
+    if (!link) return;
+    link.href = `ocean.html?lang=${lang}`;
+  });
+}
 
 function setLanguage(lang){
-  globalLangBtns.forEach(b => b.classList.remove('active'));
-  document.querySelector(`.lang-global button[data-lang="${lang}"]`)?.classList.add('active');
+  globalLangBtns.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
 
-  mainLangContents.forEach(c => c.classList.remove('active'));
-  document.querySelector(`[data-lang-content="${lang}"]`)?.classList.add('active');
+  mainLangContents.forEach(content => {
+    content.classList.toggle('active', content.dataset.langContent === lang);
+  });
 
-  panels.forEach(p => p.classList.remove('active'));
-  document.querySelector(`[data-panel="${lang}"]`)?.classList.add('active');
+  panels.forEach(panel => {
+    panel.classList.toggle('active', panel.dataset.panel === lang);
+  });
 
   document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
+  localStorage.setItem('dzlab_lang', lang);
+  updateOceanLinks(lang);
 }
 
 globalLangBtns.forEach(btn => {
@@ -690,7 +729,15 @@ globalLangBtns.forEach(btn => {
   });
 });
 
-setLanguage('ko');
+document.querySelector('.menu-btn').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    toggleMenu();
+  }
+});
+
+const savedLang = localStorage.getItem('dzlab_lang');
+setLanguage(savedLang === 'en' ? 'en' : 'ko');
 </script>
 
 </body>

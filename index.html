@@ -25,14 +25,8 @@
   --shadow: 0 18px 48px rgba(0,0,0,0.18);
 }
 
-*{
-  box-sizing:border-box;
-}
-
-html, body{
-  margin:0;
-  min-height:100%;
-}
+*{ box-sizing:border-box; }
+html, body{ margin:0; min-height:100%; }
 
 html{
   -webkit-text-size-adjust:100%;
@@ -52,9 +46,7 @@ body{
   overflow-x:hidden;
 }
 
-body.menu-open{
-  overflow:hidden;
-}
+body.menu-open{ overflow:hidden; }
 
 /* HEADER */
 .header{
@@ -160,9 +152,7 @@ body.menu-open{
   border-right:1px solid var(--line);
 }
 
-.menu.open{
-  left:0;
-}
+.menu.open{ left:0; }
 
 .menu a{
   display:block;
@@ -173,9 +163,7 @@ body.menu-open{
   letter-spacing:1px;
 }
 
-.menu a:hover{
-  color:var(--gold);
-}
+.menu a:hover{ color:var(--gold); }
 
 .menu-overlay{
   position:fixed;
@@ -201,9 +189,7 @@ body.menu-open{
   text-align:center;
 }
 
-.view.active{
-  display:block;
-}
+.view.active{ display:block; }
 
 .text{
   font-size:16px;
@@ -217,9 +203,7 @@ body.menu-open{
   opacity:0.85;
 }
 
-.block{
-  margin-top:60px;
-}
+.block{ margin-top:60px; }
 
 .link{
   display:inline-block;
@@ -231,31 +215,18 @@ body.menu-open{
   color:var(--gold);
 }
 
-.link:hover{
-  opacity:1;
-}
+.link:hover{ opacity:1; }
 
-.statement{
-  margin-top:70px;
-}
+.statement{ margin-top:70px; }
 
-.statement .text{
-  opacity:0.92;
-}
-
-.statement .text + .text{
-  margin-top:34px;
-}
+.statement .text{ opacity:0.92; }
+.statement .text + .text{ margin-top:34px; }
 
 .lang-content,
-.lang-panel{
-  display:none;
-}
+.lang-panel{ display:none; }
 
 .lang-content.active,
-.lang-panel.active{
-  display:block;
-}
+.lang-panel.active{ display:block; }
 
 /* ENTRY */
 .entry{
@@ -272,9 +243,7 @@ body.menu-open{
     calc(56px + var(--safe-bottom));
 }
 
-.entry.hidden{
-  display:none;
-}
+.entry.hidden{ display:none; }
 
 .entry-title{
   color:var(--gold);
@@ -308,6 +277,7 @@ body.menu-open{
   border:1px solid var(--line);
   background:rgba(255,255,255,0.035);
   box-shadow:var(--shadow);
+  text-align:center;
 }
 
 .top-fixed-block a{
@@ -321,9 +291,7 @@ body.menu-open{
   word-break:break-all;
 }
 
-.top-fixed-block a:hover{
-  color:var(--gold);
-}
+.top-fixed-block a:hover{ color:var(--gold); }
 
 .top-fixed-block .author{
   margin-top:18px;
@@ -349,9 +317,7 @@ body.menu-open{
   cursor:pointer;
 }
 
-.proposal-link:hover{
-  color:var(--gold);
-}
+.proposal-link:hover{ color:var(--gold); }
 
 .section-label{
   margin-top:34px;
@@ -486,13 +452,8 @@ body.menu-open{
     padding:calc(var(--header-height) + 28px) 18px calc(60px + var(--safe-bottom));
   }
 
-  .statement{
-    margin-top:60px;
-  }
-
-  .statement .text + .text{
-    margin-top:28px;
-  }
+  .statement{ margin-top:60px; }
+  .statement .text + .text{ margin-top:28px; }
 
   .top-fixed-block,
   .proposal-link,
@@ -599,7 +560,7 @@ body.menu-open{
         연구와 설계는 현재 진행 중이다.
       </div>
 
-      <a href="#" class="link" onclick="goProposal(); return false;">
+      <a id="mainProposalLink" href="ocean.html?lang=ko" class="link">
         Ocean Energy Structure Proposal →
       </a>
     </div>
@@ -664,7 +625,7 @@ body.menu-open{
         Research and structure are in progress.
       </div>
 
-      <a href="#" class="link" onclick="goProposal(); return false;">
+      <a id="mainProposalLinkEn" href="ocean.html?lang=en" class="link">
         Ocean Energy Structure Proposal →
       </a>
     </div>
@@ -711,9 +672,8 @@ body.menu-open{
 
 <div class="view" id="ocean">
   <div class="structure-wrap">
-    <a id="proposalLink" class="proposal-link" href="#" onclick="goProposal(); return false;">
-      <span class="lang-proposal lang-proposal-ko">해양 에너지 구조 제안서 →</span>
-      <span class="lang-proposal lang-proposal-en" style="display:none;">Ocean Energy Structure Proposal →</span>
+    <a id="oceanProposalLink" class="proposal-link" href="ocean.html?lang=ko">
+      해양 에너지 구조 제안서 →
     </a>
 
     <div class="section-label" id="dcaoLabel">DCAO</div>
@@ -821,9 +781,9 @@ const about = document.getElementById('about');
 const globalLangBtns = document.querySelectorAll('.lang-global button');
 const mainLangContents = document.querySelectorAll('.lang-content');
 const panels = document.querySelectorAll('.lang-panel');
-const proposalLink = document.getElementById('proposalLink');
-const proposalKo = document.querySelector('.lang-proposal-ko');
-const proposalEn = document.querySelector('.lang-proposal-en');
+const mainProposalLink = document.getElementById('mainProposalLink');
+const mainProposalLinkEn = document.getElementById('mainProposalLinkEn');
+const oceanProposalLink = document.getElementById('oceanProposalLink');
 const dcaoList = document.getElementById('dcaoList');
 const dcapList = document.getElementById('dcapList');
 const dcaoEmpty = document.getElementById('dcaoEmpty');
@@ -858,8 +818,8 @@ const fallbackDCAP = {
       category: "Platform",
       title_kr: "아카이브 구조 플랫폼",
       title_en: "Archive Structural Platform",
-      summary_kr: "데이터는 구조로 연결되고 흐름으로 작동하며 시간을 축적한다.",
-      summary_en: "Data connects as structure, operates as flow, and accumulates time.",
+      summary_kr: "데이터를 구조로 연결하고 흐름으로 작동시키며 시간을 축적하는 시스템이다.",
+      summary_en: "A system that structurally connects data and operates it as flow.",
       md_path: "archive/DCAP-01.md"
     }
   ]
@@ -925,10 +885,6 @@ function openAbout(){
   closeMenu();
 }
 
-function goProposal(){
-  window.location.href = `ocean.html?lang=${currentLang}`;
-}
-
 function setLanguage(lang){
   currentLang = lang;
 
@@ -944,9 +900,13 @@ function setLanguage(lang){
     panel.classList.toggle('active', panel.dataset.panel === lang);
   });
 
-  if (proposalKo && proposalEn) {
-    proposalKo.style.display = lang === 'ko' ? 'inline' : 'none';
-    proposalEn.style.display = lang === 'en' ? 'inline' : 'none';
+  if (mainProposalLink) mainProposalLink.href = `ocean.html?lang=${lang}`;
+  if (mainProposalLinkEn) mainProposalLinkEn.href = `ocean.html?lang=${lang}`;
+  if (oceanProposalLink) {
+    oceanProposalLink.href = `ocean.html?lang=${lang}`;
+    oceanProposalLink.textContent = lang === 'ko'
+      ? '해양 에너지 구조 제안서 →'
+      : 'Ocean Energy Structure Proposal →';
   }
 
   document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';

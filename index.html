@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>DUNGZAK CESTLAVIE LAB</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
@@ -25,8 +26,14 @@
   --shadow: 0 18px 48px rgba(0,0,0,0.18);
 }
 
-*{ box-sizing:border-box; }
-html, body{ margin:0; min-height:100%; }
+*{
+  box-sizing:border-box;
+}
+
+html, body{
+  margin:0;
+  min-height:100%;
+}
 
 html{
   -webkit-text-size-adjust:100%;
@@ -38,15 +45,17 @@ body{
   min-height:100svh;
   font-family:"Noto Serif KR", serif;
   background:
-    radial-gradient(circle at 50% 45%, rgba(0,210,255,0.22), transparent 55%),
-    radial-gradient(circle at 30% 30%, rgba(0,160,255,0.12), transparent 60%),
-    radial-gradient(circle at 70% 70%, rgba(0,80,160,0.20), transparent 60%),
-    linear-gradient(135deg,#031421,#062c44,#0a4f73);
+    radial-gradient(circle at 50% 40%, rgba(0,200,255,0.25), transparent 55%),
+    radial-gradient(circle at 30% 30%, rgba(0,180,255,0.14), transparent 60%),
+    radial-gradient(circle at 70% 70%, rgba(0,90,180,0.18), transparent 60%),
+    linear-gradient(135deg,#041c2c,#0b3a5a,#0e5c8a);
   color:var(--white);
   overflow-x:hidden;
 }
 
-body.menu-open{ overflow:hidden; }
+body.menu-open{
+  overflow:hidden;
+}
 
 /* HEADER */
 .header{
@@ -60,7 +69,7 @@ body.menu-open{ overflow:hidden; }
   align-items:center;
   justify-content:center;
   z-index:50;
-  background:rgba(3,20,33,0.28);
+  background:rgba(4,28,44,0.22);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom:1px solid var(--line-soft);
@@ -145,14 +154,16 @@ body.menu-open{ overflow:hidden; }
   width:260px;
   height:100%;
   height:100dvh;
-  background:#031421;
+  background:#041c2c;
   padding:calc(var(--safe-top) + 92px) 30px calc(40px + var(--safe-bottom));
   transition:left 0.35s ease;
   z-index:60;
   border-right:1px solid var(--line);
 }
 
-.menu.open{ left:0; }
+.menu.open{
+  left:0;
+}
 
 .menu a{
   display:block;
@@ -163,7 +174,9 @@ body.menu-open{ overflow:hidden; }
   letter-spacing:1px;
 }
 
-.menu a:hover{ color:var(--gold); }
+.menu a:hover{
+  color:var(--gold);
+}
 
 .menu-overlay{
   position:fixed;
@@ -189,7 +202,9 @@ body.menu-open{ overflow:hidden; }
   text-align:center;
 }
 
-.view.active{ display:block; }
+.view.active{
+  display:block;
+}
 
 .text{
   font-size:16px;
@@ -203,7 +218,9 @@ body.menu-open{ overflow:hidden; }
   opacity:0.85;
 }
 
-.block{ margin-top:60px; }
+.block{
+  margin-top:60px;
+}
 
 .link{
   display:inline-block;
@@ -215,18 +232,31 @@ body.menu-open{ overflow:hidden; }
   color:var(--gold);
 }
 
-.link:hover{ opacity:1; }
+.link:hover{
+  opacity:1;
+}
 
-.statement{ margin-top:70px; }
+.statement{
+  margin-top:70px;
+}
 
-.statement .text{ opacity:0.92; }
-.statement .text + .text{ margin-top:34px; }
+.statement .text{
+  opacity:0.92;
+}
+
+.statement .text + .text{
+  margin-top:34px;
+}
 
 .lang-content,
-.lang-panel{ display:none; }
+.lang-panel{
+  display:none;
+}
 
 .lang-content.active,
-.lang-panel.active{ display:block; }
+.lang-panel.active{
+  display:block;
+}
 
 /* ENTRY */
 .entry{
@@ -243,7 +273,9 @@ body.menu-open{ overflow:hidden; }
     calc(56px + var(--safe-bottom));
 }
 
-.entry.hidden{ display:none; }
+.entry.hidden{
+  display:none;
+}
 
 .entry-title{
   color:var(--gold);
@@ -291,7 +323,9 @@ body.menu-open{ overflow:hidden; }
   word-break:break-all;
 }
 
-.top-fixed-block a:hover{ color:var(--gold); }
+.top-fixed-block a:hover{
+  color:var(--gold);
+}
 
 .top-fixed-block .author{
   margin-top:18px;
@@ -314,10 +348,11 @@ body.menu-open{ overflow:hidden; }
   text-decoration:none;
   letter-spacing:0.6px;
   box-shadow:var(--shadow);
-  cursor:pointer;
 }
 
-.proposal-link:hover{ color:var(--gold); }
+.proposal-link:hover{
+  color:var(--gold);
+}
 
 .section-label{
   margin-top:34px;
@@ -452,8 +487,13 @@ body.menu-open{ overflow:hidden; }
     padding:calc(var(--header-height) + 28px) 18px calc(60px + var(--safe-bottom));
   }
 
-  .statement{ margin-top:60px; }
-  .statement .text + .text{ margin-top:28px; }
+  .statement{
+    margin-top:60px;
+  }
+
+  .statement .text + .text{
+    margin-top:28px;
+  }
 
   .top-fixed-block,
   .proposal-link,
@@ -540,12 +580,14 @@ body.menu-open{ overflow:hidden; }
 
 <div class="view" id="main">
   <div class="lang-content" data-lang-content="ko">
-    <div class="subtitle">등작 燈酌 DUNGZAK CESTLAVIE</div>
+    <div class="subtitle">
+      등작 燈酌 DUNGZAK CESTLAVIE
+    </div>
 
     <div class="block">
       <div class="text">
         등작 燈酌 DUNGZAK CESTLAVIE의 구조 사유와<br>
-        해양 에너지 개념을 연구하는 실험실이다.
+        해양 에너지 개념을 연구하는 실험실입니다.
       </div>
 
       <div class="text" style="margin-top:45px;">
@@ -557,23 +599,23 @@ body.menu-open{ overflow:hidden; }
       </div>
 
       <div class="text" style="margin-top:45px; opacity:0.72;">
-        연구와 설계는 현재 진행 중이다.
+        연구와 설계는 현재 진행 중입니다.
       </div>
 
-      <a id="mainProposalLink" href="ocean.html?lang=ko" class="link">
+      <a id="mainProposalLinkKo" class="link" href="ocean.html?lang=ko">
         Ocean Energy Structure Proposal →
       </a>
     </div>
 
     <div class="statement">
       <div class="text">
-        DUNGZAK CESTLAVIE LAB은<br>
-        등작의 구조 사유를 바탕으로 형성된 연구 공간이다.
+        DUNGZAK CESTLAVIE LAB는<br>
+        등작 燈酌 DUNGZAK CESTLAVIE의 구조 사유를 기반으로 형성된 실험 공간이다.
       </div>
 
       <div class="text">
-        이곳은 회화, 아카이브, 전시, 음악, 미학 보고서를<br>
-        서로 분리하지 않고 하나의 흐름으로 연결하는 방식을 다룬다.
+        이 공간은 회화, 아카이브, 전시, 음악, 미학 보고서를<br>
+        하나의 구조로 연결하는 방식을 연구한다.
       </div>
 
       <div class="text">
@@ -581,36 +623,38 @@ body.menu-open{ overflow:hidden; }
       </div>
 
       <div class="text">
-        첫째, 해양 에너지<br>
+        첫째, 해양 에너지 구조.<br>
         에너지를 단순한 기술이 아니라<br>
-        공간, 경험, 인간 인식의 구조로 다루는 시도이다.
+        공간, 경험, 그리고 인간 인식의 구조로 다루는 시도이다.
       </div>
 
       <div class="text">
-        둘째, 아카이브 시스템<br>
+        둘째, 아카이브 시스템.<br>
         작품, 기록, 텍스트, 데이터를<br>
-        하나의 흐름 안에서 쌓아 올리고 그것을 연결하는 것이다.
+        하나의 흐름으로 축적하고 연결하는 구조이다.
       </div>
 
       <div class="text">
-        이 DUNGZAK CESTLAVIE LAB은 결과를 제시하는 곳이 아니라<br>
-        구조가 형성되는 과정을 다루는 곳이다.
+        이 LAB는 결과를 보여주는 공간이 아니라<br>
+        구조가 생성되는 과정을 다루는 공간이다.
       </div>
 
       <div class="text">
-        여기에서 구조는 완료되지 않는다.<br>
-        계속 생성되고 축적된다.
+        여기에서 모든 것은 완성되지 않는다.<br>
+        모든 것은 진행 중이다.
       </div>
     </div>
   </div>
 
   <div class="lang-content" data-lang-content="en">
-    <div class="subtitle">DUNGZAK CESTLAVIE</div>
+    <div class="subtitle">
+      DUNGZAK CESTLAVIE
+    </div>
 
     <div class="block">
       <div class="text">
-        A laboratory exploring structural thought<br>
-        and ocean energy concepts.
+        A laboratory dedicated to structural thought<br>
+        and ocean energy concepts by DUNGZAK CESTLAVIE.
       </div>
 
       <div class="text" style="margin-top:45px;">
@@ -622,49 +666,49 @@ body.menu-open{ overflow:hidden; }
       </div>
 
       <div class="text" style="margin-top:45px; opacity:0.72;">
-        Research and structure are in progress.
+        Research and structure are currently in progress.
       </div>
 
-      <a id="mainProposalLinkEn" href="ocean.html?lang=en" class="link">
+      <a id="mainProposalLinkEn" class="link" href="ocean.html?lang=en">
         Ocean Energy Structure Proposal →
       </a>
     </div>
 
     <div class="statement">
       <div class="text">
-        DUNGZAK CESTLAVIE LAB is<br>
-        a research space formed from structural thinking.
+        DUNGZAK CESTLAVIE LAB<br>
+        is an experimental space based on the structural thinking of DUNGZAK CESTLAVIE.
       </div>
 
       <div class="text">
-        This space connects painting, archive, exhibition, music, and reports<br>
-        as a single structural flow.
+        This space studies how painting, archive, exhibition, music, and aesthetic reports<br>
+        can operate as a single structure.
       </div>
 
       <div class="text">
-        The research develops along two axes.
+        The current research develops along two axes.
       </div>
 
       <div class="text">
-        First, Ocean Energy<br>
-        Energy is treated not as technology<br>
-        but as a structure of space, experience, and perception.
+        First, ocean energy structure.<br>
+        An attempt to approach energy not as technology,<br>
+        but as a structure of space, experience, and human perception.
       </div>
 
       <div class="text">
-        Second, Archive System<br>
-        Works, records, text, and data<br>
-        are accumulated and built within a flow, then connected.
+        Second, archive system.<br>
+        A structure that accumulates and connects works, records, texts, and data<br>
+        into a continuous flow.
       </div>
 
       <div class="text">
-        This DUNGZAK CESTLAVIE LAB is not a place of results<br>
-        but a space where structure is formed.
+        This LAB is not a space for presenting results,<br>
+        but a space for generating structure.
       </div>
 
       <div class="text">
-        Structure is not completed here.<br>
-        It continues to generate and accumulate.
+        Nothing here is finished.<br>
+        Everything is in progress.
       </div>
     </div>
   </div>
@@ -676,7 +720,7 @@ body.menu-open{ overflow:hidden; }
       해양 에너지 구조 제안서 →
     </a>
 
-    <div class="section-label" id="dcaoLabel">DCAO</div>
+    <div class="section-label">DCAO</div>
     <div class="report-list" id="dcaoList"></div>
     <div class="empty-text" id="dcaoEmpty" style="display:none;"></div>
   </div>
@@ -700,7 +744,7 @@ body.menu-open{ overflow:hidden; }
       </div>
     </div>
 
-    <div class="section-label" id="dcapLabel">DCAP</div>
+    <div class="section-label">DCAP</div>
     <div class="report-list" id="dcapList"></div>
     <div class="empty-text" id="dcapEmpty" style="display:none;"></div>
   </div>
@@ -781,15 +825,13 @@ const about = document.getElementById('about');
 const globalLangBtns = document.querySelectorAll('.lang-global button');
 const mainLangContents = document.querySelectorAll('.lang-content');
 const panels = document.querySelectorAll('.lang-panel');
-const mainProposalLink = document.getElementById('mainProposalLink');
+const mainProposalLinkKo = document.getElementById('mainProposalLinkKo');
 const mainProposalLinkEn = document.getElementById('mainProposalLinkEn');
 const oceanProposalLink = document.getElementById('oceanProposalLink');
 const dcaoList = document.getElementById('dcaoList');
 const dcapList = document.getElementById('dcapList');
 const dcaoEmpty = document.getElementById('dcaoEmpty');
 const dcapEmpty = document.getElementById('dcapEmpty');
-const dcaoLabel = document.getElementById('dcaoLabel');
-const dcapLabel = document.getElementById('dcapLabel');
 
 let currentLang = 'ko';
 
@@ -818,7 +860,7 @@ const fallbackDCAP = {
       category: "Platform",
       title_kr: "아카이브 구조 플랫폼",
       title_en: "Archive Structural Platform",
-      summary_kr: "데이터를 구조로 연결하고 흐름으로 작동시키며 시간을 축적하는 시스템이다.",
+      summary_kr: "데이터를 구조적으로 연결하고 흐름으로 작동시키는 시스템이다.",
       summary_en: "A system that structurally connects data and operates it as flow.",
       md_path: "archive/DCAP-01.md"
     }
@@ -900,7 +942,10 @@ function setLanguage(lang){
     panel.classList.toggle('active', panel.dataset.panel === lang);
   });
 
-  if (mainProposalLink) mainProposalLink.href = `ocean.html?lang=${lang}`;
+  document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
+  localStorage.setItem('dzlab_lang', lang);
+
+  if (mainProposalLinkKo) mainProposalLinkKo.href = `ocean.html?lang=${lang}`;
   if (mainProposalLinkEn) mainProposalLinkEn.href = `ocean.html?lang=${lang}`;
   if (oceanProposalLink) {
     oceanProposalLink.href = `ocean.html?lang=${lang}`;
@@ -908,12 +953,6 @@ function setLanguage(lang){
       ? '해양 에너지 구조 제안서 →'
       : 'Ocean Energy Structure Proposal →';
   }
-
-  document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
-  localStorage.setItem('dzlab_lang', lang);
-
-  dcaoLabel.textContent = 'DCAO';
-  dcapLabel.textContent = 'DCAP';
 
   if(ocean.classList.contains('active')){
     renderList(dcaoData.dcao || [], 'dcao');

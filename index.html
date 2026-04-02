@@ -349,6 +349,7 @@ body.menu-open{
 
 .proposal-link{
   display:block;
+  width:100%;
   margin-top:10px;
   padding:22px 22px;
   border:1px solid var(--line);
@@ -357,7 +358,8 @@ body.menu-open{
   text-decoration:none;
   letter-spacing:0.6px;
   box-shadow:var(--shadow);
-  text-align:left;
+  text-align:center;
+  cursor:pointer;
 }
 
 .proposal-link:hover{
@@ -585,7 +587,7 @@ body.menu-open{
         연구와 설계는 현재 진행 중입니다.
       </div>
 
-      <a id="mainProposalLinkKo" href="/ocean.html?lang=ko" class="link">
+      <a id="mainProposalLinkKo" href="/ocean-proposal.html?lang=ko" class="link">
         Ocean Energy Structure Proposal →
       </a>
     </div>
@@ -650,7 +652,7 @@ body.menu-open{
         Research and structure are currently in progress.
       </div>
 
-      <a id="mainProposalLinkEn" href="/ocean.html?lang=en" class="link">
+      <a id="mainProposalLinkEn" href="/ocean-proposal.html?lang=en" class="link">
         Ocean Energy Structure Proposal →
       </a>
     </div>
@@ -697,7 +699,7 @@ body.menu-open{
 
 <div class="view" id="ocean">
   <div class="structure-wrap">
-    <a id="oceanProposalLink" class="proposal-link" href="/ocean.html?lang=ko">
+    <a id="oceanProposalLink" class="proposal-link" href="/ocean-proposal.html?lang=ko">
       해양 에너지 구조 제안서 →
     </a>
 
@@ -759,7 +761,7 @@ body.menu-open{
       </div>
 
       <div class="text" style="margin-top:40px;">
-        DUNGZAK CESTLAVIE LAB는<br>
+        DUNGZAK CESTLAVIE LAB은<br>
         이 두 축 — 해양 에너지와 아카이브 — 을 중심으로<br>
         구조를 연구하고 실험하며 확장하기 위한 입구이다.
       </div>
@@ -928,10 +930,11 @@ function setLanguage(lang){
   document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
   localStorage.setItem('dzlab_lang', lang);
 
-  if (mainProposalLinkKo) mainProposalLinkKo.href = `/ocean.html?lang=${lang}`;
-  if (mainProposalLinkEn) mainProposalLinkEn.href = `/ocean.html?lang=${lang}`;
+  if (mainProposalLinkKo) mainProposalLinkKo.href = `/ocean-proposal.html?lang=${lang}`;
+  if (mainProposalLinkEn) mainProposalLinkEn.href = `/ocean-proposal.html?lang=${lang}`;
+
   if (oceanProposalLink) {
-    oceanProposalLink.href = `/ocean.html?lang=${lang}`;
+    oceanProposalLink.href = `/ocean-proposal.html?lang=${lang}`;
     oceanProposalLink.textContent = lang === 'ko'
       ? '해양 에너지 구조 제안서 →'
       : 'Ocean Energy Structure Proposal →';

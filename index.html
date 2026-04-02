@@ -13,6 +13,12 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --header-base: 72px;
   --header-height: calc(var(--header-base) + var(--safe-top));
+  --gold: #d6b86a;
+  --gold-strong: #f0d79c;
+  --line: rgba(214,184,106,0.20);
+  --line-soft: rgba(214,184,106,0.12);
+  --blue: #8fc4ff;
+  --white: #eaf6ff;
 }
 
 *{
@@ -33,7 +39,7 @@ body{
     radial-gradient(circle at 30% 30%, rgba(0,180,255,0.14), transparent 60%),
     radial-gradient(circle at 70% 70%, rgba(0,90,180,0.18), transparent 60%),
     linear-gradient(135deg,#041c2c,#0b3a5a,#0e5c8a);
-  color:#eaf6ff;
+  color:var(--white);
   overflow-x:hidden;
 }
 
@@ -48,11 +54,11 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  z-index:20;
+  z-index:50;
   background:rgba(4,28,44,0.22);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-bottom:1px solid rgba(214,184,106,0.10);
+  border-bottom:1px solid var(--line-soft);
 }
 
 .menu-btn{
@@ -67,7 +73,7 @@ body{
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  border:1px solid rgba(214,184,106,0.20);
+  border:1px solid var(--line);
   background:rgba(255,255,255,0.03);
   border-radius:14px;
 }
@@ -76,19 +82,49 @@ body{
   display:block;
   width:22px;
   height:2px;
-  background:#d6b86a;
+  background:var(--gold);
   margin:3px 0;
 }
 
 .logo{
-  color:#d6b86a;
+  color:var(--gold);
   font-size:18px;
   letter-spacing:2px;
   text-decoration:none;
   font-weight:400;
   text-align:center;
   line-height:1;
-  padding:0 70px;
+  padding:0 96px;
+  white-space:nowrap;
+}
+
+.lang-global{
+  position:absolute;
+  right:16px;
+  top:calc(var(--safe-top) + 50%);
+  transform:translateY(-50%);
+  display:flex;
+  gap:8px;
+}
+
+.lang-global button{
+  min-width:52px;
+  height:36px;
+  border:1px solid rgba(214,184,106,0.35);
+  background:rgba(255,255,255,0.04);
+  color:var(--gold);
+  padding:0 12px;
+  font-size:12px;
+  letter-spacing:1px;
+  cursor:pointer;
+  border-radius:999px;
+  font-family:"Noto Serif KR", serif;
+}
+
+.lang-global button.active{
+  background:rgba(214,184,106,0.14);
+  border-color:rgba(214,184,106,0.72);
+  color:var(--gold-strong);
 }
 
 /* SIDE MENU */
@@ -102,8 +138,8 @@ body{
   background:#041c2c;
   padding:calc(var(--safe-top) + 92px) 30px calc(40px + var(--safe-bottom));
   transition:left 0.35s ease;
-  z-index:30;
-  border-right:1px solid rgba(214,184,106,0.18);
+  z-index:60;
+  border-right:1px solid var(--line);
 }
 
 .menu.open{
@@ -113,14 +149,14 @@ body{
 .menu a{
   display:block;
   margin-bottom:24px;
-  color:#8fc4ff;
+  color:var(--blue);
   text-decoration:none;
   font-size:15px;
   letter-spacing:1px;
 }
 
 .menu a:hover{
-  color:#d6b86a;
+  color:var(--gold);
 }
 
 .menu-overlay{
@@ -130,7 +166,7 @@ body{
   opacity:0;
   pointer-events:none;
   transition:opacity 0.3s ease;
-  z-index:25;
+  z-index:55;
 }
 
 .menu-overlay.show{
@@ -178,10 +214,10 @@ body{
   display:inline-block;
   margin-top:60px;
   font-size:15px;
-  opacity:0.78;
+  opacity:0.84;
   letter-spacing:1.5px;
   text-decoration:none;
-  color:#d6b86a;
+  color:var(--gold);
 }
 
 .link:hover{
@@ -220,7 +256,7 @@ body{
 }
 
 .entry-title{
-  color:#d6b86a;
+  color:var(--gold);
   font-size:42px;
   letter-spacing:6px;
   cursor:pointer;
@@ -238,29 +274,13 @@ body{
   word-break:keep-all;
 }
 
-/* ABOUT language switch */
-.lang-switch{
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  margin-bottom:50px;
+/* LANGUAGE CONTENT */
+.lang-content{
+  display:none;
 }
 
-.lang-btn{
-  min-width:88px;
-  padding:12px 16px;
-  border:1px solid rgba(214,184,106,0.35);
-  background:rgba(255,255,255,0.04);
-  color:#d6b86a;
-  font-size:14px;
-  letter-spacing:1.2px;
-  cursor:pointer;
-}
-
-.lang-btn.active{
-  background:rgba(214,184,106,0.12);
-  border-color:rgba(214,184,106,0.75);
-  color:#f0d79c;
+.lang-content.active{
+  display:block;
 }
 
 .lang-panel{
@@ -272,14 +292,10 @@ body{
 }
 
 @media (max-width:640px){
-  .header{
-    --header-base: 68px;
-  }
-
   .logo{
-    font-size:15px;
-    letter-spacing:1px;
-    padding:0 72px;
+    font-size:14px;
+    letter-spacing:0.8px;
+    padding:0 88px;
   }
 
   .menu-btn{
@@ -287,6 +303,19 @@ body{
     width:42px;
     height:42px;
     border-radius:13px;
+  }
+
+  .lang-global{
+    right:14px;
+    gap:6px;
+  }
+
+  .lang-global button{
+    min-width:46px;
+    height:34px;
+    padding:0 10px;
+    font-size:11px;
+    letter-spacing:0.8px;
   }
 
   .entry{
@@ -311,13 +340,6 @@ body{
   .text{
     font-size:15px;
     line-height:1.95;
-  }
-
-  .lang-btn{
-    min-width:76px;
-    padding:11px 14px;
-    font-size:13px;
-    letter-spacing:1px;
   }
 
   .view{
@@ -348,6 +370,11 @@ body{
   <a href="#" class="logo" onclick="goEntry(); return false;">
     DUNGZAK CESTLAVIE LAB
   </a>
+
+  <div class="lang-global">
+    <button type="button" class="active" data-lang="ko">KR</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
 </div>
 
 <!-- MENU -->
@@ -375,148 +402,154 @@ body{
 <div class="view" id="main">
 
   <!-- KR -->
-  <div class="subtitle">
-    등작 燈酌 DUNGZAK CESTLAVIE
+  <div class="lang-content active" data-lang-content="ko">
+    <div class="subtitle">
+      등작 燈酌 DUNGZAK CESTLAVIE
+    </div>
+
+    <div class="block">
+      <div class="text">
+        등작 燈酌 DUNGZAK CESTLAVIE의 구조 사유와<br>
+        해양 에너지 개념을 연구하는 실험실입니다.
+      </div>
+
+      <div class="text" style="margin-top:45px;">
+        DUNGZAK CESTLAVIE LAB — 개념 · 구조 · 연구
+      </div>
+
+      <div class="text" style="margin-top:12px;">
+        Archive Pro — 시스템 · 데이터 · 아카이브
+      </div>
+
+      <div class="text" style="margin-top:45px; opacity:0.72;">
+        연구와 설계는 현재 진행 중입니다.
+      </div>
+
+      <div class="text" style="margin-top:55px; font-size:14px; opacity:0.62;">
+        2016년 폴란드 바르샤바 법정에서,<br>
+        12년간 유럽과 한국을 오가며 활동해 온 행적과<br>
+        유럽 측 증언을 바탕으로<br>
+        ‘해양 에너지 사업가(Ocean Energy Businessman)’로<br>
+        공식 인정받았다.
+      </div>
+
+      <a href="ocean.html" class="link">
+        Ocean Energy Structure Proposal →
+      </a>
+    </div>
+
+    <div class="statement">
+      <div class="text">
+        DUNGZAK CESTLAVIE LAB는<br>
+        등작 燈酌 DUNGZAK CESTLAVIE의 구조 사유를 기반으로 형성된 실험 공간이다.
+      </div>
+
+      <div class="text">
+        이 공간은 회화, 아카이브, 전시, 음악, 미학 보고서를<br>
+        하나의 구조로 연결하는 방식을 연구한다.
+      </div>
+
+      <div class="text">
+        현재 연구는 두 축으로 전개된다.
+      </div>
+
+      <div class="text">
+        첫째, 해양 에너지 구조.<br>
+        에너지를 단순한 기술이 아니라<br>
+        공간, 경험, 그리고 인간 인식의 구조로 다루는 시도이다.
+      </div>
+
+      <div class="text">
+        둘째, 아카이브 시스템.<br>
+        작품, 기록, 텍스트, 데이터를<br>
+        하나의 흐름으로 축적하고 연결하는 구조이다.
+      </div>
+
+      <div class="text">
+        이 LAB는 결과를 보여주는 공간이 아니라<br>
+        구조가 생성되는 과정을 다루는 공간이다.
+      </div>
+
+      <div class="text">
+        여기에서 모든 것은 완성되지 않는다.<br>
+        모든 것은 진행 중이다.
+      </div>
+    </div>
   </div>
-
-  <div class="block">
-    <div class="text">
-      등작 燈酌 DUNGZAK CESTLAVIE의 구조 사유와<br>
-      해양 에너지 개념을 연구하는 실험실입니다.
-    </div>
-
-    <div class="text" style="margin-top:45px;">
-      DUNGZAK CESTLAVIE LAB — 개념 · 구조 · 연구
-    </div>
-
-    <div class="text" style="margin-top:12px;">
-      Archive Pro — 시스템 · 데이터 · 아카이브
-    </div>
-
-    <div class="text" style="margin-top:45px; opacity:0.72;">
-      연구와 설계는 현재 진행 중입니다.
-    </div>
-
-    <div class="text" style="margin-top:55px; font-size:14px; opacity:0.62;">
-      2016년 폴란드 바르샤바 법정에서,<br>
-      12년간 유럽과 한국을 오가며 활동해 온 행적과<br>
-      유럽 측 증언을 바탕으로<br>
-      ‘해양 에너지 사업가(Ocean Energy Businessman)’로<br>
-      공식 인정받았다.
-    </div>
-
-    <a href="ocean.html" class="link">
-      Ocean Energy Structure Proposal →
-    </a>
-  </div>
-
-  <div class="statement">
-    <div class="text">
-      DUNGZAK CESTLAVIE LAB는<br>
-      등작 燈酌 DUNGZAK CESTLAVIE의 구조 사유를 기반으로 형성된 실험 공간이다.
-    </div>
-
-    <div class="text">
-      이 공간은 회화, 아카이브, 전시, 음악, 미학 보고서를<br>
-      하나의 구조로 연결하는 방식을 연구한다.
-    </div>
-
-    <div class="text">
-      현재 연구는 두 축으로 전개된다.
-    </div>
-
-    <div class="text">
-      첫째, 해양 에너지 구조.<br>
-      에너지를 단순한 기술이 아니라<br>
-      공간, 경험, 그리고 인간 인식의 구조로 다루는 시도이다.
-    </div>
-
-    <div class="text">
-      둘째, 아카이브 시스템.<br>
-      작품, 기록, 텍스트, 데이터를<br>
-      하나의 흐름으로 축적하고 연결하는 구조이다.
-    </div>
-
-    <div class="text">
-      이 LAB는 결과를 보여주는 공간이 아니라<br>
-      구조가 생성되는 과정을 다루는 공간이다.
-    </div>
-
-    <div class="text">
-      여기에서 모든 것은 완성되지 않는다.<br>
-      모든 것은 진행 중이다.
-    </div>
-  </div>
-
-  <div class="divider"></div>
 
   <!-- EN -->
-  <div class="block">
-    <div class="text">
-      A laboratory dedicated to structural thought<br>
-      and ocean energy concepts by DUNGZAK CESTLAVIE.
+  <div class="lang-content" data-lang-content="en">
+    <div class="subtitle">
+      DUNGZAK CESTLAVIE
     </div>
 
-    <div class="text" style="margin-top:45px;">
-      DUNGZAK CESTLAVIE LAB — Concept · Structure · Research
+    <div class="block">
+      <div class="text">
+        A laboratory dedicated to structural thought<br>
+        and ocean energy concepts by DUNGZAK CESTLAVIE.
+      </div>
+
+      <div class="text" style="margin-top:45px;">
+        DUNGZAK CESTLAVIE LAB — Concept · Structure · Research
+      </div>
+
+      <div class="text" style="margin-top:12px;">
+        Archive Pro — System · Data · Archive
+      </div>
+
+      <div class="text" style="margin-top:45px; opacity:0.72;">
+        Research and structure are currently in progress.
+      </div>
+
+      <div class="text" style="margin-top:55px; font-size:14px; opacity:0.62;">
+        In 2016, at a court in Warsaw, Poland,<br>
+        based on twelve years of activity between Europe and Korea<br>
+        and supporting testimony from European partners,<br>
+        he was officially recognized as an<br>
+        “Ocean Energy Businessman.”
+      </div>
+
+      <a href="ocean.html" class="link">
+        View Proposal →
+      </a>
     </div>
 
-    <div class="text" style="margin-top:12px;">
-      Archive Pro — System · Data · Archive
-    </div>
+    <div class="statement">
+      <div class="text">
+        DUNGZAK CESTLAVIE LAB<br>
+        is an experimental space based on the structural thinking of DUNGZAK CESTLAVIE.
+      </div>
 
-    <div class="text" style="margin-top:45px; opacity:0.72;">
-      Research and structure are currently in progress.
-    </div>
+      <div class="text">
+        This space studies how painting, archive, exhibition, music, and aesthetic reports<br>
+        can operate as a single structure.
+      </div>
 
-    <div class="text" style="margin-top:55px; font-size:14px; opacity:0.62;">
-      In 2016, at a court in Warsaw, Poland,<br>
-      based on twelve years of activity between Europe and Korea<br>
-      and supporting testimony from European partners,<br>
-      he was officially recognized as an<br>
-      “Ocean Energy Businessman.”
-    </div>
+      <div class="text">
+        The current research develops along two axes.
+      </div>
 
-    <a href="ocean.html" class="link">
-      View Proposal →
-    </a>
-  </div>
+      <div class="text">
+        First, ocean energy structure.<br>
+        An attempt to approach energy not as technology,<br>
+        but as a structure of space, experience, and human perception.
+      </div>
 
-  <div class="statement">
-    <div class="text">
-      DUNGZAK CESTLAVIE LAB<br>
-      is an experimental space based on the structural thinking of DUNGZAK CESTLAVIE.
-    </div>
+      <div class="text">
+        Second, archive system.<br>
+        A structure that accumulates and connects works, records, texts, and data<br>
+        into a continuous flow.
+      </div>
 
-    <div class="text">
-      This space studies how painting, archive, exhibition, music, and aesthetic reports<br>
-      can operate as a single structure.
-    </div>
+      <div class="text">
+        This LAB is not a space for presenting results,<br>
+        but a space for generating structure.
+      </div>
 
-    <div class="text">
-      The current research develops along two axes.
-    </div>
-
-    <div class="text">
-      First, ocean energy structure.<br>
-      An attempt to approach energy not as technology,<br>
-      but as a structure of space, experience, and human perception.
-    </div>
-
-    <div class="text">
-      Second, archive system.<br>
-      A structure that accumulates and connects works, records, texts, and data<br>
-      into a continuous flow.
-    </div>
-
-    <div class="text">
-      This LAB is not a space for presenting results,<br>
-      but a space for generating structure.
-    </div>
-
-    <div class="text">
-      Nothing here is finished.<br>
-      Everything is in progress.
+      <div class="text">
+        Nothing here is finished.<br>
+        Everything is in progress.
+      </div>
     </div>
   </div>
 
@@ -524,11 +557,6 @@ body{
 
 <!-- ABOUT -->
 <div class="view" id="about">
-
-  <div class="lang-switch">
-    <button class="lang-btn active" data-lang="ko" type="button">KR</button>
-    <button class="lang-btn" data-lang="en" type="button">EN</button>
-  </div>
 
   <!-- ABOUT KR -->
   <div class="lang-panel active" data-panel="ko">
@@ -639,18 +667,30 @@ function openArchive(){
   closeMenu();
 }
 
-const buttons = document.querySelectorAll('.lang-btn');
+const globalLangBtns = document.querySelectorAll('.lang-global button');
+const mainLangContents = document.querySelectorAll('.lang-content');
 const panels = document.querySelectorAll('.lang-panel');
 
-buttons.forEach(btn => {
+function setLanguage(lang){
+  globalLangBtns.forEach(b => b.classList.remove('active'));
+  document.querySelector(`.lang-global button[data-lang="${lang}"]`)?.classList.add('active');
+
+  mainLangContents.forEach(c => c.classList.remove('active'));
+  document.querySelector(`[data-lang-content="${lang}"]`)?.classList.add('active');
+
+  panels.forEach(p => p.classList.remove('active'));
+  document.querySelector(`[data-panel="${lang}"]`)?.classList.add('active');
+
+  document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
+}
+
+globalLangBtns.forEach(btn => {
   btn.addEventListener('click', () => {
-    const lang = btn.dataset.lang;
-    buttons.forEach(b => b.classList.remove('active'));
-    panels.forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelector(`[data-panel="${lang}"]`).classList.add('active');
+    setLanguage(btn.dataset.lang);
   });
 });
+
+setLanguage('ko');
 </script>
 
 </body>

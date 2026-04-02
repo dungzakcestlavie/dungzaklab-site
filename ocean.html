@@ -12,13 +12,45 @@ body {
   margin: 0;
   padding: 80px 20px;
   background: linear-gradient(180deg, #041c2c, #0e5c8a);
-  color: #b7d7ff; /* 푸른 금빛 */
+  color: #b7d7ff;
   font-family: "Noto Serif KR", serif;
 }
 
 .container {
-  max-width: 900px;
+  max-width: 920px;
   margin: 0 auto;
+}
+
+.lang-switch {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 60px;
+}
+
+.lang-btn {
+  min-width: 120px;
+  padding: 12px 20px;
+  border: 1px solid rgba(183, 215, 255, 0.35);
+  background: rgba(255,255,255,0.04);
+  color: #8fc4ff;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  text-decoration: none;
+  text-align: center;
+  box-sizing: border-box;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.lang-btn.active {
+  background: rgba(183, 215, 255, 0.12);
+  border-color: rgba(183, 215, 255, 0.7);
+  color: #d6e9ff;
+}
+
+.lang-btn:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(183, 215, 255, 0.55);
 }
 
 h1 {
@@ -53,205 +85,295 @@ h2 {
   height: 1px;
   background: rgba(255,255,255,0.2);
 }
+
+.lang-panel {
+  display: none;
+}
+
+.lang-panel.active {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  body {
+    padding: 60px 16px;
+  }
+
+  .lang-switch {
+    gap: 10px;
+    margin-bottom: 50px;
+  }
+
+  .lang-btn {
+    min-width: 108px;
+    padding: 11px 16px;
+    font-size: 13px;
+  }
+
+  h1 {
+    font-size: 24px;
+    margin-bottom: 50px;
+  }
+
+  h2 {
+    font-size: 17px;
+    margin-top: 50px;
+  }
+
+  .text,
+  .list {
+    font-size: 15px;
+    line-height: 2.0;
+  }
+}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<!-- KR -->
+  <div class="lang-switch">
+    <a href="#" class="lang-btn active" data-lang="ko">KOREAN</a>
+    <a href="#" class="lang-btn" data-lang="en">ENGLISH</a>
+  </div>
 
-<h1>해양 에너지 구조 제안서<br>DUNGZAK CESTLAVIE — Concept Proposal</h1>
+  <!-- KR -->
+  <div class="lang-panel active" data-panel="ko">
+    <h1>해양 에너지 구조 제안서<br>DUNGZAK CESTLAVIE — Concept Proposal</h1>
 
-<h2>1. 소개</h2>
-<div class="text">
-나는 서울을 기반으로 작업하는 동시대 예술가이자 구조 사유자 등작 燈酌 DUNGZAK CESTLAVIE이다.<br><br>
+    <h2>1. 소개</h2>
+    <div class="text">
+      나는 서울을 기반으로 작업하는 동시대 예술가이자 구조 사유자 등작 燈酌 DUNGZAK CESTLAVIE이다.<br><br>
+      나는 회화, 아카이브, 전시를 통해
+      사유, 공간, 시스템이 하나의 구조로 작동하는 방식을 연구해왔다.<br><br>
+      2016년 폴란드 바르샤바에서
+      유럽과 한국을 오가며 진행한 활동을 기반으로
+      “Ocean Energy Businessman”으로 공식 인정받았다.<br><br>
+      이 제안서는 기술이 아닌
+      “구조”로서 해양 에너지를 다시 다루기 위한 출발점이다.
+    </div>
 
-나는 회화, 아카이브, 전시를 통해  
-사유, 공간, 시스템이 하나의 구조로 작동하는 방식을 연구해왔다.<br><br>
+    <h2>2. 핵심 개념</h2>
+    <div class="text">
+      해양 에너지는 단순한 기술 문제가 아니다.<br>
+      그것은 공간, 환경, 인프라, 그리고 인간 인식이 결합된 구조다.<br><br>
+      현재 대부분의 접근은 효율과 생산에 집중되어 있다.<br>
+      하지만 앞으로의 에너지는 도시, 문화, 경험과 결합되어야 한다.<br><br>
+      에너지는 구조다.<br>
+      에너지는 공간이다.<br>
+      에너지는 경험이다.
+    </div>
 
-2016년 폴란드 바르샤바에서  
-유럽과 한국을 오가며 진행한 활동을 기반으로  
-“Ocean Energy Businessman”으로 공식 인정받았다.<br><br>
+    <h2>3. 구조적 관점</h2>
+    <div class="text">
+      해양 에너지 시스템은 세 가지 층위로 이해할 수 있다.
+    </div>
 
-이 제안서는 기술이 아닌  
-“구조”로서 해양 에너지를 다시 다루기 위한 출발점이다.
+    <div class="list">
+      1. 물리적 층 (터빈, 파력, 풍력, 구조물)<br>
+      2. 환경적 층 (해양 조건, 생태, 지형)<br>
+      3. 인식의 층 (경험, 문화, 가시성)
+    </div>
+
+    <div class="text">
+      현재 대부분의 프로젝트는 1번과 2번에만 머물러 있다.<br><br>
+      이 제안은 에너지를 인간의 경험과 도시의 정체성으로 확장하는
+      3번째 층위를 포함한다.
+    </div>
+
+    <h2>4. 제안 방향</h2>
+    <div class="list">
+      • 해안 도시와 상호작용하는 에너지 구조<br>
+      • 가시적 공간 요소로 존재하는 인프라<br>
+      • 기술과 문화가 결합된 복합 구조
+    </div>
+
+    <div class="text">
+      가능한 적용 방향:
+    </div>
+
+    <div class="list">
+      • 공공 공간과 결합된 해안 에너지 구조<br>
+      • 시각적 정체성을 가진 해상 구조물<br>
+      • 에너지 + 건축 + 인식의 결합 시스템
+    </div>
+
+    <h2>5. 역할 정의</h2>
+    <div class="text">
+      나는 기술 개발자가 아니다.
+    </div>
+
+    <div class="list">
+      • 구조 기획자<br>
+      • 개념 설계자<br>
+      • 에너지와 인간 인식을 연결하는 매개자
+    </div>
+
+    <div class="text">
+      나는 부품이 아니라 구조를 제안하는 방식으로 작업한다.
+    </div>
+
+    <h2>6. 지금 이 시점</h2>
+    <div class="text">
+      재생 에너지 전환은 전 세계적으로 가속되고 있다.<br><br>
+      그러나 대부분의 프로젝트는 여전히 기능 중심이다.<br><br>
+      에너지가 어떻게 경험되고,<br>
+      어떻게 삶 속에 통합되는가.<br><br>
+      이 공백은 새로운 기회다.
+    </div>
+
+    <h2>7. 협업 방향</h2>
+    <div class="list">
+      • 해양 에너지 기업<br>
+      • 연구 기관<br>
+      • 도시 및 환경 설계자
+    </div>
+
+    <div class="text">
+      목표는 새로운 구조적 접근과
+      실험적 개념의 가능성을 탐색하는 것이다.
+    </div>
+
+    <h2>8. 결론</h2>
+    <div class="text">
+      에너지는 다음 시대의 구조를 결정한다.<br><br>
+      문제는 생산 방식이 아니라
+      그것이 어떤 방식으로 존재하는가이다.<br><br>
+      이 제안은 그 시작점이다.<br><br>
+      DUNGZAK CESTLAVIE<br>
+      Contemporary Artist / Structural Thinker<br>
+      https://dungzak.art
+    </div>
+  </div>
+
+  <!-- EN -->
+  <div class="lang-panel" data-panel="en">
+    <h1>OCEAN ENERGY STRUCTURE<br>DUNGZAK CESTLAVIE — Concept Proposal</h1>
+
+    <h2>1. Introduction</h2>
+    <div class="text">
+      I am DUNGZAK CESTLAVIE, a contemporary artist and structural thinker based in Seoul.<br><br>
+      My work explores how thought, space, and systems operate as a unified structure
+      through painting, archives, and exhibitions.<br><br>
+      In 2016, in Warsaw, Poland,
+      I was officially recognized as an “Ocean Energy Businessman”
+      based on twelve years of activity between Europe and Korea.<br><br>
+      This proposal is not about engineering,
+      but about approaching ocean energy as structure.
+    </div>
+
+    <h2>2. Core Idea</h2>
+    <div class="text">
+      Ocean energy is not only a matter of technology.<br>
+      It is a system combining space, environment, infrastructure, and human perception.<br><br>
+      Most current approaches focus on efficiency and production.<br>
+      However, the future of energy requires integration with cities, culture, and experience.<br><br>
+      Energy as structure.<br>
+      Energy as space.<br>
+      Energy as experience.
+    </div>
+
+    <h2>3. Structural Perspective</h2>
+    <div class="text">
+      Ocean energy systems can be understood through three layers:
+    </div>
+
+    <div class="list">
+      1. Physical Layer (turbines, waves, wind, infrastructure)<br>
+      2. Environmental Layer (sea conditions, ecosystems, geography)<br>
+      3. Perceptual Layer (human experience, cultural meaning, visibility)
+    </div>
+
+    <div class="text">
+      Most projects operate only within the first two layers.<br><br>
+      This proposal expands into the third layer —
+      where energy becomes part of human experience and urban identity.
+    </div>
+
+    <h2>4. Proposal Direction</h2>
+    <div class="list">
+      • interact with coastal cities<br>
+      • exist as visible spatial elements<br>
+      • function as both infrastructure and cultural presence
+    </div>
+
+    <div class="text">
+      Possible applications:
+    </div>
+
+    <div class="list">
+      • coastal energy installations integrated with public space<br>
+      • offshore structures with visual identity<br>
+      • hybrid systems combining energy, architecture, and perception
+    </div>
+
+    <h2>5. Role Definition</h2>
+    <div class="text">
+      I am not a technical engineer.
+    </div>
+
+    <div class="list">
+      • structural planner<br>
+      • concept designer<br>
+      • mediator between energy systems and human perception
+    </div>
+
+    <div class="text">
+      I propose frameworks rather than components.
+    </div>
+
+    <h2>6. Why Now</h2>
+    <div class="text">
+      The transition to renewable energy is accelerating globally.<br><br>
+      However, most developments remain purely functional.<br><br>
+      There is a critical gap:<br><br>
+      how energy is experienced<br>
+      and how it integrates into life.<br><br>
+      This gap is an opportunity.
+    </div>
+
+    <h2>7. Collaboration</h2>
+    <div class="list">
+      • ocean energy companies<br>
+      • research institutions<br>
+      • urban and environmental planners
+    </div>
+
+    <div class="text">
+      The goal is to explore new structural approaches
+      and potential pilot concepts.
+    </div>
+
+    <h2>8. Closing</h2>
+    <div class="text">
+      Energy will define the next phase of human structure.<br><br>
+      The question is not only how we produce it,
+      but how it exists within our world.<br><br>
+      This proposal is a starting point.<br><br>
+      DUNGZAK CESTLAVIE<br>
+      Contemporary Artist / Structural Thinker<br>
+      https://dungzak.art
+    </div>
+  </div>
+
 </div>
 
-<h2>2. 핵심 개념</h2>
-<div class="text">
-해양 에너지는 단순한 기술 문제가 아니다.<br>
-그것은 공간, 환경, 인프라, 그리고 인간 인식이 결합된 구조다.<br><br> 세
+<script>
+const buttons = document.querySelectorAll('.lang-btn');
+const panels = document.querySelectorAll('.lang-panel');
 
-현재 대부분의 접근은 효율과 생산에 집중되어 있다.<br>
-하지만 앞으로의 에너지는 도시, 문화, 경험과 결합되어야 한다.<br><br>
+buttons.forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    const lang = btn.dataset.lang;
 
-에너지는 구조다.<br>
-에너지는 공간이다.<br>
-에너지는 경험이다.
-</div>
+    buttons.forEach(b => b.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
 
-<h2>3. 구조적 관점</h2>
-<div class="text">
-해양 에너지 시스템은 세 가지 층위로 이해할 수 있다.
-</div>
-
-<div class="list">
-1. 물리적 층 (터빈, 파력, 풍력, 구조물)<br>
-2. 환경적 층 (해양 조건, 생태, 지형)<br>
-3. 인식의 층 (경험, 문화, 가시성)
-</div>
-
-<div class="text">
-현재 대부분의 프로젝트는 1번과 2번에만 머물러 있다.<br><br>
-
-이 제안은 에너지를 인간의 경험과 도시의 정체성으로 확장하는  
-3번째 층위를 포함한다.
-</div>
-
-<h2>4. 제안 방향</h2>
-<div class="list">
-• 해안 도시와 상호작용하는 에너지 구조<br>
-• 가시적 공간 요소로 존재하는 인프라<br>
-• 기술과 문화가 결합된 복합 구조
-</div>
-
-<div class="text">
-가능한 적용 방향:
-</div>
-
-<div class="list">
-• 공공 공간과 결합된 해안 에너지 구조<br>
-• 시각적 정체성을 가진 해상 구조물<br>
-• 에너지 + 건축 + 인식의 결합 시스템
-</div>
-
-<h2>5. 역할 정의</h2>
-<div class="text">
-나는 기술 개발자가 아니다.
-</div>
-
-<div class="list">
-• 구조 기획자<br>
-• 개념 설계자<br>
-• 에너지와 인간 인식을 연결하는 매개자
-</div>
-
-<div class="text">
-나는 부품이 아니라 구조를 제안하는 방식으로 작업한다.
-</div>
-
-<h2>6. 지금 이 시점</h2>
-<div class="text">
-재생 에너지 전환은 전 세계적으로 가속되고 있다.<br><br>
-
-그러나 대부분의 프로젝트는 여전히 기능 중심이다.<br><br>
-
-에너지가 어떻게 경험되고,<br>
-어떻게 삶 속에 통합되는가.<br><br>
-
-이 공백은 새로운 기회다.
-</div>
-
-<h2>7. 협업 방향</h2>
-<div class="list">
-• 해양 에너지 기업<br>
-• 연구 기관<br>
-• 도시 및 환경 설계자
-</div>
-
-<div class="text">
-목표는 새로운 구조적 접근과  
-실험적 개념의 가능성을 탐색하는 것이다.
-</div>
-
-<h2>8. 결론</h2>
-<div class="text">
-에너지는 다음 시대의 구조를 결정한다.<br><br>
-
-문제는 생산 방식이 아니라  
-그것이 어떤 방식으로 존재하는가이다.<br><br>
-
-이 제안은 그 시작점이다.<br><br>
-
-DUNGZAK CESTLAVIE<br>
-Contemporary Artist / Structural Thinker<br>
-https://dungzak.art
-</div>
-
-<div class="divider"></div>
-
-<!-- EN -->
-
-<h1>OCEAN ENERGY STRUCTURE<br>DUNGZAK CESTLAVIE — Concept Proposal</h1>
-
-<h2>1. Introduction</h2>
-<div class="text">
-I am DUNGZAK CESTLAVIE, a contemporary artist and structural thinker based in Seoul.<br><br>
-
-My work explores how thought, space, and systems operate as a unified structure.<br><br>
-
-In 2016, in Warsaw, Poland,  
-I was officially recognized as an “Ocean Energy Businessman.”<br><br>
-
-This proposal approaches ocean energy as structure.
-</div>
-
-<h2>2. Core Idea</h2>
-<div class="text">
-Ocean energy is not only a matter of technology.<br>
-It is a system combining space, environment, infrastructure, and human perception.<br><br>
-
-Energy as structure.<br>
-Energy as space.<br>
-Energy as experience.
-</div>
-
-<h2>3. Structural Perspective</h2>
-<div class="list">
-1. Physical Layer<br>
-2. Environmental Layer<br>
-3. Perceptual Layer
-</div>
-
-<div class="text">
-This proposal expands into the third layer.
-</div>
-
-<h2>4. Proposal Direction</h2>
-<div class="list">
-• interact with coastal cities<br>
-• exist as visible spatial elements<br>
-• combine infrastructure and culture
-</div>
-
-<h2>5. Role Definition</h2>
-<div class="text">
-I am not an engineer.<br><br>
-I propose structures.
-</div>
-
-<h2>6. Why Now</h2>
-<div class="text">
-There is a critical gap:<br><br>
-how energy is experienced<br>
-and how it integrates into life.
-</div>
-
-<h2>7. Collaboration</h2>
-<div class="list">
-• ocean energy companies<br>
-• research institutions<br>
-• urban planners
-</div>
-
-<h2>8. Closing</h2>
-<div class="text">
-Energy will define the next structure of humanity.<br><br>
-
-This proposal is a starting point.
-</div>
-
-</div>
+    btn.classList.add('active');
+    document.querySelector(`[data-panel="${lang}"]`).classList.add('active');
+  });
+});
+</script>
 </body>
 </html>

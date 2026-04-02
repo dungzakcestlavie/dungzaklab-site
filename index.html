@@ -3,109 +3,314 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUNGZAK LAB</title>
+<title>DUNGZAK CESTLAVIE LAB</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
-body {
-  margin: 0;
-  height: 100vh;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  text-align: center;
-
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:"Noto Serif KR", serif;
   background:
     radial-gradient(circle at 50% 40%, rgba(0,200,255,0.25), transparent 55%),
-    radial-gradient(circle at 30% 30%, rgba(0,180,255,0.18), transparent 60%),
-    radial-gradient(circle at 70% 70%, rgba(0,90,180,0.28), transparent 60%),
-    linear-gradient(135deg, #041c2c, #0b3a5a, #0e5c8a);
-
-  color: #eaf6ff;
-  font-family: "Noto Serif KR", serif;
+    radial-gradient(circle at 30% 30%, rgba(0,180,255,0.14), transparent 60%),
+    radial-gradient(circle at 70% 70%, rgba(0,90,180,0.18), transparent 60%),
+    linear-gradient(135deg,#041c2c,#0b3a5a,#0e5c8a);
+  color:#eaf6ff;
 }
 
-.container {
-  max-width: 760px;
-  padding: 80px 20px 40px;
+/* HEADER */
+.header{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:20;
+  background:rgba(4,28,44,0.18);
+  backdrop-filter: blur(6px);
 }
 
-.title {
-  font-size: 50px;
-  letter-spacing: 7px;
-  margin-bottom: 24px;
-  font-weight: 400;
+.menu-btn{
+  position:absolute;
+  left:20px;
+  top:50%;
+  transform:translateY(-50%);
+  width:28px;
+  height:22px;
+  cursor:pointer;
 }
 
-.subtitle {
-  font-size: 15px;
-  letter-spacing: 3px;
-  margin-bottom: 70px;
-  opacity: 0.85;
+.menu-btn span{
+  display:block;
+  width:22px;
+  height:2px;
+  background:#d6b86a;
+  margin:5px 0;
 }
 
-.block {
-  margin-top: 60px;
+.logo{
+  color:#d6b86a;
+  font-size:18px;
+  letter-spacing:2px;
+  text-decoration:none;
+  font-weight:400;
 }
 
-.text {
-  font-size: 16px;
-  line-height: 2.0;
+/* SIDE MENU */
+.menu{
+  position:fixed;
+  top:0;
+  left:-280px;
+  width:260px;
+  height:100%;
+  background:#041c2c;
+  padding:92px 30px 40px;
+  transition:left 0.35s ease;
+  z-index:30;
+  border-right:1px solid rgba(214,184,106,0.18);
 }
 
-.link {
-  margin-top: 60px;
-  font-size: 15px;
-  opacity: 0.6;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: opacity 0.3s;
+.menu.open{
+  left:0;
 }
 
-.link:hover {
-  opacity: 1;
+.menu a{
+  display:block;
+  margin-bottom:24px;
+  color:#8fc4ff;
+  text-decoration:none;
+  font-size:15px;
+  letter-spacing:1px;
 }
 
-.divider {
-  width: 40px;
-  height: 1px;
-  background: rgba(255,255,255,0.25);
-  margin: 70px auto;
+.menu a:hover{
+  color:#d6b86a;
+}
+
+.menu-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.28);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.3s ease;
+  z-index:25;
+}
+
+.menu-overlay.show{
+  opacity:1;
+  pointer-events:auto;
+}
+
+/* COMMON */
+.view{
+  display:none;
+  max-width:760px;
+  margin:0 auto;
+  padding:120px 20px 70px;
+  text-align:center;
+}
+
+.view.active{
+  display:block;
+}
+
+.text{
+  font-size:16px;
+  line-height:2;
+}
+
+.subtitle{
+  margin-top:20px;
+  letter-spacing:3px;
+  opacity:0.85;
+}
+
+.block{
+  margin-top:60px;
+}
+
+.divider{
+  width:40px;
+  height:1px;
+  background:rgba(255,255,255,0.25);
+  margin:70px auto;
+}
+
+.link{
+  display:inline-block;
+  margin-top:60px;
+  font-size:15px;
+  opacity:0.78;
+  letter-spacing:1.5px;
+  text-decoration:none;
+  color:#d6b86a;
+}
+
+.link:hover{
+  opacity:1;
+}
+
+/* ENTRY */
+.entry{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+  padding:0 20px;
+}
+
+.entry.hidden{
+  display:none;
+}
+
+.entry-title{
+  color:#d6b86a;
+  font-size:42px;
+  letter-spacing:6px;
+  cursor:pointer;
+  line-height:1.5;
+}
+
+.entry-sub{
+  margin-top:18px;
+  color:rgba(214,184,106,0.82);
+  font-size:14px;
+  letter-spacing:2px;
+}
+
+/* ABOUT language switch */
+.lang-switch{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-bottom:50px;
+}
+
+.lang-btn{
+  min-width:118px;
+  padding:12px 18px;
+  border:1px solid rgba(214,184,106,0.35);
+  background:rgba(255,255,255,0.04);
+  color:#d6b86a;
+  font-size:14px;
+  letter-spacing:1.2px;
+  cursor:pointer;
+}
+
+.lang-btn.active{
+  background:rgba(214,184,106,0.12);
+  border-color:rgba(214,184,106,0.75);
+  color:#f0d79c;
+}
+
+.lang-panel{
+  display:none;
+}
+
+.lang-panel.active{
+  display:block;
+}
+
+@media (max-width:640px){
+  .logo{
+    font-size:16px;
+    letter-spacing:1.2px;
+  }
+
+  .entry-title{
+    font-size:32px;
+    letter-spacing:4px;
+  }
+
+  .text{
+    font-size:15px;
+    line-height:1.95;
+  }
+
+  .lang-btn{
+    min-width:104px;
+    padding:11px 14px;
+    font-size:13px;
+  }
+
+  .view{
+    padding:110px 18px 60px;
+  }
 }
 </style>
 </head>
 
 <body>
-<div class="container">
 
-  <div class="title">DUNGZAK LAB</div>
+<!-- HEADER -->
+<div class="header">
+  <div class="menu-btn" onclick="toggleMenu()" aria-label="menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
 
+  <a href="#" class="logo" onclick="goEntry(); return false;">
+    DUNGZAK CESTLAVIE LAB
+  </a>
+</div>
+
+<!-- MENU -->
+<div class="menu" id="menu">
+  <a href="#" onclick="goEntry(); return false;">ENTRY</a>
+  <a href="/ocean.html" onclick="closeMenu()">OCEAN ENERGY</a>
+  <a href="#" onclick="openArchive(); return false;">ARCHIVE</a>
+  <a href="#" onclick="openAbout(); return false;">ABOUT</a>
+  <a href="https://dungzak.art" target="_blank" rel="noopener" onclick="closeMenu()">DUNGZAK.ART</a>
+</div>
+
+<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+
+<!-- ENTRY -->
+<div class="entry" id="entry">
+  <div class="entry-title" onclick="enterSite()">
+    DUNGZAK CESTLAVIE LAB
+  </div>
+  <div class="entry-sub">
+    STRUCTURE · OCEAN ENERGY · ARCHIVE
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="view" id="main">
+
+  <!-- KR -->
   <div class="subtitle">
     등작 燈酌 DUNGZAK CESTLAVIE
   </div>
 
-  <!-- KR -->
   <div class="block">
-
     <div class="text">
       등작 燈酌 DUNGZAK CESTLAVIE의 구조 사유와<br>
       해양 에너지 개념을 연구하는 실험실입니다.
     </div>
 
     <div class="text" style="margin-top:45px;">
-      DUNGZAK LAB — 개념 · 구조 · 연구
+      DUNGZAK CESTLAVIE LAB — 개념 · 구조 · 연구
     </div>
 
     <div class="text" style="margin-top:12px;">
       Archive Pro — 시스템 · 데이터 · 아카이브
     </div>
 
-    <div class="text" style="margin-top:45px; opacity:0.7;">
+    <div class="text" style="margin-top:45px; opacity:0.72;">
       연구와 설계는 현재 진행 중입니다.
     </div>
 
-    <div class="text" style="margin-top:55px; font-size:14px; opacity:0.6;">
+    <div class="text" style="margin-top:55px; font-size:14px; opacity:0.62;">
       2016년 폴란드 바르샤바 법정에서,<br>
       12년간 유럽과 한국을 오가며 활동해 온 행적과<br>
       유럽 측 증언을 바탕으로<br>
@@ -113,36 +318,33 @@ body {
       공식 인정받았다.
     </div>
 
-    <!-- 🔥 진입 -->
     <a href="/ocean.html" class="link">
       Ocean Energy Structure Proposal →
     </a>
-
   </div>
 
   <div class="divider"></div>
 
   <!-- EN -->
   <div class="block">
-
     <div class="text">
       A laboratory dedicated to structural thought<br>
       and ocean energy concepts by DUNGZAK CESTLAVIE.
     </div>
 
     <div class="text" style="margin-top:45px;">
-      DUNGZAK LAB — Concept · Structure · Research
+      DUNGZAK CESTLAVIE LAB — Concept · Structure · Research
     </div>
 
     <div class="text" style="margin-top:12px;">
       Archive Pro — System · Data · Archive
     </div>
 
-    <div class="text" style="margin-top:45px; opacity:0.7;">
+    <div class="text" style="margin-top:45px; opacity:0.72;">
       Research and structure are currently in progress.
     </div>
 
-    <div class="text" style="margin-top:55px; font-size:14px; opacity:0.6;">
+    <div class="text" style="margin-top:55px; font-size:14px; opacity:0.62;">
       In 2016, at a court in Warsaw, Poland,<br>
       based on twelve years of activity between Europe and Korea<br>
       and supporting testimony from European partners,<br>
@@ -150,13 +352,143 @@ body {
       “Ocean Energy Businessman.”
     </div>
 
-    <!-- 🔥 진입 -->
     <a href="/ocean.html" class="link">
       View Proposal →
     </a>
-
   </div>
 
 </div>
+
+<!-- ABOUT -->
+<div class="view" id="about">
+
+  <div class="lang-switch">
+    <button class="lang-btn active" data-lang="ko" type="button">KOREAN</button>
+    <button class="lang-btn" data-lang="en" type="button">ENGLISH</button>
+  </div>
+
+  <!-- ABOUT KR -->
+  <div class="lang-panel active" data-panel="ko">
+    <div class="text">
+      등작 燈酌 DUNGZAK CESTLAVIE는<br>
+      빛, 기억, 존재를 회화와 구조 사유를 통해 탐구하는 동시대 예술가이다.
+    </div>
+
+    <div class="text" style="margin-top:40px;">
+      그의 작업은 이미지를 만드는 데 머물지 않고,<br>
+      사유가 공간과 표면, 그리고 삶의 구조 안에서 어떻게 작동하는지를 묻는다.
+    </div>
+
+    <div class="text" style="margin-top:40px;">
+      회화, 아카이브, 전시, 음악, 미학 보고서는<br>
+      서로 분리된 매체가 아니라<br>
+      하나의 세계가 서로 다른 층위로 나타나는 방식이다.
+    </div>
+
+    <div class="text" style="margin-top:40px;">
+      최근 그의 연구는<br>
+      해양 에너지 구조와 아카이브 시스템으로 확장되고 있으며,<br>
+      에너지를 공간과 경험, 그리고 인간 인식의 구조로 다루기 시작했다.
+    </div>
+
+    <div class="text" style="margin-top:40px;">
+      DUNGZAK CESTLAVIE LAB는<br>
+      이 두 축 — 해양 에너지와 아카이브 — 을 중심으로<br>
+      구조를 연구하고 실험하며 확장하기 위한 입구이다.
+    </div>
+  </div>
+
+  <!-- ABOUT EN -->
+  <div class="lang-panel" data-panel="en">
+    <div class="text">
+      DUNGZAK CESTLAVIE is a contemporary artist<br>
+      who explores light, memory, and being through painting and structural thought.
+    </div>
+
+    <div class="text" style="margin-top:40px;">
+      His work does not remain at the level of image-making,<br>
+      but asks how thought operates within space, surface, and the structure of life.
+    </div>
+
+    <div class="text" style="margin-top:40px;">
+      Painting, archive, exhibition, music, and aesthetic reports<br>
+      are not separate media,<br>
+      but different layers through which one world appears.
+    </div>
+
+    <div class="text" style="margin-top:40px;">
+      His recent work expands into<br>
+      ocean energy structures and archive systems,<br>
+      approaching energy as a structure of space, experience, and human perception.
+    </div>
+
+    <div class="text" style="margin-top:40px;">
+      DUNGZAK CESTLAVIE LAB<br>
+      is an entrance for researching, testing, and expanding<br>
+      these two axes — ocean energy and archive.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const menu = document.getElementById('menu');
+const menuOverlay = document.getElementById('menuOverlay');
+const entry = document.getElementById('entry');
+const main = document.getElementById('main');
+const about = document.getElementById('about');
+
+function toggleMenu(){
+  menu.classList.toggle('open');
+  menuOverlay.classList.toggle('show');
+}
+
+function closeMenu(){
+  menu.classList.remove('open');
+  menuOverlay.classList.remove('show');
+}
+
+function enterSite(){
+  entry.classList.add('hidden');
+  main.classList.add('active');
+  about.classList.remove('active');
+  closeMenu();
+}
+
+function goEntry(){
+  entry.classList.remove('hidden');
+  main.classList.remove('active');
+  about.classList.remove('active');
+  closeMenu();
+}
+
+function openAbout(){
+  entry.classList.add('hidden');
+  main.classList.remove('active');
+  about.classList.add('active');
+  closeMenu();
+}
+
+function openArchive(){
+  entry.classList.add('hidden');
+  main.classList.add('active');
+  about.classList.remove('active');
+  closeMenu();
+}
+
+const buttons = document.querySelectorAll('.lang-btn');
+const panels = document.querySelectorAll('.lang-panel');
+
+buttons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const lang = btn.dataset.lang;
+    buttons.forEach(b => b.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelector(`[data-panel="${lang}"]`).classList.add('active');
+  });
+});
+</script>
+
 </body>
 </html>

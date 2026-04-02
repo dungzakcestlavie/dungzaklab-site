@@ -312,6 +312,8 @@ body.menu-open{
 
 .top-fixed-block a{
   display:block;
+  width:100%;
+  text-align:center;
   color:var(--gold-strong);
   text-decoration:none;
   margin-bottom:10px;
@@ -327,6 +329,7 @@ body.menu-open{
   margin-top:18px;
   line-height:1.9;
   color:var(--white);
+  text-align:center;
 }
 
 .top-fixed-block .author.en{
@@ -343,6 +346,7 @@ body.menu-open{
   text-decoration:none;
   letter-spacing:0.6px;
   box-shadow:var(--shadow);
+  cursor:pointer;
 }
 
 .proposal-link:hover{
@@ -595,7 +599,7 @@ body.menu-open{
         연구와 설계는 현재 진행 중이다.
       </div>
 
-      <a href="#" class="link" onclick="openOcean(); return false;">
+      <a href="#" class="link" onclick="goProposal(); return false;">
         Ocean Energy Structure Proposal →
       </a>
     </div>
@@ -660,7 +664,7 @@ body.menu-open{
         Research and structure are in progress.
       </div>
 
-      <a href="#" class="link" onclick="openOcean(); return false;">
+      <a href="#" class="link" onclick="goProposal(); return false;">
         Ocean Energy Structure Proposal →
       </a>
     </div>
@@ -707,8 +711,9 @@ body.menu-open{
 
 <div class="view" id="ocean">
   <div class="structure-wrap">
-    <a id="proposalLink" class="proposal-link" href="ocean.html">
-      Ocean Energy Structure Proposal →
+    <a id="proposalLink" class="proposal-link" href="#" onclick="goProposal(); return false;">
+      <span class="lang-proposal lang-proposal-ko">해양 에너지 구조 제안서 →</span>
+      <span class="lang-proposal lang-proposal-en" style="display:none;">Ocean Energy Structure Proposal →</span>
     </a>
 
     <div class="section-label" id="dcaoLabel">DCAO</div>
@@ -724,7 +729,7 @@ body.menu-open{
       <a href="https://jsgallery.art" target="_blank" rel="noopener">jsgallery.art</a>
       <a href="http://www.iiaa.or.kr" target="_blank" rel="noopener">iiaa.or.kr</a>
 
-      <div class="author lang-panel" data-panel="ko" style="display:block;">
+      <div class="author lang-panel" data-panel="ko">
         등작 燈酌 DUNGZAK CESTLAVIE<br>
         설계 · 구조 · 디자인 구축
       </div>
@@ -817,6 +822,8 @@ const globalLangBtns = document.querySelectorAll('.lang-global button');
 const mainLangContents = document.querySelectorAll('.lang-content');
 const panels = document.querySelectorAll('.lang-panel');
 const proposalLink = document.getElementById('proposalLink');
+const proposalKo = document.querySelector('.lang-proposal-ko');
+const proposalEn = document.querySelector('.lang-proposal-en');
 const dcaoList = document.getElementById('dcaoList');
 const dcapList = document.getElementById('dcapList');
 const dcaoEmpty = document.getElementById('dcaoEmpty');
@@ -851,8 +858,8 @@ const fallbackDCAP = {
       category: "Platform",
       title_kr: "아카이브 구조 플랫폼",
       title_en: "Archive Structural Platform",
-      summary_kr: "데이터를 구조로 연결하고 흐름으로 작동시키며 시간을 축적하는 시스템이다.",
-      summary_en: "A system that connects data as structure, operates it as flow, and accumulates time.",
+      summary_kr: "데이터는 구조로 연결되고 흐름으로 작동하며 시간을 축적한다.",
+      summary_en: "Data connects as structure, operates as flow, and accumulates time.",
       md_path: "archive/DCAP-01.md"
     }
   ]
@@ -918,6 +925,10 @@ function openAbout(){
   closeMenu();
 }
 
+function goProposal(){
+  window.location.href = `ocean.html?lang=${currentLang}`;
+}
+
 function setLanguage(lang){
   currentLang = lang;
 
@@ -933,12 +944,13 @@ function setLanguage(lang){
     panel.classList.toggle('active', panel.dataset.panel === lang);
   });
 
+  if (proposalKo && proposalEn) {
+    proposalKo.style.display = lang === 'ko' ? 'inline' : 'none';
+    proposalEn.style.display = lang === 'en' ? 'inline' : 'none';
+  }
+
   document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
   localStorage.setItem('dzlab_lang', lang);
-
-  if (proposalLink) {
-    proposalLink.href = `ocean.html?lang=${lang}`;
-  }
 
   dcaoLabel.textContent = 'DCAO';
   dcapLabel.textContent = 'DCAP';

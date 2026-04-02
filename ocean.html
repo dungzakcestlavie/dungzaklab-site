@@ -183,15 +183,16 @@ body{
 
 /* CONTENT */
 .container{
-  width:min(100%, 860px);
+  width:100%;
+  max-width:980px;
   margin:0 auto;
-  padding:calc(var(--header-height) + 44px) 28px calc(80px + var(--safe-bottom));
+  padding:calc(var(--header-height) + 52px) 32px calc(88px + var(--safe-bottom));
 }
 
 .lang-panel{
   display:none;
   width:100%;
-  max-width:760px;
+  max-width:680px;
   margin:0 auto;
 }
 
@@ -201,8 +202,8 @@ body{
 
 h1{
   font-size:28px;
-  letter-spacing:2px;
-  margin:0 0 60px 0;
+  letter-spacing:1.6px;
+  margin:0 0 64px 0;
   font-weight:400;
   color:#8fc4ff;
   text-align:left;
@@ -210,7 +211,7 @@ h1{
 
 h2{
   font-size:18px;
-  margin:60px 0 20px;
+  margin:64px 0 20px 0;
   font-weight:400;
   color:#9ecbff;
   letter-spacing:0.2px;
@@ -219,18 +220,22 @@ h2{
 
 .text{
   font-size:16px;
-  line-height:2.2;
-  letter-spacing:0.2px;
+  line-height:2.18;
+  letter-spacing:0.1px;
   text-align:left;
 }
 
 .list{
   margin-top:20px;
-  line-height:2.1;
-  opacity:0.85;
-  letter-spacing:0.2px;
   font-size:16px;
+  line-height:2.08;
+  opacity:0.88;
+  letter-spacing:0.1px;
   text-align:left;
+}
+
+.signature{
+  margin-top:10px;
 }
 
 @media (max-width:640px){
@@ -266,14 +271,18 @@ h2{
   }
 
   .container{
-    width:min(100%, 860px);
-    margin:0 auto;
+    max-width:100%;
     padding:calc(var(--header-height) + 30px) 18px calc(64px + var(--safe-bottom));
+  }
+
+  .lang-panel{
+    max-width:100%;
   }
 
   h1{
     font-size:24px;
     margin-bottom:50px;
+    letter-spacing:1px;
   }
 
   h2{
@@ -352,7 +361,8 @@ h2{
 
     <h2>1. 소개</h2>
     <div class="text">
-      나는 서울을 기반으로 작업하는 동시대 예술가이자 구조 사유가 등작 燈酌 DUNGZAK CESTLAVIE이다.<br><br>
+      나는 서울을 기반으로 작업하는 동시대 예술가이자 구조 사유가
+      등작 燈酌 DUNGZAK CESTLAVIE이다.<br><br>
       나는 회화, 아카이브, 전시를 통해
       사유, 공간, 시스템이 하나의 구조로 작동하는 방식을 연구해왔다.<br><br>
       2016년 폴란드 바르샤바에서
@@ -449,8 +459,10 @@ h2{
       문제는 생산 방식이 아니라
       그것이 어떤 방식으로 존재하는가이다.<br><br>
       이 제안은 그 시작점이다.<br><br>
-      등작 燈酌 DUNGZAK CESTLAVIE<br>
-      동시대 예술가 · 구조 사유가
+      <span class="signature">
+        등작 燈酌 DUNGZAK CESTLAVIE<br>
+        동시대 예술가 · 구조 사유가
+      </span>
     </div>
 
   </div>
@@ -559,9 +571,11 @@ h2{
       The issue is not production,<br>
       but how it exists.<br><br>
       This proposal is a beginning.<br><br>
-      DUNGZAK CESTLAVIE<br>
-      Contemporary Artist · Structural Thinker<br>
-      A practitioner of thought as structure
+      <span class="signature">
+        DUNGZAK CESTLAVIE<br>
+        Contemporary Artist · Structural Thinker<br>
+        A practitioner of thought as structure
+      </span>
     </div>
 
   </div>

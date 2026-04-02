@@ -2,143 +2,337 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Ocean Energy Structure</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
-body {
-  margin: 0;
-  padding: 80px 20px;
+:root{
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --header-bar: 72px;
+  --header-height: calc(var(--header-bar) + var(--safe-top));
+  --gold: #d6b86a;
+  --gold-strong: #f0d79c;
+  --line: rgba(214,184,106,0.20);
+  --line-soft: rgba(214,184,106,0.12);
+  --blue: #8fc4ff;
+  --white: #eaf6ff;
+  --left-zone: 72px;
+  --right-zone: 136px;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html, body{
+  margin:0;
+  min-height:100%;
+}
+
+html{
+  -webkit-text-size-adjust:100%;
+}
+
+body{
+  min-height:100vh;
+  min-height:100svh;
   background: linear-gradient(180deg, #041c2c, #0e5c8a);
-  color: #b7d7ff;
-  font-family: "Noto Serif KR", serif;
+  color:#b7d7ff;
+  font-family:"Noto Serif KR", serif;
+  overflow-x:hidden;
 }
 
-.container {
-  max-width: 920px;
-  margin: 0 auto;
+/* HEADER */
+.header{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:var(--header-height);
+  padding-top:var(--safe-top);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+  background:rgba(4,28,44,0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom:1px solid var(--line-soft);
 }
 
-.lang-switch {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 60px;
+.menu-btn{
+  position:absolute;
+  left:16px;
+  top:calc(var(--safe-top) + 50%);
+  transform:translateY(-50%);
+  width:44px;
+  height:44px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,0.03);
+  border-radius:14px;
+  -webkit-tap-highlight-color:transparent;
 }
 
-.lang-btn {
-  min-width: 120px;
-  padding: 12px 20px;
-  border: 1px solid rgba(183, 215, 255, 0.35);
-  background: rgba(255,255,255,0.04);
-  color: #8fc4ff;
-  font-size: 14px;
-  letter-spacing: 1.5px;
-  text-decoration: none;
-  text-align: center;
-  box-sizing: border-box;
-  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+.menu-btn span{
+  display:block;
+  width:22px;
+  height:2px;
+  background:var(--gold);
+  margin:3px 0;
 }
 
-.lang-btn.active {
-  background: rgba(183, 215, 255, 0.12);
-  border-color: rgba(183, 215, 255, 0.7);
-  color: #d6e9ff;
+.logo{
+  color:var(--gold);
+  font-size:18px;
+  letter-spacing:2px;
+  text-decoration:none;
+  font-weight:400;
+  text-align:center;
+  line-height:1;
+  white-space:nowrap;
+  max-width:calc(100vw - var(--left-zone) - var(--right-zone));
+  overflow:hidden;
+  text-overflow:ellipsis;
+  padding:0 4px;
 }
 
-.lang-btn:hover {
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(183, 215, 255, 0.55);
+.lang-global{
+  position:absolute;
+  right:16px;
+  top:calc(var(--safe-top) + 50%);
+  transform:translateY(-50%);
+  display:flex;
+  gap:8px;
 }
 
-h1 {
-  font-size: 28px;
-  letter-spacing: 2px;
-  margin-bottom: 60px;
-  font-weight: 400;
-  color: #8fc4ff;
+.lang-global button{
+  min-width:52px;
+  height:36px;
+  border:1px solid rgba(214,184,106,0.35);
+  background:rgba(255,255,255,0.04);
+  color:var(--gold);
+  padding:0 12px;
+  font-size:12px;
+  letter-spacing:1px;
+  cursor:pointer;
+  border-radius:999px;
+  font-family:"Noto Serif KR", serif;
+  -webkit-tap-highlight-color:transparent;
 }
 
-h2 {
-  font-size: 18px;
-  margin-top: 60px;
-  margin-bottom: 20px;
-  font-weight: 400;
-  color: #9ecbff;
+.lang-global button.active{
+  background:rgba(214,184,106,0.14);
+  border-color:rgba(214,184,106,0.72);
+  color:var(--gold-strong);
 }
 
-.text {
-  font-size: 16px;
-  line-height: 2.2;
+/* SIDE MENU */
+.menu{
+  position:fixed;
+  top:0;
+  left:-280px;
+  width:260px;
+  height:100%;
+  height:100dvh;
+  background:#041c2c;
+  padding:calc(var(--safe-top) + 92px) 30px calc(40px + var(--safe-bottom));
+  transition:left 0.35s ease;
+  z-index:60;
+  border-right:1px solid var(--line);
 }
 
-.list {
-  margin-top: 20px;
-  line-height: 2.1;
-  opacity: 0.85;
+.menu.open{
+  left:0;
 }
 
-.divider {
-  margin: 120px 0;
-  height: 1px;
-  background: rgba(255,255,255,0.2);
+.menu a{
+  display:block;
+  margin-bottom:24px;
+  color:var(--blue);
+  text-decoration:none;
+  font-size:15px;
+  letter-spacing:1px;
 }
 
-.lang-panel {
-  display: none;
+.menu a:hover{
+  color:var(--gold);
 }
 
-.lang-panel.active {
-  display: block;
+.menu-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.28);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.3s ease;
+  z-index:55;
 }
 
-@media (max-width: 640px) {
-  body {
-    padding: 60px 16px;
+.menu-overlay.show{
+  opacity:1;
+  pointer-events:auto;
+}
+
+/* CONTENT */
+.container{
+  max-width:920px;
+  margin:0 auto;
+  padding:calc(var(--header-height) + 44px) 20px calc(80px + var(--safe-bottom));
+}
+
+h1{
+  font-size:28px;
+  letter-spacing:2px;
+  margin:0 0 60px 0;
+  font-weight:400;
+  color:#8fc4ff;
+}
+
+h2{
+  font-size:18px;
+  margin:60px 0 20px;
+  font-weight:400;
+  color:#9ecbff;
+}
+
+.text{
+  font-size:16px;
+  line-height:2.2;
+}
+
+.list{
+  margin-top:20px;
+  line-height:2.1;
+  opacity:0.85;
+}
+
+.lang-panel{
+  display:none;
+}
+
+.lang-panel.active{
+  display:block;
+}
+
+@media (max-width:640px){
+  :root{
+    --header-bar: 68px;
+    --left-zone: 68px;
+    --right-zone: 118px;
   }
 
-  .lang-switch {
-    gap: 10px;
-    margin-bottom: 50px;
+  .logo{
+    font-size:13px;
+    letter-spacing:0.5px;
   }
 
-  .lang-btn {
-    min-width: 108px;
-    padding: 11px 16px;
-    font-size: 13px;
+  .menu-btn{
+    left:14px;
+    width:42px;
+    height:42px;
+    border-radius:13px;
   }
 
-  h1 {
-    font-size: 24px;
-    margin-bottom: 50px;
+  .lang-global{
+    right:14px;
+    gap:5px;
   }
 
-  h2 {
-    font-size: 17px;
-    margin-top: 50px;
+  .lang-global button{
+    min-width:40px;
+    height:32px;
+    padding:0 8px;
+    font-size:10px;
+    letter-spacing:0.5px;
+  }
+
+  .container{
+    padding:calc(var(--header-height) + 30px) 16px calc(64px + var(--safe-bottom));
+  }
+
+  h1{
+    font-size:24px;
+    margin-bottom:50px;
+  }
+
+  h2{
+    font-size:17px;
+    margin-top:50px;
   }
 
   .text,
-  .list {
-    font-size: 15px;
-    line-height: 2.0;
+  .list{
+    font-size:15px;
+    line-height:2.0;
+  }
+}
+
+@media (max-width:390px){
+  :root{
+    --left-zone: 64px;
+    --right-zone: 108px;
+  }
+
+  .logo{
+    font-size:12px;
+    letter-spacing:0.3px;
+  }
+
+  .lang-global button{
+    min-width:36px;
+    height:30px;
+    padding:0 7px;
+    font-size:9px;
+    letter-spacing:0.3px;
+  }
+
+  h1{
+    font-size:22px;
   }
 }
 </style>
 </head>
 
 <body>
-<div class="container">
 
-  <div class="lang-switch">
-    <a href="#" class="lang-btn active" data-lang="ko">KOREAN</a>
-    <a href="#" class="lang-btn" data-lang="en">ENGLISH</a>
+<div class="header">
+  <div class="menu-btn" onclick="toggleMenu()" aria-label="menu" role="button" tabindex="0">
+    <span></span>
+    <span></span>
+    <span></span>
   </div>
 
-  <!-- KR -->
-  <div class="lang-panel active" data-panel="ko">
+  <a href="index.html" class="logo">
+    DUNGZAK CESTLAVIE LAB
+  </a>
+
+  <div class="lang-global">
+    <button type="button" data-lang="ko">KR</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</div>
+
+<div class="menu" id="menu">
+  <a href="index.html">ENTRY</a>
+  <a href="ocean.html" id="oceanLink" onclick="closeMenu()">OCEAN ENERGY</a>
+  <a href="index.html#archive" onclick="closeMenu()">ARCHIVE</a>
+  <a href="index.html#about" onclick="closeMenu()">ABOUT</a>
+  <a href="https://dungzak.art" target="_blank" rel="noopener" onclick="closeMenu()">DUNGZAK.ART</a>
+</div>
+
+<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+
+<div class="container">
+
+  <div class="lang-panel" data-panel="ko">
     <h1>해양 에너지 구조 제안서<br>DUNGZAK CESTLAVIE — Concept Proposal</h1>
 
     <h2>1. 소개</h2>
@@ -246,7 +440,6 @@ h2 {
     </div>
   </div>
 
-  <!-- EN -->
   <div class="lang-panel" data-panel="en">
     <h1>OCEAN ENERGY STRUCTURE<br>DUNGZAK CESTLAVIE — Concept Proposal</h1>
 
@@ -359,21 +552,57 @@ h2 {
 </div>
 
 <script>
-const buttons = document.querySelectorAll('.lang-btn');
+const menu = document.getElementById('menu');
+const menuOverlay = document.getElementById('menuOverlay');
+const globalLangBtns = document.querySelectorAll('.lang-global button');
 const panels = document.querySelectorAll('.lang-panel');
+const oceanLink = document.getElementById('oceanLink');
 
-buttons.forEach(btn => {
-  btn.addEventListener('click', e => {
-    e.preventDefault();
-    const lang = btn.dataset.lang;
+function toggleMenu(){
+  menu.classList.toggle('open');
+  menuOverlay.classList.toggle('show');
+}
 
-    buttons.forEach(b => b.classList.remove('active'));
-    panels.forEach(p => p.classList.remove('active'));
+function closeMenu(){
+  menu.classList.remove('open');
+  menuOverlay.classList.remove('show');
+}
 
-    btn.classList.add('active');
-    document.querySelector(`[data-panel="${lang}"]`).classList.add('active');
+function setLanguage(lang){
+  globalLangBtns.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+
+  panels.forEach(panel => {
+    panel.classList.toggle('active', panel.dataset.panel === lang);
+  });
+
+  document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
+  localStorage.setItem('dzlab_lang', lang);
+  if (oceanLink) oceanLink.href = `ocean.html?lang=${lang}`;
+}
+
+globalLangBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    setLanguage(btn.dataset.lang);
   });
 });
+
+document.querySelector('.menu-btn').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    toggleMenu();
+  }
+});
+
+const urlLang = new URLSearchParams(window.location.search).get('lang');
+const savedLang = localStorage.getItem('dzlab_lang');
+const initialLang = urlLang === 'en' || urlLang === 'ko'
+  ? urlLang
+  : (savedLang === 'en' ? 'en' : 'ko');
+
+setLanguage(initialLang);
 </script>
+
 </body>
 </html>

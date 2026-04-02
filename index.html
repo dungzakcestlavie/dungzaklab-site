@@ -12,11 +12,10 @@ body {
   margin: 0;
   height: 100vh;
   display: flex;
-  align-items: flex-start; /* 중앙 → 위로 */
+  align-items: flex-start;
   justify-content: center;
   text-align: center;
 
-  /* 심해 + 중심 광원 */
   background:
     radial-gradient(circle at 50% 40%, rgba(0,200,255,0.25), transparent 55%),
     radial-gradient(circle at 30% 30%, rgba(0,180,255,0.18), transparent 60%),
@@ -29,7 +28,7 @@ body {
 
 .container {
   max-width: 760px;
-  padding: 80px 20px 40px; /* 위 여백 추가 */
+  padding: 80px 20px 40px;
 }
 
 .title {
@@ -52,7 +51,20 @@ body {
 
 .text {
   font-size: 16px;
-  line-height: 2.0; /* 숨 확보 */
+  line-height: 2.0;
+}
+
+.link {
+  margin-top: 60px;
+  font-size: 15px;
+  opacity: 0.6;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.link:hover {
+  opacity: 1;
 }
 
 .divider {
@@ -67,14 +79,13 @@ body {
 <body>
 <div class="container">
 
-  <!-- TITLE -->
   <div class="title">DUNGZAK LAB</div>
 
   <div class="subtitle">
     등작 燈酌 DUNGZAK CESTLAVIE
   </div>
 
-  <!-- KR BLOCK -->
+  <!-- KR -->
   <div class="block">
 
     <div class="text">
@@ -102,11 +113,16 @@ body {
       공식 인정받았다.
     </div>
 
+    <!-- 🔥 진입 -->
+    <a href="/ocean.html" class="link">
+      Ocean Energy Structure Proposal →
+    </a>
+
   </div>
 
   <div class="divider"></div>
 
-  <!-- EN BLOCK -->
+  <!-- EN -->
   <div class="block">
 
     <div class="text">
@@ -133,6 +149,11 @@ body {
       he was officially recognized as an<br>
       “Ocean Energy Businessman.”
     </div>
+
+    <!-- 🔥 진입 -->
+    <a href="/ocean.html" class="link">
+      View Proposal →
+    </a>
 
   </div>
 

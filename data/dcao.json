@@ -1,0 +1,15 @@
+{
+  "dcao": [
+    {
+      "id": "DCAO-01",
+      "slug": "DCAO-01",
+      "year": "2026",
+      "category": "Ocean",
+      "title_kr": "해양 에너지 구조의 시작",
+      "title_en": "Initiation of Ocean Energy Structure",
+      "summary_kr": "에너지를 비연속 전이 구조로 정의하는 시스템이다.",
+      "summary_en": "A system defining energy as a discontinuous transition structure.",
+      "md_path": "ocean/DCAO-01.md"
+    }
+  ]
+}

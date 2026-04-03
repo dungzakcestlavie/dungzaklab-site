@@ -15,13 +15,11 @@
   --header-height: calc(var(--header-bar) + var(--safe-top));
   --gold: #d6b86a;
   --gold-strong: #f0d79c;
-  --line: rgba(214,184,106,0.20);
-  --line-soft: rgba(214,184,106,0.12);
   --blue: #8fc4ff;
+  --blue-soft: rgba(143,196,255,0.88);
   --white: #eaf6ff;
-  --card: rgba(255,255,255,0.04);
-  --card-strong: rgba(255,255,255,0.06);
-  --shadow: 0 18px 48px rgba(0,0,0,0.18);
+  --line: rgba(214,184,106,0.18);
+  --line-soft: rgba(214,184,106,0.10);
 }
 
 *{
@@ -43,9 +41,9 @@ body{
   min-height:100svh;
   font-family:"Noto Serif KR", serif;
   background:
-    radial-gradient(circle at 50% 45%, rgba(0,210,255,0.22), transparent 55%),
-    radial-gradient(circle at 30% 30%, rgba(0,160,255,0.12), transparent 60%),
-    radial-gradient(circle at 70% 70%, rgba(0,80,160,0.20), transparent 60%),
+    radial-gradient(circle at 50% 45%, rgba(0,210,255,0.18), transparent 55%),
+    radial-gradient(circle at 28% 28%, rgba(0,160,255,0.10), transparent 60%),
+    radial-gradient(circle at 72% 70%, rgba(0,80,160,0.16), transparent 60%),
     linear-gradient(135deg,#031421,#062c44,#0a4f73);
   color:var(--white);
   overflow-x:hidden;
@@ -62,7 +60,7 @@ body{
   align-items:center;
   justify-content:center;
   z-index:50;
-  background:rgba(3,20,33,0.28);
+  background:rgba(3,20,33,0.26);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom:1px solid var(--line-soft);
@@ -80,7 +78,7 @@ body{
   justify-content:center;
   padding:0 14px;
   border:1px solid var(--line);
-  background:rgba(255,255,255,0.03);
+  background:rgba(255,255,255,0.02);
   border-radius:14px;
   color:var(--gold);
   text-decoration:none;
@@ -117,7 +115,7 @@ body{
   min-width:52px;
   height:36px;
   border:1px solid rgba(214,184,106,0.35);
-  background:rgba(255,255,255,0.04);
+  background:rgba(255,255,255,0.03);
   color:var(--gold);
   padding:0 12px;
   font-size:12px;
@@ -129,8 +127,8 @@ body{
 }
 
 .lang-global button.active{
-  background:rgba(214,184,106,0.14);
-  border-color:rgba(214,184,106,0.72);
+  background:rgba(214,184,106,0.13);
+  border-color:rgba(214,184,106,0.70);
   color:var(--gold-strong);
 }
 
@@ -138,18 +136,18 @@ body{
   max-width:920px;
   margin:0 auto;
   padding:
-    calc(var(--header-height) + 42px)
-    20px
+    calc(var(--header-height) + 44px)
+    22px
     calc(90px + var(--safe-bottom));
 }
 
 .hero{
   text-align:center;
-  padding:26px 0 18px;
+  padding:18px 0 8px;
 }
 
 .hero-kicker{
-  color:rgba(234,246,255,0.75);
+  color:rgba(234,246,255,0.72);
   font-size:13px;
   letter-spacing:2.4px;
   text-transform:uppercase;
@@ -165,13 +163,13 @@ body{
 
 .hero-sub{
   margin-top:18px;
-  font-size:15px;
+  font-size:16px;
   line-height:2;
-  color:rgba(234,246,255,0.9);
+  color:var(--blue-soft);
 }
 
 .meta-row{
-  margin-top:30px;
+  margin-top:28px;
   display:flex;
   flex-wrap:wrap;
   gap:10px;
@@ -179,29 +177,23 @@ body{
 }
 
 .meta-pill{
-  padding:9px 14px;
+  padding:8px 14px;
   border:1px solid var(--line);
-  background:rgba(255,255,255,0.035);
   border-radius:999px;
   color:var(--gold);
+  background:transparent;
   font-size:12px;
   letter-spacing:1px;
 }
 
-.card{
-  margin-top:26px;
-  padding:28px 24px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,0.035);
-  box-shadow:var(--shadow);
+.block{
+  margin-top:34px;
+  padding-top:24px;
+  border-top:1px solid var(--line-soft);
 }
 
 .section{
-  margin-top:56px;
-}
-
-.section:first-of-type{
-  margin-top:42px;
+  margin-top:54px;
 }
 
 .section-label{
@@ -212,46 +204,50 @@ body{
   text-transform:uppercase;
 }
 
-.text{
-  font-size:16px;
-  line-height:2;
-  word-break:keep-all;
-  color:var(--white);
+.text-group{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
 }
 
-.text + .text{
-  margin-top:22px;
+.text{
+  font-size:18px;
+  line-height:1.95;
+  word-break:keep-all;
+  color:var(--blue-soft);
+}
+
+.text.strong{
+  color:var(--gold-strong);
 }
 
 .grid{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:16px;
-  margin-top:20px;
+  gap:20px 24px;
+  margin-top:4px;
 }
 
-.mini-card{
-  padding:20px 18px;
-  border:1px solid var(--line);
-  background:var(--card);
+.mini-block{
+  padding-top:4px;
 }
 
 .mini-title{
   color:var(--gold-strong);
-  font-size:16px;
-  line-height:1.7;
-  margin-bottom:10px;
+  font-size:17px;
+  line-height:1.75;
+  margin-bottom:8px;
 }
 
 .mini-text{
-  color:rgba(234,246,255,0.88);
-  font-size:14px;
-  line-height:1.9;
+  color:var(--blue-soft);
+  font-size:15px;
+  line-height:1.95;
 }
 
 .signature{
-  margin-top:66px;
-  padding-top:26px;
+  margin-top:72px;
+  padding-top:28px;
   border-top:1px solid var(--line-soft);
   text-align:center;
 }
@@ -264,7 +260,7 @@ body{
 
 .signature .role{
   margin-top:8px;
-  color:rgba(234,246,255,0.82);
+  color:rgba(143,196,255,0.9);
   font-size:14px;
   line-height:1.9;
 }
@@ -284,7 +280,7 @@ body{
   min-height:42px;
   padding:0 16px;
   border:1px solid var(--line);
-  background:rgba(255,255,255,0.03);
+  background:rgba(255,255,255,0.02);
   color:var(--gold);
   text-decoration:none;
   border-radius:999px;
@@ -303,6 +299,7 @@ body{
 @media (max-width:760px){
   .grid{
     grid-template-columns:1fr;
+    gap:18px;
   }
 }
 
@@ -356,14 +353,17 @@ body{
   }
 
   .text{
-    font-size:15px;
-    line-height:1.95;
+    font-size:16px;
+    line-height:1.9;
   }
 
-  .card,
-  .mini-card{
-    padding-left:16px;
-    padding-right:16px;
+  .mini-title{
+    font-size:16px;
+  }
+
+  .mini-text{
+    font-size:14px;
+    line-height:1.9;
   }
 }
 </style>
@@ -391,8 +391,7 @@ body{
       <div class="hero-kicker">Ocean Energy Proposal</div>
       <h1 class="hero-title">해양 에너지 구조 제안서</h1>
       <div class="hero-sub">
-        기술의 설명이 아니라<br>
-        에너지, 공간, 경험, 인간 인식을 하나의 구조로 읽기 위한 제안서
+        에너지를 구조로 읽기 위한 제안서
       </div>
 
       <div class="meta-row">
@@ -402,90 +401,60 @@ body{
       </div>
     </section>
 
-    <div class="card">
-      <div class="text">
-        이 제안서는 해양 에너지를 단순한 산업 기술이나 자원 활용의 범주로 다루지 않는다.
-      </div>
-      <div class="text">
-        오히려 그것을 공간, 감각, 이동, 기억, 그리고 인간 인식의 구조와 연결된 하나의 총체적 체계로 바라본다.
-      </div>
-      <div class="text">
-        바다는 물리적 자원의 장소이면서 동시에 경험이 형성되는 장이며, 에너지는 생산 이전에 먼저 구조로 읽혀야 한다.
+    <div class="block">
+      <div class="text-group">
+        <div class="text strong">해양 에너지는 구조로 정의된다.</div>
+        <div class="text">바다는 구조가 작동하는 장이다.</div>
+        <div class="text">에너지는 생산 이전에 구조로 읽힌다.</div>
       </div>
     </div>
 
     <section class="section">
       <div class="section-label">01. 제안의 방향</div>
-      <div class="card">
-        <div class="text">
-          해양 에너지 구조는 발전 설비만의 문제가 아니다.
-        </div>
-        <div class="text">
-          그것은 해안, 도시, 이동 경로, 환경 인식, 그리고 인간의 장기적 삶의 방식까지 함께 설계하는 문제이다.
-        </div>
-        <div class="text">
-          따라서 본 제안은 기술 도입 이전에 구조적 사고가 선행되어야 한다는 전제를 갖는다.
-        </div>
+      <div class="text-group">
+        <div class="text strong">해양 에너지는 설비 문제가 아니다.</div>
+        <div class="text">해안, 도시, 이동, 인식, 삶이 동시에 설계된다.</div>
+        <div class="text">구조가 먼저, 기술은 이후에 따른다.</div>
       </div>
     </section>
 
     <section class="section">
       <div class="section-label">02. 핵심 구조</div>
       <div class="grid">
-        <div class="mini-card">
+        <div class="mini-block">
           <div class="mini-title">에너지는 구조이다</div>
-          <div class="mini-text">
-            에너지는 생산량의 수치만이 아니라, 공간 배치와 경험의 리듬, 인간의 인식 방식까지 포함하는 구조로 이해되어야 한다.
-          </div>
+          <div class="mini-text">에너지는 공간과 인식이 결합된 구조이다.</div>
         </div>
 
-        <div class="mini-card">
-          <div class="mini-title">바다는 장소이자 장치이다</div>
-          <div class="mini-text">
-            바다는 자원의 원천인 동시에, 도시와 환경 감각을 다시 조직하는 구조적 장치로 작동할 수 있다.
-          </div>
+        <div class="mini-block">
+          <div class="mini-title">바다는 장이다</div>
+          <div class="mini-text">바다는 구조가 작동하는 장소이다.</div>
         </div>
 
-        <div class="mini-card">
+        <div class="mini-block">
           <div class="mini-title">기술은 후반부이다</div>
-          <div class="mini-text">
-            기술은 구조와 방향이 정해진 뒤에 따라오는 구현 단계이며, 최초의 질문은 언제나 어떤 삶을 형성할 것인가에 있어야 한다.
-          </div>
+          <div class="mini-text">구조 이후 기술이 적용된다.</div>
         </div>
 
-        <div class="mini-card">
-          <div class="mini-title">경험이 곧 설계이다</div>
-          <div class="mini-text">
-            해양 에너지는 발전만이 아니라, 그 주변을 걷고 보고 느끼는 인간 경험의 층위까지 함께 설계되어야 한다.
-          </div>
+        <div class="mini-block">
+          <div class="mini-title">경험은 설계이다</div>
+          <div class="mini-text">인간 경험이 구조를 완성한다.</div>
         </div>
       </div>
     </section>
 
     <section class="section">
-      <div class="section-label">03. 적용 가능한 연결 축</div>
-      <div class="card">
-        <div class="text">
-          이 구조는 다음과 같은 영역과 연결될 수 있다.
-        </div>
-        <div class="text">
-          해양 에너지 기업 / 연구 기관 / 도시·환경 설계가 / 공공 전시 및 교육 플랫폼 / 해안 도시 재구성 프로젝트
-        </div>
-        <div class="text">
-          즉 본 제안은 특정 기술의 홍보 문서가 아니라, 다양한 분야가 공동으로 접속할 수 있는 구조 제안서이다.
-        </div>
+      <div class="section-label">03. 연결 축</div>
+      <div class="text-group">
+        <div class="text">해양 에너지 기업 / 연구 기관 / 도시·환경 설계자 / 공공 플랫폼</div>
       </div>
     </section>
 
     <section class="section">
-      <div class="section-label">04. 현재 상태</div>
-      <div class="card">
-        <div class="text">
-          본 문서는 완결된 사업계획서가 아니라, 앞으로 DCAO 형식으로 확장될 구조의 시작점이다.
-        </div>
-        <div class="text">
-          이후 DCAO-01, DCAO-02, DCAO-03 ... 의 형식으로 개념, 데이터, 구조 문장이 계속 축적될 수 있다.
-        </div>
+      <div class="section-label">04. 상태</div>
+      <div class="text-group">
+        <div class="text strong">구조는 DCAO로 확장된다.</div>
+        <div class="text">DCAO-01, DCAO-02, DCAO-03 …</div>
       </div>
     </section>
 
@@ -508,10 +477,9 @@ body{
   <div class="lang-panel" data-panel="en">
     <section class="hero">
       <div class="hero-kicker">Ocean Energy Proposal</div>
-      <h1 class="hero-title">Ocean Energy Structure Proposal</h1>
+      <h1 class="hero-title">Ocean Energy Structural Proposal</h1>
       <div class="hero-sub">
-        Not a description of technology,<br>
-        but a proposal for reading energy, space, experience, and human perception as one structure
+        A proposal to read energy as structure
       </div>
 
       <div class="meta-row">
@@ -521,90 +489,60 @@ body{
       </div>
     </section>
 
-    <div class="card">
-      <div class="text">
-        This proposal does not treat ocean energy merely as industrial technology or a category of resource extraction.
-      </div>
-      <div class="text">
-        Rather, it approaches it as an integrated structure connected to space, sensation, movement, memory, and human perception.
-      </div>
-      <div class="text">
-        The sea is a site of physical resources, but also a field where experience is formed, and energy must first be read as structure before it is measured as production.
+    <div class="block">
+      <div class="text-group">
+        <div class="text strong">Ocean energy is defined as structure.</div>
+        <div class="text">The ocean is a field of structure.</div>
+        <div class="text">Energy is read as structure before production.</div>
       </div>
     </div>
 
     <section class="section">
-      <div class="section-label">01. Direction of the Proposal</div>
-      <div class="card">
-        <div class="text">
-          Ocean energy structure is not only a matter of generation facilities.
-        </div>
-        <div class="text">
-          It is also a question of designing coasts, cities, movement routes, environmental perception, and long-term human ways of living together.
-        </div>
-        <div class="text">
-          Therefore, this proposal begins with the premise that structural thinking must precede technical implementation.
-        </div>
+      <div class="section-label">01. Direction</div>
+      <div class="text-group">
+        <div class="text strong">Ocean energy is not an infrastructure problem.</div>
+        <div class="text">Coast, city, mobility, perception, and life are designed together.</div>
+        <div class="text">Structure precedes technology.</div>
       </div>
     </section>
 
     <section class="section">
       <div class="section-label">02. Core Structure</div>
       <div class="grid">
-        <div class="mini-card">
+        <div class="mini-block">
           <div class="mini-title">Energy is Structure</div>
-          <div class="mini-text">
-            Energy should be understood not only as output, but as a structure including spatial arrangement, experiential rhythm, and modes of human perception.
-          </div>
+          <div class="mini-text">Energy is a structure of space and perception.</div>
         </div>
 
-        <div class="mini-card">
-          <div class="mini-title">The Sea is Site and Apparatus</div>
-          <div class="mini-text">
-            The sea can function both as a source of resources and as a structural apparatus that reorganizes urban and environmental sensibility.
-          </div>
+        <div class="mini-block">
+          <div class="mini-title">The Ocean is a Field</div>
+          <div class="mini-text">The ocean is a structural field.</div>
         </div>
 
-        <div class="mini-card">
-          <div class="mini-title">Technology Comes Later</div>
-          <div class="mini-text">
-            Technology follows after structure and direction are defined. The first question must always be what kind of life this will shape.
-          </div>
+        <div class="mini-block">
+          <div class="mini-title">Technology is Secondary</div>
+          <div class="mini-text">Technology follows structure.</div>
         </div>
 
-        <div class="mini-card">
+        <div class="mini-block">
           <div class="mini-title">Experience is Design</div>
-          <div class="mini-text">
-            Ocean energy should be designed not only as generation, but also through the layered human experience of walking, seeing, and sensing around it.
-          </div>
+          <div class="mini-text">Human experience completes structure.</div>
         </div>
       </div>
     </section>
 
     <section class="section">
-      <div class="section-label">03. Applicable Axes of Connection</div>
-      <div class="card">
-        <div class="text">
-          This structure can connect with the following fields.
-        </div>
-        <div class="text">
-          Ocean energy companies / research institutions / urban and environmental designers / public exhibition and education platforms / coastal city restructuring projects
-        </div>
-        <div class="text">
-          In this sense, the proposal is not a promotional document for a single technology, but a structural proposal open to multiple fields.
-        </div>
+      <div class="section-label">03. Connection</div>
+      <div class="text-group">
+        <div class="text">Ocean energy / research / urban design / public platform</div>
       </div>
     </section>
 
     <section class="section">
-      <div class="section-label">04. Current State</div>
-      <div class="card">
-        <div class="text">
-          This document is not a finalized business plan, but the starting point of a structure that can continue to expand in the form of DCAO.
-        </div>
-        <div class="text">
-          From here, DCAO-01, DCAO-02, DCAO-03 ... can continue to accumulate as concept notes, data fragments, and structural statements.
-        </div>
+      <div class="section-label">04. State</div>
+      <div class="text-group">
+        <div class="text strong">Structure expands as DCAO.</div>
+        <div class="text">DCAO-01, DCAO-02, DCAO-03 …</div>
       </div>
     </section>
 

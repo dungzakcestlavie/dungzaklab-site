@@ -219,6 +219,33 @@ section,
   opacity:0.85;
 }
 
+/* centered reading column */
+.proposal-inner{
+  width:100%;
+  max-width:760px;
+  margin-left:auto;
+  margin-right:auto;
+  padding-left:32px;
+  padding-right:32px;
+  box-sizing:border-box;
+}
+
+.proposal-inner,
+.proposal-inner *{
+  left:auto;
+  right:auto;
+  transform:none;
+  text-indent:0;
+}
+
+.proposal-inner .block,
+.proposal-inner .section{
+  width:100%;
+  margin-left:0;
+  margin-right:0;
+  box-sizing:border-box;
+}
+
 .block{
   margin-top:34px;
   padding-top:24px;
@@ -241,6 +268,10 @@ section,
   display:flex;
   flex-direction:column;
   gap:18px;
+  width:100%;
+  margin-left:0;
+  margin-right:0;
+  box-sizing:border-box;
 }
 
 .text{
@@ -259,10 +290,18 @@ section,
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:20px 24px;
   margin-top:4px;
+  width:100%;
+  margin-left:0;
+  margin-right:0;
+  box-sizing:border-box;
 }
 
 .mini-block{
   padding-top:4px;
+  width:100%;
+  margin-left:0;
+  margin-right:0;
+  box-sizing:border-box;
 }
 
 .mini-title{
@@ -276,6 +315,23 @@ section,
   color:var(--blue-soft);
   font-size:15px;
   line-height:1.95;
+}
+
+/* body alignment rules */
+.proposal-inner .section-label,
+.proposal-inner .text,
+.proposal-inner .mini-title,
+.proposal-inner .mini-text,
+.proposal-inner .body-title,
+.proposal-inner .body-copy,
+.proposal-inner p{
+  display:block;
+  width:100%;
+  max-width:100%;
+  margin-left:0;
+  margin-right:0;
+  box-sizing:border-box;
+  text-align:left;
 }
 
 .signature{
@@ -323,6 +379,7 @@ section,
 
 .lang-panel{
   display:none;
+  width:100%;
 }
 
 .lang-panel.active{
@@ -333,6 +390,13 @@ section,
   .grid{
     grid-template-columns:1fr;
     gap:18px;
+  }
+}
+
+@media (max-width:768px){
+  .proposal-inner{
+    padding-left:34px;
+    padding-right:34px;
   }
 }
 
@@ -432,77 +496,79 @@ section,
       </div>
     </section>
 
-    <div class="block">
-      <div class="text-group">
-        <div class="text strong">해양 에너지는 구조로 정의된다.</div>
-        <div class="text">바다는 구조가 작동하는 장이다.</div>
-        <div class="text">에너지는 생산 이전에 구조로 읽힌다.</div>
+    <div class="proposal-inner">
+      <div class="block">
+        <div class="text-group">
+          <div class="text strong">해양 에너지는 구조로 정의된다.</div>
+          <div class="text">바다는 구조가 작동하는 장이다.</div>
+          <div class="text">에너지는 생산 이전에 구조로 읽힌다.</div>
+        </div>
       </div>
+
+      <section class="section">
+        <div class="section-label">01. 제안의 방향</div>
+        <div class="text-group">
+          <div class="text strong">해양 에너지는 설비 문제가 아니다.</div>
+          <div class="text">해안, 도시, 이동, 인식, 삶이 동시에 설계된다.</div>
+          <div class="text">구조가 먼저, 기술은 이후에 따른다.</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-label">02. 핵심 구조</div>
+        <div class="grid">
+          <div class="mini-block">
+            <div class="mini-title">에너지는 구조이다</div>
+            <div class="mini-text">에너지는 공간과 인식이 결합된 구조이다.</div>
+          </div>
+
+          <div class="mini-block">
+            <div class="mini-title">바다는 장이다</div>
+            <div class="mini-text">바다는 구조가 작동하는 장소이다.</div>
+          </div>
+
+          <div class="mini-block">
+            <div class="mini-title">기술은 후반부이다</div>
+            <div class="mini-text">구조 이후 기술이 적용된다.</div>
+          </div>
+
+          <div class="mini-block">
+            <div class="mini-title">경험은 설계이다</div>
+            <div class="mini-text">인간 경험이 구조를 완성한다.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-label">03. 연결 축</div>
+        <div class="text-group">
+          <div class="text">해양 에너지 기업 / 연구 기관 / 도시·환경 설계자 / 공공 플랫폼</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-label">04. 상태</div>
+        <div class="text-group">
+          <div class="text strong">구조는 DCAO로 확장된다.</div>
+          <div class="text">DCAO-01, DCAO-02, DCAO-03 …</div>
+        </div>
+      </section>
+
+      <section class="signature">
+        <div class="name">
+          등작 燈酌 DUNGZAK CESTLAVIE
+        </div>
+        <div class="role">
+          Contemporary Artist / Structural Thinker<br>
+          DUNGZAK CESTLAVIE LAB
+        </div>
+
+        <div class="bottom-links">
+          <a href="index.html?lang=ko">LAB INDEX</a>
+          <a href="https://dungzak.art" target="_blank" rel="noopener">DUNGZAK.ART</a>
+        </div>
+      </section>
     </div>
-
-    <section class="section">
-      <div class="section-label">01. 제안의 방향</div>
-      <div class="text-group">
-        <div class="text strong">해양 에너지는 설비 문제가 아니다.</div>
-        <div class="text">해안, 도시, 이동, 인식, 삶이 동시에 설계된다.</div>
-        <div class="text">구조가 먼저, 기술은 이후에 따른다.</div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-label">02. 핵심 구조</div>
-      <div class="grid">
-        <div class="mini-block">
-          <div class="mini-title">에너지는 구조이다</div>
-          <div class="mini-text">에너지는 공간과 인식이 결합된 구조이다.</div>
-        </div>
-
-        <div class="mini-block">
-          <div class="mini-title">바다는 장이다</div>
-          <div class="mini-text">바다는 구조가 작동하는 장소이다.</div>
-        </div>
-
-        <div class="mini-block">
-          <div class="mini-title">기술은 후반부이다</div>
-          <div class="mini-text">구조 이후 기술이 적용된다.</div>
-        </div>
-
-        <div class="mini-block">
-          <div class="mini-title">경험은 설계이다</div>
-          <div class="mini-text">인간 경험이 구조를 완성한다.</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-label">03. 연결 축</div>
-      <div class="text-group">
-        <div class="text">해양 에너지 기업 / 연구 기관 / 도시·환경 설계자 / 공공 플랫폼</div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-label">04. 상태</div>
-      <div class="text-group">
-        <div class="text strong">구조는 DCAO로 확장된다.</div>
-        <div class="text">DCAO-01, DCAO-02, DCAO-03 …</div>
-      </div>
-    </section>
-
-    <section class="signature">
-      <div class="name">
-        등작 燈酌 DUNGZAK CESTLAVIE
-      </div>
-      <div class="role">
-        Contemporary Artist / Structural Thinker<br>
-        DUNGZAK CESTLAVIE LAB
-      </div>
-
-      <div class="bottom-links">
-        <a href="index.html?lang=ko">LAB INDEX</a>
-        <a href="https://dungzak.art" target="_blank" rel="noopener">DUNGZAK.ART</a>
-      </div>
-    </section>
   </div>
 
   <div class="lang-panel" data-panel="en">
@@ -514,77 +580,79 @@ section,
       </div>
     </section>
 
-    <div class="block">
-      <div class="text-group">
-        <div class="text strong">Ocean energy is defined as structure.</div>
-        <div class="text">The ocean is a field of structure.</div>
-        <div class="text">Energy is read as structure before production.</div>
+    <div class="proposal-inner">
+      <div class="block">
+        <div class="text-group">
+          <div class="text strong">Ocean energy is defined as structure.</div>
+          <div class="text">The ocean is a field of structure.</div>
+          <div class="text">Energy is read as structure before production.</div>
+        </div>
       </div>
+
+      <section class="section">
+        <div class="section-label">01. Direction</div>
+        <div class="text-group">
+          <div class="text strong">Ocean energy is not an infrastructure problem.</div>
+          <div class="text">Coast, city, mobility, perception, and life are designed together.</div>
+          <div class="text">Structure precedes technology.</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-label">02. Core Structure</div>
+        <div class="grid">
+          <div class="mini-block">
+            <div class="mini-title">Energy is Structure</div>
+            <div class="mini-text">Energy is a structure of space and perception.</div>
+          </div>
+
+          <div class="mini-block">
+            <div class="mini-title">The Ocean is a Field</div>
+            <div class="mini-text">The ocean is a structural field.</div>
+          </div>
+
+          <div class="mini-block">
+            <div class="mini-title">Technology is Secondary</div>
+            <div class="mini-text">Technology follows structure.</div>
+          </div>
+
+          <div class="mini-block">
+            <div class="mini-title">Experience is Design</div>
+            <div class="mini-text">Human experience completes structure.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-label">03. Connection</div>
+        <div class="text-group">
+          <div class="text">Ocean energy / research / urban design / public platform</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-label">04. State</div>
+        <div class="text-group">
+          <div class="text strong">Structure expands as DCAO.</div>
+          <div class="text">DCAO-01, DCAO-02, DCAO-03 …</div>
+        </div>
+      </section>
+
+      <section class="signature">
+        <div class="name">
+          DUNGZAK CESTLAVIE
+        </div>
+        <div class="role">
+          Contemporary Artist / Structural Thinker<br>
+          DUNGZAK CESTLAVIE LAB
+        </div>
+
+        <div class="bottom-links">
+          <a href="index.html?lang=en">LAB INDEX</a>
+          <a href="https://dungzak.art" target="_blank" rel="noopener">DUNGZAK.ART</a>
+        </div>
+      </section>
     </div>
-
-    <section class="section">
-      <div class="section-label">01. Direction</div>
-      <div class="text-group">
-        <div class="text strong">Ocean energy is not an infrastructure problem.</div>
-        <div class="text">Coast, city, mobility, perception, and life are designed together.</div>
-        <div class="text">Structure precedes technology.</div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-label">02. Core Structure</div>
-      <div class="grid">
-        <div class="mini-block">
-          <div class="mini-title">Energy is Structure</div>
-          <div class="mini-text">Energy is a structure of space and perception.</div>
-        </div>
-
-        <div class="mini-block">
-          <div class="mini-title">The Ocean is a Field</div>
-          <div class="mini-text">The ocean is a structural field.</div>
-        </div>
-
-        <div class="mini-block">
-          <div class="mini-title">Technology is Secondary</div>
-          <div class="mini-text">Technology follows structure.</div>
-        </div>
-
-        <div class="mini-block">
-          <div class="mini-title">Experience is Design</div>
-          <div class="mini-text">Human experience completes structure.</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-label">03. Connection</div>
-      <div class="text-group">
-        <div class="text">Ocean energy / research / urban design / public platform</div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-label">04. State</div>
-      <div class="text-group">
-        <div class="text strong">Structure expands as DCAO.</div>
-        <div class="text">DCAO-01, DCAO-02, DCAO-03 …</div>
-      </div>
-    </section>
-
-    <section class="signature">
-      <div class="name">
-        DUNGZAK CESTLAVIE
-      </div>
-      <div class="role">
-        Contemporary Artist / Structural Thinker<br>
-        DUNGZAK CESTLAVIE LAB
-      </div>
-
-      <div class="bottom-links">
-        <a href="index.html?lang=en">LAB INDEX</a>
-        <a href="https://dungzak.art" target="_blank" rel="noopener">DUNGZAK.ART</a>
-      </div>
-    </section>
   </div>
 
 </div>

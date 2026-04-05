@@ -454,6 +454,48 @@ body.menu-open{
   text-align:left;
 }
 
+/* BOOKS */
+#books .books-intro{
+  margin-bottom:50px;
+}
+
+#books .book-item{
+  display:block;
+  text-decoration:none;
+  color:var(--white);
+}
+
+#books .book-item + .book-item{
+  margin-top:40px;
+}
+
+#books .report-title{
+  letter-spacing:1.6px;
+  color:rgba(240,215,156,0.96);
+  text-shadow:0 0 10px rgba(214,184,106,0.08);
+}
+
+#books .report-title span{
+  display:inline-block;
+  margin-top:4px;
+  letter-spacing:2.4px;
+  color:rgba(240,215,156,0.74);
+}
+
+#books .report-item{
+  border-color:rgba(214,184,106,0.24);
+  background:rgba(255,255,255,0.045);
+}
+
+#books .report-item:hover{
+  border-color:rgba(214,184,106,0.42);
+  background:rgba(255,255,255,0.06);
+}
+
+#books .report-summary{
+  color:rgba(234,246,255,0.88);
+}
+
 /* RESPONSIVE */
 @media (max-width:640px){
   :root{
@@ -540,6 +582,14 @@ body.menu-open{
     font-size:13px;
     letter-spacing:1.6px;
   }
+
+  #books .report-title{
+    letter-spacing:1.2px;
+  }
+
+  #books .report-title span{
+    letter-spacing:1.8px;
+  }
 }
 </style>
 </head>
@@ -567,6 +617,7 @@ body.menu-open{
   <a href="#" onclick="goEntry(); return false;">ENTRY</a>
   <a href="#" onclick="openOcean(); return false;">OCEAN ENERGY</a>
   <a href="#" onclick="openArchive(); return false;">ARCHIVE</a>
+  <a href="#" onclick="openBooks(); return false;">BOOKS</a>
   <a href="#" onclick="openAbout(); return false;">ABOUT</a>
   <a href="https://dungzak.art" target="_blank" rel="noopener" onclick="closeMenu()">DUNGZAK.ART</a>
 </div>
@@ -752,6 +803,93 @@ body.menu-open{
   </div>
 </div>
 
+<div class="view" id="books">
+  <div class="structure-wrap">
+
+    <div class="lang-panel books-intro" data-panel="ko">
+      <div class="text">
+        작업과 사유가 하나의 구조로 응집된 아티스트북
+      </div>
+    </div>
+
+    <div class="lang-panel books-intro" data-panel="en">
+      <div class="text">
+        Artist books where work and thought operate as a single structure
+      </div>
+    </div>
+
+    <a href="https://naver.me/Gmpai16f" target="_blank" rel="noopener" class="book-item">
+      <div class="report-item">
+        <div class="report-title">
+          1 눈물은 절대 멈추지 않는다<br>
+          <span>1 Tears Never Stop</span>
+        </div>
+
+        <div class="lang-panel" data-panel="ko">
+          <div class="report-summary">
+            예술가의 존재와 책임, 인간 욕망을 구조적으로 다룬 첫 기록.<br>
+            감정이 아닌 구조로 인간과 삶을 바라보는 시도.
+          </div>
+        </div>
+
+        <div class="lang-panel" data-panel="en">
+          <div class="report-summary">
+            The first structural record addressing the artist’s existence, responsibility, and human desire.<br>
+            An attempt to understand life beyond emotion, through structure.
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a href="https://naver.me/GVVbFvfS" target="_blank" rel="noopener" class="book-item">
+      <div class="report-item">
+        <div class="report-title">
+          예술, 그 끝없는 사랑<br>
+          <span>Art, Timeless Love</span>
+        </div>
+
+        <div class="lang-panel" data-panel="ko">
+          <div class="report-summary">
+            예술과 사랑을 분리되지 않는 흐름으로 바라보며<br>
+            지속성과 반복 속에서 형성되는 감각을 탐구한다.
+          </div>
+        </div>
+
+        <div class="lang-panel" data-panel="en">
+          <div class="report-summary">
+            Approaches art and love as an inseparable continuum,<br>
+            exploring perception formed through continuity and repetition.
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a href="https://naver.me/5AueU2i2" target="_blank" rel="noopener" class="book-item">
+      <div class="report-item">
+        <div class="report-title">
+          우리를 위해 기도해 주세요<br>
+          <span>Pray for Us</span>
+        </div>
+
+        <div class="lang-panel" data-panel="ko">
+          <div class="report-summary">
+            전시와 사유가 결합된 아티스트북으로<br>
+            작업과 언어가 하나의 구조로 작동하는 흐름을 제시한다.
+          </div>
+        </div>
+
+        <div class="lang-panel" data-panel="en">
+          <div class="report-summary">
+            An artist book where exhibition and thought converge,<br>
+            presenting a unified structure of work and language.
+          </div>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
 <div class="view" id="about">
   <div class="about-wrap">
     <div class="lang-panel" data-panel="ko">
@@ -823,6 +961,7 @@ const entry = document.getElementById('entry');
 const main = document.getElementById('main');
 const ocean = document.getElementById('ocean');
 const archive = document.getElementById('archive');
+const books = document.getElementById('books');
 const about = document.getElementById('about');
 const globalLangBtns = document.querySelectorAll('.lang-global button');
 const mainLangContents = document.querySelectorAll('.lang-content');
@@ -890,6 +1029,7 @@ function clearViews(){
   main.classList.remove('active');
   ocean.classList.remove('active');
   archive.classList.remove('active');
+  books.classList.remove('active');
   about.classList.remove('active');
 }
 
@@ -920,6 +1060,13 @@ function openArchive(){
   archive.classList.add('active');
   closeMenu();
   loadDCAP();
+}
+
+function openBooks(){
+  entry.classList.add('hidden');
+  clearViews();
+  books.classList.add('active');
+  closeMenu();
 }
 
 function openAbout(){

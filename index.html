@@ -405,7 +405,7 @@ body.menu-open{
   color:var(--white);
   text-decoration:none;
   box-shadow:var(--shadow);
-  transition:transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  transition:transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .report-item:hover{
@@ -456,7 +456,7 @@ body.menu-open{
 
 /* BOOKS */
 #books .books-intro{
-  margin-bottom:50px;
+  margin-bottom:58px;
 }
 
 #books .book-item{
@@ -466,34 +466,47 @@ body.menu-open{
 }
 
 #books .book-item + .book-item{
-  margin-top:40px;
+  margin-top:34px;
 }
 
 #books .report-title{
-  letter-spacing:1.6px;
-  color:rgba(240,215,156,0.96);
-  text-shadow:0 0 10px rgba(214,184,106,0.08);
+  letter-spacing:1.75px;
+  color:rgba(245,222,163,0.98);
+  text-shadow:
+    0 0 12px rgba(214,184,106,0.12),
+    0 0 22px rgba(214,184,106,0.05);
 }
 
 #books .report-title span{
   display:inline-block;
-  margin-top:4px;
-  letter-spacing:2.4px;
-  color:rgba(240,215,156,0.74);
+  margin-top:5px;
+  letter-spacing:2.5px;
+  color:rgba(245,222,163,0.80);
 }
 
 #books .report-item{
-  border-color:rgba(214,184,106,0.24);
-  background:rgba(255,255,255,0.045);
+  padding:22px 20px 19px;
+  border-color:rgba(214,184,106,0.28);
+  background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.038));
+  box-shadow:
+    0 18px 48px rgba(0,0,0,0.18),
+    0 0 0 1px rgba(214,184,106,0.04) inset;
 }
 
 #books .report-item:hover{
-  border-color:rgba(214,184,106,0.42);
-  background:rgba(255,255,255,0.06);
+  transform:translateY(-2px);
+  border-color:rgba(214,184,106,0.48);
+  background:linear-gradient(180deg, rgba(255,255,255,0.068), rgba(255,255,255,0.05));
+  box-shadow:
+    0 22px 56px rgba(0,0,0,0.22),
+    0 0 0 1px rgba(214,184,106,0.07) inset,
+    0 0 18px rgba(214,184,106,0.08);
 }
 
 #books .report-summary{
-  color:rgba(234,246,255,0.88);
+  margin-top:12px;
+  line-height:1.95;
+  color:rgba(236,245,255,0.92);
 }
 
 /* RESPONSIVE */
@@ -583,12 +596,28 @@ body.menu-open{
     letter-spacing:1.6px;
   }
 
+  #books .books-intro{
+    margin-bottom:46px;
+  }
+
+  #books .book-item + .book-item{
+    margin-top:28px;
+  }
+
+  #books .report-item{
+    padding:20px 17px 17px;
+  }
+
   #books .report-title{
-    letter-spacing:1.2px;
+    letter-spacing:1.3px;
   }
 
   #books .report-title span{
-    letter-spacing:1.8px;
+    letter-spacing:1.9px;
+  }
+
+  #books .report-summary{
+    line-height:1.9;
   }
 }
 </style>
@@ -827,15 +856,15 @@ body.menu-open{
 
         <div class="lang-panel" data-panel="ko">
           <div class="report-summary">
-            예술가의 존재와 책임, 인간 욕망을 구조적으로 다룬 첫 기록.<br>
-            감정이 아닌 구조로 인간과 삶을 바라보는 시도.
+            예술가의 존재와 책임, 인간 욕망을 다룬 첫 기록.<br>
+            감정이 아닌 방식으로 인간과 삶을 바라보는 시도.
           </div>
         </div>
 
         <div class="lang-panel" data-panel="en">
           <div class="report-summary">
-            The first structural record addressing the artist’s existence, responsibility, and human desire.<br>
-            An attempt to understand life beyond emotion, through structure.
+            The first record addressing the artist’s existence, responsibility, and human desire.<br>
+            An attempt to understand life beyond emotion.
           </div>
         </div>
       </div>
@@ -874,14 +903,14 @@ body.menu-open{
         <div class="lang-panel" data-panel="ko">
           <div class="report-summary">
             전시와 사유가 결합된 아티스트북으로<br>
-            작업과 언어가 하나의 구조로 작동하는 흐름을 제시한다.
+            작업과 언어가 하나의 흐름으로 작동한다.
           </div>
         </div>
 
         <div class="lang-panel" data-panel="en">
           <div class="report-summary">
             An artist book where exhibition and thought converge,<br>
-            presenting a unified structure of work and language.
+            with work and language operating as a single flow.
           </div>
         </div>
       </div>

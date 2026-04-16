@@ -21,10 +21,8 @@
       --muted:rgba(244,239,230,.68);
       --soft:rgba(244,239,230,.48);
       --gold:#d4b46d;
-      --gold-2:#b89447;
       --shadow:0 20px 60px rgba(0,0,0,.35);
       --radius:18px;
-      --radius-sm:12px;
       --max:1460px;
       --header-h:84px;
     }
@@ -69,7 +67,7 @@
     .site-header{
       position:sticky;
       top:0;
-      z-index:30;
+      z-index:40;
       backdrop-filter:blur(14px);
       -webkit-backdrop-filter:blur(14px);
       background:linear-gradient(180deg, rgba(11,15,20,.92) 0%, rgba(11,15,20,.72) 100%);
@@ -158,21 +156,78 @@
     }
 
     .hero-card{
-      padding:22px 20px;
+      padding:20px;
       min-width:0;
+      min-height:148px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:14px;
     }
 
-    .hero-title{
-      margin:0 0 8px;
-      font-size:clamp(22px,3vw,34px);
-      line-height:1.12;
-      letter-spacing:.01em;
+    .hero-topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
     }
 
-    .hero-text{
+    .lang-tabs{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .lang-tab{
+      min-height:42px;
+      padding:0 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .lang-tab:hover{
+      border-color:rgba(212,180,109,.34);
+      color:var(--text);
+    }
+
+    .lang-tab.active{
+      color:var(--gold);
+      border-color:rgba(212,180,109,.52);
+      background:rgba(212,180,109,.08);
+      box-shadow:0 0 0 3px rgba(212,180,109,.06);
+    }
+
+    .hero-home-link{
+      display:inline-flex;
+      align-items:center;
+      min-height:42px;
+      padding:0 14px;
+      border-radius:999px;
+      border:1px solid rgba(212,180,109,.28);
+      background:rgba(212,180,109,.04);
+      color:var(--gold);
+      transition:.18s ease;
+      white-space:nowrap;
+    }
+
+    .hero-home-link:hover{
+      border-color:rgba(212,180,109,.52);
+      background:rgba(212,180,109,.08);
+      color:var(--text);
+    }
+
+    .hero-mode-line{
       margin:0;
       color:var(--muted);
-      font-size:15px;
+      font-size:14px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
     }
 
     .stats{
@@ -362,6 +417,16 @@
       background:#0a0f16;
     }
 
+    .thumb-wrap::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(212,180,109,.08), transparent 48%),
+        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+      pointer-events:none;
+    }
+
     .thumb{
       width:100%;
       height:100%;
@@ -369,9 +434,20 @@
       transform:scale(1.001);
       transition:transform .45s ease, opacity .22s ease;
       opacity:0;
+      background:#0a0f16;
     }
 
-    .thumb.is-loaded{opacity:1}
+    .thumb.is-loaded,
+    .thumb.is-error{
+      opacity:1;
+    }
+
+    .thumb.is-error{
+      object-fit:contain;
+      padding:22%;
+      filter:grayscale(.12) brightness(.88);
+    }
+
     .card:hover .thumb{transform:scale(1.035)}
 
     .card-body{
@@ -595,18 +671,14 @@
     }
 
     @media (max-width:880px){
-      .controls{
-        grid-template-columns:1fr 1fr;
-      }
+      .controls{grid-template-columns:1fr 1fr}
       .control-actions{
         grid-column:1/-1;
         justify-content:stretch;
       }
       .control-actions .btn{flex:1 1 0}
       .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .lightbox-inner{
-        grid-template-columns:1fr;
-      }
+      .lightbox-inner{grid-template-columns:1fr}
       .lightbox-side{
         border-left:0;
         border-top:1px solid rgba(255,255,255,.06);
@@ -631,6 +703,9 @@
       .caption{font-size:11px}
       .meta-row{font-size:13px}
       .back-link{min-height:42px;padding:0 12px}
+      .hero-card{min-height:auto;padding:16px}
+      .lang-tab,.hero-home-link{min-height:40px;padding:0 12px}
+      .hero-mode-line{font-size:13px}
       .lightbox-side .lb-title{font-size:20px}
       .lb-row{grid-template-columns:72px minmax(0,1fr)}
     }
@@ -663,35 +738,41 @@
   <div class="site-shell">
     <section class="hero">
       <article class="panel hero-card">
-        <h2 class="hero-title">works.json을 읽는 아카이브 인터페이스</h2>
-        <p class="hero-text">
-          Archive Pro는 별도 데이터베이스가 아니라 dungzak.art의 works.json을 직접 읽는 구조다.
-          검색, 섹션 필터, 정렬, 확대 보기를 통해 작품 축적을 운영 가능한 화면으로 바꾼다.
-        </p>
+        <div class="hero-topbar">
+          <div class="lang-tabs" role="tablist" aria-label="Language mode">
+            <button class="lang-tab active" type="button" data-lang="kr" aria-pressed="true">KR</button>
+            <button class="lang-tab" type="button" data-lang="en" aria-pressed="false">EN</button>
+            <button class="lang-tab" type="button" data-lang="both" aria-pressed="false">KR+EN</button>
+          </div>
+
+          <a class="hero-home-link" href="https://dungzak.art/" target="_blank" rel="noopener noreferrer">dungzak.art</a>
+        </div>
+
+        <p class="hero-mode-line" id="heroModeLine">한국어 기준</p>
       </article>
 
       <aside class="panel stats" aria-label="아카이브 통계">
         <div class="stat">
-          <div class="k">Total</div>
+          <div class="k" id="statLabelTotal">Total</div>
           <div class="v" id="statTotal">—</div>
-          <div class="d">전체 작품 수</div>
+          <div class="d" id="statDescTotal">전체 작품 수</div>
         </div>
         <div class="stat">
-          <div class="k">Filtered</div>
+          <div class="k" id="statLabelFiltered">Filtered</div>
           <div class="v" id="statFiltered">—</div>
-          <div class="d">현재 검색 결과</div>
+          <div class="d" id="statDescFiltered">현재 검색 결과</div>
         </div>
         <div class="stat">
-          <div class="k">Sections</div>
+          <div class="k" id="statLabelSections">Sections</div>
           <div class="v" id="statSections">—</div>
-          <div class="d">섹션 수</div>
+          <div class="d" id="statDescSections">섹션 수</div>
         </div>
       </aside>
     </section>
 
     <section class="panel controls" aria-label="아카이브 검색 및 필터">
       <div class="field">
-        <label for="searchInput">Search</label>
+        <label for="searchInput" id="labelSearch">Search</label>
         <input
           id="searchInput"
           class="input"
@@ -703,14 +784,14 @@
       </div>
 
       <div class="field">
-        <label for="sectionSelect">Section</label>
+        <label for="sectionSelect" id="labelSection">Section</label>
         <select id="sectionSelect" class="select" aria-label="섹션 선택">
           <option value="all">전체 섹션</option>
         </select>
       </div>
 
       <div class="field">
-        <label for="sortSelect">Sort</label>
+        <label for="sortSelect" id="labelSort">Sort</label>
         <select id="sortSelect" class="select" aria-label="정렬 선택">
           <option value="section-id-asc">섹션 + ID 오름차순</option>
           <option value="id-asc">ID 오름차순</option>
@@ -739,6 +820,7 @@
 
     <main id="archiveMain" aria-live="polite">
       <div id="loadingScreen" class="panel loading-screen">works.json을 불러오는 중입니다.</div>
+
       <div id="resultsMeta" class="meta-row" style="display:none;">
         <div class="meta-left">
           <strong id="resultText">0점</strong>
@@ -759,7 +841,7 @@
         <button id="loadMoreBtn" class="btn" type="button">더 보기</button>
       </div>
 
-      <p class="footer-note">
+      <p class="footer-note" id="footerNote">
         DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json
       </p>
     </main>
@@ -769,7 +851,7 @@
     <button id="lightboxClose" class="lightbox-close" type="button" aria-label="닫기">×</button>
 
     <div class="lightbox-inner">
-      <div class="lightbox-stage" id="lightboxStage">
+      <div class="lightbox-stage">
         <img id="lightboxImage" alt="" />
       </div>
 
@@ -780,23 +862,23 @@
 
         <div class="lb-meta">
           <div class="lb-row">
-            <div class="lb-key">재료</div>
+            <div class="lb-key" id="lbKeyMaterial">재료</div>
             <div class="lb-val" id="lbMaterial">—</div>
           </div>
           <div class="lb-row">
-            <div class="lb-key">크기</div>
+            <div class="lb-key" id="lbKeySize">크기</div>
             <div class="lb-val" id="lbSize">—</div>
           </div>
           <div class="lb-row">
-            <div class="lb-key">연도</div>
+            <div class="lb-key" id="lbKeyYear">연도</div>
             <div class="lb-val" id="lbYear">—</div>
           </div>
           <div class="lb-row">
-            <div class="lb-key">이미지</div>
+            <div class="lb-key" id="lbKeyImage">이미지</div>
             <div class="lb-val" id="lbImagePath">—</div>
           </div>
           <div class="lb-row">
-            <div class="lb-key">줌</div>
+            <div class="lb-key" id="lbKeyZoom">줌</div>
             <div class="lb-val" id="lbZoomPath">—</div>
           </div>
         </div>
@@ -816,6 +898,159 @@
       const SITE_ROOT = 'https://dungzak.art/';
       const DATA_URL = `${SITE_ROOT}data/works.json`;
       const PAGE_SIZE = 72;
+      const SVG_PLACEHOLDER = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+          <rect width="800" height="800" fill="#091018"/>
+          <circle cx="400" cy="400" r="180" fill="rgba(212,180,109,.08)"/>
+          <circle cx="400" cy="400" r="120" fill="rgba(212,180,109,.10)"/>
+          <path d="M250 520 L360 400 L455 485 L550 360 L650 520" fill="none" stroke="#7a6740" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="305" cy="270" r="42" fill="#7a6740"/>
+        </svg>
+      `)}`;
+
+      const uiText = {
+        kr: {
+          heroModeLine: '한국어 기준',
+          statLabelTotal: 'Total',
+          statLabelFiltered: 'Filtered',
+          statLabelSections: 'Sections',
+          statDescTotal: '전체 작품 수',
+          statDescFiltered: '현재 검색 결과',
+          statDescSections: '섹션 수',
+          labelSearch: 'Search',
+          labelSection: 'Section',
+          labelSort: 'Sort',
+          placeholderSearch: 'ID, 제목, 재료, 연도, 섹션 검색',
+          resetBtn: '초기화',
+          focusSearchBtn: '검색 집중',
+          statusIdle: '대기 중',
+          statusLoading: '불러오는 중',
+          statusLoaded: '로드 완료',
+          statusFailed: '로드 실패',
+          loadingScreen: 'works.json을 불러오는 중입니다.',
+          loadingScreenError: 'works.json을 불러오지 못했습니다. 경로 또는 접근 권한을 확인해 주세요.',
+          resultUnit: '점',
+          renderedPrefix: '표시 ',
+          activeFilterNone: '필터 없음',
+          searchPrefix: '검색',
+          sectionPrefix: '섹션',
+          loadMoreBtn: '더 보기',
+          emptyState: '조건에 맞는 작품이 없습니다.',
+          footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
+          lbKeyMaterial: '재료',
+          lbKeySize: '크기',
+          lbKeyYear: '연도',
+          lbKeyImage: '이미지',
+          lbKeyZoom: '줌',
+          lbOpenImage: '이미지 열기',
+          lbOpenZoom: '줌 열기',
+          untitled: '무제 / 캡션 없음',
+          noInfo: '정보 없음',
+          allSections: '전체 섹션',
+          sortOptions: [
+            '섹션 + ID 오름차순',
+            'ID 오름차순',
+            'ID 내림차순',
+            '연도 최신순',
+            '연도 오래된순',
+            '제목 가나다/ABC'
+          ]
+        },
+        en: {
+          heroModeLine: 'English mode',
+          statLabelTotal: 'Total',
+          statLabelFiltered: 'Filtered',
+          statLabelSections: 'Sections',
+          statDescTotal: 'Total works',
+          statDescFiltered: 'Current results',
+          statDescSections: 'Section count',
+          labelSearch: 'Search',
+          labelSection: 'Section',
+          labelSort: 'Sort',
+          placeholderSearch: 'Search ID, title, material, year, section',
+          resetBtn: 'Reset',
+          focusSearchBtn: 'Focus',
+          statusIdle: 'Idle',
+          statusLoading: 'Loading',
+          statusLoaded: 'Loaded',
+          statusFailed: 'Failed',
+          loadingScreen: 'Loading works.json.',
+          loadingScreenError: 'Unable to load works.json. Check path or access.',
+          resultUnit: ' works',
+          renderedPrefix: 'Visible ',
+          activeFilterNone: 'No filters',
+          searchPrefix: 'Search',
+          sectionPrefix: 'Section',
+          loadMoreBtn: 'Load more',
+          emptyState: 'No artworks match the current filters.',
+          footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
+          lbKeyMaterial: 'Material',
+          lbKeySize: 'Size',
+          lbKeyYear: 'Year',
+          lbKeyImage: 'Image',
+          lbKeyZoom: 'Zoom',
+          lbOpenImage: 'Open image',
+          lbOpenZoom: 'Open zoom',
+          untitled: 'Untitled / No Caption',
+          noInfo: 'No information',
+          allSections: 'All sections',
+          sortOptions: [
+            'Section + ID ascending',
+            'ID ascending',
+            'ID descending',
+            'Year newest first',
+            'Year oldest first',
+            'Title A–Z'
+          ]
+        },
+        both: {
+          heroModeLine: 'KR / EN',
+          statLabelTotal: 'Total',
+          statLabelFiltered: 'Filtered',
+          statLabelSections: 'Sections',
+          statDescTotal: '전체 작품 수 / Total works',
+          statDescFiltered: '현재 검색 결과 / Current results',
+          statDescSections: '섹션 수 / Section count',
+          labelSearch: 'Search',
+          labelSection: 'Section',
+          labelSort: 'Sort',
+          placeholderSearch: 'ID, 제목, title, 재료, material, year, section',
+          resetBtn: '초기화 / Reset',
+          focusSearchBtn: '검색 / Focus',
+          statusIdle: '대기 / Idle',
+          statusLoading: '불러오는 중 / Loading',
+          statusLoaded: '로드 완료 / Loaded',
+          statusFailed: '로드 실패 / Failed',
+          loadingScreen: 'works.json을 불러오는 중입니다 / Loading works.json.',
+          loadingScreenError: 'works.json을 불러오지 못했습니다 / Unable to load works.json.',
+          resultUnit: '점 / works',
+          renderedPrefix: '표시 / Visible ',
+          activeFilterNone: '필터 없음 / No filters',
+          searchPrefix: '검색 / Search',
+          sectionPrefix: '섹션 / Section',
+          loadMoreBtn: '더 보기 / Load more',
+          emptyState: '조건에 맞는 작품이 없습니다 / No artworks match the current filters.',
+          footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
+          lbKeyMaterial: '재료 / Material',
+          lbKeySize: '크기 / Size',
+          lbKeyYear: '연도 / Year',
+          lbKeyImage: '이미지 / Image',
+          lbKeyZoom: '줌 / Zoom',
+          lbOpenImage: '이미지 열기 / Open image',
+          lbOpenZoom: '줌 열기 / Open zoom',
+          untitled: '무제 / Untitled',
+          noInfo: '정보 없음 / No information',
+          allSections: '전체 섹션 / All sections',
+          sortOptions: [
+            '섹션 + ID / Section + ID',
+            'ID ↑',
+            'ID ↓',
+            '연도 최신 / Year newest',
+            '연도 오래된 / Year oldest',
+            '제목 / Title'
+          ]
+        }
+      };
 
       const state = {
         all: [],
@@ -824,7 +1059,9 @@
         query: '',
         section: 'all',
         sort: 'section-id-asc',
-        lightboxItem: null
+        lightboxItem: null,
+        lang: 'kr',
+        loadState: 'idle'
       };
 
       const els = {
@@ -832,11 +1069,23 @@
         statFiltered: document.getElementById('statFiltered'),
         statSections: document.getElementById('statSections'),
 
+        statLabelTotal: document.getElementById('statLabelTotal'),
+        statLabelFiltered: document.getElementById('statLabelFiltered'),
+        statLabelSections: document.getElementById('statLabelSections'),
+        statDescTotal: document.getElementById('statDescTotal'),
+        statDescFiltered: document.getElementById('statDescFiltered'),
+        statDescSections: document.getElementById('statDescSections'),
+
+        heroModeLine: document.getElementById('heroModeLine'),
         searchInput: document.getElementById('searchInput'),
         sectionSelect: document.getElementById('sectionSelect'),
         sortSelect: document.getElementById('sortSelect'),
         resetBtn: document.getElementById('resetBtn'),
         focusSearchBtn: document.getElementById('focusSearchBtn'),
+
+        labelSearch: document.getElementById('labelSearch'),
+        labelSection: document.getElementById('labelSection'),
+        labelSort: document.getElementById('labelSort'),
 
         sourcePill: document.getElementById('sourcePill'),
         loadedPill: document.getElementById('loadedPill'),
@@ -852,6 +1101,7 @@
         emptyState: document.getElementById('emptyState'),
         loadWrap: document.getElementById('loadWrap'),
         loadMoreBtn: document.getElementById('loadMoreBtn'),
+        footerNote: document.getElementById('footerNote'),
 
         lightbox: document.getElementById('lightbox'),
         lightboxClose: document.getElementById('lightboxClose'),
@@ -865,14 +1115,21 @@
         lbImagePath: document.getElementById('lbImagePath'),
         lbZoomPath: document.getElementById('lbZoomPath'),
         lbOpenImage: document.getElementById('lbOpenImage'),
-        lbOpenZoom: document.getElementById('lbOpenZoom')
+        lbOpenZoom: document.getElementById('lbOpenZoom'),
+
+        lbKeyMaterial: document.getElementById('lbKeyMaterial'),
+        lbKeySize: document.getElementById('lbKeySize'),
+        lbKeyYear: document.getElementById('lbKeyYear'),
+        lbKeyImage: document.getElementById('lbKeyImage'),
+        lbKeyZoom: document.getElementById('lbKeyZoom'),
+
+        langTabs: Array.from(document.querySelectorAll('.lang-tab'))
       };
 
       const numberFormat = new Intl.NumberFormat('ko-KR');
 
-      function setStatus(text, isError = false) {
-        els.statusText.textContent = text;
-        els.statusText.classList.toggle('error', !!isError);
+      function t(key) {
+        return uiText[state.lang][key];
       }
 
       function safeText(v) {
@@ -887,24 +1144,60 @@
         return new URL(clean.replace(/^\/+/, ''), SITE_ROOT).href;
       }
 
+      function setStatusByState() {
+        if (state.loadState === 'loading') els.statusText.textContent = t('statusLoading');
+        else if (state.loadState === 'loaded') els.statusText.textContent = t('statusLoaded');
+        else if (state.loadState === 'failed') els.statusText.textContent = t('statusFailed');
+        else els.statusText.textContent = t('statusIdle');
+
+        els.statusText.classList.toggle('error', state.loadState === 'failed');
+      }
+
       function getSectionLabel(item) {
+        if (state.lang === 'en') return safeText(item.section_en) || safeText(item.section_kr) || 'Unsorted';
+        if (state.lang === 'both') {
+          const kr = safeText(item.section_kr);
+          const en = safeText(item.section_en);
+          if (kr && en) return `${kr} / ${en}`;
+          return kr || en || 'Unsorted';
+        }
         return safeText(item.section_kr) || safeText(item.section_en) || 'Unsorted';
       }
 
       function getTitle(item) {
-        return safeText(item.title_kr) || safeText(item.title_en) || '';
+        const kr = safeText(item.title_kr);
+        const en = safeText(item.title_en);
+
+        if (state.lang === 'en') return en || kr || '';
+        if (state.lang === 'both') {
+          if (kr && en && kr !== en) return `${kr} / ${en}`;
+          return kr || en || '';
+        }
+        return kr || en || '';
       }
 
       function getMaterial(item) {
         const kr = safeText(item.material_kr);
         const en = safeText(item.material_en);
-        return [kr, en].filter(Boolean).join(' / ');
+
+        if (state.lang === 'en') return en || kr;
+        if (state.lang === 'both') {
+          if (kr && en && kr !== en) return `${kr} / ${en}`;
+          return kr || en;
+        }
+        return kr || en;
       }
 
       function getSize(item) {
         const kr = safeText(item.size_kr);
         const en = safeText(item.size_en);
-        return [kr, en].filter(Boolean).join(' / ');
+
+        if (state.lang === 'en') return en || kr;
+        if (state.lang === 'both') {
+          if (kr && en && kr !== en) return `${kr} / ${en}`;
+          return kr || en;
+        }
+        return kr || en;
       }
 
       function getYear(item) {
@@ -923,11 +1216,7 @@
 
       function normalizeItem(raw, index) {
         const item = raw && typeof raw === 'object' ? raw : {};
-
-        const sectionId =
-          Number.isFinite(Number(item.section_id))
-            ? Number(item.section_id)
-            : 9999;
+        const sectionId = Number.isFinite(Number(item.section_id)) ? Number(item.section_id) : 9999;
 
         return {
           _index: index,
@@ -961,9 +1250,7 @@
           item.year,
           item.image,
           item.zoom
-        ]
-          .join(' ')
-          .toLowerCase();
+        ].join(' ').toLowerCase();
       }
 
       function compareItems(a, b, mode) {
@@ -1013,15 +1300,24 @@
         }
       }
 
+      function rebuildSelectTexts() {
+        els.sectionSelect.options[0].textContent = t('allSections');
+
+        const opts = els.sortSelect.options;
+        t('sortOptions').forEach((label, index) => {
+          if (opts[index]) opts[index].textContent = label;
+        });
+      }
+
       function populateSections(items) {
         const map = new Map();
 
         items.forEach((item) => {
-          const key = String(item.section_id) + '|' + getSectionLabel(item);
+          const key = String(item.section_id) + '|' + (safeText(item.section_kr) || safeText(item.section_en) || 'Unsorted');
           if (!map.has(key)) {
             map.set(key, {
               value: key,
-              label: getSectionLabel(item),
+              item,
               section_id: item.section_id
             });
           }
@@ -1029,18 +1325,63 @@
 
         const sections = Array.from(map.values()).sort((a, b) => {
           if (a.section_id !== b.section_id) return a.section_id - b.section_id;
-          return a.label.localeCompare(b.label, 'ko');
+          const al = safeText(a.item.section_kr) || safeText(a.item.section_en);
+          const bl = safeText(b.item.section_kr) || safeText(b.item.section_en);
+          return al.localeCompare(bl, 'ko');
         });
 
-        els.sectionSelect.innerHTML = '<option value="all">전체 섹션</option>';
+        const current = state.section;
+        els.sectionSelect.innerHTML = '';
+        const allOption = document.createElement('option');
+        allOption.value = 'all';
+        allOption.textContent = t('allSections');
+        els.sectionSelect.appendChild(allOption);
+
         sections.forEach((section) => {
           const option = document.createElement('option');
           option.value = section.value;
-          option.textContent = section.label;
+          option.textContent = getSectionLabel(section.item);
           els.sectionSelect.appendChild(option);
         });
 
+        els.sectionSelect.value = current && Array.from(els.sectionSelect.options).some(o => o.value === current) ? current : 'all';
+        if (els.sectionSelect.value !== current) state.section = els.sectionSelect.value;
+
         els.statSections.textContent = numberFormat.format(sections.length);
+      }
+
+      function updateUIText() {
+        els.heroModeLine.textContent = t('heroModeLine');
+
+        els.statLabelTotal.textContent = t('statLabelTotal');
+        els.statLabelFiltered.textContent = t('statLabelFiltered');
+        els.statLabelSections.textContent = t('statLabelSections');
+        els.statDescTotal.textContent = t('statDescTotal');
+        els.statDescFiltered.textContent = t('statDescFiltered');
+        els.statDescSections.textContent = t('statDescSections');
+
+        els.labelSearch.textContent = t('labelSearch');
+        els.labelSection.textContent = t('labelSection');
+        els.labelSort.textContent = t('labelSort');
+
+        els.searchInput.placeholder = t('placeholderSearch');
+        els.resetBtn.textContent = t('resetBtn');
+        els.focusSearchBtn.textContent = t('focusSearchBtn');
+        els.loadMoreBtn.textContent = t('loadMoreBtn');
+        els.emptyState.textContent = t('emptyState');
+        els.footerNote.textContent = t('footerNote');
+        els.loadingScreen.textContent = state.loadState === 'failed' ? t('loadingScreenError') : t('loadingScreen');
+
+        els.lbKeyMaterial.textContent = t('lbKeyMaterial');
+        els.lbKeySize.textContent = t('lbKeySize');
+        els.lbKeyYear.textContent = t('lbKeyYear');
+        els.lbKeyImage.textContent = t('lbKeyImage');
+        els.lbKeyZoom.textContent = t('lbKeyZoom');
+        els.lbOpenImage.textContent = t('lbOpenImage');
+        els.lbOpenZoom.textContent = t('lbOpenZoom');
+
+        rebuildSelectTexts();
+        setStatusByState();
       }
 
       function updateStats() {
@@ -1049,34 +1390,44 @@
         els.loadedPill.textContent = `Loaded: ${numberFormat.format(state.all.length)} items`;
 
         const parts = [];
-        if (state.query) parts.push(`검색: “${state.query}”`);
+        if (state.query) parts.push(`${t('searchPrefix')}: “${state.query}”`);
         if (state.section !== 'all') {
           const selected = els.sectionSelect.options[els.sectionSelect.selectedIndex];
-          parts.push(`섹션: ${selected ? selected.textContent : state.section}`);
+          parts.push(`${t('sectionPrefix')}: ${selected ? selected.textContent : state.section}`);
         }
-        if (!parts.length) parts.push('필터 없음');
+        if (!parts.length) parts.push(t('activeFilterNone'));
         els.activeFilterText.textContent = parts.join(' / ');
       }
 
-      function applyFilters() {
-        const query = state.query.trim().toLowerCase();
+      function createImgElement(src, fallbackSrc, alt) {
+        const img = document.createElement('img');
+        img.className = 'thumb';
+        img.alt = alt;
+        img.loading = 'lazy';
+        img.decoding = 'async';
 
-        state.filtered = state.all
-          .filter((item) => {
-            if (state.section !== 'all') {
-              const key = String(item.section_id) + '|' + getSectionLabel(item);
-              if (key !== state.section) return false;
-            }
+        let triedFallback = false;
 
-            if (!query) return true;
+        img.addEventListener('load', () => {
+          img.classList.add('is-loaded');
+        });
 
-            return buildSearchText(item).includes(query);
-          })
-          .sort((a, b) => compareItems(a, b, state.sort));
+        img.addEventListener('error', () => {
+          if (!triedFallback && fallbackSrc && img.src !== fallbackSrc) {
+            triedFallback = true;
+            img.src = fallbackSrc;
+            return;
+          }
+          img.src = SVG_PLACEHOLDER;
+          img.classList.add('is-error');
+        });
 
-        state.visibleCount = PAGE_SIZE;
-        updateStats();
-        render();
+        img.src = src || fallbackSrc || SVG_PLACEHOLDER;
+        if (!src && !fallbackSrc) {
+          img.classList.add('is-error');
+        }
+
+        return img;
       }
 
       function createCard(item) {
@@ -1085,7 +1436,8 @@
         const size = getSize(item);
         const year = getYear(item);
         const infoLine = [material, size, year].filter(Boolean).join(' / ');
-        const imageSrc = toAbsoluteUrl(item.image || item.zoom || '');
+        const primaryImage = toAbsoluteUrl(item.image || '');
+        const fallbackImage = toAbsoluteUrl(item.zoom || '');
 
         const card = document.createElement('article');
         card.className = 'card';
@@ -1096,15 +1448,7 @@
 
         const thumbWrap = document.createElement('div');
         thumbWrap.className = 'thumb-wrap';
-
-        const img = document.createElement('img');
-        img.className = 'thumb';
-        img.alt = title || item.id;
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        if (imageSrc) img.src = imageSrc;
-        img.addEventListener('load', () => img.classList.add('is-loaded'));
-        thumbWrap.appendChild(img);
+        thumbWrap.appendChild(createImgElement(primaryImage, fallbackImage, title || item.id));
 
         const body = document.createElement('div');
         body.className = 'card-body';
@@ -1125,11 +1469,11 @@
 
         const titleEl = document.createElement('p');
         titleEl.className = 'title' + (title ? '' : ' empty');
-        titleEl.textContent = title || 'Untitled / No Caption';
+        titleEl.textContent = title || t('untitled');
 
         const captionEl = document.createElement('p');
         captionEl.className = 'caption';
-        captionEl.textContent = infoLine || '정보 없음';
+        captionEl.textContent = infoLine || t('noInfo');
 
         body.appendChild(top);
         body.appendChild(titleEl);
@@ -1158,8 +1502,18 @@
         const total = state.filtered.length;
         const visible = state.filtered.slice(0, state.visibleCount);
 
-        els.resultText.textContent = `${numberFormat.format(total)}점`;
-        els.renderedText.textContent = `표시 ${numberFormat.format(visible.length)}점`;
+        if (state.lang === 'en') {
+          els.resultText.textContent = `${numberFormat.format(total)}${t('resultUnit')}`;
+          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visible.length)}`;
+        } else {
+          els.resultText.textContent = `${numberFormat.format(total)}${t('resultUnit')}`;
+          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visible.length)}${state.lang === 'kr' ? '점' : ''}`;
+        }
+
+        if (state.lang === 'both') {
+          els.resultText.textContent = `${numberFormat.format(total)}${t('resultUnit')}`;
+          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visible.length)}`;
+        }
 
         els.grid.innerHTML = '';
         els.emptyState.hidden = total !== 0;
@@ -1179,14 +1533,13 @@
       function openLightbox(item) {
         state.lightboxItem = item;
 
-        const title = getTitle(item) || 'Untitled / No Caption';
+        const title = getTitle(item) || t('untitled');
         const material = getMaterial(item) || '—';
         const size = getSize(item) || '—';
         const year = getYear(item) || '—';
-        const image = toAbsoluteUrl(item.zoom || item.image || '');
-        const imageFallback = toAbsoluteUrl(item.image || '');
         const imageUrl = toAbsoluteUrl(item.image || '');
         const zoomUrl = toAbsoluteUrl(item.zoom || item.image || '');
+        const displayUrl = zoomUrl || imageUrl || SVG_PLACEHOLDER;
 
         els.lbId.textContent = item.id;
         els.lbTitle.textContent = title;
@@ -1196,12 +1549,17 @@
         els.lbYear.textContent = year;
         els.lbImagePath.textContent = imageUrl || '—';
         els.lbZoomPath.textContent = zoomUrl || '—';
-
         els.lbOpenImage.href = imageUrl || '#';
         els.lbOpenZoom.href = zoomUrl || '#';
+        els.lbOpenImage.textContent = t('lbOpenImage');
+        els.lbOpenZoom.textContent = t('lbOpenZoom');
 
         els.lightboxImage.alt = title;
-        els.lightboxImage.src = image || imageFallback;
+        els.lightboxImage.src = displayUrl;
+        els.lightboxImage.onerror = () => {
+          els.lightboxImage.src = SVG_PLACEHOLDER;
+        };
+
         els.lightbox.classList.add('open');
         els.lightbox.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
@@ -1212,7 +1570,28 @@
         els.lightbox.classList.remove('open');
         els.lightbox.setAttribute('aria-hidden', 'true');
         els.lightboxImage.removeAttribute('src');
+        els.lightboxImage.onerror = null;
         document.body.style.overflow = '';
+      }
+
+      function applyFilters() {
+        const query = state.query.trim().toLowerCase();
+
+        state.filtered = state.all
+          .filter((item) => {
+            if (state.section !== 'all') {
+              const key = String(item.section_id) + '|' + (safeText(item.section_kr) || safeText(item.section_en) || 'Unsorted');
+              if (key !== state.section) return false;
+            }
+            if (!query) return true;
+            return buildSearchText(item).includes(query);
+          })
+          .sort((a, b) => compareItems(a, b, state.sort));
+
+        state.visibleCount = PAGE_SIZE;
+        populateSections(state.all);
+        updateStats();
+        render();
       }
 
       function resetFilters() {
@@ -1228,14 +1607,13 @@
       }
 
       async function loadData() {
-        setStatus('불러오는 중');
+        state.loadState = 'loading';
+        updateUIText();
         els.sourcePill.textContent = `Source: ${DATA_URL}`;
 
         try {
           const response = await fetch(DATA_URL, { cache: 'no-store' });
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
           const raw = await response.json();
 
@@ -1246,20 +1624,36 @@
             Array.isArray(raw.data) ? raw.data :
             null;
 
-          if (!arr) {
-            throw new Error('works.json 구조를 인식할 수 없습니다.');
-          }
+          if (!arr) throw new Error('works.json structure not recognized');
 
           state.all = arr.map(normalizeItem);
+          state.loadState = 'loaded';
+
+          updateUIText();
           populateSections(state.all);
           applyFilters();
-
-          setStatus('로드 완료');
         } catch (error) {
           console.error(error);
-          els.loadingScreen.textContent =
-            'works.json을 불러오지 못했습니다. 경로 또는 접근 권한을 확인해 주세요.';
-          setStatus('로드 실패', true);
+          state.loadState = 'failed';
+          updateUIText();
+          els.loadingScreen.style.display = 'block';
+        }
+      }
+
+      function setLanguage(lang) {
+        state.lang = lang;
+        els.langTabs.forEach((tab) => {
+          const active = tab.dataset.lang === lang;
+          tab.classList.toggle('active', active);
+          tab.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        updateUIText();
+        populateSections(state.all);
+        updateStats();
+        render();
+
+        if (state.lightboxItem) {
+          openLightbox(state.lightboxItem);
         }
       }
 
@@ -1302,9 +1696,14 @@
             closeLightbox();
           }
         });
+
+        els.langTabs.forEach((tab) => {
+          tab.addEventListener('click', () => setLanguage(tab.dataset.lang));
+        });
       }
 
       bindEvents();
+      updateUIText();
       loadData();
     })();
   </script>

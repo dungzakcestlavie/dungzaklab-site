@@ -14,7 +14,6 @@
     :root{
       --bg:#0b0f14;
       --panel:#101722;
-      --panel-2:#131c29;
       --line:rgba(212,180,109,.18);
       --line-strong:rgba(212,180,109,.34);
       --text:#f4efe6;
@@ -157,7 +156,6 @@
 
     .hero-card{
       padding:20px;
-      min-width:0;
       min-height:148px;
       display:flex;
       flex-direction:column;
@@ -479,7 +477,7 @@
       border:1px solid rgba(255,255,255,.06);
       border-radius:999px;
       background:rgba(255,255,255,.02);
-      max-width:56%;
+      max-width:58%;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -656,14 +654,6 @@
       color:var(--muted);
     }
 
-    .sr-only{
-      position:absolute !important;
-      width:1px;height:1px;
-      padding:0;margin:-1px;
-      overflow:hidden;clip:rect(0,0,0,0);
-      white-space:nowrap;border:0;
-    }
-
     @media (max-width:1180px){
       .hero{grid-template-columns:1fr}
       .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -684,12 +674,8 @@
         border-top:1px solid rgba(255,255,255,.06);
         padding-top:22px;
       }
-      .lightbox-stage{
-        padding:74px 14px 14px;
-      }
-      .lightbox-stage img{
-        max-height:56vh;
-      }
+      .lightbox-stage{padding:74px 14px 14px}
+      .lightbox-stage img{max-height:56vh}
     }
 
     @media (max-width:640px){
@@ -708,14 +694,6 @@
       .hero-mode-line{font-size:13px}
       .lightbox-side .lb-title{font-size:20px}
       .lb-row{grid-template-columns:72px minmax(0,1fr)}
-    }
-
-    @media (prefers-reduced-motion:reduce){
-      *,*::before,*::after{
-        animation:none !important;
-        transition:none !important;
-        scroll-behavior:auto !important;
-      }
     }
   </style>
 </head>
@@ -841,9 +819,7 @@
         <button id="loadMoreBtn" class="btn" type="button">더 보기</button>
       </div>
 
-      <p class="footer-note" id="footerNote">
-        DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json
-      </p>
+      <p class="footer-note" id="footerNote">DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json</p>
     </main>
   </div>
 
@@ -861,26 +837,11 @@
         <p class="lb-section" id="lbSection">—</p>
 
         <div class="lb-meta">
-          <div class="lb-row">
-            <div class="lb-key" id="lbKeyMaterial">재료</div>
-            <div class="lb-val" id="lbMaterial">—</div>
-          </div>
-          <div class="lb-row">
-            <div class="lb-key" id="lbKeySize">크기</div>
-            <div class="lb-val" id="lbSize">—</div>
-          </div>
-          <div class="lb-row">
-            <div class="lb-key" id="lbKeyYear">연도</div>
-            <div class="lb-val" id="lbYear">—</div>
-          </div>
-          <div class="lb-row">
-            <div class="lb-key" id="lbKeyImage">이미지</div>
-            <div class="lb-val" id="lbImagePath">—</div>
-          </div>
-          <div class="lb-row">
-            <div class="lb-key" id="lbKeyZoom">줌</div>
-            <div class="lb-val" id="lbZoomPath">—</div>
-          </div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyMaterial">재료</div><div class="lb-val" id="lbMaterial">—</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeySize">크기</div><div class="lb-val" id="lbSize">—</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyYear">연도</div><div class="lb-val" id="lbYear">—</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyImage">이미지</div><div class="lb-val" id="lbImagePath">—</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyZoom">줌</div><div class="lb-val" id="lbZoomPath">—</div></div>
         </div>
 
         <div class="lb-actions">
@@ -898,6 +859,16 @@
       const SITE_ROOT = 'https://dungzak.art/';
       const DATA_URL = `${SITE_ROOT}data/works.json`;
       const PAGE_SIZE = 72;
+
+      const SECTION_MAP = {
+        0: { kr: 'A 기원', en: 'Origins' },
+        1: { kr: 'I 우리를 위해 기도해 주세요', en: 'Pray for Us' },
+        2: { kr: 'II 인간', en: 'Human Being' },
+        3: { kr: 'III 정신의 재탄생', en: 'Rebirth of Mind' },
+        4: { kr: 'IV 존재의 회복', en: 'Restoration of Being' },
+        5: { kr: 'V 빛의 초의식', en: 'Metaconsciousness of Light' }
+      };
+
       const SVG_PLACEHOLDER = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
           <rect width="800" height="800" fill="#091018"/>
@@ -911,9 +882,6 @@
       const uiText = {
         kr: {
           heroModeLine: '한국어 기준',
-          statLabelTotal: 'Total',
-          statLabelFiltered: 'Filtered',
-          statLabelSections: 'Sections',
           statDescTotal: '전체 작품 수',
           statDescFiltered: '현재 검색 결과',
           statDescSections: '섹션 수',
@@ -931,22 +899,23 @@
           loadingScreenError: 'works.json을 불러오지 못했습니다. 경로 또는 접근 권한을 확인해 주세요.',
           resultUnit: '점',
           renderedPrefix: '표시 ',
+          renderedSuffix: '점',
           activeFilterNone: '필터 없음',
           searchPrefix: '검색',
           sectionPrefix: '섹션',
-          loadMoreBtn: '더 보기',
           emptyState: '조건에 맞는 작품이 없습니다.',
+          loadMore: '더 보기',
           footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          lbKeyMaterial: '재료',
-          lbKeySize: '크기',
-          lbKeyYear: '연도',
-          lbKeyImage: '이미지',
-          lbKeyZoom: '줌',
-          lbOpenImage: '이미지 열기',
-          lbOpenZoom: '줌 열기',
           untitled: '무제 / 캡션 없음',
           noInfo: '정보 없음',
           allSections: '전체 섹션',
+          lbMaterial: '재료',
+          lbSize: '크기',
+          lbYear: '연도',
+          lbImage: '이미지',
+          lbZoom: '줌',
+          openImage: '이미지 열기',
+          openZoom: '줌 열기',
           sortOptions: [
             '섹션 + ID 오름차순',
             'ID 오름차순',
@@ -958,9 +927,6 @@
         },
         en: {
           heroModeLine: 'English mode',
-          statLabelTotal: 'Total',
-          statLabelFiltered: 'Filtered',
-          statLabelSections: 'Sections',
           statDescTotal: 'Total works',
           statDescFiltered: 'Current results',
           statDescSections: 'Section count',
@@ -975,39 +941,37 @@
           statusLoaded: 'Loaded',
           statusFailed: 'Failed',
           loadingScreen: 'Loading works.json.',
-          loadingScreenError: 'Unable to load works.json. Check path or access.',
+          loadingScreenError: 'Unable to load works.json.',
           resultUnit: ' works',
           renderedPrefix: 'Visible ',
+          renderedSuffix: '',
           activeFilterNone: 'No filters',
           searchPrefix: 'Search',
           sectionPrefix: 'Section',
-          loadMoreBtn: 'Load more',
           emptyState: 'No artworks match the current filters.',
+          loadMore: 'Load more',
           footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          lbKeyMaterial: 'Material',
-          lbKeySize: 'Size',
-          lbKeyYear: 'Year',
-          lbKeyImage: 'Image',
-          lbKeyZoom: 'Zoom',
-          lbOpenImage: 'Open image',
-          lbOpenZoom: 'Open zoom',
           untitled: 'Untitled / No Caption',
           noInfo: 'No information',
           allSections: 'All sections',
+          lbMaterial: 'Material',
+          lbSize: 'Size',
+          lbYear: 'Year',
+          lbImage: 'Image',
+          lbZoom: 'Zoom',
+          openImage: 'Open image',
+          openZoom: 'Open zoom',
           sortOptions: [
-            'Section + ID ascending',
+            'Section + ID',
             'ID ascending',
             'ID descending',
-            'Year newest first',
-            'Year oldest first',
+            'Year newest',
+            'Year oldest',
             'Title A–Z'
           ]
         },
         both: {
           heroModeLine: 'KR / EN',
-          statLabelTotal: 'Total',
-          statLabelFiltered: 'Filtered',
-          statLabelSections: 'Sections',
           statDescTotal: '전체 작품 수 / Total works',
           statDescFiltered: '현재 검색 결과 / Current results',
           statDescSections: '섹션 수 / Section count',
@@ -1025,22 +989,23 @@
           loadingScreenError: 'works.json을 불러오지 못했습니다 / Unable to load works.json.',
           resultUnit: '점 / works',
           renderedPrefix: '표시 / Visible ',
+          renderedSuffix: '',
           activeFilterNone: '필터 없음 / No filters',
           searchPrefix: '검색 / Search',
           sectionPrefix: '섹션 / Section',
-          loadMoreBtn: '더 보기 / Load more',
           emptyState: '조건에 맞는 작품이 없습니다 / No artworks match the current filters.',
+          loadMore: '더 보기 / Load more',
           footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          lbKeyMaterial: '재료 / Material',
-          lbKeySize: '크기 / Size',
-          lbKeyYear: '연도 / Year',
-          lbKeyImage: '이미지 / Image',
-          lbKeyZoom: '줌 / Zoom',
-          lbOpenImage: '이미지 열기 / Open image',
-          lbOpenZoom: '줌 열기 / Open zoom',
           untitled: '무제 / Untitled',
           noInfo: '정보 없음 / No information',
           allSections: '전체 섹션 / All sections',
+          lbMaterial: '재료 / Material',
+          lbSize: '크기 / Size',
+          lbYear: '연도 / Year',
+          lbImage: '이미지 / Image',
+          lbZoom: '줌 / Zoom',
+          openImage: '이미지 열기 / Open image',
+          openZoom: '줌 열기 / Open zoom',
           sortOptions: [
             '섹션 + ID / Section + ID',
             'ID ↑',
@@ -1068,61 +1033,49 @@
         statTotal: document.getElementById('statTotal'),
         statFiltered: document.getElementById('statFiltered'),
         statSections: document.getElementById('statSections'),
-
-        statLabelTotal: document.getElementById('statLabelTotal'),
-        statLabelFiltered: document.getElementById('statLabelFiltered'),
-        statLabelSections: document.getElementById('statLabelSections'),
         statDescTotal: document.getElementById('statDescTotal'),
         statDescFiltered: document.getElementById('statDescFiltered'),
         statDescSections: document.getElementById('statDescSections'),
-
         heroModeLine: document.getElementById('heroModeLine'),
         searchInput: document.getElementById('searchInput'),
         sectionSelect: document.getElementById('sectionSelect'),
         sortSelect: document.getElementById('sortSelect'),
         resetBtn: document.getElementById('resetBtn'),
         focusSearchBtn: document.getElementById('focusSearchBtn'),
-
         labelSearch: document.getElementById('labelSearch'),
         labelSection: document.getElementById('labelSection'),
         labelSort: document.getElementById('labelSort'),
-
         sourcePill: document.getElementById('sourcePill'),
         loadedPill: document.getElementById('loadedPill'),
         statusText: document.getElementById('statusText'),
-
         loadingScreen: document.getElementById('loadingScreen'),
         resultsMeta: document.getElementById('resultsMeta'),
         resultText: document.getElementById('resultText'),
         renderedText: document.getElementById('renderedText'),
         activeFilterText: document.getElementById('activeFilterText'),
-
         grid: document.getElementById('grid'),
         emptyState: document.getElementById('emptyState'),
         loadWrap: document.getElementById('loadWrap'),
         loadMoreBtn: document.getElementById('loadMoreBtn'),
         footerNote: document.getElementById('footerNote'),
-
         lightbox: document.getElementById('lightbox'),
         lightboxClose: document.getElementById('lightboxClose'),
         lightboxImage: document.getElementById('lightboxImage'),
         lbId: document.getElementById('lbId'),
         lbTitle: document.getElementById('lbTitle'),
         lbSection: document.getElementById('lbSection'),
-        lbMaterial: document.getElementById('lbMaterial'),
-        lbSize: document.getElementById('lbSize'),
-        lbYear: document.getElementById('lbYear'),
+        lbMaterialVal: document.getElementById('lbMaterial'),
+        lbSizeVal: document.getElementById('lbSize'),
+        lbYearVal: document.getElementById('lbYear'),
         lbImagePath: document.getElementById('lbImagePath'),
         lbZoomPath: document.getElementById('lbZoomPath'),
         lbOpenImage: document.getElementById('lbOpenImage'),
         lbOpenZoom: document.getElementById('lbOpenZoom'),
-
         lbKeyMaterial: document.getElementById('lbKeyMaterial'),
         lbKeySize: document.getElementById('lbKeySize'),
         lbKeyYear: document.getElementById('lbKeyYear'),
         lbKeyImage: document.getElementById('lbKeyImage'),
         lbKeyZoom: document.getElementById('lbKeyZoom'),
-
         langTabs: Array.from(document.querySelectorAll('.lang-tab'))
       };
 
@@ -1149,25 +1102,20 @@
         else if (state.loadState === 'loaded') els.statusText.textContent = t('statusLoaded');
         else if (state.loadState === 'failed') els.statusText.textContent = t('statusFailed');
         else els.statusText.textContent = t('statusIdle');
-
         els.statusText.classList.toggle('error', state.loadState === 'failed');
       }
 
-      function getSectionLabel(item) {
-        if (state.lang === 'en') return safeText(item.section_en) || safeText(item.section_kr) || 'Unsorted';
-        if (state.lang === 'both') {
-          const kr = safeText(item.section_kr);
-          const en = safeText(item.section_en);
-          if (kr && en) return `${kr} / ${en}`;
-          return kr || en || 'Unsorted';
-        }
-        return safeText(item.section_kr) || safeText(item.section_en) || 'Unsorted';
+      function getSectionTextById(sectionId) {
+        const sec = SECTION_MAP[sectionId];
+        if (!sec) return state.lang === 'en' ? 'Unsorted' : (state.lang === 'both' ? '미분류 / Unsorted' : '미분류');
+        if (state.lang === 'en') return sec.en;
+        if (state.lang === 'both') return `${sec.kr} / ${sec.en}`;
+        return sec.kr;
       }
 
       function getTitle(item) {
         const kr = safeText(item.title_kr);
         const en = safeText(item.title_en);
-
         if (state.lang === 'en') return en || kr || '';
         if (state.lang === 'both') {
           if (kr && en && kr !== en) return `${kr} / ${en}`;
@@ -1179,7 +1127,6 @@
       function getMaterial(item) {
         const kr = safeText(item.material_kr);
         const en = safeText(item.material_en);
-
         if (state.lang === 'en') return en || kr;
         if (state.lang === 'both') {
           if (kr && en && kr !== en) return `${kr} / ${en}`;
@@ -1191,7 +1138,6 @@
       function getSize(item) {
         const kr = safeText(item.size_kr);
         const en = safeText(item.size_en);
-
         if (state.lang === 'en') return en || kr;
         if (state.lang === 'both') {
           if (kr && en && kr !== en) return `${kr} / ${en}`;
@@ -1216,12 +1162,10 @@
 
       function normalizeItem(raw, index) {
         const item = raw && typeof raw === 'object' ? raw : {};
-        const sectionId = Number.isFinite(Number(item.section_id)) ? Number(item.section_id) : 9999;
-
         return {
           _index: index,
           id: safeText(item.id) || `item-${index + 1}`,
-          section_id: sectionId,
+          section_id: Number.isFinite(Number(item.section_id)) ? Number(item.section_id) : 9999,
           section_kr: safeText(item.section_kr),
           section_en: safeText(item.section_en),
           title_kr: safeText(item.title_kr),
@@ -1247,9 +1191,7 @@
           item.material_en,
           item.size_kr,
           item.size_en,
-          item.year,
-          item.image,
-          item.zoom
+          item.year
         ].join(' ').toLowerCase();
       }
 
@@ -1300,88 +1242,64 @@
         }
       }
 
-      function rebuildSelectTexts() {
-        els.sectionSelect.options[0].textContent = t('allSections');
-
-        const opts = els.sortSelect.options;
-        t('sortOptions').forEach((label, index) => {
-          if (opts[index]) opts[index].textContent = label;
-        });
-      }
-
-      function populateSections(items) {
-        const map = new Map();
-
-        items.forEach((item) => {
-          const key = String(item.section_id) + '|' + (safeText(item.section_kr) || safeText(item.section_en) || 'Unsorted');
-          if (!map.has(key)) {
-            map.set(key, {
-              value: key,
-              item,
-              section_id: item.section_id
-            });
-          }
-        });
-
-        const sections = Array.from(map.values()).sort((a, b) => {
-          if (a.section_id !== b.section_id) return a.section_id - b.section_id;
-          const al = safeText(a.item.section_kr) || safeText(a.item.section_en);
-          const bl = safeText(b.item.section_kr) || safeText(b.item.section_en);
-          return al.localeCompare(bl, 'ko');
-        });
-
-        const current = state.section;
-        els.sectionSelect.innerHTML = '';
-        const allOption = document.createElement('option');
-        allOption.value = 'all';
-        allOption.textContent = t('allSections');
-        els.sectionSelect.appendChild(allOption);
-
-        sections.forEach((section) => {
-          const option = document.createElement('option');
-          option.value = section.value;
-          option.textContent = getSectionLabel(section.item);
-          els.sectionSelect.appendChild(option);
-        });
-
-        els.sectionSelect.value = current && Array.from(els.sectionSelect.options).some(o => o.value === current) ? current : 'all';
-        if (els.sectionSelect.value !== current) state.section = els.sectionSelect.value;
-
-        els.statSections.textContent = numberFormat.format(sections.length);
-      }
-
-      function updateUIText() {
+      function rebuildStaticTexts() {
         els.heroModeLine.textContent = t('heroModeLine');
-
-        els.statLabelTotal.textContent = t('statLabelTotal');
-        els.statLabelFiltered.textContent = t('statLabelFiltered');
-        els.statLabelSections.textContent = t('statLabelSections');
         els.statDescTotal.textContent = t('statDescTotal');
         els.statDescFiltered.textContent = t('statDescFiltered');
         els.statDescSections.textContent = t('statDescSections');
-
         els.labelSearch.textContent = t('labelSearch');
         els.labelSection.textContent = t('labelSection');
         els.labelSort.textContent = t('labelSort');
-
         els.searchInput.placeholder = t('placeholderSearch');
         els.resetBtn.textContent = t('resetBtn');
         els.focusSearchBtn.textContent = t('focusSearchBtn');
-        els.loadMoreBtn.textContent = t('loadMoreBtn');
         els.emptyState.textContent = t('emptyState');
+        els.loadMoreBtn.textContent = t('loadMore');
         els.footerNote.textContent = t('footerNote');
+        els.lbKeyMaterial.textContent = t('lbMaterial');
+        els.lbKeySize.textContent = t('lbSize');
+        els.lbKeyYear.textContent = t('lbYear');
+        els.lbKeyImage.textContent = t('lbImage');
+        els.lbKeyZoom.textContent = t('lbZoom');
+        els.lbOpenImage.textContent = t('openImage');
+        els.lbOpenZoom.textContent = t('openZoom');
         els.loadingScreen.textContent = state.loadState === 'failed' ? t('loadingScreenError') : t('loadingScreen');
 
-        els.lbKeyMaterial.textContent = t('lbKeyMaterial');
-        els.lbKeySize.textContent = t('lbKeySize');
-        els.lbKeyYear.textContent = t('lbKeyYear');
-        els.lbKeyImage.textContent = t('lbKeyImage');
-        els.lbKeyZoom.textContent = t('lbKeyZoom');
-        els.lbOpenImage.textContent = t('lbOpenImage');
-        els.lbOpenZoom.textContent = t('lbOpenZoom');
+        const sortTexts = t('sortOptions');
+        Array.from(els.sortSelect.options).forEach((opt, idx) => {
+          if (sortTexts[idx]) opt.textContent = sortTexts[idx];
+        });
 
-        rebuildSelectTexts();
         setStatusByState();
+      }
+
+      function populateSections() {
+        const prev = state.section;
+        els.sectionSelect.innerHTML = '';
+
+        const allOpt = document.createElement('option');
+        allOpt.value = 'all';
+        allOpt.textContent = t('allSections');
+        els.sectionSelect.appendChild(allOpt);
+
+        Object.keys(SECTION_MAP)
+          .map(Number)
+          .sort((a, b) => a - b)
+          .forEach((sectionId) => {
+            const hasWorks = state.all.some(item => item.section_id === sectionId);
+            if (!hasWorks) return;
+
+            const opt = document.createElement('option');
+            opt.value = String(sectionId);
+            opt.textContent = getSectionTextById(sectionId);
+            els.sectionSelect.appendChild(opt);
+          });
+
+        const values = Array.from(els.sectionSelect.options).map(o => o.value);
+        state.section = values.includes(prev) ? prev : 'all';
+        els.sectionSelect.value = state.section;
+
+        els.statSections.textContent = numberFormat.format(els.sectionSelect.options.length - 1);
       }
 
       function updateStats() {
@@ -1391,27 +1309,26 @@
 
         const parts = [];
         if (state.query) parts.push(`${t('searchPrefix')}: “${state.query}”`);
-        if (state.section !== 'all') {
-          const selected = els.sectionSelect.options[els.sectionSelect.selectedIndex];
-          parts.push(`${t('sectionPrefix')}: ${selected ? selected.textContent : state.section}`);
+        if (state.section !== 'all') parts.push(`${t('sectionPrefix')}: ${getSectionTextById(Number(state.section))}`);
+        els.activeFilterText.textContent = parts.length ? parts.join(' / ') : t('activeFilterNone');
+
+        if (state.lang === 'en') {
+          els.resultText.textContent = `${numberFormat.format(state.filtered.length)}${t('resultUnit')}`;
+          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(Math.min(state.visibleCount, state.filtered.length))}`;
+        } else {
+          els.resultText.textContent = `${numberFormat.format(state.filtered.length)}${t('resultUnit')}`;
+          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(Math.min(state.visibleCount, state.filtered.length))}${t('renderedSuffix')}`;
         }
-        if (!parts.length) parts.push(t('activeFilterNone'));
-        els.activeFilterText.textContent = parts.join(' / ');
       }
 
-      function createImgElement(src, fallbackSrc, alt) {
+      function createThumb(primarySrc, fallbackSrc, alt) {
         const img = document.createElement('img');
         img.className = 'thumb';
         img.alt = alt;
-        img.loading = 'lazy';
-        img.decoding = 'async';
 
         let triedFallback = false;
 
-        img.addEventListener('load', () => {
-          img.classList.add('is-loaded');
-        });
-
+        img.addEventListener('load', () => img.classList.add('is-loaded'));
         img.addEventListener('error', () => {
           if (!triedFallback && fallbackSrc && img.src !== fallbackSrc) {
             triedFallback = true;
@@ -1422,10 +1339,8 @@
           img.classList.add('is-error');
         });
 
-        img.src = src || fallbackSrc || SVG_PLACEHOLDER;
-        if (!src && !fallbackSrc) {
-          img.classList.add('is-error');
-        }
+        img.src = primarySrc || fallbackSrc || SVG_PLACEHOLDER;
+        if (!primarySrc && !fallbackSrc) img.classList.add('is-error');
 
         return img;
       }
@@ -1436,19 +1351,18 @@
         const size = getSize(item);
         const year = getYear(item);
         const infoLine = [material, size, year].filter(Boolean).join(' / ');
-        const primaryImage = toAbsoluteUrl(item.image || '');
-        const fallbackImage = toAbsoluteUrl(item.zoom || '');
+        const imageSrc = toAbsoluteUrl(item.image || '');
+        const zoomSrc = toAbsoluteUrl(item.zoom || '');
 
         const card = document.createElement('article');
         card.className = 'card';
         card.setAttribute('tabindex', '0');
         card.setAttribute('role', 'button');
         card.setAttribute('aria-label', `${item.id} 작품 보기`);
-        card.dataset.id = item.id;
 
         const thumbWrap = document.createElement('div');
         thumbWrap.className = 'thumb-wrap';
-        thumbWrap.appendChild(createImgElement(primaryImage, fallbackImage, title || item.id));
+        thumbWrap.appendChild(createThumb(imageSrc, zoomSrc, title || item.id));
 
         const body = document.createElement('div');
         body.className = 'card-body';
@@ -1462,7 +1376,7 @@
 
         const sectionEl = document.createElement('div');
         sectionEl.className = 'section-tag';
-        sectionEl.textContent = getSectionLabel(item);
+        sectionEl.textContent = getSectionTextById(item.section_id);
 
         top.appendChild(idEl);
         top.appendChild(sectionEl);
@@ -1483,7 +1397,6 @@
         card.appendChild(body);
 
         const open = () => openLightbox(item);
-
         card.addEventListener('click', open);
         card.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -1499,35 +1412,20 @@
         els.loadingScreen.style.display = 'none';
         els.resultsMeta.style.display = 'flex';
 
-        const total = state.filtered.length;
-        const visible = state.filtered.slice(0, state.visibleCount);
-
-        if (state.lang === 'en') {
-          els.resultText.textContent = `${numberFormat.format(total)}${t('resultUnit')}`;
-          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visible.length)}`;
-        } else {
-          els.resultText.textContent = `${numberFormat.format(total)}${t('resultUnit')}`;
-          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visible.length)}${state.lang === 'kr' ? '점' : ''}`;
-        }
-
-        if (state.lang === 'both') {
-          els.resultText.textContent = `${numberFormat.format(total)}${t('resultUnit')}`;
-          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visible.length)}`;
-        }
-
         els.grid.innerHTML = '';
-        els.emptyState.hidden = total !== 0;
+        els.emptyState.hidden = state.filtered.length !== 0;
 
-        if (!total) {
+        if (!state.filtered.length) {
           els.loadWrap.hidden = true;
           return;
         }
 
+        const visible = state.filtered.slice(0, state.visibleCount);
         const frag = document.createDocumentFragment();
-        visible.forEach((item) => frag.appendChild(createCard(item)));
+        visible.forEach(item => frag.appendChild(createCard(item)));
         els.grid.appendChild(frag);
 
-        els.loadWrap.hidden = visible.length >= total;
+        els.loadWrap.hidden = visible.length >= state.filtered.length;
       }
 
       function openLightbox(item) {
@@ -1543,22 +1441,18 @@
 
         els.lbId.textContent = item.id;
         els.lbTitle.textContent = title;
-        els.lbSection.textContent = getSectionLabel(item);
-        els.lbMaterial.textContent = material;
-        els.lbSize.textContent = size;
-        els.lbYear.textContent = year;
+        els.lbSection.textContent = getSectionTextById(item.section_id);
+        els.lbMaterialVal.textContent = material;
+        els.lbSizeVal.textContent = size;
+        els.lbYearVal.textContent = year;
         els.lbImagePath.textContent = imageUrl || '—';
         els.lbZoomPath.textContent = zoomUrl || '—';
         els.lbOpenImage.href = imageUrl || '#';
         els.lbOpenZoom.href = zoomUrl || '#';
-        els.lbOpenImage.textContent = t('lbOpenImage');
-        els.lbOpenZoom.textContent = t('lbOpenZoom');
 
         els.lightboxImage.alt = title;
         els.lightboxImage.src = displayUrl;
-        els.lightboxImage.onerror = () => {
-          els.lightboxImage.src = SVG_PLACEHOLDER;
-        };
+        els.lightboxImage.onerror = () => { els.lightboxImage.src = SVG_PLACEHOLDER; };
 
         els.lightbox.classList.add('open');
         els.lightbox.setAttribute('aria-hidden', 'false');
@@ -1579,65 +1473,15 @@
 
         state.filtered = state.all
           .filter((item) => {
-            if (state.section !== 'all') {
-              const key = String(item.section_id) + '|' + (safeText(item.section_kr) || safeText(item.section_en) || 'Unsorted');
-              if (key !== state.section) return false;
-            }
+            if (state.section !== 'all' && item.section_id !== Number(state.section)) return false;
             if (!query) return true;
             return buildSearchText(item).includes(query);
           })
           .sort((a, b) => compareItems(a, b, state.sort));
 
         state.visibleCount = PAGE_SIZE;
-        populateSections(state.all);
         updateStats();
         render();
-      }
-
-      function resetFilters() {
-        state.query = '';
-        state.section = 'all';
-        state.sort = 'section-id-asc';
-
-        els.searchInput.value = '';
-        els.sectionSelect.value = 'all';
-        els.sortSelect.value = 'section-id-asc';
-
-        applyFilters();
-      }
-
-      async function loadData() {
-        state.loadState = 'loading';
-        updateUIText();
-        els.sourcePill.textContent = `Source: ${DATA_URL}`;
-
-        try {
-          const response = await fetch(DATA_URL, { cache: 'no-store' });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-          const raw = await response.json();
-
-          const arr =
-            Array.isArray(raw) ? raw :
-            Array.isArray(raw.works) ? raw.works :
-            Array.isArray(raw.items) ? raw.items :
-            Array.isArray(raw.data) ? raw.data :
-            null;
-
-          if (!arr) throw new Error('works.json structure not recognized');
-
-          state.all = arr.map(normalizeItem);
-          state.loadState = 'loaded';
-
-          updateUIText();
-          populateSections(state.all);
-          applyFilters();
-        } catch (error) {
-          console.error(error);
-          state.loadState = 'failed';
-          updateUIText();
-          els.loadingScreen.style.display = 'block';
-        }
       }
 
       function setLanguage(lang) {
@@ -1647,14 +1491,45 @@
           tab.classList.toggle('active', active);
           tab.setAttribute('aria-pressed', active ? 'true' : 'false');
         });
-        updateUIText();
-        populateSections(state.all);
-        updateStats();
-        render();
+        rebuildStaticTexts();
+        populateSections();
+        applyFilters();
+        if (state.lightboxItem) openLightbox(state.lightboxItem);
+      }
 
-        if (state.lightboxItem) {
-          openLightbox(state.lightboxItem);
+      async function loadData() {
+        state.loadState = 'loading';
+        rebuildStaticTexts();
+        els.sourcePill.textContent = `Source: ${DATA_URL}`;
+
+        try {
+          const response = await fetch(DATA_URL, { cache: 'no-store' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const raw = await response.json();
+          const arr = Array.isArray(raw.works) ? raw.works : (Array.isArray(raw) ? raw : []);
+
+          state.all = arr.map(normalizeItem);
+          state.loadState = 'loaded';
+
+          rebuildStaticTexts();
+          populateSections();
+          applyFilters();
+        } catch (error) {
+          console.error(error);
+          state.loadState = 'failed';
+          rebuildStaticTexts();
+          els.loadingScreen.style.display = 'block';
         }
+      }
+
+      function resetFilters() {
+        state.query = '';
+        state.section = 'all';
+        state.sort = 'section-id-asc';
+        els.searchInput.value = '';
+        els.sectionSelect.value = 'all';
+        els.sortSelect.value = 'section-id-asc';
+        applyFilters();
       }
 
       function bindEvents() {
@@ -1682,19 +1557,17 @@
 
         els.loadMoreBtn.addEventListener('click', () => {
           state.visibleCount += PAGE_SIZE;
+          updateStats();
           render();
         });
 
         els.lightboxClose.addEventListener('click', closeLightbox);
-
         els.lightbox.addEventListener('click', (e) => {
           if (e.target === els.lightbox) closeLightbox();
         });
 
         document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && els.lightbox.classList.contains('open')) {
-            closeLightbox();
-          }
+          if (e.key === 'Escape' && els.lightbox.classList.contains('open')) closeLightbox();
         });
 
         els.langTabs.forEach((tab) => {
@@ -1703,7 +1576,7 @@
       }
 
       bindEvents();
-      updateUIText();
+      rebuildStaticTexts();
       loadData();
     })();
   </script>

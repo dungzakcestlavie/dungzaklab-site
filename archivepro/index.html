@@ -813,7 +813,8 @@
     (() => {
       'use strict';
 
-      const DATA_URL = 'https://dungzak.art/data/works.json';
+      const SITE_ROOT = 'https://dungzak.art/';
+      const DATA_URL = `${SITE_ROOT}data/works.json`;
       const PAGE_SIZE = 72;
 
       const state = {
@@ -877,6 +878,13 @@
       function safeText(v) {
         if (v === null || v === undefined) return '';
         return String(v).trim();
+      }
+
+      function toAbsoluteUrl(path) {
+        const clean = safeText(path);
+        if (!clean) return '';
+        if (/^https?:\/\//i.test(clean)) return clean;
+        return new URL(clean.replace(/^\/+/, ''), SITE_ROOT).href;
       }
 
       function getSectionLabel(item) {
@@ -1077,7 +1085,7 @@
         const size = getSize(item);
         const year = getYear(item);
         const infoLine = [material, size, year].filter(Boolean).join(' / ');
-        const imageSrc = item.image || item.zoom || '';
+        const imageSrc = toAbsoluteUrl(item.image || item.zoom || '');
 
         const card = document.createElement('article');
         card.className = 'card';
@@ -1175,8 +1183,10 @@
         const material = getMaterial(item) || '—';
         const size = getSize(item) || '—';
         const year = getYear(item) || '—';
-        const image = item.zoom || item.image || '';
-        const imageFallback = item.image || '';
+        const image = toAbsoluteUrl(item.zoom || item.image || '');
+        const imageFallback = toAbsoluteUrl(item.image || '');
+        const imageUrl = toAbsoluteUrl(item.image || '');
+        const zoomUrl = toAbsoluteUrl(item.zoom || item.image || '');
 
         els.lbId.textContent = item.id;
         els.lbTitle.textContent = title;
@@ -1184,11 +1194,11 @@
         els.lbMaterial.textContent = material;
         els.lbSize.textContent = size;
         els.lbYear.textContent = year;
-        els.lbImagePath.textContent = item.image || '—';
-        els.lbZoomPath.textContent = item.zoom || '—';
+        els.lbImagePath.textContent = imageUrl || '—';
+        els.lbZoomPath.textContent = zoomUrl || '—';
 
-        els.lbOpenImage.href = item.image || '#';
-        els.lbOpenZoom.href = item.zoom || item.image || '#';
+        els.lbOpenImage.href = imageUrl || '#';
+        els.lbOpenZoom.href = zoomUrl || '#';
 
         els.lightboxImage.alt = title;
         els.lightboxImage.src = image || imageFallback;

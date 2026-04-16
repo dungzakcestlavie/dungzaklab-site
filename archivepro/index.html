@@ -3,94 +3,1300 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b0f1a" />
+  <meta name="theme-color" content="#0b0f14" />
   <meta name="color-scheme" content="dark" />
+  <meta name="format-detection" content="telephone=no,address=no,email=no" />
+
   <title>Archive Pro — DUNGZAK CESTLAVIE LAB</title>
   <meta name="description" content="Archive Pro — artwork archive engine for search, filter, and zoom view." />
-  <link rel="stylesheet" href="./styles.css" />
+
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#101722;
+      --panel-2:#131c29;
+      --line:rgba(212,180,109,.18);
+      --line-strong:rgba(212,180,109,.34);
+      --text:#f4efe6;
+      --muted:rgba(244,239,230,.68);
+      --soft:rgba(244,239,230,.48);
+      --gold:#d4b46d;
+      --gold-2:#b89447;
+      --shadow:0 20px 60px rgba(0,0,0,.35);
+      --radius:18px;
+      --radius-sm:12px;
+      --max:1460px;
+      --header-h:84px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text)}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Segoe UI",Roboto,sans-serif;
+      min-height:100vh;
+      line-height:1.5;
+      letter-spacing:.01em;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+      overflow-x:hidden;
+    }
+
+    a{color:inherit;text-decoration:none}
+    img{display:block;max-width:100%}
+    button,input,select{font:inherit}
+
+    .site-bg{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(212,180,109,.08), transparent 34%),
+        radial-gradient(circle at 85% 18%, rgba(98,129,175,.10), transparent 28%),
+        radial-gradient(circle at 50% 100%, rgba(212,180,109,.06), transparent 34%),
+        linear-gradient(180deg, #0a0e14 0%, #0b0f14 42%, #0c1018 100%);
+    }
+
+    .site-shell{
+      position:relative;
+      z-index:1;
+      width:min(calc(100% - 28px), var(--max));
+      margin:0 auto;
+      padding:18px 0 44px;
+    }
+
+    .site-header{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+      background:linear-gradient(180deg, rgba(11,15,20,.92) 0%, rgba(11,15,20,.72) 100%);
+      border-bottom:1px solid rgba(255,255,255,.03);
+    }
+
+    .header-inner{
+      width:min(calc(100% - 28px), var(--max));
+      min-height:var(--header-h);
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:14px;
+      align-items:center;
+      padding:16px 0;
+    }
+
+    .brand-wrap{min-width:0}
+    .eyebrow{
+      margin:0 0 4px;
+      color:var(--gold);
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .brand-row{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:flex-end;
+      gap:10px 14px;
+    }
+
+    .brand-row h1{
+      margin:0;
+      font-size:clamp(26px,4vw,42px);
+      line-height:1;
+      letter-spacing:.04em;
+      font-weight:700;
+      color:var(--text);
+    }
+
+    .subline{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+    }
+
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      padding:0 14px;
+      border:1px solid var(--line-strong);
+      border-radius:999px;
+      color:var(--gold);
+      background:rgba(212,180,109,.04);
+      transition:.2s ease;
+      white-space:nowrap;
+    }
+
+    .back-link:hover{
+      border-color:rgba(212,180,109,.52);
+      background:rgba(212,180,109,.08);
+      transform:translateY(-1px);
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:16px;
+      padding-top:18px;
+    }
+
+    .panel{
+      background:linear-gradient(180deg, rgba(19,28,41,.92), rgba(16,23,34,.90));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    .hero-card{
+      padding:22px 20px;
+      min-width:0;
+    }
+
+    .hero-title{
+      margin:0 0 8px;
+      font-size:clamp(22px,3vw,34px);
+      line-height:1.12;
+      letter-spacing:.01em;
+    }
+
+    .hero-text{
+      margin:0;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      padding:18px;
+    }
+
+    .stat{
+      background:rgba(255,255,255,.02);
+      border:1px solid rgba(255,255,255,.04);
+      border-radius:16px;
+      padding:16px 14px;
+      min-height:96px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:4px;
+    }
+
+    .stat .k{
+      font-size:12px;
+      color:var(--soft);
+      text-transform:uppercase;
+      letter-spacing:.12em;
+    }
+
+    .stat .v{
+      font-size:clamp(20px,3vw,32px);
+      line-height:1;
+      color:var(--gold);
+      font-weight:700;
+      letter-spacing:.02em;
+    }
+
+    .stat .d{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .controls{
+      margin-top:16px;
+      padding:16px;
+      display:grid;
+      grid-template-columns:1.3fr .9fr .9fr auto;
+      gap:12px;
+      align-items:end;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+      min-width:0;
+    }
+
+    .field label{
+      font-size:12px;
+      color:var(--soft);
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .input,
+    .select{
+      width:100%;
+      min-height:46px;
+      padding:0 14px;
+      color:var(--text);
+      background:#0f1621;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      outline:none;
+      transition:.18s ease;
+    }
+
+    .input::placeholder{color:rgba(244,239,230,.42)}
+    .input:focus,
+    .select:focus{
+      border-color:rgba(212,180,109,.55);
+      box-shadow:0 0 0 4px rgba(212,180,109,.08);
+    }
+
+    .control-actions{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      min-height:46px;
+      padding:0 16px;
+      border-radius:12px;
+      border:1px solid var(--line-strong);
+      background:rgba(212,180,109,.06);
+      color:var(--gold);
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      background:rgba(212,180,109,.10);
+      border-color:rgba(212,180,109,.58);
+    }
+
+    .btn.secondary{
+      color:var(--text);
+      background:rgba(255,255,255,.03);
+      border-color:rgba(255,255,255,.08);
+    }
+
+    .meta-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin:16px 2px 10px;
+      color:var(--muted);
+      font-size:14px;
+      flex-wrap:wrap;
+    }
+
+    .meta-left,
+    .meta-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .meta-pill{
+      display:inline-flex;
+      align-items:center;
+      min-height:32px;
+      padding:0 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .status{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+    }
+
+    .status.error{
+      color:#ffb0b0;
+      border-color:rgba(255,110,110,.28);
+      background:rgba(255,110,110,.08);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:14px;
+    }
+
+    .card{
+      overflow:hidden;
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(20,28,40,.92), rgba(13,18,27,.94));
+      border:1px solid rgba(255,255,255,.05);
+      box-shadow:0 14px 34px rgba(0,0,0,.26);
+      transition:.22s ease;
+      cursor:pointer;
+      min-width:0;
+    }
+
+    .card:hover{
+      transform:translateY(-3px);
+      border-color:rgba(212,180,109,.22);
+      box-shadow:0 18px 40px rgba(0,0,0,.34);
+    }
+
+    .thumb-wrap{
+      position:relative;
+      aspect-ratio:1/1;
+      overflow:hidden;
+      background:#0a0f16;
+    }
+
+    .thumb{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      transform:scale(1.001);
+      transition:transform .45s ease, opacity .22s ease;
+      opacity:0;
+    }
+
+    .thumb.is-loaded{opacity:1}
+    .card:hover .thumb{transform:scale(1.035)}
+
+    .card-body{
+      padding:12px 12px 13px;
+      min-width:0;
+    }
+
+    .card-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:8px;
+    }
+
+    .work-id{
+      color:var(--gold);
+      font-size:12px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      word-break:break-word;
+    }
+
+    .section-tag{
+      flex:0 0 auto;
+      font-size:11px;
+      color:var(--soft);
+      padding:3px 8px;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:999px;
+      background:rgba(255,255,255,.02);
+      max-width:56%;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .title{
+      margin:0 0 6px;
+      font-size:14px;
+      color:var(--text);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .title.empty{
+      color:var(--muted);
+      font-style:italic;
+    }
+
+    .caption{
+      margin:0;
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .empty-state{
+      padding:38px 18px;
+      border:1px dashed rgba(255,255,255,.08);
+      border-radius:18px;
+      text-align:center;
+      color:var(--muted);
+      background:rgba(255,255,255,.02);
+    }
+
+    .load-wrap{
+      display:flex;
+      justify-content:center;
+      padding:18px 0 8px;
+    }
+
+    .footer-note{
+      margin:22px 0 0;
+      padding:0 2px;
+      color:var(--soft);
+      font-size:12px;
+      text-align:center;
+      letter-spacing:.04em;
+    }
+
+    .lightbox{
+      position:fixed;
+      inset:0;
+      z-index:120;
+      display:none;
+      background:rgba(6,10,14,.92);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+    }
+
+    .lightbox.open{display:block}
+
+    .lightbox-close{
+      position:absolute;
+      top:max(16px, env(safe-area-inset-top));
+      right:max(16px, env(safe-area-inset-right));
+      z-index:4;
+      min-width:46px;
+      min-height:46px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.26);
+      color:var(--text);
+      cursor:pointer;
+      font-size:20px;
+    }
+
+    .lightbox-inner{
+      position:absolute;
+      inset:0;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 380px;
+      gap:0;
+    }
+
+    .lightbox-stage{
+      position:relative;
+      min-width:0;
+      min-height:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:74px 22px 24px;
+    }
+
+    .lightbox-stage img{
+      max-width:100%;
+      max-height:calc(100vh - 110px);
+      object-fit:contain;
+      box-shadow:0 20px 60px rgba(0,0,0,.42);
+      border-radius:8px;
+      background:#091018;
+    }
+
+    .lightbox-side{
+      border-left:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(18,26,38,.96), rgba(12,18,27,.96));
+      padding:78px 22px 22px;
+      overflow:auto;
+    }
+
+    .lightbox-side .lb-id{
+      margin:0 0 8px;
+      font-size:12px;
+      color:var(--gold);
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+
+    .lightbox-side .lb-title{
+      margin:0 0 10px;
+      font-size:24px;
+      line-height:1.2;
+      word-break:keep-all;
+    }
+
+    .lightbox-side .lb-section{
+      margin:0 0 18px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .lb-meta{
+      display:grid;
+      gap:10px;
+      margin:0 0 20px;
+    }
+
+    .lb-row{
+      display:grid;
+      grid-template-columns:88px minmax(0,1fr);
+      gap:10px;
+      align-items:start;
+      font-size:14px;
+    }
+
+    .lb-key{color:var(--soft)}
+    .lb-val{color:var(--text);word-break:break-word}
+
+    .lb-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:18px;
+    }
+
+    .lb-link{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:0 14px;
+      border-radius:12px;
+      border:1px solid rgba(212,180,109,.34);
+      background:rgba(212,180,109,.06);
+      color:var(--gold);
+    }
+
+    .loading-screen{
+      padding:46px 18px;
+      text-align:center;
+      color:var(--muted);
+    }
+
+    .sr-only{
+      position:absolute !important;
+      width:1px;height:1px;
+      padding:0;margin:-1px;
+      overflow:hidden;clip:rect(0,0,0,0);
+      white-space:nowrap;border:0;
+    }
+
+    @media (max-width:1180px){
+      .hero{grid-template-columns:1fr}
+      .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .lightbox-inner{grid-template-columns:1fr 340px}
+    }
+
+    @media (max-width:880px){
+      .controls{
+        grid-template-columns:1fr 1fr;
+      }
+      .control-actions{
+        grid-column:1/-1;
+        justify-content:stretch;
+      }
+      .control-actions .btn{flex:1 1 0}
+      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .lightbox-inner{
+        grid-template-columns:1fr;
+      }
+      .lightbox-side{
+        border-left:0;
+        border-top:1px solid rgba(255,255,255,.06);
+        padding-top:22px;
+      }
+      .lightbox-stage{
+        padding:74px 14px 14px;
+      }
+      .lightbox-stage img{
+        max-height:56vh;
+      }
+    }
+
+    @media (max-width:640px){
+      .site-shell{width:min(calc(100% - 18px), var(--max))}
+      .header-inner{width:min(calc(100% - 18px), var(--max))}
+      .stats{grid-template-columns:1fr}
+      .controls{grid-template-columns:1fr}
+      .grid{gap:10px}
+      .card-body{padding:10px 10px 12px}
+      .title{font-size:13px}
+      .caption{font-size:11px}
+      .meta-row{font-size:13px}
+      .back-link{min-height:42px;padding:0 12px}
+      .lightbox-side .lb-title{font-size:20px}
+      .lb-row{grid-template-columns:72px minmax(0,1fr)}
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      *,*::before,*::after{
+        animation:none !important;
+        transition:none !important;
+        scroll-behavior:auto !important;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="site-header">
+  <div class="site-bg" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="header-inner">
       <div class="brand-wrap">
         <p class="eyebrow">DUNGZAK CESTLAVIE LAB</p>
-        <h1>ARCHIVE PRO</h1>
-        <p class="subline">Search, filter, access.</p>
+        <div class="brand-row">
+          <h1>ARCHIVE PRO</h1>
+          <p class="subline">Search, filter, access.</p>
+        </div>
+      </div>
+      <a class="back-link" href="../index.html" aria-label="LAB으로 돌아가기">LAB</a>
+    </div>
+  </header>
+
+  <div class="site-shell">
+    <section class="hero">
+      <article class="panel hero-card">
+        <h2 class="hero-title">works.json을 읽는 아카이브 인터페이스</h2>
+        <p class="hero-text">
+          Archive Pro는 별도 데이터베이스가 아니라 dungzak.art의 works.json을 직접 읽는 구조다.
+          검색, 섹션 필터, 정렬, 확대 보기를 통해 작품 축적을 운영 가능한 화면으로 바꾼다.
+        </p>
+      </article>
+
+      <aside class="panel stats" aria-label="아카이브 통계">
+        <div class="stat">
+          <div class="k">Total</div>
+          <div class="v" id="statTotal">—</div>
+          <div class="d">전체 작품 수</div>
+        </div>
+        <div class="stat">
+          <div class="k">Filtered</div>
+          <div class="v" id="statFiltered">—</div>
+          <div class="d">현재 검색 결과</div>
+        </div>
+        <div class="stat">
+          <div class="k">Sections</div>
+          <div class="v" id="statSections">—</div>
+          <div class="d">섹션 수</div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="panel controls" aria-label="아카이브 검색 및 필터">
+      <div class="field">
+        <label for="searchInput">Search</label>
+        <input
+          id="searchInput"
+          class="input"
+          type="search"
+          placeholder="ID, 제목, 재료, 연도, 섹션 검색"
+          autocomplete="off"
+          spellcheck="false"
+        />
       </div>
 
-      <a class="back-link" href="../index.html">LAB</a>
-    </header>
+      <div class="field">
+        <label for="sectionSelect">Section</label>
+        <select id="sectionSelect" class="select" aria-label="섹션 선택">
+          <option value="all">전체 섹션</option>
+        </select>
+      </div>
 
-    <main class="main-layout">
-      <section class="control-panel" aria-label="Archive controls">
-        <div class="search-row">
-          <label class="sr-only" for="searchInput">Search artworks</label>
-          <input
-            id="searchInput"
-            class="search-input"
-            type="search"
-            placeholder="Search by ID or title (e.g. OR-690)"
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <button id="clearSearchBtn" class="ghost-button" type="button">Clear</button>
+      <div class="field">
+        <label for="sortSelect">Sort</label>
+        <select id="sortSelect" class="select" aria-label="정렬 선택">
+          <option value="section-id-asc">섹션 + ID 오름차순</option>
+          <option value="id-asc">ID 오름차순</option>
+          <option value="id-desc">ID 내림차순</option>
+          <option value="year-desc">연도 최신순</option>
+          <option value="year-asc">연도 오래된순</option>
+          <option value="title-asc">제목 가나다/ABC</option>
+        </select>
+      </div>
+
+      <div class="control-actions">
+        <button id="resetBtn" class="btn secondary" type="button">초기화</button>
+        <button id="focusSearchBtn" class="btn" type="button">검색 집중</button>
+      </div>
+    </section>
+
+    <div class="meta-row">
+      <div class="meta-left">
+        <span class="meta-pill" id="sourcePill">Source: https://dungzak.art/data/works.json</span>
+        <span class="meta-pill" id="loadedPill">Loaded: —</span>
+      </div>
+      <div class="meta-right">
+        <span id="statusText" class="status">대기 중</span>
+      </div>
+    </div>
+
+    <main id="archiveMain" aria-live="polite">
+      <div id="loadingScreen" class="panel loading-screen">works.json을 불러오는 중입니다.</div>
+      <div id="resultsMeta" class="meta-row" style="display:none;">
+        <div class="meta-left">
+          <strong id="resultText">0점</strong>
+          <span class="meta-pill" id="renderedText">표시 0점</span>
         </div>
-
-        <div class="filter-row" role="tablist" aria-label="Artwork sections">
-          <button class="filter-chip is-active" type="button" data-filter="all">All</button>
-          <button class="filter-chip" type="button" data-filter="0">Origins</button>
-          <button class="filter-chip" type="button" data-filter="1">I</button>
-          <button class="filter-chip" type="button" data-filter="2">II</button>
-          <button class="filter-chip" type="button" data-filter="3">III</button>
-          <button class="filter-chip" type="button" data-filter="4">IV</button>
-          <button class="filter-chip" type="button" data-filter="5">V</button>
+        <div class="meta-right">
+          <span class="meta-pill" id="activeFilterText">필터 없음</span>
         </div>
+      </div>
 
-        <div class="sort-row">
-          <label for="sortSelect">Sort</label>
-          <select id="sortSelect" class="sort-select">
-            <option value="id-asc">ID ↑</option>
-            <option value="id-desc">ID ↓</option>
-          </select>
-        </div>
+      <section id="grid" class="grid" aria-label="작품 그리드"></section>
 
-        <div class="meta-row" aria-live="polite">
-          <span id="resultCount">0 works</span>
-          <span id="statusLine">Loading archive...</span>
-        </div>
-      </section>
+      <div id="emptyState" class="empty-state" hidden>
+        조건에 맞는 작품이 없습니다.
+      </div>
 
-      <section class="grid-section" aria-label="Artwork results">
-        <div id="artGrid" class="art-grid"></div>
-        <div id="emptyState" class="empty-state" hidden>No works found.</div>
-      </section>
+      <div id="loadWrap" class="load-wrap" hidden>
+        <button id="loadMoreBtn" class="btn" type="button">더 보기</button>
+      </div>
+
+      <p class="footer-note">
+        DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json
+      </p>
     </main>
   </div>
 
-  <dialog id="viewer" class="viewer">
-    <div class="viewer-shell">
-      <button class="viewer-close" id="closeViewerBtn" type="button" aria-label="Close">×</button>
+  <div id="lightbox" class="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="작품 확대 보기">
+    <button id="lightboxClose" class="lightbox-close" type="button" aria-label="닫기">×</button>
 
-      <div class="viewer-content">
-        <button class="nav-button prev-button" id="prevBtn" type="button" aria-label="Previous work">‹</button>
-
-        <figure class="viewer-figure">
-          <img id="viewerImage" src="" alt="" />
-          <figcaption class="viewer-caption">
-            <p id="viewerId" class="viewer-id"></p>
-            <p id="viewerSection" class="viewer-section"></p>
-            <p id="viewerTitle" class="viewer-title"></p>
-            <p id="viewerMaterial" class="viewer-material"></p>
-            <p id="viewerSize" class="viewer-size"></p>
-            <p id="viewerYear" class="viewer-year"></p>
-          </figcaption>
-        </figure>
-
-        <button class="nav-button next-button" id="nextBtn" type="button" aria-label="Next work">›</button>
+    <div class="lightbox-inner">
+      <div class="lightbox-stage" id="lightboxStage">
+        <img id="lightboxImage" alt="" />
       </div>
-    </div>
-  </dialog>
 
-  <script src="./app.js"></script>
+      <aside class="lightbox-side">
+        <p class="lb-id" id="lbId">—</p>
+        <h3 class="lb-title" id="lbTitle">—</h3>
+        <p class="lb-section" id="lbSection">—</p>
+
+        <div class="lb-meta">
+          <div class="lb-row">
+            <div class="lb-key">재료</div>
+            <div class="lb-val" id="lbMaterial">—</div>
+          </div>
+          <div class="lb-row">
+            <div class="lb-key">크기</div>
+            <div class="lb-val" id="lbSize">—</div>
+          </div>
+          <div class="lb-row">
+            <div class="lb-key">연도</div>
+            <div class="lb-val" id="lbYear">—</div>
+          </div>
+          <div class="lb-row">
+            <div class="lb-key">이미지</div>
+            <div class="lb-val" id="lbImagePath">—</div>
+          </div>
+          <div class="lb-row">
+            <div class="lb-key">줌</div>
+            <div class="lb-val" id="lbZoomPath">—</div>
+          </div>
+        </div>
+
+        <div class="lb-actions">
+          <a id="lbOpenImage" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">이미지 열기</a>
+          <a id="lbOpenZoom" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">줌 열기</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const DATA_URL = 'https://dungzak.art/data/works.json';
+      const PAGE_SIZE = 72;
+
+      const state = {
+        all: [],
+        filtered: [],
+        visibleCount: PAGE_SIZE,
+        query: '',
+        section: 'all',
+        sort: 'section-id-asc',
+        lightboxItem: null
+      };
+
+      const els = {
+        statTotal: document.getElementById('statTotal'),
+        statFiltered: document.getElementById('statFiltered'),
+        statSections: document.getElementById('statSections'),
+
+        searchInput: document.getElementById('searchInput'),
+        sectionSelect: document.getElementById('sectionSelect'),
+        sortSelect: document.getElementById('sortSelect'),
+        resetBtn: document.getElementById('resetBtn'),
+        focusSearchBtn: document.getElementById('focusSearchBtn'),
+
+        sourcePill: document.getElementById('sourcePill'),
+        loadedPill: document.getElementById('loadedPill'),
+        statusText: document.getElementById('statusText'),
+
+        loadingScreen: document.getElementById('loadingScreen'),
+        resultsMeta: document.getElementById('resultsMeta'),
+        resultText: document.getElementById('resultText'),
+        renderedText: document.getElementById('renderedText'),
+        activeFilterText: document.getElementById('activeFilterText'),
+
+        grid: document.getElementById('grid'),
+        emptyState: document.getElementById('emptyState'),
+        loadWrap: document.getElementById('loadWrap'),
+        loadMoreBtn: document.getElementById('loadMoreBtn'),
+
+        lightbox: document.getElementById('lightbox'),
+        lightboxClose: document.getElementById('lightboxClose'),
+        lightboxImage: document.getElementById('lightboxImage'),
+        lbId: document.getElementById('lbId'),
+        lbTitle: document.getElementById('lbTitle'),
+        lbSection: document.getElementById('lbSection'),
+        lbMaterial: document.getElementById('lbMaterial'),
+        lbSize: document.getElementById('lbSize'),
+        lbYear: document.getElementById('lbYear'),
+        lbImagePath: document.getElementById('lbImagePath'),
+        lbZoomPath: document.getElementById('lbZoomPath'),
+        lbOpenImage: document.getElementById('lbOpenImage'),
+        lbOpenZoom: document.getElementById('lbOpenZoom')
+      };
+
+      const numberFormat = new Intl.NumberFormat('ko-KR');
+
+      function setStatus(text, isError = false) {
+        els.statusText.textContent = text;
+        els.statusText.classList.toggle('error', !!isError);
+      }
+
+      function safeText(v) {
+        if (v === null || v === undefined) return '';
+        return String(v).trim();
+      }
+
+      function getSectionLabel(item) {
+        return safeText(item.section_kr) || safeText(item.section_en) || 'Unsorted';
+      }
+
+      function getTitle(item) {
+        return safeText(item.title_kr) || safeText(item.title_en) || '';
+      }
+
+      function getMaterial(item) {
+        const kr = safeText(item.material_kr);
+        const en = safeText(item.material_en);
+        return [kr, en].filter(Boolean).join(' / ');
+      }
+
+      function getSize(item) {
+        const kr = safeText(item.size_kr);
+        const en = safeText(item.size_en);
+        return [kr, en].filter(Boolean).join(' / ');
+      }
+
+      function getYear(item) {
+        return safeText(item.year);
+      }
+
+      function parseIdNumber(id) {
+        const match = safeText(id).match(/(\d+)(?!.*\d)/);
+        return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
+      }
+
+      function parseYearNumber(year) {
+        const y = parseInt(String(year || '').match(/\d{4}/)?.[0] || '', 10);
+        return Number.isFinite(y) ? y : null;
+      }
+
+      function normalizeItem(raw, index) {
+        const item = raw && typeof raw === 'object' ? raw : {};
+
+        const sectionId =
+          Number.isFinite(Number(item.section_id))
+            ? Number(item.section_id)
+            : 9999;
+
+        return {
+          _index: index,
+          id: safeText(item.id) || `item-${index + 1}`,
+          section_id: sectionId,
+          section_kr: safeText(item.section_kr),
+          section_en: safeText(item.section_en),
+          title_kr: safeText(item.title_kr),
+          title_en: safeText(item.title_en),
+          material_kr: safeText(item.material_kr),
+          material_en: safeText(item.material_en),
+          size_kr: safeText(item.size_kr),
+          size_en: safeText(item.size_en),
+          year: safeText(item.year),
+          image: safeText(item.image),
+          zoom: safeText(item.zoom)
+        };
+      }
+
+      function buildSearchText(item) {
+        return [
+          item.id,
+          item.section_kr,
+          item.section_en,
+          item.title_kr,
+          item.title_en,
+          item.material_kr,
+          item.material_en,
+          item.size_kr,
+          item.size_en,
+          item.year,
+          item.image,
+          item.zoom
+        ]
+          .join(' ')
+          .toLowerCase();
+      }
+
+      function compareItems(a, b, mode) {
+        switch (mode) {
+          case 'id-asc': {
+            const idDiff = parseIdNumber(a.id) - parseIdNumber(b.id);
+            if (idDiff !== 0) return idDiff;
+            return a.id.localeCompare(b.id, 'ko');
+          }
+          case 'id-desc': {
+            const idDiff = parseIdNumber(b.id) - parseIdNumber(a.id);
+            if (idDiff !== 0) return idDiff;
+            return b.id.localeCompare(a.id, 'ko');
+          }
+          case 'year-desc': {
+            const ay = parseYearNumber(a.year);
+            const by = parseYearNumber(b.year);
+            if (ay === null && by === null) return a._index - b._index;
+            if (ay === null) return 1;
+            if (by === null) return -1;
+            if (by !== ay) return by - ay;
+            return a._index - b._index;
+          }
+          case 'year-asc': {
+            const ay = parseYearNumber(a.year);
+            const by = parseYearNumber(b.year);
+            if (ay === null && by === null) return a._index - b._index;
+            if (ay === null) return 1;
+            if (by === null) return -1;
+            if (ay !== by) return ay - by;
+            return a._index - b._index;
+          }
+          case 'title-asc': {
+            const at = getTitle(a) || a.id;
+            const bt = getTitle(b) || b.id;
+            const c = at.localeCompare(bt, 'ko');
+            if (c !== 0) return c;
+            return a._index - b._index;
+          }
+          case 'section-id-asc':
+          default: {
+            if (a.section_id !== b.section_id) return a.section_id - b.section_id;
+            const idDiff = parseIdNumber(a.id) - parseIdNumber(b.id);
+            if (idDiff !== 0) return idDiff;
+            return a._index - b._index;
+          }
+        }
+      }
+
+      function populateSections(items) {
+        const map = new Map();
+
+        items.forEach((item) => {
+          const key = String(item.section_id) + '|' + getSectionLabel(item);
+          if (!map.has(key)) {
+            map.set(key, {
+              value: key,
+              label: getSectionLabel(item),
+              section_id: item.section_id
+            });
+          }
+        });
+
+        const sections = Array.from(map.values()).sort((a, b) => {
+          if (a.section_id !== b.section_id) return a.section_id - b.section_id;
+          return a.label.localeCompare(b.label, 'ko');
+        });
+
+        els.sectionSelect.innerHTML = '<option value="all">전체 섹션</option>';
+        sections.forEach((section) => {
+          const option = document.createElement('option');
+          option.value = section.value;
+          option.textContent = section.label;
+          els.sectionSelect.appendChild(option);
+        });
+
+        els.statSections.textContent = numberFormat.format(sections.length);
+      }
+
+      function updateStats() {
+        els.statTotal.textContent = numberFormat.format(state.all.length);
+        els.statFiltered.textContent = numberFormat.format(state.filtered.length);
+        els.loadedPill.textContent = `Loaded: ${numberFormat.format(state.all.length)} items`;
+
+        const parts = [];
+        if (state.query) parts.push(`검색: “${state.query}”`);
+        if (state.section !== 'all') {
+          const selected = els.sectionSelect.options[els.sectionSelect.selectedIndex];
+          parts.push(`섹션: ${selected ? selected.textContent : state.section}`);
+        }
+        if (!parts.length) parts.push('필터 없음');
+        els.activeFilterText.textContent = parts.join(' / ');
+      }
+
+      function applyFilters() {
+        const query = state.query.trim().toLowerCase();
+
+        state.filtered = state.all
+          .filter((item) => {
+            if (state.section !== 'all') {
+              const key = String(item.section_id) + '|' + getSectionLabel(item);
+              if (key !== state.section) return false;
+            }
+
+            if (!query) return true;
+
+            return buildSearchText(item).includes(query);
+          })
+          .sort((a, b) => compareItems(a, b, state.sort));
+
+        state.visibleCount = PAGE_SIZE;
+        updateStats();
+        render();
+      }
+
+      function createCard(item) {
+        const title = getTitle(item);
+        const material = getMaterial(item);
+        const size = getSize(item);
+        const year = getYear(item);
+        const infoLine = [material, size, year].filter(Boolean).join(' / ');
+        const imageSrc = item.image || item.zoom || '';
+
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', `${item.id} 작품 보기`);
+        card.dataset.id = item.id;
+
+        const thumbWrap = document.createElement('div');
+        thumbWrap.className = 'thumb-wrap';
+
+        const img = document.createElement('img');
+        img.className = 'thumb';
+        img.alt = title || item.id;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        if (imageSrc) img.src = imageSrc;
+        img.addEventListener('load', () => img.classList.add('is-loaded'));
+        thumbWrap.appendChild(img);
+
+        const body = document.createElement('div');
+        body.className = 'card-body';
+
+        const top = document.createElement('div');
+        top.className = 'card-top';
+
+        const idEl = document.createElement('div');
+        idEl.className = 'work-id';
+        idEl.textContent = item.id;
+
+        const sectionEl = document.createElement('div');
+        sectionEl.className = 'section-tag';
+        sectionEl.textContent = getSectionLabel(item);
+
+        top.appendChild(idEl);
+        top.appendChild(sectionEl);
+
+        const titleEl = document.createElement('p');
+        titleEl.className = 'title' + (title ? '' : ' empty');
+        titleEl.textContent = title || 'Untitled / No Caption';
+
+        const captionEl = document.createElement('p');
+        captionEl.className = 'caption';
+        captionEl.textContent = infoLine || '정보 없음';
+
+        body.appendChild(top);
+        body.appendChild(titleEl);
+        body.appendChild(captionEl);
+
+        card.appendChild(thumbWrap);
+        card.appendChild(body);
+
+        const open = () => openLightbox(item);
+
+        card.addEventListener('click', open);
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            open();
+          }
+        });
+
+        return card;
+      }
+
+      function render() {
+        els.loadingScreen.style.display = 'none';
+        els.resultsMeta.style.display = 'flex';
+
+        const total = state.filtered.length;
+        const visible = state.filtered.slice(0, state.visibleCount);
+
+        els.resultText.textContent = `${numberFormat.format(total)}점`;
+        els.renderedText.textContent = `표시 ${numberFormat.format(visible.length)}점`;
+
+        els.grid.innerHTML = '';
+        els.emptyState.hidden = total !== 0;
+
+        if (!total) {
+          els.loadWrap.hidden = true;
+          return;
+        }
+
+        const frag = document.createDocumentFragment();
+        visible.forEach((item) => frag.appendChild(createCard(item)));
+        els.grid.appendChild(frag);
+
+        els.loadWrap.hidden = visible.length >= total;
+      }
+
+      function openLightbox(item) {
+        state.lightboxItem = item;
+
+        const title = getTitle(item) || 'Untitled / No Caption';
+        const material = getMaterial(item) || '—';
+        const size = getSize(item) || '—';
+        const year = getYear(item) || '—';
+        const image = item.zoom || item.image || '';
+        const imageFallback = item.image || '';
+
+        els.lbId.textContent = item.id;
+        els.lbTitle.textContent = title;
+        els.lbSection.textContent = getSectionLabel(item);
+        els.lbMaterial.textContent = material;
+        els.lbSize.textContent = size;
+        els.lbYear.textContent = year;
+        els.lbImagePath.textContent = item.image || '—';
+        els.lbZoomPath.textContent = item.zoom || '—';
+
+        els.lbOpenImage.href = item.image || '#';
+        els.lbOpenZoom.href = item.zoom || item.image || '#';
+
+        els.lightboxImage.alt = title;
+        els.lightboxImage.src = image || imageFallback;
+        els.lightbox.classList.add('open');
+        els.lightbox.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeLightbox() {
+        state.lightboxItem = null;
+        els.lightbox.classList.remove('open');
+        els.lightbox.setAttribute('aria-hidden', 'true');
+        els.lightboxImage.removeAttribute('src');
+        document.body.style.overflow = '';
+      }
+
+      function resetFilters() {
+        state.query = '';
+        state.section = 'all';
+        state.sort = 'section-id-asc';
+
+        els.searchInput.value = '';
+        els.sectionSelect.value = 'all';
+        els.sortSelect.value = 'section-id-asc';
+
+        applyFilters();
+      }
+
+      async function loadData() {
+        setStatus('불러오는 중');
+        els.sourcePill.textContent = `Source: ${DATA_URL}`;
+
+        try {
+          const response = await fetch(DATA_URL, { cache: 'no-store' });
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const raw = await response.json();
+
+          const arr =
+            Array.isArray(raw) ? raw :
+            Array.isArray(raw.works) ? raw.works :
+            Array.isArray(raw.items) ? raw.items :
+            Array.isArray(raw.data) ? raw.data :
+            null;
+
+          if (!arr) {
+            throw new Error('works.json 구조를 인식할 수 없습니다.');
+          }
+
+          state.all = arr.map(normalizeItem);
+          populateSections(state.all);
+          applyFilters();
+
+          setStatus('로드 완료');
+        } catch (error) {
+          console.error(error);
+          els.loadingScreen.textContent =
+            'works.json을 불러오지 못했습니다. 경로 또는 접근 권한을 확인해 주세요.';
+          setStatus('로드 실패', true);
+        }
+      }
+
+      function bindEvents() {
+        els.searchInput.addEventListener('input', () => {
+          state.query = els.searchInput.value;
+          applyFilters();
+        });
+
+        els.sectionSelect.addEventListener('change', () => {
+          state.section = els.sectionSelect.value;
+          applyFilters();
+        });
+
+        els.sortSelect.addEventListener('change', () => {
+          state.sort = els.sortSelect.value;
+          applyFilters();
+        });
+
+        els.resetBtn.addEventListener('click', resetFilters);
+
+        els.focusSearchBtn.addEventListener('click', () => {
+          els.searchInput.focus();
+          els.searchInput.select();
+        });
+
+        els.loadMoreBtn.addEventListener('click', () => {
+          state.visibleCount += PAGE_SIZE;
+          render();
+        });
+
+        els.lightboxClose.addEventListener('click', closeLightbox);
+
+        els.lightbox.addEventListener('click', (e) => {
+          if (e.target === els.lightbox) closeLightbox();
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && els.lightbox.classList.contains('open')) {
+            closeLightbox();
+          }
+        });
+      }
+
+      bindEvents();
+      loadData();
+    })();
+  </script>
 </body>
 </html>

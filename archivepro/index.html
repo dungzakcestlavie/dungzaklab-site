@@ -103,6 +103,19 @@
       gap:10px 14px;
     }
 
+    .brand-home-link{
+      display:inline-flex;
+      align-items:flex-end;
+      color:inherit;
+      text-decoration:none;
+      border-radius:12px;
+      transition:.18s ease;
+    }
+
+    .brand-home-link:hover h1{
+      color:var(--gold);
+    }
+
     .brand-row h1{
       margin:0;
       font-size:clamp(26px,4vw,42px);
@@ -705,7 +718,9 @@
       <div class="brand-wrap">
         <p class="eyebrow">DUNGZAK CESTLAVIE LAB</p>
         <div class="brand-row">
-          <h1>ARCHIVE PRO</h1>
+          <a href="#" id="archiveHomeLink" class="brand-home-link" aria-label="Archive Pro home">
+            <h1>ARCHIVE PRO</h1>
+          </a>
           <p class="subline">Search, filter, access.</p>
         </div>
       </div>
@@ -1076,7 +1091,8 @@
         lbKeyYear: document.getElementById('lbKeyYear'),
         lbKeyImage: document.getElementById('lbKeyImage'),
         lbKeyZoom: document.getElementById('lbKeyZoom'),
-        langTabs: Array.from(document.querySelectorAll('.lang-tab'))
+        langTabs: Array.from(document.querySelectorAll('.lang-tab')),
+        archiveHomeLink: document.getElementById('archiveHomeLink')
       };
 
       const numberFormat = new Intl.NumberFormat('ko-KR');
@@ -1497,6 +1513,20 @@
         if (state.lightboxItem) openLightbox(state.lightboxItem);
       }
 
+      function goArchiveHome() {
+        state.query = '';
+        state.section = 'all';
+        state.sort = 'section-id-asc';
+        state.visibleCount = PAGE_SIZE;
+
+        els.searchInput.value = '';
+        els.sectionSelect.value = 'all';
+        els.sortSelect.value = 'section-id-asc';
+
+        applyFilters();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
       async function loadData() {
         state.loadState = 'loading';
         rebuildStaticTexts();
@@ -1573,6 +1603,13 @@
         els.langTabs.forEach((tab) => {
           tab.addEventListener('click', () => setLanguage(tab.dataset.lang));
         });
+
+        if (els.archiveHomeLink) {
+          els.archiveHomeLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            goArchiveHome();
+          });
+        }
       }
 
       bindEvents();

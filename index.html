@@ -85,10 +85,10 @@ body.menu-open{
   display:flex;
   align-items:center;
   justify-content:center;
-  z-index:50;
-  background:rgba(3,20,33,0.28);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  z-index:100;
+  background:rgba(3,20,33,0.34);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom:1px solid var(--line-soft);
 }
 
@@ -163,23 +163,24 @@ body.menu-open{
   color:var(--gold-strong);
 }
 
-/* SIDE MENU */
+/* MENU + OVERLAY */
 .menu{
   position:fixed;
   top:0;
-  left:-280px;
-  width:260px;
-  height:100%;
+  left:0;
+  width:min(320px, 84vw);
   height:100dvh;
-  background:#031421;
+  background:rgba(3,20,33,0.98);
   padding:calc(var(--safe-top) + 92px) 30px calc(40px + var(--safe-bottom));
-  transition:left 0.35s ease;
-  z-index:60;
+  transform:translateX(-104%);
+  transition:transform 0.34s ease;
+  z-index:120;
   border-right:1px solid var(--line);
+  box-shadow:24px 0 48px rgba(0,0,0,0.28);
 }
 
 .menu.open{
-  left:0;
+  transform:translateX(0);
 }
 
 .menu a{
@@ -198,11 +199,11 @@ body.menu-open{
 .menu-overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.28);
+  background:rgba(0,0,0,0.58);
   opacity:0;
   pointer-events:none;
   transition:opacity 0.3s ease;
-  z-index:55;
+  z-index:110;
 }
 
 .menu-overlay.show{
@@ -275,42 +276,68 @@ body.menu-open{
   display:block;
 }
 
-/* ENTRY */
-.entry{
-  min-height:100vh;
-  min-height:100svh;
+/* HOME */
+.home{
+  max-width:980px;
+}
+
+.home-hero{
+  min-height:calc(100vh - var(--header-height) - 20px);
+  min-height:calc(100svh - var(--header-height) - 20px);
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  flex-direction:column;
   text-align:center;
-  padding:
-    calc(var(--header-height) + 20px)
-    24px
-    calc(56px + var(--safe-bottom));
+  padding:18px 4px 48px;
 }
 
-.entry.hidden{
-  display:none;
-}
-
-.entry-title{
+.home-title{
   color:var(--gold);
   font-size:42px;
   letter-spacing:6px;
-  cursor:pointer;
   line-height:1.45;
   max-width:900px;
 }
 
-.entry-sub{
+.home-kicker{
   margin-top:18px;
   color:rgba(214,184,106,0.82);
   font-size:14px;
   letter-spacing:1.6px;
   line-height:1.8;
-  max-width:100%;
-  word-break:keep-all;
+}
+
+.home-selector{
+  width:100%;
+  max-width:620px;
+  margin-top:42px;
+  display:grid;
+  gap:14px;
+}
+
+.selector-link{
+  display:block;
+  width:100%;
+  padding:18px 22px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,0.035);
+  color:var(--gold-strong);
+  text-decoration:none;
+  letter-spacing:1px;
+  line-height:1.7;
+  box-shadow:var(--shadow);
+  transition:transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.selector-link:hover{
+  transform:translateY(-1px);
+  background:rgba(255,255,255,0.05);
+  border-color:rgba(214,184,106,0.36);
+}
+
+.home-intro{
+  margin-top:14px;
 }
 
 /* LIST VIEWS */
@@ -543,32 +570,40 @@ body.menu-open{
     letter-spacing:0.5px;
   }
 
-  .entry{
-    padding:
-      calc(var(--header-height) + 16px)
-      18px
-      calc(52px + var(--safe-bottom));
+  .view{
+    padding:calc(var(--header-height) + 28px) 18px calc(60px + var(--safe-bottom));
   }
 
-  .entry-title{
+  .home-hero{
+    padding:8px 0 32px;
+    min-height:calc(100svh - var(--header-height) - 8px);
+  }
+
+  .home-title{
     font-size:30px;
     letter-spacing:3px;
     line-height:1.42;
   }
 
-  .entry-sub{
+  .home-kicker{
     font-size:11px;
     letter-spacing:1px;
     line-height:1.7;
   }
 
-  .text{
-    font-size:15px;
-    line-height:1.95;
+  .home-selector{
+    margin-top:34px;
+    gap:10px;
   }
 
-  .view{
-    padding:calc(var(--header-height) + 28px) 18px calc(60px + var(--safe-bottom));
+  .selector-link{
+    padding:15px 16px;
+    line-height:1.55;
+  }
+
+  .text{
+    font-size:15px;
+    line-height:1.88;
   }
 
   .statement{
@@ -617,22 +652,21 @@ body.menu-open{
   }
 
   #books .report-summary{
-    line-height:1.9;
+    line-height:1.85;
   }
 }
 </style>
 </head>
-
 <body>
 
 <div class="header">
-  <div class="menu-btn" onclick="toggleMenu()" aria-label="menu" role="button" tabindex="0">
+  <div class="menu-btn" id="menuBtn" aria-label="menu" role="button" tabindex="0">
     <span></span>
     <span></span>
     <span></span>
   </div>
 
-  <a href="#" class="logo" onclick="goEntry(); return false;">
+  <a href="#" class="logo" onclick="openHome(); return false;">
     DUNGZAK CESTLAVIE LAB
   </a>
 
@@ -642,10 +676,10 @@ body.menu-open{
   </div>
 </div>
 
-<div class="menu" id="menu">
-  <a href="#" onclick="goEntry(); return false;">ENTRY</a>
+<div class="menu" id="menu" aria-hidden="true">
   <a href="#" onclick="openOcean(); return false;">OCEAN ENERGY</a>
   <a href="#" onclick="openArchive(); return false;">ARCHIVE</a>
+  <a href="/archivepro/index.html" onclick="closeMenu()">ARCHIVE PRO</a>
   <a href="#" onclick="openBooks(); return false;">BOOKS</a>
   <a href="#" onclick="openAbout(); return false;">ABOUT</a>
   <a href="https://dungzak.art" target="_blank" rel="noopener" onclick="closeMenu()">DUNGZAK.ART</a>
@@ -653,142 +687,152 @@ body.menu-open{
 
 <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
 
-<div class="entry" id="entry">
-  <div class="entry-title" onclick="enterSite()">
-    DUNGZAK CESTLAVIE LAB
-  </div>
-  <div class="entry-sub">
-    STRUCTURE · OCEAN ENERGY · ARCHIVE
-  </div>
-</div>
-
-<div class="view" id="main">
-  <div class="lang-content" data-lang-content="ko">
-    <div class="subtitle">등작 燈酌 DUNGZAK CESTLAVIE</div>
-
-    <div class="block">
-      <div class="text">
-        등작 燈酌 DUNGZAK CESTLAVIE의 구조 사유와<br>
-        해양 에너지 개념을 연구하는 실험실입니다.
-      </div>
-
-      <div class="text" style="margin-top:45px;">
-        DUNGZAK CESTLAVIE LAB — 개념 · 구조 · 연구
-      </div>
-
-      <div class="text" style="margin-top:12px;">
-        Archive Pro — 시스템 · 데이터 · 아카이브
-      </div>
-
-      <div class="text" style="margin-top:45px; opacity:0.72;">
-        연구와 설계는 현재 진행 중입니다.
-      </div>
-
-      <a id="mainProposalLinkKo" href="/ocean-proposal.html?lang=ko" class="link">
-        Ocean Energy Structure Proposal →
-      </a>
+<div class="view home active" id="home">
+  <div class="home-hero">
+    <div class="home-title">
+      DUNGZAK CESTLAVIE LAB
     </div>
 
-    <div class="statement">
-      <div class="text">
-        DUNGZAK CESTLAVIE LAB는<br>
-        등작 燈酌 DUNGZAK CESTLAVIE의 구조 사유를 기반으로 형성된 실험 공간이다.
-      </div>
+    <div class="home-kicker">
+      STRUCTURE · OCEAN ENERGY · ARCHIVE · ARCHIVE PRO
+    </div>
 
-      <div class="text">
-        이 공간은 회화, 아카이브, 전시, 음악, 미학 보고서를<br>
-        하나의 구조로 연결하는 방식을 연구한다.
-      </div>
-
-      <div class="text">
-        현재 연구는 두 축으로 전개된다.
-      </div>
-
-      <div class="text">
-        첫째, 해양 에너지 구조.<br>
-        에너지를 단순한 기술이 아니라<br>
-        공간, 경험, 그리고 인간 인식의 구조로 다루는 시도이다.
-      </div>
-
-      <div class="text">
-        둘째, 아카이브 시스템.<br>
-        작품, 기록, 텍스트, 데이터를<br>
-        하나의 흐름으로 축적하고 연결하는 구조이다.
-      </div>
-
-      <div class="text">
-        이 LAB는 결과를 보여주는 공간이 아니라<br>
-        구조가 생성되는 과정을 다루는 공간이다.
-      </div>
-
-      <div class="text">
-        여기에서 모든 것은 완성되지 않는다.<br>
-        모든 것은 진행 중이다.
-      </div>
+    <div class="home-selector">
+      <a href="#" class="selector-link" onclick="openOcean(); return false;">OCEAN ENERGY →</a>
+      <a href="#" class="selector-link" onclick="openArchive(); return false;">ARCHIVE →</a>
+      <a href="/archivepro/index.html" class="selector-link">ARCHIVE PRO →</a>
+      <a href="#" class="selector-link" onclick="openBooks(); return false;">BOOKS →</a>
     </div>
   </div>
 
-  <div class="lang-content" data-lang-content="en">
-    <div class="subtitle">DUNGZAK CESTLAVIE</div>
+  <div class="home-intro">
+    <div class="lang-content" data-lang-content="ko">
+      <div class="subtitle">등작 燈酌 DUNGZAK CESTLAVIE</div>
 
-    <div class="block">
-      <div class="text">
-        A laboratory dedicated to structural thought<br>
-        and ocean energy concepts by DUNGZAK CESTLAVIE.
+      <div class="block">
+        <div class="text">
+          등작 燈酌 DUNGZAK CESTLAVIE의 구조 사유와<br>
+          해양 에너지 개념을 연구하는 실험실입니다.
+        </div>
+
+        <div class="text" style="margin-top:45px;">
+          DUNGZAK CESTLAVIE LAB — 개념 · 구조 · 연구
+        </div>
+
+        <div class="text" style="margin-top:12px;">
+          Archive Pro — 시스템 · 데이터 · 아카이브
+        </div>
+
+        <div class="text" style="margin-top:45px; opacity:0.72;">
+          연구와 설계는 현재 진행 중입니다.
+        </div>
+
+        <a id="mainProposalLinkKo" href="/ocean-proposal.html?lang=ko" class="link">
+          Ocean Energy Structure Proposal →
+        </a>
       </div>
 
-      <div class="text" style="margin-top:45px;">
-        DUNGZAK CESTLAVIE LAB — Concept · Structure · Research
-      </div>
+      <div class="statement">
+        <div class="text">
+          DUNGZAK CESTLAVIE LAB는<br>
+          등작 燈酌 DUNGZAK CESTLAVIE의 구조 사유를 기반으로 형성된 실험 공간이다.
+        </div>
 
-      <div class="text" style="margin-top:12px;">
-        Archive Pro — System · Data · Archive
-      </div>
+        <div class="text">
+          이 공간은 회화, 아카이브, 전시, 음악, 미학 보고서를<br>
+          하나의 구조로 연결하는 방식을 연구한다.
+        </div>
 
-      <div class="text" style="margin-top:45px; opacity:0.72;">
-        Research and structure are currently in progress.
-      </div>
+        <div class="text">
+          현재 연구는 두 축으로 전개된다.
+        </div>
 
-      <a id="mainProposalLinkEn" href="/ocean-proposal.html?lang=en" class="link">
-        Ocean Energy Structure Proposal →
-      </a>
+        <div class="text">
+          첫째, 해양 에너지 구조.<br>
+          에너지를 단순한 기술이 아니라<br>
+          공간, 경험, 그리고 인간 인식의 구조로 다루는 시도이다.
+        </div>
+
+        <div class="text">
+          둘째, 아카이브 시스템.<br>
+          작품, 기록, 텍스트, 데이터를<br>
+          하나의 흐름으로 축적하고 연결하는 구조이다.
+        </div>
+
+        <div class="text">
+          이 LAB는 결과를 보여주는 공간이 아니라<br>
+          구조가 생성되는 과정을 다루는 공간이다.
+        </div>
+
+        <div class="text">
+          여기에서 모든 것은 완성되지 않는다.<br>
+          모든 것은 진행 중이다.
+        </div>
+      </div>
     </div>
 
-    <div class="statement">
-      <div class="text">
-        DUNGZAK CESTLAVIE LAB<br>
-        is an experimental space based on the structural thinking of DUNGZAK CESTLAVIE.
+    <div class="lang-content" data-lang-content="en">
+      <div class="subtitle">DUNGZAK CESTLAVIE</div>
+
+      <div class="block">
+        <div class="text">
+          A laboratory dedicated to structural thought<br>
+          and ocean energy concepts by DUNGZAK CESTLAVIE.
+        </div>
+
+        <div class="text" style="margin-top:45px;">
+          DUNGZAK CESTLAVIE LAB — Concept · Structure · Research
+        </div>
+
+        <div class="text" style="margin-top:12px;">
+          Archive Pro — System · Data · Archive
+        </div>
+
+        <div class="text" style="margin-top:45px; opacity:0.72;">
+          Research and structure are currently in progress.
+        </div>
+
+        <a id="mainProposalLinkEn" href="/ocean-proposal.html?lang=en" class="link">
+          Ocean Energy Structure Proposal →
+        </a>
       </div>
 
-      <div class="text">
-        This space studies how painting, archive, exhibition, music, and aesthetic reports<br>
-        can operate as a single structure.
-      </div>
+      <div class="statement">
+        <div class="text">
+          DUNGZAK CESTLAVIE LAB<br>
+          is an experimental space based on the structural thinking of DUNGZAK CESTLAVIE.
+        </div>
 
-      <div class="text">
-        The current research develops along two axes.
-      </div>
+        <div class="text">
+          This space studies how painting, archive, exhibition, music, and aesthetic reports<br>
+          can operate as a single structure.
+        </div>
 
-      <div class="text">
-        First, ocean energy structure.<br>
-        An attempt to approach energy not as technology,<br>
-        but as a structure of space, experience, and human perception.
-      </div>
+        <div class="text">
+          The current research develops along two axes.
+        </div>
 
-      <div class="text">
-        Second, archive system.<br>
-        A structure that accumulates and connects works, records, texts, and data<br>
-        into a continuous flow.
-      </div>
+        <div class="text">
+          First, ocean energy structure.<br>
+          An attempt to approach energy not as technology,<br>
+          but as a structure of space, experience, and human perception.
+        </div>
 
-      <div class="text">
-        This LAB is not a space for presenting results,<br>
-        but a space for generating structure.
-      </div>
+        <div class="text">
+          Second, archive system.<br>
+          A structure that accumulates and connects works, records, texts, and data<br>
+          into a continuous flow.
+        </div>
 
-      <div class="text">
-        Nothing here is finished.<br>
-        Everything is in progress.
+        <div class="text">
+          This LAB is not a space for presenting results,<br>
+          but a space for generating structure.
+        </div>
+
+        <div class="text">
+          Nothing here is finished.<br>
+          Everything is in progress.
+        </div>
       </div>
     </div>
   </div>
@@ -982,22 +1026,25 @@ body.menu-open{
     </div>
   </div>
 </div>
-
 <script>
 const menu = document.getElementById('menu');
 const menuOverlay = document.getElementById('menuOverlay');
-const entry = document.getElementById('entry');
-const main = document.getElementById('main');
+const menuBtn = document.getElementById('menuBtn');
+
+const home = document.getElementById('home');
 const ocean = document.getElementById('ocean');
 const archive = document.getElementById('archive');
 const books = document.getElementById('books');
 const about = document.getElementById('about');
+
 const globalLangBtns = document.querySelectorAll('.lang-global button');
-const mainLangContents = document.querySelectorAll('.lang-content');
+const homeLangContents = document.querySelectorAll('.lang-content');
 const panels = document.querySelectorAll('.lang-panel');
+
 const mainProposalLinkKo = document.getElementById('mainProposalLinkKo');
 const mainProposalLinkEn = document.getElementById('mainProposalLinkEn');
 const oceanProposalLink = document.getElementById('oceanProposalLink');
+
 const dcaoList = document.getElementById('dcaoList');
 const dcapList = document.getElementById('dcapList');
 const dcaoEmpty = document.getElementById('dcaoEmpty');
@@ -1042,41 +1089,52 @@ let dcapLoaded = false;
 let dcaoData = fallbackDCAO;
 let dcapData = fallbackDCAP;
 
-function toggleMenu(){
-  menu.classList.toggle('open');
-  menuOverlay.classList.toggle('show');
-  document.body.classList.toggle('menu-open', menu.classList.contains('open'));
+function lockBodyScroll(){
+  document.body.classList.add('menu-open');
+}
+
+function unlockBodyScroll(){
+  document.body.classList.remove('menu-open');
+}
+
+function openMenu(){
+  menu.classList.add('open');
+  menuOverlay.classList.add('show');
+  menu.setAttribute('aria-hidden', 'false');
+  lockBodyScroll();
 }
 
 function closeMenu(){
   menu.classList.remove('open');
   menuOverlay.classList.remove('show');
-  document.body.classList.remove('menu-open');
+  menu.setAttribute('aria-hidden', 'true');
+  unlockBodyScroll();
+}
+
+function toggleMenu(){
+  if(menu.classList.contains('open')){
+    closeMenu();
+  }else{
+    openMenu();
+  }
 }
 
 function clearViews(){
-  main.classList.remove('active');
+  home.classList.remove('active');
   ocean.classList.remove('active');
   archive.classList.remove('active');
   books.classList.remove('active');
   about.classList.remove('active');
+  window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
-function enterSite(){
-  entry.classList.add('hidden');
+function openHome(){
   clearViews();
-  main.classList.add('active');
-  closeMenu();
-}
-
-function goEntry(){
-  entry.classList.remove('hidden');
-  clearViews();
+  home.classList.add('active');
   closeMenu();
 }
 
 function openOcean(){
-  entry.classList.add('hidden');
   clearViews();
   ocean.classList.add('active');
   closeMenu();
@@ -1084,7 +1142,6 @@ function openOcean(){
 }
 
 function openArchive(){
-  entry.classList.add('hidden');
   clearViews();
   archive.classList.add('active');
   closeMenu();
@@ -1092,43 +1149,41 @@ function openArchive(){
 }
 
 function openBooks(){
-  entry.classList.add('hidden');
   clearViews();
   books.classList.add('active');
   closeMenu();
 }
 
 function openAbout(){
-  entry.classList.add('hidden');
   clearViews();
   about.classList.add('active');
   closeMenu();
 }
 
 function setLanguage(lang){
-  currentLang = lang;
+  currentLang = lang === 'en' ? 'en' : 'ko';
 
   globalLangBtns.forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.lang === lang);
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
   });
 
-  mainLangContents.forEach(content => {
-    content.classList.toggle('active', content.dataset.langContent === lang);
+  homeLangContents.forEach(content => {
+    content.classList.toggle('active', content.dataset.langContent === currentLang);
   });
 
   panels.forEach(panel => {
-    panel.classList.toggle('active', panel.dataset.panel === lang);
+    panel.classList.toggle('active', panel.dataset.panel === currentLang);
   });
 
-  document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
-  localStorage.setItem('dzlab_lang', lang);
+  document.documentElement.lang = currentLang;
+  localStorage.setItem('dzlab_lang', currentLang);
 
-  if (mainProposalLinkKo) mainProposalLinkKo.href = `/ocean-proposal.html?lang=${lang}`;
-  if (mainProposalLinkEn) mainProposalLinkEn.href = `/ocean-proposal.html?lang=${lang}`;
+  if(mainProposalLinkKo) mainProposalLinkKo.href = `/ocean-proposal.html?lang=${currentLang}`;
+  if(mainProposalLinkEn) mainProposalLinkEn.href = `/ocean-proposal.html?lang=${currentLang}`;
 
-  if (oceanProposalLink) {
-    oceanProposalLink.href = `/ocean-proposal.html?lang=${lang}`;
-    oceanProposalLink.textContent = lang === 'ko'
+  if(oceanProposalLink){
+    oceanProposalLink.href = `/ocean-proposal.html?lang=${currentLang}`;
+    oceanProposalLink.textContent = currentLang === 'ko'
       ? '해양 에너지 구조 제안서 →'
       : 'Ocean Energy Structure Proposal →';
   }
@@ -1220,15 +1275,24 @@ globalLangBtns.forEach(btn => {
   });
 });
 
-document.querySelector('.menu-btn').addEventListener('keydown', (e) => {
+menuBtn.addEventListener('click', toggleMenu);
+
+menuBtn.addEventListener('keydown', (e) => {
   if(e.key === 'Enter' || e.key === ' '){
     e.preventDefault();
     toggleMenu();
   }
 });
 
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && menu.classList.contains('open')){
+    closeMenu();
+  }
+});
+
 const savedLang = localStorage.getItem('dzlab_lang');
 setLanguage(savedLang === 'en' ? 'en' : 'ko');
+openHome();
 </script>
 
 </body>

@@ -21,6 +21,17 @@
       "summary_kr": "해양 에너지를 연속 흐름이 아닌 임계 조건 기반 전이 구조로 해석하고, 공진 기반 파일럿 설계를 제안한다.",
       "summary_en": "Interprets ocean energy as a threshold-based discontinuous transition system and proposes resonance-based pilot design.",
       "md_path": "ocean/DCAO-02.md"
+    },
+    {
+      "id": "DCAO-03",
+      "slug": "DCAO-03",
+      "year": "2026",
+      "category": "Ocean",
+      "title_kr": "붕괴 지역의 해양 에너지와 점프형 위험 구조",
+      "title_en": "Ocean Energy in Collapsing Ecologies and the Structure of Jump Risk",
+      "summary_kr": "생태 붕괴 지역에서 추출된 해양 에너지가 문명 시스템으로 점프할 때 발생하는 층위별 위험 구조를 분석한다.",
+      "summary_en": "Analyzes the layered risk structure that emerges when ocean energy extracted from collapsing ecosystems jumps into civilizational systems.",
+      "md_path": "ocean/DCAO-03.md"
     }
   ]
 }

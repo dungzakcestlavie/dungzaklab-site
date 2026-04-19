@@ -32,6 +32,17 @@
       "summary_kr": "생태 붕괴 지역에서 추출된 해양 에너지가 문명 시스템으로 점프할 때 발생하는 층위별 위험 구조를 분석한다.",
       "summary_en": "Analyzes the layered risk structure that emerges when ocean energy extracted from collapsing ecosystems jumps into civilizational systems.",
       "md_path": "ocean/DCAO-03.md"
+    },
+    {
+      "id": "DCAO-04",
+      "slug": "DCAO-04",
+      "year": "2026",
+      "category": "Ocean",
+      "title_kr": "에너지의 공존 체계와 해양 에너지의 순응성",
+      "title_en": "Coexistence Framework of Energy and Compliance in Ocean Systems",
+      "summary_kr": "에너지를 소비가 아닌 관계적 흐름으로 재정의하고, 해양 에너지를 추출이 아닌 순응 기반 작동 방식으로 전환하는 개념을 제안한다.",
+      "summary_en": "Redefines energy as a relational flow rather than consumption and proposes a compliance-based mode of operation for ocean energy instead of extraction.",
+      "md_path": "ocean/DCAO-04.md"
     }
   ]
 }

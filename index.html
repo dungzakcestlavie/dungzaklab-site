@@ -640,6 +640,39 @@ body.menu-open{
   outline-offset:2px;
 }
 
+
+/* INSTANT MOBILE RESPONSE — early touch feedback */
+a,
+button,
+.menu-btn,
+.selector-link,
+.proposal-link,
+.report-item,
+.book-item{
+  touch-action:manipulation;
+}
+
+.menu-btn,
+.lang-global button,
+.selector-link,
+.proposal-link,
+.report-item,
+.book-item{
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+.is-pressing,
+.menu-btn.is-pressing,
+.lang-global button.is-pressing,
+.selector-link.is-pressing,
+.proposal-link.is-pressing,
+.report-item.is-pressing,
+.book-item.is-pressing .report-item{
+  transform:scale(0.985);
+  box-shadow:0 0 8px rgba(184,150,62,0.32);
+}
+
 /* RESPONSIVE */
 @media (max-width:640px){
   :root{
@@ -772,6 +805,117 @@ body.menu-open{
 }
 
 </style>
+
+<script>
+(function(){
+  window.__DZLAB_BOOT_READY__ = false;
+  window.__DZLAB_EARLY_VIEW__ = '';
+
+  function el(id){ return document.getElementById(id); }
+
+  function clearViewsFast(){
+    ['home','ocean','archive','books','about'].forEach(function(id){
+      var node = el(id);
+      if(node) node.classList.remove('active');
+    });
+    window.scrollTo(0, 0);
+  }
+
+  window.openMenu = function(){
+    var menu = el('menu');
+    var overlay = el('menuOverlay');
+    if(menu){
+      menu.classList.add('open');
+      menu.setAttribute('aria-hidden','false');
+    }
+    if(overlay) overlay.classList.add('show');
+    if(document.body) document.body.classList.add('menu-open');
+  };
+
+  window.closeMenu = function(){
+    var menu = el('menu');
+    var overlay = el('menuOverlay');
+    if(menu){
+      menu.classList.remove('open');
+      menu.setAttribute('aria-hidden','true');
+    }
+    if(overlay) overlay.classList.remove('show');
+    if(document.body) document.body.classList.remove('menu-open');
+  };
+
+  window.toggleMenu = function(){
+    var menu = el('menu');
+    if(menu && menu.classList.contains('open')) window.closeMenu();
+    else window.openMenu();
+  };
+
+  window.openHome = function(){
+    window.__DZLAB_EARLY_VIEW__ = 'home';
+    clearViewsFast();
+    var node = el('home');
+    if(node) node.classList.add('active');
+    window.closeMenu();
+  };
+
+  window.openOcean = function(){
+    window.__DZLAB_EARLY_VIEW__ = 'ocean';
+    clearViewsFast();
+    var node = el('ocean');
+    if(node) node.classList.add('active');
+    window.closeMenu();
+  };
+
+  window.openArchive = function(){
+    window.__DZLAB_EARLY_VIEW__ = 'archive';
+    clearViewsFast();
+    var node = el('archive');
+    if(node) node.classList.add('active');
+    window.closeMenu();
+  };
+
+  window.openBooks = function(){
+    window.__DZLAB_EARLY_VIEW__ = 'books';
+    clearViewsFast();
+    var node = el('books');
+    if(node) node.classList.add('active');
+    window.closeMenu();
+  };
+
+  window.openAbout = function(){
+    window.__DZLAB_EARLY_VIEW__ = 'about';
+    clearViewsFast();
+    var node = el('about');
+    if(node) node.classList.add('active');
+    window.closeMenu();
+  };
+
+  document.addEventListener('pointerdown', function(e){
+    var t = e.target;
+    if(!t || !t.closest) return;
+
+    var btn = t.closest('#menuBtn');
+    if(btn && !window.__DZLAB_BOOT_READY__){
+      e.preventDefault();
+      window.toggleMenu();
+      btn.classList.add('is-pressing');
+      return;
+    }
+
+    var clickable = t.closest('a, button, .menu-btn, .selector-link, .proposal-link, .report-item, .book-item');
+    if(clickable) clickable.classList.add('is-pressing');
+  }, {capture:true, passive:false});
+
+  function releasePress(){
+    document.querySelectorAll('.is-pressing').forEach(function(node){
+      node.classList.remove('is-pressing');
+    });
+  }
+
+  document.addEventListener('pointerup', releasePress, {capture:true, passive:true});
+  document.addEventListener('pointercancel', releasePress, {capture:true, passive:true});
+  document.addEventListener('scroll', releasePress, {capture:true, passive:true});
+})();
+</script>
 </head>
 <body>
 
@@ -1428,7 +1572,20 @@ document.addEventListener('keydown', (e) => {
 
 const savedLang = localStorage.getItem('dzlab_lang');
 setLanguage(savedLang === 'en' ? 'en' : 'ko');
-openHome();
+
+window.__DZLAB_BOOT_READY__ = true;
+
+if(window.__DZLAB_EARLY_VIEW__ === 'ocean'){
+  openOcean();
+}else if(window.__DZLAB_EARLY_VIEW__ === 'archive'){
+  openArchive();
+}else if(window.__DZLAB_EARLY_VIEW__ === 'books'){
+  openBooks();
+}else if(window.__DZLAB_EARLY_VIEW__ === 'about'){
+  openAbout();
+}else{
+  openHome();
+}
 </script>
 
 </body>

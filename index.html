@@ -46,7 +46,8 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet"></noscript>
 
 <style>
 :root{
@@ -111,8 +112,8 @@ body.menu-open{
   justify-content:center;
   z-index:100;
   background:rgba(3,20,33,0.34);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-bottom:1px solid var(--line-soft);
 }
 
@@ -246,6 +247,14 @@ body.menu-open{
 
 .view.active{
   display:block;
+}
+
+.view,
+.report-item,
+.selector-link,
+.top-fixed-block,
+.proposal-link{
+  contain:layout paint style;
 }
 
 .text{
@@ -679,6 +688,18 @@ body.menu-open{
     line-height:1.85;
   }
 }
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,
+  *::before,
+  *::after{
+    transition-duration:0.001ms !important;
+    animation-duration:0.001ms !important;
+    animation-iteration-count:1 !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1223,7 +1244,7 @@ function setLanguage(lang){
 
 async function fetchJSON(path, fallback){
   try{
-    const res = await fetch(path, { cache: 'no-store' });
+    const res = await fetch(path, { cache: 'default' });
     if(!res.ok) throw new Error('fetch fail');
     return await res.json();
   }catch(e){
@@ -1235,7 +1256,7 @@ function renderList(items, type){
   const listEl = type === 'dcao' ? dcaoList : dcapList;
   const emptyEl = type === 'dcao' ? dcaoEmpty : dcapEmpty;
 
-  listEl.innerHTML = '';
+  listEl.replaceChildren();
 
   if(!items || !items.length){
     emptyEl.style.display = 'block';
@@ -1247,6 +1268,8 @@ function renderList(items, type){
 
   emptyEl.style.display = 'none';
 
+  const frag = document.createDocumentFragment();
+
   items.forEach(item => {
     const title = currentLang === 'ko' ? item.title_kr : item.title_en;
     const summary = currentLang === 'ko' ? item.summary_kr : item.summary_en;
@@ -1257,15 +1280,30 @@ function renderList(items, type){
     a.target = '_self';
     a.rel = 'noopener';
 
-    a.innerHTML = `
-      <div class="report-id">${escapeHtml(item.id || '')}</div>
-      <div class="report-title">${escapeHtml(title || '')}</div>
-      <div class="report-summary">${escapeHtml(summary || '')}</div>
-      <div class="report-meta">${escapeHtml(item.category || '')} · ${escapeHtml(item.year || '')}</div>
-    `;
+    const idEl = document.createElement('div');
+    idEl.className = 'report-id';
+    idEl.textContent = item.id || '';
 
-    listEl.appendChild(a);
+    const titleEl = document.createElement('div');
+    titleEl.className = 'report-title';
+    titleEl.textContent = title || '';
+
+    const summaryEl = document.createElement('div');
+    summaryEl.className = 'report-summary';
+    summaryEl.textContent = summary || '';
+
+    const metaEl = document.createElement('div');
+    metaEl.className = 'report-meta';
+    metaEl.textContent = `${item.category || ''} · ${item.year || ''}`;
+
+    a.appendChild(idEl);
+    a.appendChild(titleEl);
+    a.appendChild(summaryEl);
+    a.appendChild(metaEl);
+    frag.appendChild(a);
   });
+
+  listEl.appendChild(frag);
 }
 
 async function loadDCAO(){

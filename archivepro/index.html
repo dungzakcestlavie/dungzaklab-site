@@ -1020,8 +1020,10 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzak.art/';
-      const DATA_URL = `${SITE_ROOT}data/works.json`;
-      const PAGE_SIZE = 72;
+      const DATA_URL = `${SITE_ROOT}data/works.json?v=20260425`;
+      const INITIAL_VISIBLE = 12;
+      const LOAD_STEP = 24;
+      const SEARCH_DEBOUNCE_MS = 250;
 
       const SECTION_MAP = {
         0: { kr: 'A 기원', en: 'Origins' },
@@ -1189,13 +1191,14 @@
       const state = {
         all: [],
         filtered: [],
-        visibleCount: PAGE_SIZE,
+        visibleCount: INITIAL_VISIBLE,
         query: '',
         section: 'all',
         sort: 'section-id-asc',
         lightboxItem: null,
         lang: 'kr',
-        loadState: 'idle'
+        loadState: 'idle',
+        isLoaded: false
       };
 
       const els = {
@@ -1253,6 +1256,17 @@
       };
 
       const numberFormat = new Intl.NumberFormat('ko-KR');
+      let searchTimer = null;
+
+      const lazyImageObserver = 'IntersectionObserver' in window
+        ? new IntersectionObserver((entries, observer) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              loadLazyImage(entry.target);
+              observer.unobserve(entry.target);
+            });
+          }, { root: null, rootMargin: '300px', threshold: 0.01 })
+        : null;
 
       function t(key) {
         return uiText[state.lang][key];
@@ -1268,6 +1282,13 @@
         if (!clean) return '';
         if (/^https?:\/\//i.test(clean)) return clean;
         return new URL(clean.replace(/^\/+/, ''), SITE_ROOT).href;
+      }
+
+      function debounce(fn, delay) {
+        return (...args) => {
+          window.clearTimeout(searchTimer);
+          searchTimer = window.setTimeout(() => fn(...args), delay);
+        };
       }
 
       function syncDataLanguage(root = document) {
@@ -1532,6 +1553,7 @@
       }
 
       function updateStats() {
+        const visibleNow = Math.min(state.visibleCount, state.filtered.length);
         els.statTotal.textContent = numberFormat.format(state.all.length);
         els.statFiltered.textContent = numberFormat.format(state.filtered.length);
         els.loadedPill.textContent = `Loaded: ${numberFormat.format(state.all.length)} items`;
@@ -1540,33 +1562,67 @@
 
         if (state.lang === 'en') {
           els.resultText.textContent = `${numberFormat.format(state.filtered.length)}${t('resultUnit')}`;
-          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(Math.min(state.visibleCount, state.filtered.length))}`;
+          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}`;
         } else {
           els.resultText.textContent = `${numberFormat.format(state.filtered.length)}${t('resultUnit')}`;
-          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(Math.min(state.visibleCount, state.filtered.length))}${t('renderedSuffix')}`;
+          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}${t('renderedSuffix')}`;
         }
       }
 
-      function createThumb(primarySrc, fallbackSrc, alt) {
+      function loadLazyImage(img) {
+        if (!img || img.dataset.loaded === 'true') return;
+
+        const src = img.dataset.src || '';
+        if (!src) {
+          img.src = SVG_PLACEHOLDER;
+          img.classList.add('is-error');
+          img.dataset.loaded = 'true';
+          return;
+        }
+
+        img.dataset.loaded = 'true';
+        img.src = src;
+      }
+
+      function observeLazyImages(root = els.grid) {
+        const images = Array.from(root.querySelectorAll('img.thumb[data-src]:not([data-loaded="true"])'));
+
+        if (!lazyImageObserver) {
+          images.forEach(loadLazyImage);
+          return;
+        }
+
+        images.forEach((img) => lazyImageObserver.observe(img));
+      }
+
+      function createThumb(primarySrc, alt) {
         const img = document.createElement('img');
         img.className = 'thumb';
         img.alt = alt;
+        img.width = 800;
+        img.height = 800;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.fetchPriority = 'low';
 
-        let triedFallback = false;
+        img.dataset.src = primarySrc || '';
+        img.dataset.loaded = 'false';
 
-        img.addEventListener('load', () => img.classList.add('is-loaded'));
+        img.addEventListener('load', () => {
+          img.classList.add('is-loaded');
+        }, { once: true });
+
         img.addEventListener('error', () => {
-          if (!triedFallback && fallbackSrc && img.src !== fallbackSrc) {
-            triedFallback = true;
-            img.src = fallbackSrc;
-            return;
-          }
+          img.removeAttribute('data-src');
           img.src = SVG_PLACEHOLDER;
           img.classList.add('is-error');
-        });
+        }, { once: true });
 
-        img.src = primarySrc || fallbackSrc || SVG_PLACEHOLDER;
-        if (!primarySrc && !fallbackSrc) img.classList.add('is-error');
+        if (!primarySrc) {
+          img.src = SVG_PLACEHOLDER;
+          img.classList.add('is-error');
+          img.dataset.loaded = 'true';
+        }
 
         return img;
       }
@@ -1578,7 +1634,6 @@
         const year = getYear(item);
         const infoLine = [material, size, year].filter(Boolean).join(' / ');
         const imageSrc = toAbsoluteUrl(item.image || '');
-        const zoomSrc = toAbsoluteUrl(item.zoom || '');
 
         const card = document.createElement('article');
         card.className = 'card';
@@ -1588,7 +1643,7 @@
 
         const thumbWrap = document.createElement('div');
         thumbWrap.className = 'thumb-wrap';
-        thumbWrap.appendChild(createThumb(imageSrc, zoomSrc, title || item.id));
+        thumbWrap.appendChild(createThumb(imageSrc, title || item.id));
 
         const detailHover = document.createElement('span');
         detailHover.className = 'detail-hover';
@@ -1645,21 +1700,32 @@
         els.loadingScreen.style.display = 'none';
         els.resultsMeta.style.display = 'flex';
 
-        els.grid.innerHTML = '';
+        if (lazyImageObserver) {
+          els.grid.querySelectorAll('img.thumb[data-src]').forEach((img) => lazyImageObserver.unobserve(img));
+        }
+
+        els.grid.textContent = '';
         els.emptyState.hidden = state.filtered.length !== 0;
 
         if (!state.filtered.length) {
           els.loadWrap.hidden = true;
+          updateStats();
           return;
         }
 
         const visible = state.filtered.slice(0, state.visibleCount);
         const frag = document.createDocumentFragment();
-        visible.forEach(item => frag.appendChild(createCard(item)));
-        els.grid.appendChild(frag);
 
+        visible.forEach((item) => {
+          frag.appendChild(createCard(item));
+        });
+
+        els.grid.appendChild(frag);
         syncDataLanguage(els.grid);
+        observeLazyImages(els.grid);
+
         els.loadWrap.hidden = visible.length >= state.filtered.length;
+        updateStats();
       }
 
       function openLightbox(item) {
@@ -1670,7 +1736,7 @@
         const size = getSize(item) || '—';
         const year = getYear(item) || '—';
         const imageUrl = toAbsoluteUrl(item.image || '');
-        const zoomUrl = toAbsoluteUrl(item.zoom || item.image || '');
+        const zoomUrl = toAbsoluteUrl(item.zoom || '');
         const displayUrl = zoomUrl || imageUrl || SVG_PLACEHOLDER;
 
         els.lbId.textContent = item.id;
@@ -1682,11 +1748,15 @@
         els.lbImagePath.textContent = imageUrl || '—';
         els.lbZoomPath.textContent = zoomUrl || '—';
         els.lbOpenImage.href = imageUrl || '#';
-        els.lbOpenZoom.href = zoomUrl || '#';
+        els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
 
         els.lightboxImage.alt = title;
-        els.lightboxImage.src = displayUrl;
+        els.lightboxImage.removeAttribute('src');
+        els.lightboxImage.loading = 'eager';
+        els.lightboxImage.decoding = 'async';
+        els.lightboxImage.fetchPriority = 'high';
         els.lightboxImage.onerror = () => { els.lightboxImage.src = SVG_PLACEHOLDER; };
+        els.lightboxImage.src = displayUrl;
 
         els.lightbox.classList.add('open');
         els.lightbox.setAttribute('aria-hidden', 'false');
@@ -1702,7 +1772,7 @@
         document.body.style.overflow = '';
       }
 
-      function applyFilters() {
+      function applyFilters(resetVisible = true) {
         const query = state.query.trim().toLowerCase();
 
         state.filtered = state.all
@@ -1713,11 +1783,16 @@
           })
           .sort((a, b) => compareItems(a, b, state.sort));
 
-        state.visibleCount = PAGE_SIZE;
-        updateStats();
+        if (resetVisible) state.visibleCount = INITIAL_VISIBLE;
+
         updateSectionButtonState();
         render();
       }
+
+      const debouncedSearch = debounce(() => {
+        state.query = els.searchInput.value;
+        applyFilters(true);
+      }, SEARCH_DEBOUNCE_MS);
 
       function setLanguage(lang) {
         state.lang = lang;
@@ -1728,7 +1803,7 @@
         });
         rebuildStaticTexts();
         populateSections();
-        applyFilters();
+        applyFilters(true);
         if (state.lightboxItem) openLightbox(state.lightboxItem);
       }
 
@@ -1736,33 +1811,36 @@
         state.query = '';
         state.section = 'all';
         state.sort = 'section-id-asc';
-        state.visibleCount = PAGE_SIZE;
+        state.visibleCount = INITIAL_VISIBLE;
 
         els.searchInput.value = '';
         els.sectionSelect.value = 'all';
         els.sortSelect.value = 'section-id-asc';
 
-        applyFilters();
+        applyFilters(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
       async function loadData() {
+        if (state.isLoaded || state.loadState === 'loading') return;
+
         state.loadState = 'loading';
         rebuildStaticTexts();
         els.sourcePill.textContent = `Source: ${DATA_URL}`;
 
         try {
-          const response = await fetch(DATA_URL, { cache: 'no-store' });
+          const response = await fetch(DATA_URL, { cache: 'default' });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const raw = await response.json();
           const arr = Array.isArray(raw.works) ? raw.works : (Array.isArray(raw) ? raw : []);
 
           state.all = arr.map(normalizeItem);
+          state.isLoaded = true;
           state.loadState = 'loaded';
 
           rebuildStaticTexts();
           populateSections();
-          applyFilters();
+          applyFilters(true);
         } catch (error) {
           console.error(error);
           state.loadState = 'failed';
@@ -1775,10 +1853,13 @@
         state.query = '';
         state.section = 'all';
         state.sort = 'section-id-asc';
+        state.visibleCount = INITIAL_VISIBLE;
+
         els.searchInput.value = '';
         els.sectionSelect.value = 'all';
         els.sortSelect.value = 'section-id-asc';
-        applyFilters();
+
+        applyFilters(true);
       }
 
       function scrollToSearch() {
@@ -1787,19 +1868,16 @@
       }
 
       function bindEvents() {
-        els.searchInput.addEventListener('input', () => {
-          state.query = els.searchInput.value;
-          applyFilters();
-        });
+        els.searchInput.addEventListener('input', debouncedSearch);
 
         els.sectionSelect.addEventListener('change', () => {
           state.section = els.sectionSelect.value;
-          applyFilters();
+          applyFilters(true);
         });
 
         els.sortSelect.addEventListener('change', () => {
           state.sort = els.sortSelect.value;
-          applyFilters();
+          applyFilters(true);
         });
 
         els.resetBtn.addEventListener('click', resetFilters);
@@ -1810,12 +1888,12 @@
         });
 
         els.loadMoreBtn.addEventListener('click', () => {
-          state.visibleCount += PAGE_SIZE;
-          updateStats();
+          state.visibleCount += LOAD_STEP;
           render();
         });
 
         els.lightboxClose.addEventListener('click', closeLightbox);
+
         els.lightbox.addEventListener('click', (e) => {
           if (e.target === els.lightbox) closeLightbox();
         });
@@ -1843,7 +1921,7 @@
           btn.addEventListener('click', () => {
             state.section = btn.dataset.section || 'all';
             els.sectionSelect.value = state.section;
-            applyFilters();
+            applyFilters(true);
             scrollToSearch();
           });
         });

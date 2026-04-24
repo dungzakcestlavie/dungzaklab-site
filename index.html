@@ -569,6 +569,76 @@ body.menu-open{
   color:rgba(236,245,255,0.92);
 }
 
+
+
+/* MICRO CLICK RESPONSE — lightweight card feedback */
+.selector-link,
+.proposal-link,
+.report-item,
+.top-fixed-link,
+.book-item,
+.menu a,
+.link,
+.logo,
+.lang-global button,
+.menu-btn{
+  cursor:pointer;
+  -webkit-tap-highlight-color:rgba(184,150,62,0.20);
+}
+
+.selector-link,
+.proposal-link,
+.report-item,
+.top-fixed-link,
+.book-item .report-item{
+  transition:transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  will-change:transform;
+}
+
+.selector-link:hover,
+.proposal-link:hover,
+.report-item:hover,
+.top-fixed-link:hover{
+  transform:scale(1.01);
+  border-color:rgba(184,150,62,0.42);
+  box-shadow:0 0 12px rgba(184,150,62,0.25);
+}
+
+#books .book-item:hover .report-item,
+#books .report-item:hover{
+  transform:scale(1.01);
+  border-color:rgba(184,150,62,0.48);
+  box-shadow:0 0 12px rgba(184,150,62,0.25);
+}
+
+.selector-link:active,
+.proposal-link:active,
+.report-item:active,
+.top-fixed-link:active,
+.book-item:active .report-item,
+.menu a:active,
+.link:active,
+.logo:active,
+.lang-global button:active,
+.menu-btn:active{
+  transform:scale(0.98);
+  box-shadow:0 0 6px rgba(184,150,62,0.35);
+}
+
+.selector-link:focus-visible,
+.proposal-link:focus-visible,
+.report-item:focus-visible,
+.top-fixed-link:focus-visible,
+.book-item:focus-visible,
+.menu a:focus-visible,
+.link:focus-visible,
+.logo:focus-visible,
+.lang-global button:focus-visible,
+.menu-btn:focus-visible{
+  outline:1px solid #B8963E;
+  outline-offset:2px;
+}
+
 /* RESPONSIVE */
 @media (max-width:640px){
   :root{

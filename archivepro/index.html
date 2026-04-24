@@ -112,9 +112,7 @@
       transition:.18s ease;
     }
 
-    .brand-home-link:hover h1{
-      color:var(--gold);
-    }
+    .brand-home-link:hover h1{color:var(--gold)}
 
     .brand-row h1{
       margin:0;
@@ -151,6 +149,37 @@
       border-color:rgba(212,180,109,.52);
       background:rgba(212,180,109,.08);
       transform:translateY(-1px);
+    }
+
+    .entry-layer{
+      margin-top:18px;
+      padding:18px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+
+    .entry-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:52px;
+      padding:0 24px;
+      border-radius:999px;
+      border:1px solid rgba(212,180,109,.48);
+      background:rgba(212,180,109,.08);
+      color:var(--gold);
+      cursor:pointer;
+      transition:.2s ease;
+      letter-spacing:.04em;
+      white-space:pre-line;
+    }
+
+    .entry-btn:hover{
+      transform:translateY(-1px);
+      background:rgba(212,180,109,.12);
+      border-color:rgba(212,180,109,.68);
+      color:var(--text);
     }
 
     .hero{
@@ -280,6 +309,51 @@
       color:var(--muted);
     }
 
+    .section-nav{
+      margin-top:16px;
+      padding:16px;
+    }
+
+    .section-nav-title{
+      margin:0 0 12px;
+      color:var(--soft);
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+    }
+
+    .section-buttons{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .section-btn{
+      min-height:44px;
+      padding:0 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      cursor:pointer;
+      transition:.18s ease;
+      white-space:pre-line;
+      text-align:center;
+    }
+
+    .section-btn:hover{
+      color:var(--text);
+      border-color:rgba(212,180,109,.34);
+      background:rgba(212,180,109,.06);
+      transform:translateY(-1px);
+    }
+
+    .section-btn.active{
+      color:var(--gold);
+      border-color:rgba(212,180,109,.54);
+      background:rgba(212,180,109,.10);
+    }
+
     .controls{
       margin-top:16px;
       padding:16px;
@@ -287,6 +361,7 @@
       grid-template-columns:1.3fr .9fr .9fr auto;
       gap:12px;
       align-items:end;
+      scroll-margin-top:110px;
     }
 
     .field{
@@ -382,6 +457,7 @@
       background:rgba(255,255,255,.03);
       color:var(--muted);
       font-size:12px;
+      white-space:pre-line;
     }
 
     .status{
@@ -460,6 +536,36 @@
     }
 
     .card:hover .thumb{transform:scale(1.035)}
+
+    .detail-hover{
+      position:absolute;
+      left:12px;
+      right:12px;
+      bottom:12px;
+      z-index:3;
+      min-height:36px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(212,180,109,.34);
+      background:rgba(8,12,18,.68);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+      color:var(--gold);
+      font-size:12px;
+      letter-spacing:.04em;
+      text-align:center;
+      opacity:0;
+      transform:translateY(6px);
+      transition:.2s ease;
+      pointer-events:none;
+      white-space:pre-line;
+    }
+
+    .card:hover .detail-hover,
+    .card:focus-visible .detail-hover{
+      opacity:1;
+      transform:translateY(0);
+    }
 
     .card-body{
       padding:12px 12px 13px;
@@ -659,6 +765,7 @@
       border:1px solid rgba(212,180,109,.34);
       background:rgba(212,180,109,.06);
       color:var(--gold);
+      white-space:pre-line;
     }
 
     .loading-screen{
@@ -707,6 +814,10 @@
       .hero-mode-line{font-size:13px}
       .lightbox-side .lb-title{font-size:20px}
       .lb-row{grid-template-columns:72px minmax(0,1fr)}
+      .entry-layer{padding:14px}
+      .entry-btn{width:100%}
+      .section-buttons{display:grid;grid-template-columns:1fr 1fr}
+      .section-btn{width:100%}
     }
   </style>
 </head>
@@ -729,6 +840,17 @@
   </header>
 
   <div class="site-shell">
+    <section class="panel entry-layer" aria-label="Archive entry">
+      <button
+        id="entryBtn"
+        class="entry-btn"
+        type="button"
+        data-kr="아카이브 입장 →"
+        data-en="Enter Archive →">
+        아카이브 입장 →
+      </button>
+    </section>
+
     <section class="hero">
       <article class="panel hero-card">
         <div class="hero-topbar">
@@ -763,7 +885,25 @@
       </aside>
     </section>
 
-    <section class="panel controls" aria-label="아카이브 검색 및 필터">
+    <section class="panel section-nav" aria-label="Section navigation">
+      <p
+        class="section-nav-title"
+        data-kr="섹션 탐색"
+        data-en="Section Navigation">
+        섹션 탐색
+      </p>
+
+      <div class="section-buttons" id="sectionButtons">
+        <button class="section-btn" type="button" data-section="0" data-kr="기원" data-en="Origins">기원</button>
+        <button class="section-btn" type="button" data-section="1" data-kr="우리를 위해 기도해 주세요" data-en="Pray for Us">우리를 위해 기도해 주세요</button>
+        <button class="section-btn" type="button" data-section="2" data-kr="인간" data-en="Human Being">인간</button>
+        <button class="section-btn" type="button" data-section="3" data-kr="정신의 재탄생" data-en="Rebirth of Mind">정신의 재탄생</button>
+        <button class="section-btn" type="button" data-section="4" data-kr="존재의 회복" data-en="Restoration of Being">존재의 회복</button>
+        <button class="section-btn" type="button" data-section="5" data-kr="빛의 초의식" data-en="Metaconsciousness of Light">빛의 초의식</button>
+      </div>
+    </section>
+
+    <section id="searchArea" class="panel controls" aria-label="아카이브 검색 및 필터">
       <div class="field">
         <label for="searchInput" id="labelSearch">Search</label>
         <input
@@ -773,6 +913,8 @@
           placeholder="ID, 제목, 재료, 연도, 섹션 검색"
           autocomplete="off"
           spellcheck="false"
+          data-kr="ID, 제목, 재료, 연도, 섹션 검색"
+          data-en="Search ID, title, material, year, section"
         />
       </div>
 
@@ -820,7 +962,13 @@
           <span class="meta-pill" id="renderedText">표시 0점</span>
         </div>
         <div class="meta-right">
-          <span class="meta-pill" id="activeFilterText">필터 없음</span>
+          <span
+            class="meta-pill"
+            id="activeFilterText"
+            data-kr="필터 없음"
+            data-en="No filters">
+            필터 없음
+          </span>
         </div>
       </div>
 
@@ -916,8 +1064,10 @@
           renderedPrefix: '표시 ',
           renderedSuffix: '점',
           activeFilterNone: '필터 없음',
+          filteredPrefix: '필터 적용됨',
           searchPrefix: '검색',
           sectionPrefix: '섹션',
+          yearPrefix: '연도',
           emptyState: '조건에 맞는 작품이 없습니다.',
           loadMore: '더 보기',
           footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
@@ -961,8 +1111,10 @@
           renderedPrefix: 'Visible ',
           renderedSuffix: '',
           activeFilterNone: 'No filters',
+          filteredPrefix: 'Filtered',
           searchPrefix: 'Search',
           sectionPrefix: 'Section',
+          yearPrefix: 'Year',
           emptyState: 'No artworks match the current filters.',
           loadMore: 'Load more',
           footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
@@ -1006,8 +1158,10 @@
           renderedPrefix: '표시 / Visible ',
           renderedSuffix: '',
           activeFilterNone: '필터 없음 / No filters',
+          filteredPrefix: '필터 적용됨 / Filtered',
           searchPrefix: '검색 / Search',
           sectionPrefix: '섹션 / Section',
+          yearPrefix: '연도 / Year',
           emptyState: '조건에 맞는 작품이 없습니다 / No artworks match the current filters.',
           loadMore: '더 보기 / Load more',
           footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
@@ -1092,7 +1246,10 @@
         lbKeyImage: document.getElementById('lbKeyImage'),
         lbKeyZoom: document.getElementById('lbKeyZoom'),
         langTabs: Array.from(document.querySelectorAll('.lang-tab')),
-        archiveHomeLink: document.getElementById('archiveHomeLink')
+        archiveHomeLink: document.getElementById('archiveHomeLink'),
+        entryBtn: document.getElementById('entryBtn'),
+        searchArea: document.getElementById('searchArea'),
+        sectionButtons: Array.from(document.querySelectorAll('.section-btn'))
       };
 
       const numberFormat = new Intl.NumberFormat('ko-KR');
@@ -1113,6 +1270,22 @@
         return new URL(clean.replace(/^\/+/, ''), SITE_ROOT).href;
       }
 
+      function syncDataLanguage(root = document) {
+        root.querySelectorAll('[data-kr][data-en]').forEach((node) => {
+          const kr = node.dataset.kr || '';
+          const en = node.dataset.en || '';
+
+          if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
+            node.placeholder = state.lang === 'en' ? en : (state.lang === 'both' ? `${kr}\n${en}` : kr);
+            return;
+          }
+
+          if (state.lang === 'en') node.textContent = en;
+          else if (state.lang === 'both') node.textContent = `${kr}\n${en}`;
+          else node.textContent = kr;
+        });
+      }
+
       function setStatusByState() {
         if (state.loadState === 'loading') els.statusText.textContent = t('statusLoading');
         else if (state.loadState === 'loaded') els.statusText.textContent = t('statusLoaded');
@@ -1127,6 +1300,12 @@
         if (state.lang === 'en') return sec.en;
         if (state.lang === 'both') return `${sec.kr} / ${sec.en}`;
         return sec.kr;
+      }
+
+      function getSectionPlainById(sectionId, lang) {
+        const sec = SECTION_MAP[sectionId];
+        if (!sec) return lang === 'en' ? 'Unsorted' : '미분류';
+        return lang === 'en' ? sec.en : sec.kr;
       }
 
       function getTitle(item) {
@@ -1286,6 +1465,7 @@
           if (sortTexts[idx]) opt.textContent = sortTexts[idx];
         });
 
+        syncDataLanguage();
         setStatusByState();
       }
 
@@ -1316,6 +1496,39 @@
         els.sectionSelect.value = state.section;
 
         els.statSections.textContent = numberFormat.format(els.sectionSelect.options.length - 1);
+        updateSectionButtonState();
+      }
+
+      function updateSectionButtonState() {
+        els.sectionButtons.forEach((btn) => {
+          const active = state.section !== 'all' && btn.dataset.section === String(state.section);
+          btn.classList.toggle('active', active);
+        });
+      }
+
+      function updateActiveFilterDataset() {
+        const krParts = [];
+        const enParts = [];
+
+        if (state.section !== 'all') {
+          krParts.push(`섹션 ${getSectionPlainById(Number(state.section), 'kr')}`);
+          enParts.push(`Section ${getSectionPlainById(Number(state.section), 'en')}`);
+        }
+
+        if (state.query) {
+          krParts.push(`검색 “${state.query}”`);
+          enParts.push(`Search “${state.query}”`);
+        }
+
+        if (!krParts.length && !enParts.length) {
+          els.activeFilterText.dataset.kr = '필터 없음';
+          els.activeFilterText.dataset.en = 'No filters';
+        } else {
+          els.activeFilterText.dataset.kr = `필터 적용됨: ${krParts.join(' + ')}`;
+          els.activeFilterText.dataset.en = `Filtered: ${enParts.join(' + ')}`;
+        }
+
+        syncDataLanguage(els.activeFilterText.parentElement);
       }
 
       function updateStats() {
@@ -1323,10 +1536,7 @@
         els.statFiltered.textContent = numberFormat.format(state.filtered.length);
         els.loadedPill.textContent = `Loaded: ${numberFormat.format(state.all.length)} items`;
 
-        const parts = [];
-        if (state.query) parts.push(`${t('searchPrefix')}: “${state.query}”`);
-        if (state.section !== 'all') parts.push(`${t('sectionPrefix')}: ${getSectionTextById(Number(state.section))}`);
-        els.activeFilterText.textContent = parts.length ? parts.join(' / ') : t('activeFilterNone');
+        updateActiveFilterDataset();
 
         if (state.lang === 'en') {
           els.resultText.textContent = `${numberFormat.format(state.filtered.length)}${t('resultUnit')}`;
@@ -1379,6 +1589,13 @@
         const thumbWrap = document.createElement('div');
         thumbWrap.className = 'thumb-wrap';
         thumbWrap.appendChild(createThumb(imageSrc, zoomSrc, title || item.id));
+
+        const detailHover = document.createElement('span');
+        detailHover.className = 'detail-hover';
+        detailHover.dataset.kr = '상세 보기 →';
+        detailHover.dataset.en = 'View Detail →';
+        detailHover.textContent = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
+        thumbWrap.appendChild(detailHover);
 
         const body = document.createElement('div');
         body.className = 'card-body';
@@ -1441,6 +1658,7 @@
         visible.forEach(item => frag.appendChild(createCard(item)));
         els.grid.appendChild(frag);
 
+        syncDataLanguage(els.grid);
         els.loadWrap.hidden = visible.length >= state.filtered.length;
       }
 
@@ -1497,6 +1715,7 @@
 
         state.visibleCount = PAGE_SIZE;
         updateStats();
+        updateSectionButtonState();
         render();
       }
 
@@ -1562,6 +1781,11 @@
         applyFilters();
       }
 
+      function scrollToSearch() {
+        if (!els.searchArea) return;
+        els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
       function bindEvents() {
         els.searchInput.addEventListener('input', () => {
           state.query = els.searchInput.value;
@@ -1610,6 +1834,19 @@
             goArchiveHome();
           });
         }
+
+        if (els.entryBtn) {
+          els.entryBtn.addEventListener('click', scrollToSearch);
+        }
+
+        els.sectionButtons.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.section = btn.dataset.section || 'all';
+            els.sectionSelect.value = state.section;
+            applyFilters();
+            scrollToSearch();
+          });
+        });
       }
 
       bindEvents();

@@ -774,6 +774,75 @@
       color:var(--muted);
     }
 
+
+
+/* MICRO CLICK RESPONSE — lightweight card feedback */
+.card,
+.btn,
+.section-btn,
+.entry-btn,
+.back-link,
+.hero-home-link,
+.lb-link,
+.lang-tab,
+.brand-home-link{
+  cursor:pointer;
+  -webkit-tap-highlight-color:rgba(184,150,62,0.20);
+}
+
+.card,
+.btn,
+.section-btn,
+.entry-btn,
+.back-link,
+.hero-home-link,
+.lb-link,
+.lang-tab,
+.brand-home-link{
+  transition:transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  will-change:transform;
+}
+
+.card:hover,
+.btn:hover,
+.section-btn:hover,
+.entry-btn:hover,
+.back-link:hover,
+.hero-home-link:hover,
+.lb-link:hover,
+.lang-tab:hover,
+.brand-home-link:hover{
+  transform:scale(1.01);
+  border-color:rgba(184,150,62,0.42);
+  box-shadow:0 0 12px rgba(184,150,62,0.25);
+}
+
+.card:active,
+.btn:active,
+.section-btn:active,
+.entry-btn:active,
+.back-link:active,
+.hero-home-link:active,
+.lb-link:active,
+.lang-tab:active,
+.brand-home-link:active{
+  transform:scale(0.98);
+  box-shadow:0 0 6px rgba(184,150,62,0.35);
+}
+
+.card:focus-visible,
+.btn:focus-visible,
+.section-btn:focus-visible,
+.entry-btn:focus-visible,
+.back-link:focus-visible,
+.hero-home-link:focus-visible,
+.lb-link:focus-visible,
+.lang-tab:focus-visible,
+.brand-home-link:focus-visible{
+  outline:1px solid #B8963E;
+  outline-offset:2px;
+}
+
     @media (max-width:1180px){
       .hero{grid-template-columns:1fr}
       .grid{grid-template-columns:repeat(3,minmax(0,1fr))}

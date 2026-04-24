@@ -118,6 +118,7 @@ body.menu-open{
 }
 
 .menu-btn{
+  touch-action:manipulation;
   position:absolute;
   left:16px;
   top:calc(var(--safe-top) + 50%);
@@ -198,7 +199,7 @@ body.menu-open{
   background:rgba(3,20,33,0.98);
   padding:calc(var(--safe-top) + 92px) 30px calc(40px + var(--safe-bottom));
   transform:translateX(-104%);
-  transition:transform 0.34s ease;
+  transition:transform 0.22s cubic-bezier(.2,.8,.2,1);
   z-index:120;
   border-right:1px solid var(--line);
   box-shadow:24px 0 48px rgba(0,0,0,0.28);
@@ -227,7 +228,7 @@ body.menu-open{
   background:rgba(0,0,0,0.58);
   opacity:0;
   pointer-events:none;
-  transition:opacity 0.3s ease;
+  transition:opacity 0.18s ease;
   z-index:110;
 }
 
@@ -1407,7 +1408,10 @@ globalLangBtns.forEach(btn => {
   });
 });
 
-menuBtn.addEventListener('click', toggleMenu);
+menuBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  toggleMenu();
+}, { passive:false });
 
 menuBtn.addEventListener('keydown', (e) => {
   if(e.key === 'Enter' || e.key === ' '){

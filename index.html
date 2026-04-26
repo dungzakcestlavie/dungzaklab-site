@@ -1443,7 +1443,7 @@ function setLanguage(lang){
   });
 
   document.querySelectorAll('.about-business').forEach(block => {
-    block.classList.toggle('active', block.dataset.lang === currentLang);
+    block.classList.toggle('active', (currentLang === 'ko' && block.dataset.lang === 'kr') || (currentLang === 'en' && block.dataset.lang === 'en'));
   });
 
   document.documentElement.lang = currentLang;

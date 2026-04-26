@@ -515,6 +515,18 @@ body.menu-open{
   text-align:left;
 }
 
+.about-business{
+  display:none;
+  white-space:pre-line;
+  font-size:16px;
+  line-height:2;
+  word-break:keep-all;
+}
+
+.about-business.active{
+  display:block;
+}
+
 /* BOOKS */
 #books .books-intro{
   margin-bottom:58px;
@@ -1225,65 +1237,60 @@ button,
 
 <div class="view" id="about">
   <div class="about-wrap">
-    <div class="lang-panel" data-panel="ko">
-      <div class="text">
-        등작 燈酌 DUNGZAK CESTLAVIE는<br>
-        빛, 기억, 존재를 회화와 구조 사유를 통해 탐구하는 동시대 예술가이다.
-      </div>
 
-      <div class="text" style="margin-top:40px;">
-        그의 작업은 이미지를 만드는 데 머물지 않고,<br>
-        사유가 공간과 표면, 그리고 삶의 구조 안에서 어떻게 작동하는지를 묻는다.
-      </div>
+    <div class="about-business" data-lang="kr">
+  등작 DUNGZAK CESTLAVIE는 대한민국에 등록된 사업체로,
+  예술 창작과 디지털 아카이브,
+  전시 구조 설계 및 응용 소프트웨어 개발을 기반으로 운영됩니다.
 
-      <div class="text" style="margin-top:40px;">
-        회화, 아카이브, 전시, 음악, 미학 보고서는<br>
-        서로 분리된 매체가 아니라<br>
-        하나의 세계가 서로 다른 층위로 나타나는 방식이다.
-      </div>
+  사업자 등록
 
-      <div class="text" style="margin-top:40px;">
-        최근 그의 연구는<br>
-        해양 에너지 구조와 아카이브 시스템으로 확장되고 있으며,<br>
-        에너지를 공간과 경험, 그리고 인간 인식의 구조로 다루기 시작했다.
-      </div>
+  상호(법적 명칭): 등작 DUNGZAK CESTLAVIE
+  대표: 등작
+  설립자: 등작
+  운영명: DUNGZAK CESTLAVIE
+  사업자등록번호: 370-03-03979
 
-      <div class="text" style="margin-top:40px;">
-        DUNGZAK CESTLAVIE LAB은<br>
-        이 두 축 — 해양 에너지와 아카이브 — 을 중심으로<br>
-        구조를 연구하고 실험하며 확장하기 위한 입구이다.
-      </div>
+  업종
+
+  정보통신업 / 응용 소프트웨어 개발 및 공급업
+  예술 창작업 / 회화 및 관련 예술가
+
+  연구 / 실험 프로젝트
+
+  DCAO (Dungzak Concept of Ocean Energy)
+
+  해양 에너지 구조에 대한 연구는
+  에너지의 채취가 아니라
+  구조적 공존과 상호작용을 전제로 한 시스템 설계를 목표로 합니다.
     </div>
 
-    <div class="lang-panel" data-panel="en">
-      <div class="text">
-        DUNGZAK CESTLAVIE is a contemporary artist<br>
-        who explores light, memory, and being through painting and structural thought.
-      </div>
+    <div class="about-business" data-lang="en">
+  DUNGZAK CESTLAVIE is a registered business entity in the Republic of Korea,
+  operating across art practice, digital archives,
+  exhibition structure design, and application software development.
 
-      <div class="text" style="margin-top:40px;">
-        His work does not remain at the level of image-making,<br>
-        but asks how thought operates within space, surface, and the structure of life.
-      </div>
+  Business Registration
 
-      <div class="text" style="margin-top:40px;">
-        Painting, archive, exhibition, music, and aesthetic reports<br>
-        are not separate media,<br>
-        but different layers through which one world appears.
-      </div>
+  Legal Business Name: Dungzak DUNGZAK CESTLAVIE
+  Founder & Representative: Dungzak
+  Operating Name: DUNGZAK CESTLAVIE
+  Business Registration Number: 370-03-03979
+  Registered in: Republic of Korea
 
-      <div class="text" style="margin-top:40px;">
-        His recent work expands into<br>
-        ocean energy structures and archive systems,<br>
-        approaching energy as a structure of space, experience, and human perception.
-      </div>
+  Business Category
 
-      <div class="text" style="margin-top:40px;">
-        DUNGZAK CESTLAVIE LAB<br>
-        is an entrance for researching, testing, and expanding<br>
-        these two axes — ocean energy and archive.
-      </div>
+  Information Technology / Application Software Development
+  Art Practice / Painting & Visual Arts
+
+  Research / Experimental Projects
+
+  DCAO (Dungzak Concept of Ocean Energy)
+
+  This research explores ocean energy not as extraction,
+  but as a system of structural coexistence and interaction.
     </div>
+
   </div>
 </div>
 <script>
@@ -1433,6 +1440,10 @@ function setLanguage(lang){
 
   panels.forEach(panel => {
     panel.classList.toggle('active', panel.dataset.panel === currentLang);
+  });
+
+  document.querySelectorAll('.about-business').forEach(block => {
+    block.classList.toggle('active', block.dataset.lang === currentLang);
   });
 
   document.documentElement.lang = currentLang;

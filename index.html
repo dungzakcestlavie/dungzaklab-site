@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
 
 <title>DUNGZAK CESTLAVIE LAB — Archive Pro · Ocean Energy · Structural Research</title>
 <meta name="description" content="DUNGZAK CESTLAVIE LAB is a research platform exploring ocean energy structures, archive systems, and conceptual frameworks. Featuring Archive Pro, a structural artwork archive by DUNGZAK CESTLAVIE.">
@@ -554,6 +555,21 @@ body.menu-open{
 .about-business a:focus-visible{
   outline:1px solid #B8963E;
   outline-offset:2px;
+}
+
+
+/* BUSINESS NUMBER — prevent mobile auto-link */
+.biz-number{
+  color:#B8963E;
+  text-decoration:none;
+  pointer-events:none;
+  cursor:default;
+}
+
+.biz-number a{
+  color:inherit;
+  text-decoration:none;
+  pointer-events:none;
 }
 
 
@@ -1279,7 +1295,7 @@ button,
   대표: 등작
   설립자: 등작
   운영명: DUNGZAK CESTLAVIE
-  사업자등록번호: 370-03-03979
+  사업자등록번호: <span class="biz-number">370-03-03979</span>
 
   업종
 
@@ -1305,7 +1321,7 @@ button,
   Legal Business Name: Dungzak DUNGZAK CESTLAVIE
   Founder & Representative: Dungzak
   Operating Name: DUNGZAK CESTLAVIE
-  Business Registration Number: 370-03-03979
+  Business Registration Number: <span class="biz-number">370-03-03979</span>
   Registered in: Republic of Korea
 
   Business Category

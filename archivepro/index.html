@@ -1108,14 +1108,9 @@
       <div class="field">
         <label for="sortSelect" id="labelSort">Sort</label>
         <select id="sortSelect" class="select" aria-label="정렬 선택">
-          <option value="section-id-asc">섹션 + ID 오름차순</option>
-          <option value="section-year-asc" selected>섹션 + 연도 오래된순</option>
-          <option value="section-year-desc">섹션 + 연도 최신순</option>
-          <option value="id-asc">ID 오름차순</option>
-          <option value="id-desc">ID 내림차순</option>
-          <option value="year-desc">연도 최신순</option>
-          <option value="year-asc">연도 오래된순</option>
-          <option value="title-asc">제목 가나다/ABC</option>
+          <option value="section-id-asc" selected>섹션 + ID</option>
+          <option value="section-year-desc">섹션 + 최신</option>
+          <option value="id-desc">최신 등록순</option>
         </select>
       </div>
 
@@ -1202,11 +1197,11 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-archivepro-sort-hardened-v5';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-archivepro-sort-simple-final';
       const DATA_URLS = [
         DATA_URL,
-        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-archivepro-sort-hardened-v5',
-        'https://dungzak.art/data/works.json?v=20260428-archivepro-sort-hardened-v5'
+        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-archivepro-sort-simple-final',
+        'https://dungzak.art/data/works.json?v=20260428-archivepro-sort-simple-final'
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
@@ -1343,14 +1338,9 @@
           openImage: '이미지 열기',
           openZoom: '줌 열기',
           sortOptions: [
-            '섹션 + ID 오름차순',
-            '섹션 + 연도 오래된순',
-            '섹션 + 연도 최신순',
-            'ID 오름차순',
-            'ID 내림차순',
-            '연도 최신순',
-            '연도 오래된순',
-            '제목 가나다/ABC'
+            '섹션 + ID',
+            '섹션 + 최신',
+            '최신 등록순'
           ]
         },
         en: {
@@ -1393,13 +1383,8 @@
           openZoom: 'Open zoom',
           sortOptions: [
             'Section + ID',
-            'Section + Year oldest',
-            'Section + Year newest',
-            'ID ascending',
-            'ID descending',
-            'Year newest',
-            'Year oldest',
-            'Title A–Z'
+            'Section + Newest',
+            'Newest upload'
           ]
         },
         both: {
@@ -1442,13 +1427,8 @@
           openZoom: '줌 열기 / Open zoom',
           sortOptions: [
             '섹션 + ID / Section + ID',
-            '섹션 + 연도 오래된순 / Section + Year oldest',
-            '섹션 + 연도 최신순 / Section + Year newest',
-            'ID ↑',
-            'ID ↓',
-            '연도 최신 / Year newest',
-            '연도 오래된 / Year oldest',
-            '제목 / Title'
+            '섹션 + 최신 / Section + Newest',
+            '최신 등록순 / Newest upload'
           ]
         }
       };
@@ -1459,7 +1439,7 @@
         visibleCount: INITIAL_VISIBLE,
         query: '',
         section: 'all',
-        sort: 'section-year-asc',
+        sort: 'section-id-asc',
         lightboxItem: null,
         lang: 'kr',
         loadState: 'idle',

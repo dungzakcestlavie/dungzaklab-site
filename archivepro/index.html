@@ -1202,11 +1202,11 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-archivepro-collected-search-sort-v4';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-archivepro-sort-hardened-v5';
       const DATA_URLS = [
         DATA_URL,
-        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-archivepro-collected-search-sort-v4',
-        'https://dungzak.art/data/works.json?v=20260428-archivepro-collected-search-sort-v4'
+        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-archivepro-sort-hardened-v5',
+        'https://dungzak.art/data/works.json?v=20260428-archivepro-sort-hardened-v5'
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
@@ -1636,9 +1636,43 @@
         return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
       }
 
+      function parseIdPrefix(id) {
+        return safeText(id)
+          .toLowerCase()
+          .replace(/[-_\s]*\d+.*$/i, '')
+          .replace(/[^a-z가-힣]/g, '');
+      }
+
+      function compareIdNatural(a, b, direction = 'asc') {
+        const ap = parseIdPrefix(a.id);
+        const bp = parseIdPrefix(b.id);
+        const prefixCompare = ap.localeCompare(bp, 'ko', { numeric: true, sensitivity: 'base' });
+        if (prefixCompare !== 0) return direction === 'desc' ? -prefixCompare : prefixCompare;
+
+        const an = parseIdNumber(a.id);
+        const bn = parseIdNumber(b.id);
+        if (an !== bn) return direction === 'desc' ? bn - an : an - bn;
+
+        const rawCompare = safeText(a.id).localeCompare(safeText(b.id), 'ko', { numeric: true, sensitivity: 'base' });
+        return direction === 'desc' ? -rawCompare : rawCompare;
+      }
+
+      function parseYearNumbers(year) {
+        const matches = String(year || '').match(/\d{4}/g) || [];
+        const nums = matches
+          .map((v) => parseInt(v, 10))
+          .filter((v) => Number.isFinite(v));
+        return nums;
+      }
+
       function parseYearNumber(year) {
-        const y = parseInt(String(year || '').match(/\d{4}/)?.[0] || '', 10);
-        return Number.isFinite(y) ? y : null;
+        const nums = parseYearNumbers(year);
+        return nums.length ? nums[0] : null;
+      }
+
+      function parseYearEndNumber(year) {
+        const nums = parseYearNumbers(year);
+        return nums.length ? nums[nums.length - 1] : null;
       }
 
       function getYearSearchValues(item) {
@@ -1819,34 +1853,36 @@
       }
 
       function compareIdAsc(a, b) {
-        const idDiff = parseIdNumber(a.id) - parseIdNumber(b.id);
-        if (idDiff !== 0) return idDiff;
-        return safeText(a.id).localeCompare(safeText(b.id), 'ko', { numeric: true, sensitivity: 'base' });
+        return compareIdNatural(a, b, 'asc');
       }
 
       function compareIdDesc(a, b) {
-        const idDiff = parseIdNumber(b.id) - parseIdNumber(a.id);
-        if (idDiff !== 0) return idDiff;
-        return safeText(b.id).localeCompare(safeText(a.id), 'ko', { numeric: true, sensitivity: 'base' });
+        return compareIdNatural(a, b, 'desc');
       }
 
       function compareYearAsc(a, b) {
         const ay = parseYearNumber(a.year);
         const by = parseYearNumber(b.year);
+
+        // Year 없는 항목은 항상 뒤로 보낸다. 둘 다 없으면 ID 자연 정렬.
         if (ay === null && by === null) return compareIdAsc(a, b);
         if (ay === null) return 1;
         if (by === null) return -1;
+
         if (ay !== by) return ay - by;
         return compareIdAsc(a, b);
       }
 
       function compareYearDesc(a, b) {
-        const ay = parseYearNumber(a.year);
-        const by = parseYearNumber(b.year);
+        const ay = parseYearEndNumber(a.year);
+        const by = parseYearEndNumber(b.year);
+
+        // Year 없는 항목은 항상 뒤로 보낸다. 둘 다 없으면 ID 자연 정렬.
         if (ay === null && by === null) return compareIdAsc(a, b);
         if (ay === null) return 1;
         if (by === null) return -1;
-        if (by !== ay) return by - ay;
+
+        if (ay !== by) return by - ay;
         return compareIdAsc(a, b);
       }
 

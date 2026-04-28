@@ -1039,7 +1039,7 @@
 
     <div class="meta-row">
       <div class="meta-left">
-        <span class="meta-pill" id="sourcePill">Source: https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json</span>
+        <span class="meta-pill" id="sourcePill">Source: https://dungzakcestlavie.github.io/data/works.json</span>
         <span class="meta-pill" id="loadedPill">Loaded: —</span>
       </div>
       <div class="meta-right">
@@ -1114,7 +1114,11 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-shop-fixed';
+      const DATA_URLS = [
+        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-shop-final',
+        'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-shop-final'
+      ];
+      const DATA_URL = DATA_URLS[0];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
       const LOAD_STEP = 24;
@@ -1986,27 +1990,44 @@
 
         state.loadState = 'loading';
         rebuildStaticTexts();
-        els.sourcePill.textContent = `Source: ${DATA_URL}`;
+        els.sourcePill.textContent = `Source: ${DATA_URLS.join(' → ')}`;
 
-        try {
-          const response = await fetch(DATA_URL, { cache: 'default' });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const raw = await response.json();
-          const arr = Array.isArray(raw.works) ? raw.works : (Array.isArray(raw) ? raw : []);
+        let lastError = null;
 
-          state.all = arr.map(normalizeItem);
-          state.isLoaded = true;
-          state.loadState = 'loaded';
+        for (const url of DATA_URLS) {
+          try {
+            const response = await fetch(url, { cache: 'no-store' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-          rebuildStaticTexts();
-          populateSections();
-          applyFilters(true);
-        } catch (error) {
-          console.error(error);
-          state.loadState = 'failed';
-          rebuildStaticTexts();
-          els.loadingScreen.style.display = 'block';
+            const raw = await response.json();
+            const arr = Array.isArray(raw)
+              ? raw
+              : (Array.isArray(raw.works) ? raw.works : []);
+
+            if (!Array.isArray(arr)) throw new Error('works data is not an array');
+
+            state.all = arr.map(normalizeItem);
+            state.isLoaded = true;
+            state.loadState = 'loaded';
+
+            els.sourcePill.textContent = `Source: ${url}`;
+            rebuildStaticTexts();
+            populateSections();
+            applyFilters(true);
+            return;
+          } catch (error) {
+            lastError = error;
+            console.warn('Archive Pro data load failed:', url, error);
+          }
         }
+
+        console.error(lastError);
+        state.loadState = 'failed';
+        state.all = [];
+        state.filtered = [];
+        rebuildStaticTexts();
+        updateStats();
+        els.loadingScreen.style.display = 'block';
       }
 
       function resetFilters() {

@@ -1202,11 +1202,11 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-archivepro-section-search-path-final-v2';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-archivepro-section-fixed-v3';
       const DATA_URLS = [
         DATA_URL,
-        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-archivepro-section-search-path-final-v2',
-        'https://dungzak.art/data/works.json?v=20260428-archivepro-section-search-path-final-v2'
+        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-archivepro-section-fixed-v3',
+        'https://dungzak.art/data/works.json?v=20260428-archivepro-section-fixed-v3'
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
@@ -1643,45 +1643,45 @@
 
       function inferSectionId(item) {
         const id = safeText(item.id);
-        const rawSectionId = Number(item.section_id);
-        const sectionKr = safeText(item.section_kr);
-        const sectionEn = safeText(item.section_en);
-        const joined = `${sectionKr} ${sectionEn}`.toLowerCase();
+        const sid = Number(item.section_id);
 
-        /* SECTION HARD RULE:
-           1) OR-* is always Origins.
-           2) If section_id is 0–5, trust JSON section_id first.
-           3) Text/prefix inference is only fallback for old or incomplete data. */
+        /* SECTION ABSOLUTE RULE:
+           - OR-* is always Origins.
+           - All other works use JSON section_id only.
+           - No title/section text guessing, so sections never overlap by inference. */
         if (/^or[-_]?\d+/i.test(id)) return 0;
-        if (Number.isFinite(rawSectionId) && rawSectionId >= 0 && rawSectionId <= 5) return rawSectionId;
-
-        if (joined.includes('origins') || joined.includes('기원')) return 0;
-        if (joined.includes('pray for us') || joined.includes('우리를 위해 기도')) return 1;
-        if (joined.includes('human being') || joined.includes('인간')) return 2;
-        if (joined.includes('rebirth of mind') || joined.includes('정신의 재탄생')) return 3;
-        if (joined.includes('restoration of being') || joined.includes('존재의 회복')) return 4;
-        if (joined.includes('metaconsciousness of light') || joined.includes('빛의 초의식')) return 5;
-        if (/^ce\d+/i.test(id)) return 2;
-        if (/^do[-_]?\d+/i.test(id)) return 3;
-        if (/^ac\d+/i.test(id)) return 4;
-        return Number.isFinite(rawSectionId) ? rawSectionId : 9999;
+        if (Number.isFinite(sid) && sid >= 0 && sid <= 5) return sid;
+        return 9999;
       }
 
-      function normalizeImageUrl(url, kind, id) {
+      function normalizeImageUrl(url, kind, id, sectionId) {
         const safeId = safeText(id);
         const clean = safeText(url).replace(/\s+/g, '');
         const folder = kind === 'zoom' ? 'zoom' : 'standard';
-
-        /* PATH HARD RULE:
-           Archive Pro reads dungzak.art works.json, but image files for this archive
-           must resolve to the dungzakcestlavie.github.io images folder.
-           Therefore any old dungzaklab-images/archivepro path is normalized here.
-           JSON section/text remains untouched. */
         const fileFromUrl = clean.match(/\/([^\/]+\.(?:jpg|jpeg|png|webp))(?:\?.*)?$/i)?.[1] || '';
         const fileName = fileFromUrl || (safeId ? `${safeId}.jpg` : '');
         if (!fileName) return '';
 
-        return `https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/${folder}/${fileName}`;
+        /* PATH ABSOLUTE RULE:
+           - Section 1 / Pray for Us keeps the exact JSON image path when it exists.
+             This prevents the Pray section from visually overlapping with Human when IDs repeat.
+           - Sections 2-5 resolve to dungzakcestlavie.github.io/images.
+           - Origins keeps the exact JSON image path when it exists; fallback goes to lab-images.
+        */
+        const sid = Number(sectionId);
+
+        if (sid === 1 && clean) return clean;
+
+        if (sid === 0) {
+          if (clean) return clean;
+          return `https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/${folder}/${fileName}`;
+        }
+
+        if (sid >= 2 && sid <= 5) {
+          return `https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/${folder}/${fileName}`;
+        }
+
+        return clean || `https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/${folder}/${fileName}`;
       }
 
       function normalizeItem(raw, index) {
@@ -1702,8 +1702,8 @@
           size_kr: safeText(item.size_kr),
           size_en: safeText(item.size_en),
           year: safeText(item.year),
-          image: normalizeImageUrl(item.image, 'standard', safeText(item.id)),
-          zoom: normalizeImageUrl(item.zoom, 'zoom', safeText(item.id)),
+          image: normalizeImageUrl(item.image, 'standard', safeText(item.id), sectionId),
+          zoom: normalizeImageUrl(item.zoom, 'zoom', safeText(item.id), sectionId),
           status: status
         };
       }

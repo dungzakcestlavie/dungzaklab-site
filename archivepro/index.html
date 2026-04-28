@@ -1039,7 +1039,7 @@
 
     <div class="meta-row">
       <div class="meta-left">
-        <span class="meta-pill" id="sourcePill">Source: https://dungzak.art/data/works.json</span>
+        <span class="meta-pill" id="sourcePill">Source: https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json</span>
         <span class="meta-pill" id="loadedPill">Loaded: —</span>
       </div>
       <div class="meta-right">
@@ -1113,8 +1113,9 @@
     (() => {
       'use strict';
 
-      const SITE_ROOT = 'https://dungzak.art/';
-      const DATA_URL = `${SITE_ROOT}data/works.json?v=20260425`;
+      const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-shop-fixed';
+      const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
       const LOAD_STEP = 24;
       const SEARCH_DEBOUNCE_MS = 250;
@@ -1515,10 +1516,15 @@
 
       function normalizeItem(raw, index) {
         const item = raw && typeof raw === 'object' ? raw : {};
+        const sectionId = Number.isFinite(Number(item.section_id)) ? Number(item.section_id) : 9999;
+        const rawStatus = safeText(item.status);
+        const futureAutoStatus = index >= AUTO_AVAILABLE_AFTER_COUNT ? 'available' : '';
+        const status = sectionId === 0 ? '' : (rawStatus || futureAutoStatus);
+
         return {
           _index: index,
           id: safeText(item.id) || `item-${index + 1}`,
-          section_id: Number.isFinite(Number(item.section_id)) ? Number(item.section_id) : 9999,
+          section_id: sectionId,
           section_kr: safeText(item.section_kr),
           section_en: safeText(item.section_en),
           title_kr: safeText(item.title_kr),
@@ -1530,7 +1536,7 @@
           year: safeText(item.year),
           image: safeText(item.image),
           zoom: safeText(item.zoom),
-          status: safeText(item.status)
+          status: status
         };
       }
 

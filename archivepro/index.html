@@ -1039,7 +1039,7 @@
 
     <div class="meta-row">
       <div class="meta-left">
-        <span class="meta-pill" id="sourcePill">Source: https://dungzakcestlavie.github.io/data/works.json</span>
+        <span class="meta-pill" id="sourcePill">Source: https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json</span>
         <span class="meta-pill" id="loadedPill">Loaded: —</span>
       </div>
       <div class="meta-right">
@@ -1114,11 +1114,12 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-shop-final';
       const DATA_URLS = [
+        DATA_URL,
         'https://dungzakcestlavie.github.io/data/works.json?v=20260428-shop-final',
-        'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-shop-final'
+        'https://dungzak.art/data/works.json?v=20260428-shop-final'
       ];
-      const DATA_URL = DATA_URLS[0];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
       const LOAD_STEP = 24;
@@ -1985,49 +1986,76 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
-      async function loadData() {
-        if (state.isLoaded || state.loadState === 'loading') return;
+      function parseWorksPayload(text) {
+        let json = null;
 
-        state.loadState = 'loading';
-        rebuildStaticTexts();
-        els.sourcePill.textContent = `Source: ${DATA_URLS.join(' → ')}`;
+        try {
+          json = JSON.parse(text);
+        } catch (firstError) {
+          const repaired = text
+            .replace(/(\"status\"\s*:\s*\"(?:available|reserved|collected)\"\s*)\n\s*\{/g, '$1\n    },\n    {')
+            .replace(/(\"zoom\"\s*:\s*\"[^\"]+\"\s*)\n\s*(\"status\"\s*:)/g, '$1,\n      $2')
+            .replace(/,\s*([}\]])/g, '$1');
 
+          try {
+            json = JSON.parse(repaired);
+          } catch (secondError) {
+            throw firstError;
+          }
+        }
+
+        if (Array.isArray(json)) return json;
+        if (json && Array.isArray(json.works)) return json.works;
+        return [];
+      }
+
+      async function fetchWorksFromCandidates() {
         let lastError = null;
 
         for (const url of DATA_URLS) {
           try {
             const response = await fetch(url, { cache: 'no-store' });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-            const raw = await response.json();
-            const arr = Array.isArray(raw)
-              ? raw
-              : (Array.isArray(raw.works) ? raw.works : []);
-
-            if (!Array.isArray(arr)) throw new Error('works data is not an array');
-
-            state.all = arr.map(normalizeItem);
-            state.isLoaded = true;
-            state.loadState = 'loaded';
-
-            els.sourcePill.textContent = `Source: ${url}`;
-            rebuildStaticTexts();
-            populateSections();
-            applyFilters(true);
-            return;
+            const text = await response.text();
+            const arr = parseWorksPayload(text);
+            if (!Array.isArray(arr)) throw new Error('works payload is not an array');
+            return { arr, url };
           } catch (error) {
             lastError = error;
             console.warn('Archive Pro data load failed:', url, error);
           }
         }
 
-        console.error(lastError);
-        state.loadState = 'failed';
-        state.all = [];
-        state.filtered = [];
+        throw lastError || new Error('Unable to load works.json');
+      }
+
+      async function loadData() {
+        if (state.isLoaded || state.loadState === 'loading') return;
+
+        state.loadState = 'loading';
         rebuildStaticTexts();
-        updateStats();
-        els.loadingScreen.style.display = 'block';
+        els.sourcePill.textContent = `Source: ${DATA_URLS[0]}`;
+
+        try {
+          const result = await fetchWorksFromCandidates();
+          const arr = result.arr;
+
+          state.all = arr.map(normalizeItem);
+          state.isLoaded = true;
+          state.loadState = 'loaded';
+
+          els.sourcePill.textContent = `Source: ${result.url}`;
+          rebuildStaticTexts();
+          populateSections();
+          applyFilters(true);
+        } catch (error) {
+          console.error(error);
+          state.all = [];
+          state.filtered = [];
+          state.loadState = 'failed';
+          rebuildStaticTexts();
+          els.loadingScreen.style.display = 'block';
+        }
       }
 
       function resetFilters() {

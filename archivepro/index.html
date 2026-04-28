@@ -2075,11 +2075,12 @@
       }
 
       function createCard(item) {
-        const title = getTitle(item);
-        const material = getMaterial(item);
-        const size = getSize(item);
-        const year = getYear(item);
-        const infoLine = [material, size, year].filter(Boolean).join(' / ');
+        const isOrigin = Number(item.section_id) === 0;
+        const title = isOrigin ? 'Untitled' : getTitle(item);
+        const material = isOrigin ? '' : getMaterial(item);
+        const size = isOrigin ? '' : getSize(item);
+        const year = isOrigin ? '' : getYear(item);
+        const infoLine = isOrigin ? '' : [material, size, year].filter(Boolean).join(' / ');
         const imageSrc = toAbsoluteUrl(item.image || '');
 
         const card = document.createElement('article');
@@ -2126,7 +2127,7 @@
 
         body.appendChild(top);
         body.appendChild(titleEl);
-        body.appendChild(captionEl);
+        if (!isOrigin) body.appendChild(captionEl);
 
         const statusHTML = renderStatusUI(item);
         if (statusHTML) {
@@ -2194,10 +2195,11 @@
       function openLightbox(item) {
         state.lightboxItem = item;
 
-        const title = getTitle(item) || t('untitled');
-        const material = getMaterial(item) || '—';
-        const size = getSize(item) || '—';
-        const year = getYear(item) || '—';
+        const isOrigin = Number(item.section_id) === 0;
+        const title = isOrigin ? 'Untitled' : (getTitle(item) || t('untitled'));
+        const material = isOrigin ? '—' : (getMaterial(item) || '—');
+        const size = isOrigin ? '—' : (getSize(item) || '—');
+        const year = isOrigin ? '—' : (getYear(item) || '—');
         const imageUrl = toAbsoluteUrl(item.image || '');
         const zoomUrl = toAbsoluteUrl(item.zoom || '');
         const displayUrl = zoomUrl || imageUrl || SVG_PLACEHOLDER;

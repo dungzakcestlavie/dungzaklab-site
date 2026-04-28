@@ -1200,11 +1200,11 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-section-status-githubio-final';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-archivepro-path-section-search-final';
       const DATA_URLS = [
         DATA_URL,
-        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-section-status-githubio-final',
-        'https://dungzak.art/data/works.json?v=20260428-section-status-githubio-final'
+        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-archivepro-path-section-search-final',
+        'https://dungzak.art/data/works.json?v=20260428-archivepro-path-section-search-final'
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
@@ -1218,7 +1218,7 @@
         if (!value) return '';
         if (['available', 'available for collection', '소장가능', '소장 가능'].includes(value)) return 'available';
         if (['reserved', '예약', '예약중'].includes(value)) return 'reserved';
-        if (['collected', 'sold', '소장', '판매완료', '판매 완료'].includes(value)) return 'collected';
+        if (['sold', 'collected', '소장', '소장완료', '소장 완료', '판매완료', '판매 완료'].includes(value)) return 'sold';
         return value;
       }
 
@@ -1234,10 +1234,10 @@
           if (state.lang === 'both') return '예약 / reserved';
           return '예약';
         }
-        if (normalized === 'collected') {
-          if (state.lang === 'en') return 'collected';
-          if (state.lang === 'both') return '소장 / collected';
-          return '소장';
+        if (normalized === 'sold') {
+          if (state.lang === 'en') return 'sold';
+          if (state.lang === 'both') return '소장 완료 / sold';
+          return '소장 완료';
         }
         return '';
       }
@@ -1635,12 +1635,19 @@
 
       function inferSectionId(item) {
         const id = safeText(item.id);
+        const rawSectionId = Number(item.section_id);
         const sectionKr = safeText(item.section_kr);
         const sectionEn = safeText(item.section_en);
         const joined = `${sectionKr} ${sectionEn}`.toLowerCase();
-        const rawSectionId = Number.isFinite(Number(item.section_id)) ? Number(item.section_id) : 9999;
 
+        /* SECTION HARD RULE:
+           1) OR-* is always Origins.
+           2) If section_id is 0–5, trust JSON section_id first.
+           3) Text/prefix inference is only fallback for old or incomplete data. */
         if (/^or[-_]?\d+/i.test(id)) return 0;
+        if (Number.isFinite(rawSectionId) && rawSectionId >= 0 && rawSectionId <= 5) return rawSectionId;
+
+        if (joined.includes('origins') || joined.includes('기원')) return 0;
         if (joined.includes('pray for us') || joined.includes('우리를 위해 기도')) return 1;
         if (joined.includes('human being') || joined.includes('인간')) return 2;
         if (joined.includes('rebirth of mind') || joined.includes('정신의 재탄생')) return 3;
@@ -1649,15 +1656,18 @@
         if (/^ce\d+/i.test(id)) return 2;
         if (/^do[-_]?\d+/i.test(id)) return 3;
         if (/^ac\d+/i.test(id)) return 4;
-        return rawSectionId;
+        return Number.isFinite(rawSectionId) ? rawSectionId : 9999;
       }
 
-      function normalizeGithubImageUrl(url) {
+      function normalizeImageUrl(url, kind, id) {
         const clean = safeText(url);
-        if (!clean) return '';
-        return clean
-          .replace('https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/', 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/standard/')
-          .replace('https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/', 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/zoom/');
+        if (clean) return clean;
+        const safeId = safeText(id);
+        if (!safeId) return '';
+        if (/^or[-_]?\d+/i.test(safeId)) {
+          return `https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/${kind}/${safeId}.jpg`;
+        }
+        return '';
       }
 
       function normalizeItem(raw, index) {
@@ -1678,25 +1688,63 @@
           size_kr: safeText(item.size_kr),
           size_en: safeText(item.size_en),
           year: safeText(item.year),
-          image: normalizeGithubImageUrl(item.image),
-          zoom: normalizeGithubImageUrl(item.zoom),
+          image: normalizeImageUrl(item.image, 'standard', safeText(item.id)),
+          zoom: normalizeImageUrl(item.zoom, 'zoom', safeText(item.id)),
           status: status
         };
       }
 
+      function normalizeSearchToken(value) {
+        return safeText(value)
+          .toLowerCase()
+          .normalize('NFKC')
+          .replace(/[ⅠⅡⅢⅣⅤ]/g, (m) => ({ 'Ⅰ':'1', 'Ⅱ':'2', 'Ⅲ':'3', 'Ⅳ':'4', 'Ⅴ':'5' }[m] || m))
+          .replace(/[‐-―]/g, '-')
+          .replace(/[_:;,.\/\|()[\]{}]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      function compactSearchToken(value) {
+        return normalizeSearchToken(value).replace(/[^a-z0-9가-힣]/g, '');
+      }
+
+      function getSectionAliases(sectionId) {
+        const map = {
+          0: ['0', 'a', 'origin', 'origins', '기원'],
+          1: ['1', 'i', 'pray', 'pray for us', '우리를 위해 기도해 주세요', '우리를 위해 기도', '기도'],
+          2: ['2', 'ii', 'human', 'human being', '인간'],
+          3: ['3', 'iii', 'rebirth', 'rebirth of mind', 'mind', '정신의 재탄생', '정신'],
+          4: ['4', 'iv', 'restoration', 'restoration of being', 'being', '존재의 회복', '존재'],
+          5: ['5', 'v', 'metaconsciousness', 'metaconsciousness of light', 'light', '빛의 초의식', '빛']
+        };
+        return map[Number(sectionId)] || [];
+      }
+
       function buildSearchText(item) {
-        return [
+        const values = [
           item.id,
+          compactSearchToken(item.id),
+          item.section_id,
           item.section_kr,
           item.section_en,
+          getSectionTextById(item.section_id),
+          ...getSectionAliases(item.section_id),
           item.title_kr,
           item.title_en,
           item.material_kr,
           item.material_en,
           item.size_kr,
           item.size_en,
-          item.year
-        ].join(' ').toLowerCase();
+          item.year,
+          item.status,
+          getStatusLabel(item.status),
+          item.image,
+          item.zoom
+        ];
+        const normalized = values.map(normalizeSearchToken).filter(Boolean);
+        const compacted = values.map(compactSearchToken).filter(Boolean);
+        return `${normalized.join(' ')} ${compacted.join(' ')}`;
       }
 
       function compareItems(a, b, mode) {
@@ -2077,13 +2125,15 @@
       }
 
       function applyFilters(resetVisible = true) {
-        const query = state.query.trim().toLowerCase();
+        const query = normalizeSearchToken(state.query);
+        const compactQuery = compactSearchToken(state.query);
 
         state.filtered = state.all
           .filter((item) => {
             if (state.section !== 'all' && item.section_id !== Number(state.section)) return false;
             if (!query) return true;
-            return buildSearchText(item).includes(query);
+            const haystack = buildSearchText(item);
+            return haystack.includes(query) || (compactQuery && haystack.includes(compactQuery));
           })
           .sort((a, b) => compareItems(a, b, state.sort));
 

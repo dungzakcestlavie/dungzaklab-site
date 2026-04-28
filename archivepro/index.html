@@ -1108,13 +1108,9 @@
       <div class="field">
         <label for="sortSelect" id="labelSort">Sort</label>
         <select id="sortSelect" class="select" aria-label="정렬 선택">
-          <option value="section-id-asc" selected>섹션 + 번호 빠른순</option>
-          <option value="section-year-desc">섹션 + 최신</option>
-          <option value="id-asc">번호 빠른순</option>
+          <option value="section-id-asc" selected>기본순</option>
           <option value="id-desc">번호 늦은순</option>
           <option value="year-desc">최신순</option>
-          <option value="year-asc">오래된순</option>
-          <option value="title-asc">제목순</option>
         </select>
       </div>
 
@@ -1201,11 +1197,11 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260429-sort-search-independent-final';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260429-simple-sort-section-reset-final';
       const DATA_URLS = [
         DATA_URL,
-        'https://dungzakcestlavie.github.io/data/works.json?v=20260429-sort-search-independent-final',
-        'https://dungzak.art/data/works.json?v=20260429-sort-search-independent-final'
+        'https://dungzakcestlavie.github.io/data/works.json?v=20260429-simple-sort-section-reset-final',
+        'https://dungzak.art/data/works.json?v=20260429-simple-sort-section-reset-final'
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
@@ -1342,13 +1338,9 @@
           openImage: '이미지 열기',
           openZoom: '줌 열기',
           sortOptions: [
-            '섹션 + 번호 빠른순',
-            '섹션 + 최신',
-            '번호 빠른순',
+            '기본순',
             '번호 늦은순',
-            '최신순',
-            '오래된순',
-            '제목순'
+            '최신순'
           ]
         },
         en: {
@@ -1390,13 +1382,9 @@
           openImage: 'Open image',
           openZoom: 'Open zoom',
           sortOptions: [
-            'Section + Fast ID',
-            'Section + Newest',
-            'Fast ID',
+            'Default',
             'Late ID',
-            'Newest',
-            'Oldest',
-            'Title'
+            'Newest'
           ]
         },
         both: {
@@ -1438,13 +1426,9 @@
           openImage: '이미지 열기 / Open image',
           openZoom: '줌 열기 / Open zoom',
           sortOptions: [
-            '섹션 + 번호 빠른순 / Section + Fast ID',
-            '섹션 + 최신 / Section + Newest',
-            '번호 빠른순 / Fast ID',
+            '기본순 / Default',
             '번호 늦은순 / Late ID',
-            '최신순 / Newest',
-            '오래된순 / Oldest',
-            '제목순 / Title'
+            '최신순 / Newest'
           ]
         }
       };
@@ -2415,7 +2399,12 @@
 
         els.sectionSelect.addEventListener('change', () => {
           state.section = els.sectionSelect.value;
-          /* Section selection must not reset search or sort. */
+          /* Section change starts a clean section view.
+             This prevents the previous search word from making every section look the same. */
+          state.query = '';
+          state.sort = FAST_ORDER;
+          els.searchInput.value = '';
+          els.sortSelect.value = FAST_ORDER;
           applyFilters(true);
         });
 
@@ -2463,12 +2452,16 @@
 
         els.sectionButtons.forEach((btn) => {
           btn.addEventListener('click', () => {
-            /* Section buttons now only change the active section.
-               Search text and Sort mode remain independent and unchanged. */
+            /* Section buttons now open a clean section view.
+               Search text is cleared and sort returns to the simple default order. */
             state.section = btn.dataset.section || 'all';
+            state.query = '';
+            state.sort = FAST_ORDER;
             state.visibleCount = INITIAL_VISIBLE;
 
+            els.searchInput.value = '';
             els.sectionSelect.value = state.section;
+            els.sortSelect.value = FAST_ORDER;
 
             applyFilters(true);
             scrollToSearch();

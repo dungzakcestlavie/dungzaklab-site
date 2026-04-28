@@ -1109,6 +1109,8 @@
         <label for="sortSelect" id="labelSort">Sort</label>
         <select id="sortSelect" class="select" aria-label="정렬 선택">
           <option value="section-id-asc">섹션 + ID 오름차순</option>
+          <option value="section-year-asc" selected>섹션 + 연도 오래된순</option>
+          <option value="section-year-desc">섹션 + 연도 최신순</option>
           <option value="id-asc">ID 오름차순</option>
           <option value="id-desc">ID 내림차순</option>
           <option value="year-desc">연도 최신순</option>
@@ -1200,11 +1202,11 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-archivepro-path-section-search-final';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-sort-section-year-search-hardfix';
       const DATA_URLS = [
         DATA_URL,
-        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-archivepro-path-section-search-final',
-        'https://dungzak.art/data/works.json?v=20260428-archivepro-path-section-search-final'
+        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-sort-section-year-search-hardfix',
+        'https://dungzak.art/data/works.json?v=20260428-sort-section-year-search-hardfix'
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
@@ -1342,6 +1344,8 @@
           openZoom: '줌 열기',
           sortOptions: [
             '섹션 + ID 오름차순',
+            '섹션 + 연도 오래된순',
+            '섹션 + 연도 최신순',
             'ID 오름차순',
             'ID 내림차순',
             '연도 최신순',
@@ -1389,6 +1393,8 @@
           openZoom: 'Open zoom',
           sortOptions: [
             'Section + ID',
+            'Section + Year oldest',
+            'Section + Year newest',
             'ID ascending',
             'ID descending',
             'Year newest',
@@ -1436,6 +1442,8 @@
           openZoom: '줌 열기 / Open zoom',
           sortOptions: [
             '섹션 + ID / Section + ID',
+            '섹션 + 연도 오래된순 / Section + Year oldest',
+            '섹션 + 연도 최신순 / Section + Year newest',
             'ID ↑',
             'ID ↓',
             '연도 최신 / Year newest',
@@ -1451,7 +1459,7 @@
         visibleCount: INITIAL_VISIBLE,
         query: '',
         section: 'all',
-        sort: 'section-id-asc',
+        sort: 'section-year-asc',
         lightboxItem: null,
         lang: 'kr',
         loadState: 'idle',
@@ -1747,49 +1755,72 @@
         return `${normalized.join(' ')} ${compacted.join(' ')}`;
       }
 
+      function compareIdAsc(a, b) {
+        const idDiff = parseIdNumber(a.id) - parseIdNumber(b.id);
+        if (idDiff !== 0) return idDiff;
+        return safeText(a.id).localeCompare(safeText(b.id), 'ko', { numeric: true, sensitivity: 'base' });
+      }
+
+      function compareIdDesc(a, b) {
+        const idDiff = parseIdNumber(b.id) - parseIdNumber(a.id);
+        if (idDiff !== 0) return idDiff;
+        return safeText(b.id).localeCompare(safeText(a.id), 'ko', { numeric: true, sensitivity: 'base' });
+      }
+
+      function compareYearAsc(a, b) {
+        const ay = parseYearNumber(a.year);
+        const by = parseYearNumber(b.year);
+        if (ay === null && by === null) return compareIdAsc(a, b);
+        if (ay === null) return 1;
+        if (by === null) return -1;
+        if (ay !== by) return ay - by;
+        return compareIdAsc(a, b);
+      }
+
+      function compareYearDesc(a, b) {
+        const ay = parseYearNumber(a.year);
+        const by = parseYearNumber(b.year);
+        if (ay === null && by === null) return compareIdDesc(a, b);
+        if (ay === null) return 1;
+        if (by === null) return -1;
+        if (by !== ay) return by - ay;
+        return compareIdDesc(a, b);
+      }
+
       function compareItems(a, b, mode) {
+        /* SORT HARD RULE:
+           - Section filter and section buttons are independent from sorting.
+           - Year sort always uses parsed numeric year first.
+           - If the year is the same, ID order is used as the stable tie-breaker.
+           - Section + Year keeps sections grouped, then orders works by year inside each section. */
         switch (mode) {
-          case 'id-asc': {
-            const idDiff = parseIdNumber(a.id) - parseIdNumber(b.id);
-            if (idDiff !== 0) return idDiff;
-            return a.id.localeCompare(b.id, 'ko');
+          case 'section-year-asc': {
+            if (a.section_id !== b.section_id) return a.section_id - b.section_id;
+            return compareYearAsc(a, b);
           }
-          case 'id-desc': {
-            const idDiff = parseIdNumber(b.id) - parseIdNumber(a.id);
-            if (idDiff !== 0) return idDiff;
-            return b.id.localeCompare(a.id, 'ko');
+          case 'section-year-desc': {
+            if (a.section_id !== b.section_id) return a.section_id - b.section_id;
+            return compareYearDesc(a, b);
           }
-          case 'year-desc': {
-            const ay = parseYearNumber(a.year);
-            const by = parseYearNumber(b.year);
-            if (ay === null && by === null) return a._index - b._index;
-            if (ay === null) return 1;
-            if (by === null) return -1;
-            if (by !== ay) return by - ay;
-            return a._index - b._index;
-          }
-          case 'year-asc': {
-            const ay = parseYearNumber(a.year);
-            const by = parseYearNumber(b.year);
-            if (ay === null && by === null) return a._index - b._index;
-            if (ay === null) return 1;
-            if (by === null) return -1;
-            if (ay !== by) return ay - by;
-            return a._index - b._index;
-          }
+          case 'id-asc':
+            return compareIdAsc(a, b);
+          case 'id-desc':
+            return compareIdDesc(a, b);
+          case 'year-desc':
+            return compareYearDesc(a, b);
+          case 'year-asc':
+            return compareYearAsc(a, b);
           case 'title-asc': {
             const at = getTitle(a) || a.id;
             const bt = getTitle(b) || b.id;
-            const c = at.localeCompare(bt, 'ko');
+            const c = at.localeCompare(bt, 'ko', { numeric: true, sensitivity: 'base' });
             if (c !== 0) return c;
-            return a._index - b._index;
+            return compareIdAsc(a, b);
           }
           case 'section-id-asc':
           default: {
             if (a.section_id !== b.section_id) return a.section_id - b.section_id;
-            const idDiff = parseIdNumber(a.id) - parseIdNumber(b.id);
-            if (idDiff !== 0) return idDiff;
-            return a._index - b._index;
+            return compareIdAsc(a, b);
           }
         }
       }
@@ -1877,12 +1908,13 @@
           enParts.push(`Search “${state.query}”`);
         }
 
+        const sortLabel = els.sortSelect?.selectedOptions?.[0]?.textContent || '';
         if (!krParts.length && !enParts.length) {
-          els.activeFilterText.dataset.kr = '필터 없음';
-          els.activeFilterText.dataset.en = 'No filters';
+          els.activeFilterText.dataset.kr = sortLabel ? `정렬: ${sortLabel}` : '필터 없음';
+          els.activeFilterText.dataset.en = sortLabel ? `Sort: ${sortLabel}` : 'No filters';
         } else {
-          els.activeFilterText.dataset.kr = `필터 적용됨: ${krParts.join(' + ')}`;
-          els.activeFilterText.dataset.en = `Filtered: ${enParts.join(' + ')}`;
+          els.activeFilterText.dataset.kr = `필터 적용됨: ${krParts.join(' + ')}${sortLabel ? ' / 정렬: ' + sortLabel : ''}`;
+          els.activeFilterText.dataset.en = `Filtered: ${enParts.join(' + ')}${sortLabel ? ' / Sort: ' + sortLabel : ''}`;
         }
 
         syncDataLanguage(els.activeFilterText.parentElement);
@@ -2125,6 +2157,12 @@
       }
 
       function applyFilters(resetVisible = true) {
+        /* Always read current control values before filtering/sorting.
+           This prevents the visual select state and internal state from drifting. */
+        state.query = els.searchInput ? els.searchInput.value : state.query;
+        state.section = els.sectionSelect ? els.sectionSelect.value : state.section;
+        state.sort = els.sortSelect ? els.sortSelect.value : state.sort;
+
         const query = normalizeSearchToken(state.query);
         const compactQuery = compactSearchToken(state.query);
 
@@ -2164,12 +2202,12 @@
       function goArchiveHome() {
         state.query = '';
         state.section = 'all';
-        state.sort = 'section-id-asc';
+        state.sort = 'section-year-asc';
         state.visibleCount = INITIAL_VISIBLE;
 
         els.searchInput.value = '';
         els.sectionSelect.value = 'all';
-        els.sortSelect.value = 'section-id-asc';
+        els.sortSelect.value = 'section-year-asc';
 
         applyFilters(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2250,12 +2288,12 @@
       function resetFilters() {
         state.query = '';
         state.section = 'all';
-        state.sort = 'section-id-asc';
+        state.sort = 'section-year-asc';
         state.visibleCount = INITIAL_VISIBLE;
 
         els.searchInput.value = '';
         els.sectionSelect.value = 'all';
-        els.sortSelect.value = 'section-id-asc';
+        els.sortSelect.value = 'section-year-asc';
 
         applyFilters(true);
       }

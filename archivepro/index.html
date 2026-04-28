@@ -843,6 +843,31 @@
   outline-offset:2px;
 }
 
+
+    .work-status {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #B8963E;
+      opacity: 0.8;
+    }
+
+    .status-label {
+      display: block;
+    }
+
+    .status-inquiry {
+      display: inline-block;
+      margin-top: 2px;
+      color: #B8963E;
+      text-decoration: none;
+      opacity: 0.7;
+    }
+
+    .status-inquiry:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+
     @media (max-width:1180px){
       .hero{grid-template-columns:1fr}
       .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -1093,6 +1118,49 @@
       const INITIAL_VISIBLE = 12;
       const LOAD_STEP = 24;
       const SEARCH_DEBOUNCE_MS = 250;
+
+      const ART_EMAIL = "dungzakcestlavie@gmail.com";
+
+      function getStatusLabel(status) {
+        if (status === "available") return "available for collection";
+        if (status === "reserved") return "reserved";
+        if (status === "collected") return "collected";
+        return "";
+      }
+
+      function getInquiryLink(workId) {
+        const subject = encodeURIComponent("Artwork Inquiry — " + workId);
+        const body = encodeURIComponent(
+          "Hello,\n\nI would like to inquire about this artwork.\n\nArtwork ID: " + workId
+        );
+        return "mailto:" + ART_EMAIL + "?subject=" + subject + "&body=" + body;
+      }
+
+      function renderStatusUI(work) {
+        if (work.section_id === 0) return "";
+        if (!work.status) return "";
+
+        const label = getStatusLabel(work.status);
+        if (!label) return "";
+
+        if (work.status === "available") {
+          return [
+            '<div class="work-status">',
+            '<div class="status-label">' + label + '</div>',
+            '<a href="' + getInquiryLink(work.id) + '" class="status-inquiry">',
+            'inquiry via email',
+            '</a>',
+            '</div>'
+          ].join("");
+        }
+
+        return [
+          '<div class="work-status">',
+          '<div class="status-label">' + label + '</div>',
+          '</div>'
+        ].join("");
+      }
+
 
       const SECTION_MAP = {
         0: { kr: 'A 기원', en: 'Origins' },
@@ -1461,7 +1529,8 @@
           size_en: safeText(item.size_en),
           year: safeText(item.year),
           image: safeText(item.image),
-          zoom: safeText(item.zoom)
+          zoom: safeText(item.zoom),
+          status: safeText(item.status)
         };
       }
 
@@ -1749,6 +1818,22 @@
         body.appendChild(top);
         body.appendChild(titleEl);
         body.appendChild(captionEl);
+
+        const statusHTML = renderStatusUI(item);
+        if (statusHTML) {
+          const statusWrap = document.createElement('div');
+          statusWrap.innerHTML = statusHTML;
+          const statusLink = statusWrap.querySelector('.status-inquiry');
+          if (statusLink) {
+            statusLink.addEventListener('click', (e) => {
+              e.stopPropagation();
+            });
+            statusLink.addEventListener('keydown', (e) => {
+              e.stopPropagation();
+            });
+          }
+          body.appendChild(statusWrap);
+        }
 
         card.appendChild(thumbWrap);
         card.appendChild(body);

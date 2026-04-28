@@ -1202,11 +1202,11 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-sort-section-year-search-hardfix';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-archivepro-section-search-path-final-v2';
       const DATA_URLS = [
         DATA_URL,
-        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-sort-section-year-search-hardfix',
-        'https://dungzak.art/data/works.json?v=20260428-sort-section-year-search-hardfix'
+        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-archivepro-section-search-path-final-v2',
+        'https://dungzak.art/data/works.json?v=20260428-archivepro-section-search-path-final-v2'
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
@@ -1668,14 +1668,20 @@
       }
 
       function normalizeImageUrl(url, kind, id) {
-        const clean = safeText(url);
-        if (clean) return clean;
         const safeId = safeText(id);
-        if (!safeId) return '';
-        if (/^or[-_]?\d+/i.test(safeId)) {
-          return `https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/${kind}/${safeId}.jpg`;
-        }
-        return '';
+        const clean = safeText(url).replace(/\s+/g, '');
+        const folder = kind === 'zoom' ? 'zoom' : 'standard';
+
+        /* PATH HARD RULE:
+           Archive Pro reads dungzak.art works.json, but image files for this archive
+           must resolve to the dungzakcestlavie.github.io images folder.
+           Therefore any old dungzaklab-images/archivepro path is normalized here.
+           JSON section/text remains untouched. */
+        const fileFromUrl = clean.match(/\/([^\/]+\.(?:jpg|jpeg|png|webp))(?:\?.*)?$/i)?.[1] || '';
+        const fileName = fileFromUrl || (safeId ? `${safeId}.jpg` : '');
+        if (!fileName) return '';
+
+        return `https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/${folder}/${fileName}`;
       }
 
       function normalizeItem(raw, index) {
@@ -1730,21 +1736,32 @@
       }
 
       function buildSearchText(item) {
+        const sectionKr = getSectionPlainById(item.section_id, 'kr');
+        const sectionEn = getSectionPlainById(item.section_id, 'en');
         const values = [
           item.id,
           compactSearchToken(item.id),
+          safeText(item.id).replace(/[-_\s]/g, ''),
+          `section ${item.section_id}`,
+          `섹션 ${item.section_id}`,
           item.section_id,
           item.section_kr,
           item.section_en,
+          sectionKr,
+          sectionEn,
           getSectionTextById(item.section_id),
           ...getSectionAliases(item.section_id),
           item.title_kr,
           item.title_en,
+          compactSearchToken(item.title_kr),
+          compactSearchToken(item.title_en),
           item.material_kr,
           item.material_en,
           item.size_kr,
           item.size_en,
           item.year,
+          `year ${item.year}`,
+          `연도 ${item.year}`,
           item.status,
           getStatusLabel(item.status),
           item.image,
@@ -1753,6 +1770,24 @@
         const normalized = values.map(normalizeSearchToken).filter(Boolean);
         const compacted = values.map(compactSearchToken).filter(Boolean);
         return `${normalized.join(' ')} ${compacted.join(' ')}`;
+      }
+
+      function matchesSearch(item, rawQuery) {
+        const q = normalizeSearchToken(rawQuery);
+        const cq = compactSearchToken(rawQuery);
+        if (!q && !cq) return true;
+
+        const haystack = buildSearchText(item);
+        if (q && haystack.includes(q)) return true;
+        if (cq && haystack.includes(cq)) return true;
+
+        const tokens = q.split(' ').map(v => v.trim()).filter(Boolean);
+        if (tokens.length > 1 && tokens.every(token => haystack.includes(token))) return true;
+
+        const compactTokens = tokens.map(compactSearchToken).filter(Boolean);
+        if (compactTokens.length > 1 && compactTokens.every(token => haystack.includes(token))) return true;
+
+        return false;
       }
 
       function compareIdAsc(a, b) {
@@ -2163,15 +2198,10 @@
         state.section = els.sectionSelect ? els.sectionSelect.value : state.section;
         state.sort = els.sortSelect ? els.sortSelect.value : state.sort;
 
-        const query = normalizeSearchToken(state.query);
-        const compactQuery = compactSearchToken(state.query);
-
         state.filtered = state.all
           .filter((item) => {
             if (state.section !== 'all' && item.section_id !== Number(state.section)) return false;
-            if (!query) return true;
-            const haystack = buildSearchText(item);
-            return haystack.includes(query) || (compactQuery && haystack.includes(compactQuery));
+            return matchesSearch(item, state.query);
           })
           .sort((a, b) => compareItems(a, b, state.sort));
 
@@ -2220,7 +2250,7 @@
           json = JSON.parse(text);
         } catch (firstError) {
           const repaired = text
-            .replace(/(\"status\"\s*:\s*\"(?:available|reserved|collected)\"\s*)\n\s*\{/g, '$1\n    },\n    {')
+            .replace(/(\"status\"\s*:\s*\"(?:available|reserved|collected|sold)\"\s*)\n\s*\{/g, '$1\n    },\n    {')
             .replace(/(\"zoom\"\s*:\s*\"[^\"]+\"\s*)\n\s*(\"status\"\s*:)/g, '$1,\n      $2')
             .replace(/,\s*([}\]])/g, '$1');
 

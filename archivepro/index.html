@@ -1197,11 +1197,11 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260429-simple-sort-section-reset-final';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260429-search-boost-final';
       const DATA_URLS = [
         DATA_URL,
-        'https://dungzakcestlavie.github.io/data/works.json?v=20260429-simple-sort-section-reset-final',
-        'https://dungzak.art/data/works.json?v=20260429-simple-sort-section-reset-final'
+        'https://dungzakcestlavie.github.io/data/works.json?v=20260429-search-boost-final',
+        'https://dungzak.art/data/works.json?v=20260429-search-boost-final'
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
@@ -1752,26 +1752,78 @@
       function normalizeSearchToken(value) {
         return safeText(value)
           .toLowerCase()
+          .normalize('NFKD')
+          .replace(/[\u0300-\u036f]/g, '')
           .normalize('NFKC')
-          .replace(/[ⅠⅡⅢⅣⅤ]/g, (m) => ({ 'Ⅰ':'1', 'Ⅱ':'2', 'Ⅲ':'3', 'Ⅳ':'4', 'Ⅴ':'5' }[m] || m))
-          .replace(/[‐-―]/g, '-')
-          .replace(/[_:;,.\/\|()[\]{}]+/g, ' ')
+          .replace(/[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹ]/g, (m) => ({
+            'Ⅰ':'1', 'Ⅱ':'2', 'Ⅲ':'3', 'Ⅳ':'4', 'Ⅴ':'5', 'Ⅵ':'6', 'Ⅶ':'7', 'Ⅷ':'8', 'Ⅸ':'9', 'Ⅹ':'10',
+            'ⅰ':'1', 'ⅱ':'2', 'ⅲ':'3', 'ⅳ':'4', 'ⅴ':'5', 'ⅵ':'6', 'ⅶ':'7', 'ⅷ':'8', 'ⅸ':'9', 'ⅹ':'10'
+          }[m] || m))
+          .replace(/[‐‑‒–—―]/g, '-')
+          .replace(/&/g, ' and ')
+          .replace(/["'“”‘’]+/g, '')
+          .replace(/[_:;,.\/\|()[\]{}<>]+/g, ' ')
           .replace(/\s+/g, ' ')
           .trim();
       }
 
       function compactSearchToken(value) {
-        return normalizeSearchToken(value).replace(/[^a-z0-9가-힣]/g, '');
+        return normalizeSearchToken(value).replace(/[^a-z0-9가-힣ㄱ-ㅎ]/g, '');
+      }
+
+      function hangulInitials(value) {
+        const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+        return safeText(value).split('').map((ch) => {
+          const code = ch.charCodeAt(0) - 0xAC00;
+          if (code >= 0 && code <= 11171) return CHO[Math.floor(code / 588)] || ch;
+          return ch;
+        }).join('');
+      }
+
+      function getSearchAliases(value) {
+        const base = normalizeSearchToken(value);
+        const compact = compactSearchToken(value);
+        const aliases = [base, compact, hangulInitials(base), hangulInitials(compact)];
+
+        const groups = [
+          ['watercolour', 'watercolor', 'water colour', 'water color', '수채', '수채화'],
+          ['oilstick', 'oil stick', '오일스틱'],
+          ['acrylic', 'acrylics', '아크릴'],
+          ['canvas', '캔버스'],
+          ['paper', '종이'],
+          ['pencil', '연필'],
+          ['pigment', '분채'],
+          ['unbleached cotton', 'cotton', '광목'],
+          ['light', '빛'],
+          ['memory', '기억'],
+          ['being', '존재'],
+          ['human', '인간'],
+          ['mind', '정신'],
+          ['origin', 'origins', '기원'],
+          ['pray', 'prayer', '기도'],
+          ['available', 'available for collection', '소장 가능', '소장가능'],
+          ['reserved', '예약'],
+          ['collected', 'sold', '소장 완료', '소장완료']
+        ];
+
+        groups.forEach((group) => {
+          const normalizedGroup = group.map(normalizeSearchToken);
+          if (normalizedGroup.some((word) => base.includes(word) || compact.includes(compactSearchToken(word)))) {
+            aliases.push(...group, ...normalizedGroup, ...group.map(compactSearchToken));
+          }
+        });
+
+        return Array.from(new Set(aliases.map(safeText).filter(Boolean)));
       }
 
       function getSectionAliases(sectionId) {
         const map = {
-          0: ['0', 'a', 'origin', 'origins', '기원'],
-          1: ['1', 'i', 'pray', 'pray for us', '우리를 위해 기도해 주세요', '우리를 위해 기도', '기도'],
-          2: ['2', 'ii', 'human', 'human being', '인간'],
-          3: ['3', 'iii', 'rebirth', 'rebirth of mind', 'mind', '정신의 재탄생', '정신'],
-          4: ['4', 'iv', 'restoration', 'restoration of being', 'being', '존재의 회복', '존재'],
-          5: ['5', 'v', 'metaconsciousness', 'metaconsciousness of light', 'light', '빛의 초의식', '빛']
+          0: ['0', 'a', 'origin', 'origins', 'or', '기원', 'ㄱㅇ'],
+          1: ['1', 'i', 'pray', 'pray for us', 'prayer', '우리를 위해 기도해 주세요', '우리를 위해 기도', '기도', 'ㅇㄹㄹㅇㅎㄱㄷㅎㅈㅅㅇ', 'ㄱㄷ'],
+          2: ['2', 'ii', 'human', 'human being', '인간', 'ㅇㄱ'],
+          3: ['3', 'iii', 'rebirth', 'rebirth of mind', 'mind', '정신의 재탄생', '정신', 'ㅈㅅㅇㅈㅌㅅ', 'ㅈㅅ'],
+          4: ['4', 'iv', 'restoration', 'restoration of being', 'being', '존재의 회복', '존재', 'ㅈㅈㅇㅎㅂ', 'ㅈㅈ'],
+          5: ['5', 'v', 'metaconsciousness', 'metaconsciousness of light', 'light', '빛의 초의식', '빛', 'ㅂㅇㅊㅇㅅ', 'ㅂㅊㅇㅅ', 'ㅂ']
         };
         return map[Number(sectionId)] || [];
       }
@@ -1792,21 +1844,51 @@
           ...getSectionAliases(item.section_id),
           item.title_kr,
           item.title_en,
-          compactSearchToken(item.title_kr),
-          compactSearchToken(item.title_en),
           item.material_kr,
           item.material_en,
           item.size_kr,
           item.size_en,
           ...getYearSearchValues(item),
           item.status,
-          getStatusLabel(item.status),
           item.image,
           item.zoom
         ];
-        const normalized = values.map(normalizeSearchToken).filter(Boolean);
-        const compacted = values.map(compactSearchToken).filter(Boolean);
-        return `${normalized.join(' ')} ${compacted.join(' ')}`;
+
+        const expanded = values.flatMap(getSearchAliases);
+        const normalized = expanded.map(normalizeSearchToken).filter(Boolean);
+        const compacted = expanded.map(compactSearchToken).filter(Boolean);
+        const initials = expanded.map(hangulInitials).map(compactSearchToken).filter(Boolean);
+        return Array.from(new Set([...normalized, ...compacted, ...initials])).join(' ');
+      }
+
+      function getQueryTokens(rawQuery) {
+        const q = normalizeSearchToken(rawQuery);
+        const compact = compactSearchToken(rawQuery);
+        const tokens = q.split(' ').map(v => v.trim()).filter(Boolean);
+        const expanded = tokens.flatMap(getSearchAliases).map(normalizeSearchToken).filter(Boolean);
+        const compacted = tokens.flatMap(getSearchAliases).map(compactSearchToken).filter(Boolean);
+        const initials = [hangulInitials(q), hangulInitials(compact)].map(compactSearchToken).filter(Boolean);
+        return Array.from(new Set([...tokens, ...expanded, ...compacted, ...initials])).filter(Boolean);
+      }
+
+      function matchIdQuery(item, rawQuery) {
+        const compact = compactSearchToken(rawQuery);
+        if (!compact) return false;
+
+        const itemId = safeText(item.id);
+        const idCompact = compactSearchToken(itemId);
+        const idNumber = parseIdNumber(itemId);
+        const idPrefix = parseIdPrefix(itemId);
+        const numberMatch = compact.match(/(\d+)$/);
+        const queryNumber = numberMatch ? Number(numberMatch[1]) : null;
+        const queryPrefix = compact.replace(/\d+$/g, '');
+
+        if (compact === idCompact) return true;
+        if (queryNumber !== null && Number.isFinite(queryNumber) && queryPrefix) {
+          if (idPrefix && compactSearchToken(idPrefix) === compactSearchToken(queryPrefix) && idNumber === queryNumber) return true;
+        }
+        if (/^\d+$/.test(compact) && Number(compact) === idNumber) return true;
+        return false;
       }
 
       function matchesSearch(item, rawQuery) {
@@ -1815,27 +1897,33 @@
         if (!q && !cq) return true;
 
         const year = parseYearNumber(item.year);
-        const yearQuery = q.match(/(?:^|\s)(\d{4})(?:\s|$)/)?.[1] || '';
-        const idCompact = compactSearchToken(item.id);
-        const sectionAliases = getSectionAliases(item.section_id).map(normalizeSearchToken);
+        const yearEnd = parseYearEndNumber(item.year);
         const haystack = buildSearchText(item);
+        const hayCompact = compactSearchToken(haystack);
+        const hayInitials = compactSearchToken(hangulInitials(haystack));
+        const sectionAliases = getSectionAliases(item.section_id).flatMap(getSearchAliases).map(normalizeSearchToken);
 
-        if (yearQuery && String(year) === yearQuery && q.split(' ').filter(Boolean).length === 1) return true;
-        if (cq && idCompact === cq) return true;
+        if (matchIdQuery(item, rawQuery)) return true;
+        if (/^\d{4}$/.test(cq) && (String(year) === cq || String(yearEnd) === cq)) return true;
         if (q && sectionAliases.includes(q)) return true;
         if (q && haystack.includes(q)) return true;
-        if (cq && haystack.includes(cq)) return true;
+        if (cq && hayCompact.includes(cq)) return true;
+        if (cq && hayInitials.includes(cq)) return true;
 
-        const tokens = q.split(' ').map(v => v.trim()).filter(Boolean);
-        if (tokens.length > 1 && tokens.every(token => {
-          if (/^\d{4}$/.test(token)) return String(year) === token;
-          return haystack.includes(token) || haystack.includes(compactSearchToken(token));
-        })) return true;
+        const tokens = getQueryTokens(rawQuery);
+        if (!tokens.length) return true;
 
-        const compactTokens = tokens.map(compactSearchToken).filter(Boolean);
-        if (compactTokens.length > 1 && compactTokens.every(token => haystack.includes(token))) return true;
-
-        return false;
+        return tokens.every((token) => {
+          const nt = normalizeSearchToken(token);
+          const ct = compactSearchToken(token);
+          if (!nt && !ct) return true;
+          if (/^\d{4}$/.test(ct) && (String(year) === ct || String(yearEnd) === ct)) return true;
+          if (nt && sectionAliases.includes(nt)) return true;
+          if (nt && haystack.includes(nt)) return true;
+          if (ct && hayCompact.includes(ct)) return true;
+          if (ct && hayInitials.includes(ct)) return true;
+          return false;
+        });
       }
 
       function compareIdAsc(a, b) {

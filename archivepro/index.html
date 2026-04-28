@@ -1114,11 +1114,11 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-shop-final';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-section-status-githubio-final';
       const DATA_URLS = [
         DATA_URL,
-        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-shop-final',
-        'https://dungzak.art/data/works.json?v=20260428-shop-final'
+        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-section-status-githubio-final',
+        'https://dungzak.art/data/works.json?v=20260428-section-status-githubio-final'
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
@@ -1127,11 +1127,39 @@
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
 
+      function normalizeStatus(status) {
+        const value = safeText(status).toLowerCase();
+        if (!value) return '';
+        if (['available', 'available for collection', '소장가능', '소장 가능'].includes(value)) return 'available';
+        if (['reserved', '예약', '예약중'].includes(value)) return 'reserved';
+        if (['collected', 'sold', '소장', '판매완료', '판매 완료'].includes(value)) return 'collected';
+        return value;
+      }
+
       function getStatusLabel(status) {
-        if (status === "available") return "available for collection";
-        if (status === "reserved") return "reserved";
-        if (status === "collected") return "collected";
-        return "";
+        const normalized = normalizeStatus(status);
+        if (normalized === 'available') {
+          if (state.lang === 'en') return 'available for collection';
+          if (state.lang === 'both') return '소장 가능 / available for collection';
+          return '소장 가능';
+        }
+        if (normalized === 'reserved') {
+          if (state.lang === 'en') return 'reserved';
+          if (state.lang === 'both') return '예약 / reserved';
+          return '예약';
+        }
+        if (normalized === 'collected') {
+          if (state.lang === 'en') return 'collected';
+          if (state.lang === 'both') return '소장 / collected';
+          return '소장';
+        }
+        return '';
+      }
+
+      function getInquiryText() {
+        if (state.lang === 'en') return 'inquiry via email';
+        if (state.lang === 'both') return '이메일 문의 / inquiry via email';
+        return '이메일 문의';
       }
 
       function getInquiryLink(workId) {
@@ -1143,28 +1171,28 @@
       }
 
       function renderStatusUI(work) {
-        if (work.section_id === 0) return "";
-        if (!work.status) return "";
+        if (work.section_id === 0) return '';
 
-        const label = getStatusLabel(work.status);
-        if (!label) return "";
+        const status = normalizeStatus(work.status || 'available');
+        const label = getStatusLabel(status);
+        if (!label) return '';
 
-        if (work.status === "available") {
+        if (status === 'available') {
           return [
             '<div class="work-status">',
             '<div class="status-label">' + label + '</div>',
             '<a href="' + getInquiryLink(work.id) + '" class="status-inquiry">',
-            'inquiry via email',
+            getInquiryText(),
             '</a>',
             '</div>'
-          ].join("");
+          ].join('');
         }
 
         return [
           '<div class="work-status">',
           '<div class="status-label">' + label + '</div>',
           '</div>'
-        ].join("");
+        ].join('');
       }
 
 
@@ -1519,12 +1547,37 @@
         return Number.isFinite(y) ? y : null;
       }
 
+      function inferSectionId(item) {
+        const id = safeText(item.id);
+        const sectionKr = safeText(item.section_kr);
+        const sectionEn = safeText(item.section_en);
+        const joined = `${sectionKr} ${sectionEn}`.toLowerCase();
+        const rawSectionId = Number.isFinite(Number(item.section_id)) ? Number(item.section_id) : 9999;
+
+        if (/^or[-_]?\d+/i.test(id)) return 0;
+        if (joined.includes('pray for us') || joined.includes('우리를 위해 기도')) return 1;
+        if (joined.includes('human being') || joined.includes('인간')) return 2;
+        if (joined.includes('rebirth of mind') || joined.includes('정신의 재탄생')) return 3;
+        if (joined.includes('restoration of being') || joined.includes('존재의 회복')) return 4;
+        if (joined.includes('metaconsciousness of light') || joined.includes('빛의 초의식')) return 5;
+        if (/^ce\d+/i.test(id)) return 2;
+        if (/^do[-_]?\d+/i.test(id)) return 3;
+        if (/^ac\d+/i.test(id)) return 4;
+        return rawSectionId;
+      }
+
+      function normalizeGithubImageUrl(url) {
+        const clean = safeText(url);
+        if (!clean) return '';
+        return clean
+          .replace('https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/', 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/standard/')
+          .replace('https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/', 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/zoom/');
+      }
+
       function normalizeItem(raw, index) {
         const item = raw && typeof raw === 'object' ? raw : {};
-        const sectionId = Number.isFinite(Number(item.section_id)) ? Number(item.section_id) : 9999;
-        const rawStatus = safeText(item.status);
-        const futureAutoStatus = index >= AUTO_AVAILABLE_AFTER_COUNT ? 'available' : '';
-        const status = sectionId === 0 ? '' : (rawStatus || futureAutoStatus);
+        const sectionId = inferSectionId(item);
+        const status = sectionId === 0 ? '' : normalizeStatus(item.status || 'available');
 
         return {
           _index: index,
@@ -1539,8 +1592,8 @@
           size_kr: safeText(item.size_kr),
           size_en: safeText(item.size_en),
           year: safeText(item.year),
-          image: safeText(item.image),
-          zoom: safeText(item.zoom),
+          image: normalizeGithubImageUrl(item.image),
+          zoom: normalizeGithubImageUrl(item.zoom),
           status: status
         };
       }

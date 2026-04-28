@@ -2284,12 +2284,12 @@
       function goArchiveHome() {
         state.query = '';
         state.section = 'all';
-        state.sort = 'section-year-asc';
+        state.sort = 'section-id-asc';
         state.visibleCount = INITIAL_VISIBLE;
 
         els.searchInput.value = '';
         els.sectionSelect.value = 'all';
-        els.sortSelect.value = 'section-year-asc';
+        els.sortSelect.value = 'section-id-asc';
 
         applyFilters(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2370,12 +2370,12 @@
       function resetFilters() {
         state.query = '';
         state.section = 'all';
-        state.sort = 'section-year-asc';
+        state.sort = 'section-id-asc';
         state.visibleCount = INITIAL_VISIBLE;
 
         els.searchInput.value = '';
         els.sectionSelect.value = 'all';
-        els.sortSelect.value = 'section-year-asc';
+        els.sortSelect.value = 'section-id-asc';
 
         applyFilters(true);
       }
@@ -2437,8 +2437,15 @@
 
         els.sectionButtons.forEach((btn) => {
           btn.addEventListener('click', () => {
+            state.query = '';
             state.section = btn.dataset.section || 'all';
+            state.sort = 'section-id-asc';
+            state.visibleCount = INITIAL_VISIBLE;
+
+            els.searchInput.value = '';
             els.sectionSelect.value = state.section;
+            els.sortSelect.value = 'section-id-asc';
+
             applyFilters(true);
             scrollToSearch();
           });

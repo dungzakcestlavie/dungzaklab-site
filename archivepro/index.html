@@ -1197,11 +1197,11 @@
       'use strict';
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-archivepro-sort-simple-final';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260428-archivepro-origin-lang-final';
       const DATA_URLS = [
         DATA_URL,
-        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-archivepro-sort-simple-final',
-        'https://dungzak.art/data/works.json?v=20260428-archivepro-sort-simple-final'
+        'https://dungzakcestlavie.github.io/data/works.json?v=20260428-archivepro-origin-lang-final',
+        'https://dungzak.art/data/works.json?v=20260428-archivepro-origin-lang-final'
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
@@ -1609,6 +1609,12 @@
 
       function getYear(item) {
         return safeText(item.year);
+      }
+
+      function getOriginTitle() {
+        if (state.lang === 'en') return 'Untitled';
+        if (state.lang === 'both') return '무제 / Untitled';
+        return '무제';
       }
 
       function parseIdNumber(id) {
@@ -2076,7 +2082,7 @@
 
       function createCard(item) {
         const isOrigin = Number(item.section_id) === 0;
-        const title = isOrigin ? 'Untitled' : getTitle(item);
+        const title = isOrigin ? getOriginTitle() : getTitle(item);
         const material = isOrigin ? '' : getMaterial(item);
         const size = isOrigin ? '' : getSize(item);
         const year = isOrigin ? '' : getYear(item);
@@ -2196,7 +2202,7 @@
         state.lightboxItem = item;
 
         const isOrigin = Number(item.section_id) === 0;
-        const title = isOrigin ? 'Untitled' : (getTitle(item) || t('untitled'));
+        const title = isOrigin ? getOriginTitle() : (getTitle(item) || t('untitled'));
         const material = isOrigin ? '—' : (getMaterial(item) || '—');
         const size = isOrigin ? '—' : (getSize(item) || '—');
         const year = isOrigin ? '—' : (getYear(item) || '—');

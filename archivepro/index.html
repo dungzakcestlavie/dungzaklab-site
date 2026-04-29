@@ -6,1285 +6,130 @@
   <meta name="theme-color" content="#0b0f14" />
   <meta name="color-scheme" content="dark" />
   <meta name="format-detection" content="telephone=no,address=no,email=no" />
-
-  <title>Archive Pro — DUNGZAK CESTLAVIE LAB</title>
-  <meta name="description" content="Archive Pro — artwork archive engine for search, filter, and zoom view." />
-
+  <title>Archive Pro - DUNGZAK CESTLAVIE LAB</title>
+  <meta name="description" content="Archive Pro - artwork archive engine for search, filter, and zoom view." />
   <style>
     :root{
-      --bg:#0b0f14;
-      --panel:#101722;
-      --line:rgba(212,180,109,.18);
-      --line-strong:rgba(212,180,109,.34);
-      --text:#f4efe6;
-      --muted:rgba(244,239,230,.68);
-      --soft:rgba(244,239,230,.48);
-      --gold:#d4b46d;
-      --shadow:0 20px 60px rgba(0,0,0,.35);
-      --radius:18px;
-      --max:1460px;
-      --header-h:84px;
+      --bg:#0b0f14;--panel:#101722;--line:rgba(212,180,109,.18);--line-strong:rgba(212,180,109,.34);
+      --text:#f4efe6;--muted:rgba(244,239,230,.68);--soft:rgba(244,239,230,.48);--gold:#d4b46d;
+      --shadow:0 20px 60px rgba(0,0,0,.35);--radius:18px;--max:1460px;--header-h:84px;
     }
-
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--text)}
-    html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);width:100%;max-width:100%;overflow-x:hidden}
+    html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:pan-y;overscroll-behavior-x:none}
     body{
+      min-height:100vh;line-height:1.5;letter-spacing:.01em;overflow-x:hidden;
       font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Segoe UI",Roboto,sans-serif;
-      min-height:100vh;
-      line-height:1.5;
-      letter-spacing:.01em;
-      -webkit-font-smoothing:antialiased;
-      text-rendering:optimizeLegibility;
-      overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
     }
-
-    a{color:inherit;text-decoration:none}
-    img{display:block;max-width:100%}
-    button,input,select{font:inherit}
-
+    body.viewer-open{overflow:hidden!important;touch-action:none;overscroll-behavior:none}
+    a{color:inherit;text-decoration:none}img{display:block;max-width:100%}button,input,select{font:inherit}
     .site-bg{
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      z-index:0;
+      position:fixed;inset:0;pointer-events:none;z-index:0;
       background:
         radial-gradient(circle at 15% 20%, rgba(212,180,109,.08), transparent 34%),
         radial-gradient(circle at 85% 18%, rgba(98,129,175,.10), transparent 28%),
         radial-gradient(circle at 50% 100%, rgba(212,180,109,.06), transparent 34%),
-        linear-gradient(180deg, #0a0e14 0%, #0b0f14 42%, #0c1018 100%);
+        linear-gradient(180deg,#0a0e14 0%,#0b0f14 42%,#0c1018 100%);
     }
-
-    .site-shell{
-      position:relative;
-      z-index:1;
-      width:min(calc(100% - 28px), var(--max));
-      margin:0 auto;
-      padding:18px 0 44px;
-    }
-
+    .site-shell{position:relative;z-index:1;width:min(calc(100% - 28px),var(--max));margin:0 auto;padding:18px 0 44px}
     .site-header{
-      position:sticky;
-      top:0;
-      z-index:40;
-      backdrop-filter:blur(14px);
-      -webkit-backdrop-filter:blur(14px);
-      background:linear-gradient(180deg, rgba(11,15,20,.92) 0%, rgba(11,15,20,.72) 100%);
-      border-bottom:1px solid rgba(255,255,255,.03);
+      position:sticky;top:0;z-index:40;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+      background:linear-gradient(180deg,rgba(11,15,20,.92),rgba(11,15,20,.72));border-bottom:1px solid rgba(255,255,255,.03);
     }
-
-    .header-inner{
-      width:min(calc(100% - 28px), var(--max));
-      min-height:var(--header-h);
-      margin:0 auto;
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:14px;
-      align-items:center;
-      padding:16px 0;
-    }
-
-    .brand-wrap{min-width:0}
-    .eyebrow{
-      margin:0 0 4px;
-      color:var(--gold);
-      font-size:12px;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .brand-row{
-      display:flex;
-      flex-wrap:wrap;
-      align-items:flex-end;
-      gap:10px 14px;
-    }
-
-    .brand-home-link{
-      display:inline-flex;
-      align-items:flex-end;
-      color:inherit;
-      text-decoration:none;
-      border-radius:12px;
-      transition:.18s ease;
-    }
-
+    .header-inner{width:min(calc(100% - 28px),var(--max));min-height:var(--header-h);margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:16px 0}
+    .eyebrow{margin:0 0 4px;color:var(--gold);font-size:12px;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .brand-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 14px}
+    .brand-home-link{display:inline-flex;align-items:flex-end;border-radius:12px}
+    .brand-row h1{margin:0;font-size:clamp(26px,4vw,42px);line-height:1;letter-spacing:.04em;font-weight:700}
     .brand-home-link:hover h1{color:var(--gold)}
-
-    .brand-row h1{
-      margin:0;
-      font-size:clamp(26px,4vw,42px);
-      line-height:1;
-      letter-spacing:.04em;
-      font-weight:700;
-      color:var(--text);
+    .subline{margin:0;color:var(--muted);font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+    .back-link,.hero-home-link,.entry-btn,.section-btn,.btn,.lb-link,.lang-tab{
+      display:inline-flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:rgba(184,150,62,.20);
+      transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease,background .15s ease,color .15s ease;will-change:transform;
+    }
+    .back-link{min-height:44px;padding:0 14px;border:1px solid var(--line-strong);border-radius:999px;color:var(--gold);background:rgba(212,180,109,.04);white-space:nowrap}
+    .back-link:hover,.hero-home-link:hover,.entry-btn:hover,.section-btn:hover,.btn:hover,.lb-link:hover,.lang-tab:hover,.brand-home-link:hover{
+      transform:scale(1.01);border-color:rgba(184,150,62,.42);box-shadow:0 0 12px rgba(184,150,62,.25)
+    }
+    .back-link:active,.hero-home-link:active,.entry-btn:active,.section-btn:active,.btn:active,.lb-link:active,.lang-tab:active,.brand-home-link:active{transform:scale(.98);box-shadow:0 0 6px rgba(184,150,62,.35)}
+    .entry-layer{margin-top:18px;padding:18px;display:flex;justify-content:center;align-items:center}
+    .entry-btn{min-height:52px;padding:0 24px;border-radius:999px;border:1px solid rgba(212,180,109,.48);background:rgba(212,180,109,.08);color:var(--gold);letter-spacing:.04em;white-space:pre-line}
+    .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:16px;padding-top:18px}
+    .panel{background:linear-gradient(180deg,rgba(19,28,41,.92),rgba(16,23,34,.90));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .hero-card{padding:20px;min-height:148px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+    .hero-topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    .lang-tabs{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .lang-tab{min-height:42px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--muted)}
+    .lang-tab.active{color:var(--gold);border-color:rgba(212,180,109,.52);background:rgba(212,180,109,.08);box-shadow:0 0 0 3px rgba(212,180,109,.06)}
+    .hero-home-link{min-height:42px;padding:0 14px;border-radius:999px;border:1px solid rgba(212,180,109,.28);background:rgba(212,180,109,.04);color:var(--gold);white-space:nowrap}
+    .hero-mode-line{margin:0;color:var(--muted);font-size:14px;letter-spacing:.14em;text-transform:uppercase}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:18px}
+    .stat{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:16px;padding:16px 14px;min-height:96px;display:flex;flex-direction:column;justify-content:center;gap:4px}
+    .stat .k{font-size:12px;color:var(--soft);text-transform:uppercase;letter-spacing:.12em}.stat .v{font-size:clamp(20px,3vw,32px);line-height:1;color:var(--gold);font-weight:700}.stat .d{font-size:12px;color:var(--muted)}
+    .section-nav{margin-top:16px;padding:16px}.section-nav-title{margin:0 0 12px;color:var(--soft);font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+    .section-buttons{display:flex;flex-wrap:wrap;gap:10px}
+    .section-btn{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--muted);white-space:pre-line;text-align:center}
+    .section-btn.active{color:var(--gold);border-color:rgba(212,180,109,.54);background:rgba(212,180,109,.10)}
+    .controls{margin-top:16px;padding:16px;display:grid;grid-template-columns:minmax(260px,1.35fr) minmax(220px,.9fr) minmax(220px,.9fr) auto;gap:12px;align-items:end;scroll-margin-top:110px}
+    .field{display:flex;flex-direction:column;gap:7px;min-width:0;position:relative}.field label{font-size:12px;color:var(--soft);letter-spacing:.08em;text-transform:uppercase}
+    .input,.select{width:100%;height:52px;min-height:52px;line-height:52px;padding:0 16px;color:var(--text);background:#0c121b;border:1px solid rgba(244,239,230,.10);border-radius:14px;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+    .input{padding-right:48px}.input::placeholder{color:rgba(244,239,230,.42)}.input:hover,.select:hover{border-color:rgba(212,180,109,.34);background:#0e1621}
+    .input:focus,.select:focus{border-color:rgba(212,180,109,.68);box-shadow:0 0 0 3px rgba(212,180,109,.10),inset 0 1px 0 rgba(255,255,255,.04)}
+    .field:first-child::after{content:"";position:absolute;right:17px;bottom:15px;width:15px;height:15px;border:2px solid rgba(244,239,230,.62);border-radius:50%;pointer-events:none}
+    .field:first-child::before{content:"";position:absolute;right:13px;bottom:13px;width:8px;height:2px;background:rgba(244,239,230,.62);transform:rotate(45deg);border-radius:99px;pointer-events:none}
+    .select{appearance:none;-webkit-appearance:none;padding-right:48px;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,rgba(244,239,230,.78) 50%),linear-gradient(135deg,rgba(244,239,230,.78) 50%,transparent 50%);background-position:calc(100% - 23px) 50%,calc(100% - 16px) 50%;background-size:7px 7px,7px 7px;background-repeat:no-repeat}
+    .select option{color:#f4efe6;background:#0c121b}.control-actions{display:grid;grid-template-columns:auto auto;gap:10px;align-items:end}.btn{height:52px;min-height:52px;padding:0 16px;border-radius:14px;border:1px solid var(--line-strong);background:rgba(212,180,109,.06);color:var(--gold);white-space:nowrap}.btn.secondary{color:var(--text);background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.08)}
+    .meta-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:16px 2px 10px;color:var(--muted);font-size:14px;flex-wrap:wrap}.meta-left,.meta-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .meta-pill,.status{display:inline-flex;align-items:center;min-height:32px;padding:0 10px;border-radius:999px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--muted);font-size:12px;white-space:pre-line}
+    .status.error{color:#ffb0b0;border-color:rgba(255,110,110,.28);background:rgba(255,110,110,.08)}
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;max-width:100%;overflow-x:hidden}
+    .card{overflow:hidden;border-radius:18px;background:linear-gradient(180deg,rgba(20,28,40,.92),rgba(13,18,27,.94));border:1px solid rgba(255,255,255,.05);box-shadow:0 14px 34px rgba(0,0,0,.26);cursor:pointer;min-width:0;max-width:100%;touch-action:manipulation}
+    .card:hover{transform:translateY(-3px) scale(1.01);border-color:rgba(212,180,109,.22);box-shadow:0 18px 40px rgba(0,0,0,.34)}
+    .thumb-wrap{position:relative;aspect-ratio:1/1;overflow:hidden;background:#0a0f16}.thumb-wrap::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(212,180,109,.08),transparent 48%),linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,0));pointer-events:none}
+    .thumb{width:100%;height:100%;object-fit:cover;transform:scale(1.001);transition:transform .45s ease,opacity .22s ease;opacity:0;background:#0a0f16}.thumb.is-loaded,.thumb.is-error{opacity:1}.thumb.is-error{object-fit:contain;padding:22%;filter:grayscale(.12) brightness(.88)}.card:hover .thumb{transform:scale(1.035)}
+    .detail-hover{position:absolute;left:12px;right:12px;bottom:12px;z-index:3;min-height:36px;padding:8px 12px;border-radius:999px;border:1px solid rgba(212,180,109,.34);background:rgba(8,12,18,.68);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--gold);font-size:12px;letter-spacing:.04em;text-align:center;opacity:0;transform:translateY(6px);transition:.2s ease;pointer-events:none;white-space:pre-line}
+    .card:hover .detail-hover,.card:focus-visible .detail-hover{opacity:1;transform:translateY(0)}
+    .card-body{padding:12px 12px 13px;min-width:0}.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+    .work-id{color:var(--gold);font-size:12px;letter-spacing:.10em;text-transform:uppercase;word-break:break-word}.section-tag{flex:0 0 auto;font-size:11px;color:var(--soft);padding:3px 8px;border:1px solid rgba(255,255,255,.06);border-radius:999px;background:rgba(255,255,255,.02);max-width:58%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .title{margin:0 0 6px;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title.empty{color:var(--muted);font-style:italic}.caption{margin:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .work-status{margin-top:6px;font-size:11px;color:#b8963e}.status-label{display:block;margin-bottom:3px;color:#b8963e;opacity:.92;font-weight:500}.status-inquiry{display:inline-block;margin-top:1px;color:#b8963e;text-decoration:none;font-size:11px;font-weight:500;line-height:1.35;opacity:.88}.status-inquiry:hover{color:#d4b46d;opacity:1;text-decoration:underline;text-underline-offset:3px}
+    .empty-state{padding:38px 18px;border:1px dashed rgba(255,255,255,.08);border-radius:18px;text-align:center;color:var(--muted);background:rgba(255,255,255,.02)}.load-wrap{display:flex;justify-content:center;padding:18px 0 8px}.footer-note{margin:22px 0 0;padding:0 2px;color:var(--soft);font-size:12px;text-align:center;letter-spacing:.04em}.loading-screen{padding:46px 18px;text-align:center;color:var(--muted)}
+    .lightbox{position:fixed;inset:0;z-index:120;display:none;background:rgba(6,10,14,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);touch-action:none;overscroll-behavior:none}.lightbox.open{display:block}
+    .lightbox-close{position:absolute;top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));z-index:4;width:54px;height:54px;min-width:54px;min-height:54px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.26);color:var(--text);cursor:pointer;font-size:24px;pointer-events:auto;touch-action:manipulation}
+    .lightbox-inner{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 380px}.lightbox-stage{position:relative;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;padding:74px 22px 24px;overflow:hidden;touch-action:none}
+    .lightbox-stage img{max-width:100%;max-height:calc(100vh - 110px);object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,.42);border-radius:8px;background:#091018;will-change:transform;transform-origin:center center;transform:translate3d(0,0,0) scale(1);transition:transform .05s linear;user-select:none;-webkit-user-drag:none;touch-action:none}
+    body.viewer-open .lightbox-stage.is-zoomed{cursor:grab}body.viewer-open .lightbox-stage.is-zoomed.is-dragging{cursor:grabbing}
+    .lightbox-side{border-left:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg,rgba(18,26,38,.96),rgba(12,18,27,.96));padding:78px 22px 22px;overflow:auto}.lb-id{margin:0 0 8px;font-size:12px;color:var(--gold);letter-spacing:.16em;text-transform:uppercase}.lb-title{margin:0 0 10px;font-size:24px;line-height:1.2;word-break:keep-all}.lb-section{margin:0 0 18px;color:var(--muted);font-size:14px}.lb-meta{display:grid;gap:10px;margin:0 0 20px}.lb-row{display:grid;grid-template-columns:88px minmax(0,1fr);gap:10px;align-items:start;font-size:14px}.lb-key{color:var(--soft)}.lb-val{color:var(--text);word-break:break-word}.lb-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.lb-link{min-height:42px;padding:0 14px;border-radius:12px;border:1px solid rgba(212,180,109,.34);background:rgba(212,180,109,.06);color:var(--gold);white-space:pre-line}
+    @media (max-width:1180px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.lightbox-inner{grid-template-columns:1fr 340px}}
+    @media (max-width:1040px){.controls{grid-template-columns:1fr 1fr}.controls .field:first-child{grid-column:1/-1}.control-actions{grid-column:1/-1;grid-template-columns:1fr 1fr}}
+    @media (max-width:880px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.lightbox-inner{grid-template-columns:1fr}.lightbox-side{border-left:0;border-top:1px solid rgba(255,255,255,.06);padding-top:22px}.lightbox-stage{padding:74px 14px 14px}.lightbox-stage img{max-height:56vh}}
+    @media (max-width:768px){
+      .lightbox{width:100vw;height:100dvh;overflow:hidden;background:#070a14}.lightbox-inner{height:100dvh;display:grid;grid-template-columns:1fr;grid-template-rows:minmax(0,52dvh) minmax(0,48dvh);overflow:hidden}.lightbox-stage{height:100%;padding:calc(env(safe-area-inset-top,0px) + 58px) 18px 14px}.lightbox-stage img{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;pointer-events:auto!important}.lightbox-close{position:fixed!important;top:calc(env(safe-area-inset-top,0px) + 16px)!important;right:16px!important;z-index:99999!important}.lightbox-side{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:28px 22px calc(env(safe-area-inset-bottom,0px) + 96px);border-left:0;border-top:1px solid rgba(255,255,255,.06);overflow-wrap:anywhere;word-break:break-word}.lb-meta .lb-row:nth-child(4),.lb-meta .lb-row:nth-child(5),.lb-actions .lb-link{display:none!important}
     }
-
-    .subline{
-      margin:0;
-      color:var(--muted);
-      font-size:13px;
-      letter-spacing:.06em;
-      text-transform:uppercase;
-    }
-
-    .back-link{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:44px;
-      padding:0 14px;
-      border:1px solid var(--line-strong);
-      border-radius:999px;
-      color:var(--gold);
-      background:rgba(212,180,109,.04);
-      transition:.2s ease;
-      white-space:nowrap;
-    }
-
-    .back-link:hover{
-      border-color:rgba(212,180,109,.52);
-      background:rgba(212,180,109,.08);
-      transform:translateY(-1px);
-    }
-
-    .entry-layer{
-      margin-top:18px;
-      padding:18px;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-    }
-
-    .entry-btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:52px;
-      padding:0 24px;
-      border-radius:999px;
-      border:1px solid rgba(212,180,109,.48);
-      background:rgba(212,180,109,.08);
-      color:var(--gold);
-      cursor:pointer;
-      transition:.2s ease;
-      letter-spacing:.04em;
-      white-space:pre-line;
-    }
-
-    .entry-btn:hover{
-      transform:translateY(-1px);
-      background:rgba(212,180,109,.12);
-      border-color:rgba(212,180,109,.68);
-      color:var(--text);
-    }
-
-    .hero{
-      display:grid;
-      grid-template-columns:1.05fr .95fr;
-      gap:16px;
-      padding-top:18px;
-    }
-
-    .panel{
-      background:linear-gradient(180deg, rgba(19,28,41,.92), rgba(16,23,34,.90));
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-    }
-
-    .hero-card{
-      padding:20px;
-      min-height:148px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:14px;
-    }
-
-    .hero-topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      flex-wrap:wrap;
-    }
-
-    .lang-tabs{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
-    .lang-tab{
-      min-height:42px;
-      padding:0 14px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.03);
-      color:var(--muted);
-      cursor:pointer;
-      transition:.18s ease;
-    }
-
-    .lang-tab:hover{
-      border-color:rgba(212,180,109,.34);
-      color:var(--text);
-    }
-
-    .lang-tab.active{
-      color:var(--gold);
-      border-color:rgba(212,180,109,.52);
-      background:rgba(212,180,109,.08);
-      box-shadow:0 0 0 3px rgba(212,180,109,.06);
-    }
-
-    .hero-home-link{
-      display:inline-flex;
-      align-items:center;
-      min-height:42px;
-      padding:0 14px;
-      border-radius:999px;
-      border:1px solid rgba(212,180,109,.28);
-      background:rgba(212,180,109,.04);
-      color:var(--gold);
-      transition:.18s ease;
-      white-space:nowrap;
-    }
-
-    .hero-home-link:hover{
-      border-color:rgba(212,180,109,.52);
-      background:rgba(212,180,109,.08);
-      color:var(--text);
-    }
-
-    .hero-mode-line{
-      margin:0;
-      color:var(--muted);
-      font-size:14px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-    }
-
-    .stats{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:12px;
-      padding:18px;
-    }
-
-    .stat{
-      background:rgba(255,255,255,.02);
-      border:1px solid rgba(255,255,255,.04);
-      border-radius:16px;
-      padding:16px 14px;
-      min-height:96px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:4px;
-    }
-
-    .stat .k{
-      font-size:12px;
-      color:var(--soft);
-      text-transform:uppercase;
-      letter-spacing:.12em;
-    }
-
-    .stat .v{
-      font-size:clamp(20px,3vw,32px);
-      line-height:1;
-      color:var(--gold);
-      font-weight:700;
-      letter-spacing:.02em;
-    }
-
-    .stat .d{
-      font-size:12px;
-      color:var(--muted);
-    }
-
-    .section-nav{
-      margin-top:16px;
-      padding:16px;
-    }
-
-    .section-nav-title{
-      margin:0 0 12px;
-      color:var(--soft);
-      font-size:12px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-    }
-
-    .section-buttons{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-
-    .section-btn{
-      min-height:44px;
-      padding:0 14px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.03);
-      color:var(--muted);
-      cursor:pointer;
-      transition:.18s ease;
-      white-space:pre-line;
-      text-align:center;
-    }
-
-    .section-btn:hover{
-      color:var(--text);
-      border-color:rgba(212,180,109,.34);
-      background:rgba(212,180,109,.06);
-      transform:translateY(-1px);
-    }
-
-    .section-btn.active{
-      color:var(--gold);
-      border-color:rgba(212,180,109,.54);
-      background:rgba(212,180,109,.10);
-    }
-
-    .controls{
-      margin-top:16px;
-      padding:16px;
-      display:grid;
-      grid-template-columns:1.3fr .9fr .9fr auto;
-      gap:12px;
-      align-items:end;
-      scroll-margin-top:110px;
-    }
-
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:7px;
-      min-width:0;
-    }
-
-    .field label{
-      font-size:12px;
-      color:var(--soft);
-      letter-spacing:.08em;
-      text-transform:uppercase;
-    }
-
-    .input,
-    .select{
-      width:100%;
-      min-height:46px;
-      padding:0 14px;
-      color:var(--text);
-      background:#0f1621;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:12px;
-      outline:none;
-      transition:.18s ease;
-    }
-
-    .input::placeholder{color:rgba(244,239,230,.42)}
-    .input:focus,
-    .select:focus{
-      border-color:rgba(212,180,109,.55);
-      box-shadow:0 0 0 4px rgba(212,180,109,.08);
-    }
-
-    .control-actions{
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      flex-wrap:wrap;
-    }
-
-    .btn{
-      min-height:46px;
-      padding:0 16px;
-      border-radius:12px;
-      border:1px solid var(--line-strong);
-      background:rgba(212,180,109,.06);
-      color:var(--gold);
-      cursor:pointer;
-      transition:.18s ease;
-    }
-
-    .btn:hover{
-      transform:translateY(-1px);
-      background:rgba(212,180,109,.10);
-      border-color:rgba(212,180,109,.58);
-    }
-
-    .btn.secondary{
-      color:var(--text);
-      background:rgba(255,255,255,.03);
-      border-color:rgba(255,255,255,.08);
-    }
-
-    .meta-row{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin:16px 2px 10px;
-      color:var(--muted);
-      font-size:14px;
-      flex-wrap:wrap;
-    }
-
-    .meta-left,
-    .meta-right{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .meta-pill{
-      display:inline-flex;
-      align-items:center;
-      min-height:32px;
-      padding:0 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.06);
-      background:rgba(255,255,255,.03);
-      color:var(--muted);
-      font-size:12px;
-      white-space:pre-line;
-    }
-
-    .status{
-      padding:8px 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.03);
-      color:var(--muted);
-    }
-
-    .status.error{
-      color:#ffb0b0;
-      border-color:rgba(255,110,110,.28);
-      background:rgba(255,110,110,.08);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:14px;
-    }
-
-    .card{
-      overflow:hidden;
-      border-radius:18px;
-      background:linear-gradient(180deg, rgba(20,28,40,.92), rgba(13,18,27,.94));
-      border:1px solid rgba(255,255,255,.05);
-      box-shadow:0 14px 34px rgba(0,0,0,.26);
-      transition:.22s ease;
-      cursor:pointer;
-      min-width:0;
-    }
-
-    .card:hover{
-      transform:translateY(-3px);
-      border-color:rgba(212,180,109,.22);
-      box-shadow:0 18px 40px rgba(0,0,0,.34);
-    }
-
-    .thumb-wrap{
-      position:relative;
-      aspect-ratio:1/1;
-      overflow:hidden;
-      background:#0a0f16;
-    }
-
-    .thumb-wrap::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        radial-gradient(circle at 50% 50%, rgba(212,180,109,.08), transparent 48%),
-        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
-      pointer-events:none;
-    }
-
-    .thumb{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      transform:scale(1.001);
-      transition:transform .45s ease, opacity .22s ease;
-      opacity:0;
-      background:#0a0f16;
-    }
-
-    .thumb.is-loaded,
-    .thumb.is-error{
-      opacity:1;
-    }
-
-    .thumb.is-error{
-      object-fit:contain;
-      padding:22%;
-      filter:grayscale(.12) brightness(.88);
-    }
-
-    .card:hover .thumb{transform:scale(1.035)}
-
-    .detail-hover{
-      position:absolute;
-      left:12px;
-      right:12px;
-      bottom:12px;
-      z-index:3;
-      min-height:36px;
-      padding:8px 12px;
-      border-radius:999px;
-      border:1px solid rgba(212,180,109,.34);
-      background:rgba(8,12,18,.68);
-      backdrop-filter:blur(8px);
-      -webkit-backdrop-filter:blur(8px);
-      color:var(--gold);
-      font-size:12px;
-      letter-spacing:.04em;
-      text-align:center;
-      opacity:0;
-      transform:translateY(6px);
-      transition:.2s ease;
-      pointer-events:none;
-      white-space:pre-line;
-    }
-
-    .card:hover .detail-hover,
-    .card:focus-visible .detail-hover{
-      opacity:1;
-      transform:translateY(0);
-    }
-
-    .card-body{
-      padding:12px 12px 13px;
-      min-width:0;
-    }
-
-    .card-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:10px;
-      margin-bottom:8px;
-    }
-
-    .work-id{
-      color:var(--gold);
-      font-size:12px;
-      letter-spacing:.10em;
-      text-transform:uppercase;
-      word-break:break-word;
-    }
-
-    .section-tag{
-      flex:0 0 auto;
-      font-size:11px;
-      color:var(--soft);
-      padding:3px 8px;
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:999px;
-      background:rgba(255,255,255,.02);
-      max-width:58%;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .title{
-      margin:0 0 6px;
-      font-size:14px;
-      color:var(--text);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .title.empty{
-      color:var(--muted);
-      font-style:italic;
-    }
-
-    .caption{
-      margin:0;
-      font-size:12px;
-      color:var(--muted);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .empty-state{
-      padding:38px 18px;
-      border:1px dashed rgba(255,255,255,.08);
-      border-radius:18px;
-      text-align:center;
-      color:var(--muted);
-      background:rgba(255,255,255,.02);
-    }
-
-    .load-wrap{
-      display:flex;
-      justify-content:center;
-      padding:18px 0 8px;
-    }
-
-    .footer-note{
-      margin:22px 0 0;
-      padding:0 2px;
-      color:var(--soft);
-      font-size:12px;
-      text-align:center;
-      letter-spacing:.04em;
-    }
-
-    .lightbox{
-      position:fixed;
-      inset:0;
-      z-index:120;
-      display:none;
-      background:rgba(6,10,14,.92);
-      backdrop-filter:blur(10px);
-      -webkit-backdrop-filter:blur(10px);
-    }
-
-    .lightbox.open,
-    .lightbox.active{display:block}
-
-    .lightbox-close{
-      position:absolute;
-      top:max(16px, env(safe-area-inset-top));
-      right:max(16px, env(safe-area-inset-right));
-      z-index:4;
-      min-width:46px;
-      min-height:46px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.26);
-      color:var(--text);
-      cursor:pointer;
-      font-size:20px;
-    }
-
-    .lightbox-inner{
-      position:absolute;
-      inset:0;
-      display:grid;
-      grid-template-columns:minmax(0,1fr) 380px;
-      gap:0;
-    }
-
-    .lightbox-stage{
-      position:relative;
-      min-width:0;
-      min-height:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:74px 22px 24px;
-    }
-
-    .lightbox-stage img{
-      max-width:100%;
-      max-height:calc(100vh - 110px);
-      object-fit:contain;
-      box-shadow:0 20px 60px rgba(0,0,0,.42);
-      border-radius:8px;
-      background:#091018;
-    }
-
-    .lightbox-side{
-      border-left:1px solid rgba(255,255,255,.06);
-      background:linear-gradient(180deg, rgba(18,26,38,.96), rgba(12,18,27,.96));
-      padding:78px 22px 22px;
-      overflow:auto;
-    }
-
-    .lightbox-side .lb-id{
-      margin:0 0 8px;
-      font-size:12px;
-      color:var(--gold);
-      letter-spacing:.16em;
-      text-transform:uppercase;
-    }
-
-    .lightbox-side .lb-title{
-      margin:0 0 10px;
-      font-size:24px;
-      line-height:1.2;
-      word-break:keep-all;
-    }
-
-    .lightbox-side .lb-section{
-      margin:0 0 18px;
-      color:var(--muted);
-      font-size:14px;
-    }
-
-    .lb-meta{
-      display:grid;
-      gap:10px;
-      margin:0 0 20px;
-    }
-
-    .lb-row{
-      display:grid;
-      grid-template-columns:88px minmax(0,1fr);
-      gap:10px;
-      align-items:start;
-      font-size:14px;
-    }
-
-    .lb-key{color:var(--soft)}
-    .lb-val{color:var(--text);word-break:break-word}
-
-    .lb-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:18px;
-    }
-
-    .lb-link{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:42px;
-      padding:0 14px;
-      border-radius:12px;
-      border:1px solid rgba(212,180,109,.34);
-      background:rgba(212,180,109,.06);
-      color:var(--gold);
-      white-space:pre-line;
-    }
-
-    .loading-screen{
-      padding:46px 18px;
-      text-align:center;
-      color:var(--muted);
-    }
-
-
-
-
-/* REFINED SEARCH / FILTER / SORT CONTROLS — precise desktop + mobile */
-.controls{
-  grid-template-columns:minmax(260px, 1.35fr) minmax(220px, .9fr) minmax(220px, .9fr) auto;
-  align-items:end;
-  gap:12px;
-}
-.field{position:relative;}
-.input,.select{
-  height:52px;
-  min-height:52px;
-  line-height:52px;
-  border-radius:14px;
-  background-color:#0c121b;
-  border:1px solid rgba(244,239,230,.10);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
-}
-.input{padding:0 48px 0 16px;}
-.field:first-child::after{
-  content:"";
-  position:absolute;
-  right:17px;
-  bottom:15px;
-  width:15px;
-  height:15px;
-  border:2px solid rgba(244,239,230,.62);
-  border-radius:50%;
-  pointer-events:none;
-}
-.field:first-child::before{
-  content:"";
-  position:absolute;
-  right:13px;
-  bottom:13px;
-  width:8px;
-  height:2px;
-  background:rgba(244,239,230,.62);
-  transform:rotate(45deg);
-  transform-origin:center;
-  pointer-events:none;
-  border-radius:99px;
-}
-.select{
-  appearance:none;
-  -webkit-appearance:none;
-  padding:0 48px 0 16px;
-  cursor:pointer;
-  background-image:
-    linear-gradient(45deg, transparent 50%, rgba(244,239,230,.78) 50%),
-    linear-gradient(135deg, rgba(244,239,230,.78) 50%, transparent 50%);
-  background-position:
-    calc(100% - 23px) 50%,
-    calc(100% - 16px) 50%;
-  background-size:7px 7px, 7px 7px;
-  background-repeat:no-repeat;
-}
-.select option{color:#f4efe6;background:#0c121b;}
-.input:hover,.select:hover{border-color:rgba(212,180,109,.34);background-color:#0e1621;}
-.input:focus,.select:focus{
-  border-color:rgba(212,180,109,.68);
-  background-color:#0c121b;
-  box-shadow:0 0 0 3px rgba(212,180,109,.10), inset 0 1px 0 rgba(255,255,255,.04);
-}
-.control-actions{
-  display:grid;
-  grid-template-columns:auto auto;
-  gap:10px;
-  align-items:end;
-}
-.control-actions .btn{
-  height:52px;
-  min-height:52px;
-  border-radius:14px;
-  white-space:nowrap;
-}
-@media (max-width:1040px){
-  .controls{grid-template-columns:1fr 1fr;}
-  .controls .field:first-child{grid-column:1/-1;}
-  .control-actions{grid-column:1/-1;grid-template-columns:1fr 1fr;}
-}
-@media (max-width:640px){
-  .controls{grid-template-columns:1fr;gap:11px;}
-  .controls .field:first-child,.control-actions{grid-column:auto;}
-  .control-actions{grid-template-columns:1fr 1fr;}
-  .input,.select,.control-actions .btn{height:50px;min-height:50px;line-height:50px;}
-}
-/* MICRO CLICK RESPONSE — lightweight card feedback */
-.card,
-.btn,
-.section-btn,
-.entry-btn,
-.back-link,
-.hero-home-link,
-.lb-link,
-.lang-tab,
-.brand-home-link{
-  cursor:pointer;
-  -webkit-tap-highlight-color:rgba(184,150,62,0.20);
-}
-
-.card,
-.btn,
-.section-btn,
-.entry-btn,
-.back-link,
-.hero-home-link,
-.lb-link,
-.lang-tab,
-.brand-home-link{
-  transition:transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
-  will-change:transform;
-}
-
-.card:hover,
-.btn:hover,
-.section-btn:hover,
-.entry-btn:hover,
-.back-link:hover,
-.hero-home-link:hover,
-.lb-link:hover,
-.lang-tab:hover,
-.brand-home-link:hover{
-  transform:scale(1.01);
-  border-color:rgba(184,150,62,0.42);
-  box-shadow:0 0 12px rgba(184,150,62,0.25);
-}
-
-.card:active,
-.btn:active,
-.section-btn:active,
-.entry-btn:active,
-.back-link:active,
-.hero-home-link:active,
-.lb-link:active,
-.lang-tab:active,
-.brand-home-link:active{
-  transform:scale(0.98);
-  box-shadow:0 0 6px rgba(184,150,62,0.35);
-}
-
-.card:focus-visible,
-.btn:focus-visible,
-.section-btn:focus-visible,
-.entry-btn:focus-visible,
-.back-link:focus-visible,
-.hero-home-link:focus-visible,
-.lb-link:focus-visible,
-.lang-tab:focus-visible,
-.brand-home-link:focus-visible{
-  outline:1px solid #B8963E;
-  outline-offset:2px;
-}
-
-
-    .work-status {
-      margin-top: 6px;
-      font-size: 11px;
-      color: #B8963E;
-      opacity: 1;
-    }
-
-    .status-label {
-      display: block;
-      margin-bottom: 3px;
-      color: #B8963E;
-      opacity: 0.92;
-      font-weight: 500;
-    }
-
-    .status-inquiry {
-      display: inline-block;
-      margin-top: 1px;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: #B8963E;
-      text-decoration: none;
-      font-size: 11px;
-      font-weight: 500;
-      line-height: 1.35;
-      letter-spacing: 0.01em;
-      opacity: 0.88;
-      cursor: pointer;
-      -webkit-tap-highlight-color: rgba(184,150,62,0.18);
-      transition: opacity 0.14s ease, color 0.14s ease, text-decoration-color 0.14s ease;
-    }
-
-    .status-inquiry:hover,
-    .status-inquiry:focus-visible {
-      color: #D4B46D;
-      opacity: 1;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      outline: none;
-    }
-
-    .status-inquiry:active {
-      opacity: 0.82;
-    }
-
-    @media (max-width:1180px){
-      .hero{grid-template-columns:1fr}
-      .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-      .lightbox-inner{grid-template-columns:1fr 340px}
-    }
-
-    @media (max-width:880px){
-      .controls{grid-template-columns:1fr 1fr}
-      .control-actions{
-        grid-column:1/-1;
-        justify-content:stretch;
-      }
-      .control-actions .btn{flex:1 1 0}
-      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .lightbox-inner{grid-template-columns:1fr}
-      .lightbox-side{
-        border-left:0;
-        border-top:1px solid rgba(255,255,255,.06);
-        padding-top:22px;
-      }
-      .lightbox-stage{padding:74px 14px 14px}
-      .lightbox-stage img{max-height:56vh}
-    }
-
     @media (max-width:640px){
-      .site-shell{width:min(calc(100% - 18px), var(--max))}
-      .header-inner{width:min(calc(100% - 18px), var(--max))}
-      .stats{grid-template-columns:1fr}
-      .controls{grid-template-columns:1fr}
-      .grid{gap:10px}
-      .card-body{padding:10px 10px 12px}
-      .title{font-size:13px}
-      .caption{font-size:11px}
-      .meta-row{font-size:13px}
-      .back-link{min-height:42px;padding:0 12px}
-      .hero-card{min-height:auto;padding:16px}
-      .lang-tab,.hero-home-link{min-height:40px;padding:0 12px}
-      .hero-mode-line{font-size:13px}
-      .lightbox-side .lb-title{font-size:20px}
-      .lb-row{grid-template-columns:72px minmax(0,1fr)}
-      .entry-layer{padding:14px}
-      .entry-btn{width:100%}
-      .section-buttons{display:grid;grid-template-columns:1fr 1fr}
-      .section-btn{width:100%}
+      .site-shell,.header-inner{width:min(calc(100% - 18px),var(--max))}.stats{grid-template-columns:1fr}.controls{grid-template-columns:1fr;gap:11px}.controls .field:first-child,.control-actions{grid-column:auto}.control-actions{grid-template-columns:1fr 1fr}.input,.select,.btn{height:50px;min-height:50px;line-height:50px}.grid{gap:10px}.card-body{padding:10px 10px 12px}.title{font-size:13px}.caption{font-size:11px}.meta-row{font-size:13px}.back-link{min-height:42px;padding:0 12px}.hero-card{min-height:auto;padding:16px}.lang-tab,.hero-home-link{min-height:40px;padding:0 12px}.section-buttons{display:grid;grid-template-columns:1fr 1fr}.section-btn{width:100%}.entry-layer{padding:14px}.entry-btn{width:100%}.lb-title{font-size:20px}.lb-row{grid-template-columns:72px minmax(0,1fr)}
     }
-
-    /* ARCHIVE PRO VIEWPORT LOCK + LIGHTBOX ONLY ZOOM */
-    html,
-    body{
-      width:100%;
-      max-width:100%;
-      overflow-x:hidden;
-      touch-action:pan-y;
-      overscroll-behavior-x:none;
-    }
-
-    body.viewer-open{
-      overflow:hidden !important;
-      touch-action:none;
-      overscroll-behavior:none;
-    }
-
-    .archive-root,
-    .app,
-    .site-shell,
-    main,
-    .grid,
-    .work-grid,
-    .cards,
-    .card{
-      max-width:100%;
-      overflow-x:hidden;
-    }
-
-    .card,
-    .work-card,
-    .card img,
-    .work-card img,
-    button,
-    a{
-      touch-action:manipulation;
-    }
-
-    .viewer,
-    .lightbox,
-    #viewer,
-    #lightbox{
-      touch-action:none;
-      overscroll-behavior:none;
-    }
-
-    .viewer img,
-    .lightbox img,
-    #viewer img,
-    #lightbox img{
-      touch-action:none;
-      user-select:none;
-      -webkit-user-drag:none;
-    }
-
-    .lightbox-stage{
-      overflow:hidden;
-      touch-action:none;
-      cursor:default;
-    }
-
-    .lightbox-stage img{
-      will-change:transform;
-      transform-origin:center center;
-      transform:translate3d(0,0,0) scale(1);
-      transition:transform .05s linear;
-      user-select:none;
-      -webkit-user-drag:none;
-      touch-action:none;
-    }
-
-    body.viewer-open .lightbox-stage.is-zoomed{ cursor:grab; }
-    body.viewer-open .lightbox-stage.is-zoomed.is-dragging{ cursor:grabbing; }
-
-    /* ARCHIVE PRO MOBILE LIGHTBOX RATIO FIX — image area / caption area / safe-area only */
-    html.viewer-open,
-    body.viewer-open{
-      overflow:hidden !important;
-      width:100%;
-      height:100%;
-      overscroll-behavior:none;
-    }
-
-    @media (max-width:768px){
-      .viewer,
-      .lightbox,
-      #viewer,
-      #lightbox{
-        position:fixed;
-        inset:0;
-        width:100vw;
-        height:100dvh;
-        overflow:hidden;
-        background:#070A14;
-      }
-
-      .viewer-inner,
-      .lightbox-inner{
-        position:absolute;
-        inset:0;
-        height:100dvh;
-        display:grid;
-        grid-template-columns:1fr;
-        grid-template-rows:minmax(0,52dvh) minmax(0,48dvh);
-        overflow:hidden;
-      }
-
-      .viewer-media,
-      .lightbox-media,
-      .lightbox-stage{
-        position:relative;
-        min-width:0;
-        min-height:0;
-        height:100%;
-        padding:calc(env(safe-area-inset-top, 0px) + 58px) 18px 14px 18px;
-        box-sizing:border-box;
-        overflow:hidden;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        touch-action:none;
-      }
-
-      .viewer-media img,
-      .lightbox-media img,
-      .lightbox-stage img,
-      #lightboxImage{
-        width:100%;
-        height:100%;
-        max-width:100%;
-        max-height:100%;
-        object-fit:contain;
-        display:block;
-        border-radius:10px;
-      }
-
-      .viewer-close,
-      .lightbox-close,
-      .close-viewer,
-      #lightboxClose{
-        position:fixed;
-        top:calc(env(safe-area-inset-top, 0px) + 18px);
-        right:18px;
-        z-index:9999;
-        width:54px;
-        height:54px;
-        min-width:54px;
-        min-height:54px;
-        border-radius:50%;
-        display:grid;
-        place-items:center;
-        background:rgba(7,10,20,.72);
-        border:1px solid rgba(255,255,255,.18);
-        color:#fff;
-      }
-
-      .viewer-caption,
-      .lightbox-caption,
-      .detail-panel,
-      .lightbox-side{
-        min-height:0;
-        max-height:none;
-        height:100%;
-        overflow-y:auto;
-        -webkit-overflow-scrolling:touch;
-        padding:28px 22px calc(env(safe-area-inset-bottom, 0px) + 96px) 22px;
-        box-sizing:border-box;
-        border-left:0;
-        border-top:1px solid rgba(255,255,255,.06);
-        overflow-wrap:anywhere;
-        word-break:break-word;
-      }
-
-      .detail-row.image-url,
-      .detail-row.zoom-url,
-      .meta-row.image-url,
-      .meta-row.zoom-url,
-      .lb-meta .lb-row:nth-child(4),
-      .lb-meta .lb-row:nth-child(5){
-        display:none;
-      }
-    }
-    /* ARCHIVE PRO MOBILE UX FIX — hide mobile open buttons + make close X always clickable */
-    .viewer-close,
-    .lightbox-close,
-    .close-viewer,
-    #viewerCloseBtn,
-    #lightboxClose{
-      pointer-events:auto;
-    }
-
-    @media (max-width:768px){
-      .image-open-btn,
-      .zoom-open-btn,
-      .open-image-btn,
-      .open-zoom-btn,
-      #lbOpenImage,
-      #lbOpenZoom,
-      .lb-actions .lb-link{
-        display:none !important;
-      }
-
-      .viewer-close,
-      .lightbox-close,
-      .close-viewer,
-      #viewerCloseBtn,
-      #lightboxClose{
-        position:fixed !important;
-        top:calc(env(safe-area-inset-top, 0px) + 16px) !important;
-        right:16px !important;
-        z-index:99999 !important;
-        pointer-events:auto !important;
-        touch-action:manipulation !important;
-      }
-
-      .viewer-media img,
-      .lightbox-media img,
-      .lightbox-stage img,
-      #lightboxImage{
-        pointer-events:none !important;
-      }
-    }
-
-    /* ARCHIVE PRO CLOSE X NO NAVIGATION PATCH */
-    .viewer,
-    .lightbox,
-    .viewer-inner,
-    .lightbox-inner{
-      pointer-events:auto;
-    }
-
   </style>
 </head>
 <body>
   <div class="site-bg" aria-hidden="true"></div>
-
   <header class="site-header">
     <div class="header-inner">
       <div class="brand-wrap">
         <p class="eyebrow">DUNGZAK CESTLAVIE LAB</p>
         <div class="brand-row">
-          <a href="#" id="archiveHomeLink" class="brand-home-link" aria-label="Archive Pro home">
-            <h1>ARCHIVE PRO</h1>
-          </a>
+          <a href="#" id="archiveHomeLink" class="brand-home-link" aria-label="Archive Pro home"><h1>ARCHIVE PRO</h1></a>
           <p class="subline">Search, filter, access.</p>
         </div>
       </div>
       <a class="back-link" href="../index.html" aria-label="LAB으로 돌아가기">LAB</a>
     </div>
   </header>
-
   <div class="site-shell">
     <section class="panel entry-layer" aria-label="Archive entry">
-      <button
-        id="entryBtn"
-        class="entry-btn"
-        type="button"
-        data-kr="아카이브 입장 →"
-        data-en="Enter Archive →">
-        아카이브 입장 →
-      </button>
+      <button id="entryBtn" class="entry-btn" type="button" data-kr="아카이브 입장 -" data-en="Enter Archive -">아카이브 입장 -</button>
     </section>
-
     <section class="hero">
       <article class="panel hero-card">
         <div class="hero-topbar">
@@ -1293,40 +138,18 @@
             <button class="lang-tab" type="button" data-lang="en" aria-pressed="false">EN</button>
             <button class="lang-tab" type="button" data-lang="both" aria-pressed="false">KR+EN</button>
           </div>
-
           <a class="hero-home-link" href="https://dungzak.art/" target="_blank" rel="noopener noreferrer">dungzak.art</a>
         </div>
-
         <p class="hero-mode-line" id="heroModeLine">한국어 기준</p>
       </article>
-
       <aside class="panel stats" aria-label="아카이브 통계">
-        <div class="stat">
-          <div class="k" id="statLabelTotal">Total</div>
-          <div class="v" id="statTotal">—</div>
-          <div class="d" id="statDescTotal">전체 작품 수</div>
-        </div>
-        <div class="stat">
-          <div class="k" id="statLabelFiltered">Filtered</div>
-          <div class="v" id="statFiltered">—</div>
-          <div class="d" id="statDescFiltered">현재 검색 결과</div>
-        </div>
-        <div class="stat">
-          <div class="k" id="statLabelSections">Sections</div>
-          <div class="v" id="statSections">—</div>
-          <div class="d" id="statDescSections">섹션 수</div>
-        </div>
+        <div class="stat"><div class="k">Total</div><div class="v" id="statTotal">-</div><div class="d" id="statDescTotal">전체 작품 수</div></div>
+        <div class="stat"><div class="k">Filtered</div><div class="v" id="statFiltered">-</div><div class="d" id="statDescFiltered">현재 검색 결과</div></div>
+        <div class="stat"><div class="k">Sections</div><div class="v" id="statSections">-</div><div class="d" id="statDescSections">섹션 수</div></div>
       </aside>
     </section>
-
     <section class="panel section-nav" aria-label="Section navigation">
-      <p
-        class="section-nav-title"
-        data-kr="섹션 탐색"
-        data-en="Section Navigation">
-        섹션 탐색
-      </p>
-
+      <p class="section-nav-title" data-kr="섹션 탐색" data-en="Section Navigation">섹션 탐색</p>
       <div class="section-buttons" id="sectionButtons">
         <button class="section-btn" type="button" data-section="0" data-kr="기원" data-en="Origins">기원</button>
         <button class="section-btn" type="button" data-section="1" data-kr="우리를 위해 기도해 주세요" data-en="Pray for Us">우리를 위해 기도해 주세요</button>
@@ -1336,108 +159,64 @@
         <button class="section-btn" type="button" data-section="5" data-kr="빛의 초의식" data-en="Metaconsciousness of Light">빛의 초의식</button>
       </div>
     </section>
-
     <section id="searchArea" class="panel controls" aria-label="아카이브 검색 및 필터">
       <div class="field">
         <label for="searchInput" id="labelSearch">Search</label>
-        <input
-          id="searchInput"
-          class="input"
-          type="search"
-          placeholder="ID, 제목, 재료, 연도, 섹션 검색"
-          autocomplete="off"
-          spellcheck="false"
-          data-kr="ID, 제목, 재료, 연도, 섹션 검색"
-          data-en="Search ID, title, material, year, section"
-        />
+        <input id="searchInput" class="input" type="search" placeholder="ID, 제목, 재료, 연도, 섹션 검색" autocomplete="off" spellcheck="false" />
       </div>
-
       <div class="field">
         <label for="sectionSelect" id="labelSection">Section</label>
-        <select id="sectionSelect" class="select" aria-label="섹션 선택">
-          <option value="all">전체 섹션</option>
-        </select>
+        <select id="sectionSelect" class="select" aria-label="섹션 선택"><option value="all">전체 섹션</option></select>
       </div>
-
       <div class="field">
         <label for="sortSelect" id="labelSort">Sort</label>
         <select id="sortSelect" class="select" aria-label="정렬 선택">
-          <option value="section-id-asc" selected>기본순</option>
+          <option value="relevance" selected>관련도순</option>
+          <option value="section-id-asc">기본순</option>
           <option value="id-desc">번호 늦은순</option>
           <option value="year-desc">최신순</option>
+          <option value="year-asc">오래된순</option>
         </select>
       </div>
-
       <div class="control-actions">
         <button id="resetBtn" class="btn secondary" type="button">초기화</button>
         <button id="focusSearchBtn" class="btn" type="button">검색 집중</button>
       </div>
     </section>
-
     <div class="meta-row">
       <div class="meta-left">
-        <span class="meta-pill" id="sourcePill">Source: https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json</span>
-        <span class="meta-pill" id="loadedPill">Loaded: —</span>
+        <span class="meta-pill" id="sourcePill">Source: -</span>
+        <span class="meta-pill" id="loadedPill">Loaded: -</span>
       </div>
-      <div class="meta-right">
-        <span id="statusText" class="status">대기 중</span>
-      </div>
+      <div class="meta-right"><span id="statusText" class="status">대기 중</span></div>
     </div>
-
     <main id="archiveMain" aria-live="polite">
       <div id="loadingScreen" class="panel loading-screen">works.json을 불러오는 중입니다.</div>
-
       <div id="resultsMeta" class="meta-row" style="display:none;">
-        <div class="meta-left">
-          <strong id="resultText">0점</strong>
-          <span class="meta-pill" id="renderedText">표시 0점</span>
-        </div>
-        <div class="meta-right">
-          <span
-            class="meta-pill"
-            id="activeFilterText"
-            data-kr="필터 없음"
-            data-en="No filters">
-            필터 없음
-          </span>
-        </div>
+        <div class="meta-left"><strong id="resultText">0점</strong><span class="meta-pill" id="renderedText">표시 0점</span></div>
+        <div class="meta-right"><span class="meta-pill" id="activeFilterText" data-kr="필터 없음" data-en="No filters">필터 없음</span></div>
       </div>
-
       <section id="grid" class="grid" aria-label="작품 그리드"></section>
-
-      <div id="emptyState" class="empty-state" hidden>
-        조건에 맞는 작품이 없습니다.
-      </div>
-
-      <div id="loadWrap" class="load-wrap" hidden>
-        <button id="loadMoreBtn" class="btn" type="button">더 보기</button>
-      </div>
-
+      <div id="emptyState" class="empty-state" hidden>조건에 맞는 작품이 없습니다.</div>
+      <div id="loadWrap" class="load-wrap" hidden><button id="loadMoreBtn" class="btn" type="button">더 보기</button></div>
       <p class="footer-note" id="footerNote">DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json</p>
     </main>
   </div>
-
   <div id="lightbox" class="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="작품 확대 보기">
-    <button id="viewerCloseBtn" class="lightbox-close viewer-close" type="button" aria-label="닫기">×</button>
-
+    <button id="viewerCloseBtn" class="lightbox-close viewer-close" type="button" aria-label="닫기">x</button>
     <div class="lightbox-inner">
-      <div class="lightbox-stage">
-        <img id="lightboxImage" alt="" />
-      </div>
-
+      <div class="lightbox-stage"><img id="lightboxImage" alt="" /></div>
       <aside class="lightbox-side">
-        <p class="lb-id" id="lbId">—</p>
-        <h3 class="lb-title" id="lbTitle">—</h3>
-        <p class="lb-section" id="lbSection">—</p>
-
+        <p class="lb-id" id="lbId">-</p>
+        <h3 class="lb-title" id="lbTitle">-</h3>
+        <p class="lb-section" id="lbSection">-</p>
         <div class="lb-meta">
-          <div class="lb-row"><div class="lb-key" id="lbKeyMaterial">재료</div><div class="lb-val" id="lbMaterial">—</div></div>
-          <div class="lb-row"><div class="lb-key" id="lbKeySize">크기</div><div class="lb-val" id="lbSize">—</div></div>
-          <div class="lb-row"><div class="lb-key" id="lbKeyYear">연도</div><div class="lb-val" id="lbYear">—</div></div>
-          <div class="lb-row"><div class="lb-key" id="lbKeyImage">이미지</div><div class="lb-val" id="lbImagePath">—</div></div>
-          <div class="lb-row"><div class="lb-key" id="lbKeyZoom">줌</div><div class="lb-val" id="lbZoomPath">—</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyMaterial">재료</div><div class="lb-val" id="lbMaterial">-</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeySize">크기</div><div class="lb-val" id="lbSize">-</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyYear">연도</div><div class="lb-val" id="lbYear">-</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyImage">이미지</div><div class="lb-val" id="lbImagePath">-</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyZoom">줌</div><div class="lb-val" id="lbZoomPath">-</div></div>
         </div>
-
         <div class="lb-actions">
           <a id="lbOpenImage" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">이미지 열기</a>
           <a id="lbOpenZoom" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">줌 열기</a>
@@ -1445,135 +224,49 @@
       </aside>
     </div>
   </div>
-
   <script>
     (() => {
       'use strict';
 
-
-      /* PAGE ZOOM LOCK — keep whole Archive Pro viewport fixed.
-         Lightbox image zoom still works through the existing custom viewerScale engine. */
-      const preventBrowserZoom = (e) => {
-        if (e && typeof e.preventDefault === 'function') e.preventDefault();
-      };
-
-      ['gesturestart', 'gesturechange', 'gestureend'].forEach((type) => {
-        document.addEventListener(type, preventBrowserZoom, { passive: false });
-        window.addEventListener(type, preventBrowserZoom, { passive: false });
+      const preventBrowserZoom = (e) => { if (e && typeof e.preventDefault === 'function') e.preventDefault(); };
+      ['gesturestart','gesturechange','gestureend'].forEach((type) => {
+        document.addEventListener(type, preventBrowserZoom, { passive:false });
+        window.addEventListener(type, preventBrowserZoom, { passive:false });
       });
-
       document.addEventListener('touchmove', (e) => {
-        if (e.touches && e.touches.length > 1 && !document.body.classList.contains('viewer-open')) {
-          e.preventDefault();
-        }
-      }, { passive: false });
-
+        if (e.touches && e.touches.length > 1 && !document.body.classList.contains('viewer-open')) e.preventDefault();
+      }, { passive:false });
       document.addEventListener('dblclick', (e) => {
         const lightbox = document.getElementById('lightbox');
         if (!lightbox || !lightbox.contains(e.target)) e.preventDefault();
-      }, { passive: false });
-
-      document.addEventListener('wheel', (e) => {
-        if (e.ctrlKey || e.metaKey) e.preventDefault();
-      }, { passive: false });
-
+      }, { passive:false });
+      document.addEventListener('wheel', (e) => { if (e.ctrlKey || e.metaKey) e.preventDefault(); }, { passive:false });
       document.addEventListener('keydown', (e) => {
         const key = String(e.key || '').toLowerCase();
-        if ((e.ctrlKey || e.metaKey) && (key === '+' || key === '-' || key === '=' || key === '0')) {
-          e.preventDefault();
-        }
-      }, { passive: false });
+        if ((e.ctrlKey || e.metaKey) && (key === '+' || key === '-' || key === '=' || key === '0')) e.preventDefault();
+      }, { passive:false });
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260429-search-boost-final';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260430-kr-en-search-max';
       const DATA_URLS = [
         DATA_URL,
-        'https://dungzakcestlavie.github.io/data/works.json?v=20260429-search-boost-final',
-        'https://dungzak.art/data/works.json?v=20260429-search-boost-final'
+        'https://dungzakcestlavie.github.io/data/works.json?v=20260430-kr-en-search-max',
+        'https://dungzak.art/data/works.json?v=20260430-kr-en-search-max'
       ];
-      const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
       const LOAD_STEP = 24;
-      const SEARCH_DEBOUNCE_MS = 250;
-
-      const ART_EMAIL = "dungzakcestlavie@gmail.com";
-
-      function normalizeStatus(status) {
-        const value = safeText(status).toLowerCase();
-        if (!value) return '';
-        if (['available', 'available for collection', '소장가능', '소장 가능'].includes(value)) return 'available';
-        if (['reserved', '예약', '예약중'].includes(value)) return 'reserved';
-        if (['collected', 'sold', '소장', '소장완료', '소장 완료', '판매완료', '판매 완료'].includes(value)) return 'collected';
-        return value;
-      }
-
-      function getStatusLabel(status) {
-        const normalized = normalizeStatus(status);
-        if (normalized === 'available') {
-          if (state.lang === 'en') return 'available for collection';
-          if (state.lang === 'both') return '소장 가능 / available for collection';
-          return '소장 가능';
-        }
-        if (normalized === 'reserved') {
-          if (state.lang === 'en') return 'reserved';
-          if (state.lang === 'both') return '예약 / reserved';
-          return '예약';
-        }
-        if (normalized === 'collected') {
-          if (state.lang === 'en') return 'collected';
-          if (state.lang === 'both') return '소장됨 / collected';
-          return '소장됨';
-        }
-        return '';
-      }
-
-      function getInquiryText() {
-        if (state.lang === 'en') return 'inquiry via email →';
-        if (state.lang === 'both') return '이메일 문의 → / inquiry via email →';
-        return '이메일 문의 →';
-      }
-
-      function getInquiryLink(workId) {
-        const subject = encodeURIComponent("Artwork Inquiry — " + workId);
-        const body = encodeURIComponent(
-          "Hello,\n\nI would like to inquire about this artwork.\n\nArtwork ID: " + workId
-        );
-        return "mailto:" + ART_EMAIL + "?subject=" + subject + "&body=" + body;
-      }
-
-      function renderStatusUI(work) {
-        if (work.section_id === 0) return '';
-
-        const status = normalizeStatus(work.status || 'available');
-        const label = getStatusLabel(status);
-        if (!label) return '';
-
-        if (status === 'available') {
-          return [
-            '<div class="work-status">',
-            '<div class="status-label">' + label + '</div>',
-            '<a href="' + getInquiryLink(work.id) + '" class="status-inquiry">',
-            getInquiryText(),
-            '</a>',
-            '</div>'
-          ].join('');
-        }
-
-        return [
-          '<div class="work-status">',
-          '<div class="status-label">' + label + '</div>',
-          '</div>'
-        ].join('');
-      }
-
+      const SEARCH_DEBOUNCE_MS = 180;
+      const ART_EMAIL = 'dungzakcestlavie@gmail.com';
+      const FAST_ORDER = 'section-id-asc';
+      const RELEVANCE_ORDER = 'relevance';
 
       const SECTION_MAP = {
-        0: { kr: 'A 기원', en: 'Origins' },
-        1: { kr: 'I 우리를 위해 기도해 주세요', en: 'Pray for Us' },
-        2: { kr: 'II 인간', en: 'Human Being' },
-        3: { kr: 'III 정신의 재탄생', en: 'Rebirth of Mind' },
-        4: { kr: 'IV 존재의 회복', en: 'Restoration of Being' },
-        5: { kr: 'V 빛의 초의식', en: 'Metaconsciousness of Light' }
+        0:{kr:'A 기원',en:'Origins'},
+        1:{kr:'I 우리를 위해 기도해 주세요',en:'Pray for Us'},
+        2:{kr:'II 인간',en:'Human Being'},
+        3:{kr:'III 정신의 재탄생',en:'Rebirth of Mind'},
+        4:{kr:'IV 존재의 회복',en:'Restoration of Being'},
+        5:{kr:'V 빛의 초의식',en:'Metaconsciousness of Light'}
       };
 
       const SVG_PLACEHOLDER = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
@@ -1587,536 +280,210 @@
       `)}`;
 
       const uiText = {
-        kr: {
-          heroModeLine: '한국어 기준',
-          statDescTotal: '전체 작품 수',
-          statDescFiltered: '현재 검색 결과',
-          statDescSections: '섹션 수',
-          labelSearch: 'Search',
-          labelSection: 'Section',
-          labelSort: 'Sort',
-          placeholderSearch: 'ID, 제목, 재료, 연도, 섹션 검색',
-          resetBtn: '초기화',
-          focusSearchBtn: '검색 집중',
-          statusIdle: '대기 중',
-          statusLoading: '불러오는 중',
-          statusLoaded: '로드 완료',
-          statusFailed: '로드 실패',
-          loadingScreen: 'works.json을 불러오는 중입니다.',
-          loadingScreenError: 'works.json을 불러오지 못했습니다. 경로 또는 접근 권한을 확인해 주세요.',
-          resultUnit: '점',
-          renderedPrefix: '표시 ',
-          renderedSuffix: '점',
-          activeFilterNone: '필터 없음',
-          filteredPrefix: '필터 적용됨',
-          searchPrefix: '검색',
-          sectionPrefix: '섹션',
-          yearPrefix: '연도',
-          emptyState: '조건에 맞는 작품이 없습니다.',
-          loadMore: '더 보기',
-          footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: '무제 / 캡션 없음',
-          noInfo: '정보 없음',
-          allSections: '전체 섹션',
-          lbMaterial: '재료',
-          lbSize: '크기',
-          lbYear: '연도',
-          lbImage: '이미지',
-          lbZoom: '줌',
-          openImage: '이미지 열기',
-          openZoom: '줌 열기',
-          sortOptions: [
-            '기본순',
-            '번호 늦은순',
-            '최신순'
-          ]
+        kr:{
+          heroModeLine:'한국어 기준',statDescTotal:'전체 작품 수',statDescFiltered:'현재 검색 결과',statDescSections:'섹션 수',
+          labelSearch:'Search',labelSection:'Section',labelSort:'Sort',placeholderSearch:'ID, 제목, 재료, 연도, 섹션 검색',
+          resetBtn:'초기화',focusSearchBtn:'검색 집중',statusIdle:'대기 중',statusLoading:'불러오는 중',statusLoaded:'로드 완료',statusFailed:'로드 실패',
+          loadingScreen:'works.json을 불러오는 중입니다.',loadingScreenError:'works.json을 불러오지 못했습니다. 경로 또는 접근 권한을 확인해 주세요.',
+          resultUnit:'점',renderedPrefix:'표시 ',renderedSuffix:'점',activeFilterNone:'필터 없음',emptyState:'조건에 맞는 작품이 없습니다.',
+          loadMore:'더 보기',footerNote:'DUNGZAK CESTLAVIE LAB / Archive Pro / KR/EN reinforced search engine',
+          untitled:'무제 / 캡션 없음',noInfo:'정보 없음',allSections:'전체 섹션',
+          lbMaterial:'재료',lbSize:'크기',lbYear:'연도',lbImage:'이미지',lbZoom:'줌',openImage:'이미지 열기',openZoom:'줌 열기',
+          sortOptions:['관련도순','기본순','번호 늦은순','최신순','오래된순']
         },
-        en: {
-          heroModeLine: 'English mode',
-          statDescTotal: 'Total works',
-          statDescFiltered: 'Current results',
-          statDescSections: 'Section count',
-          labelSearch: 'Search',
-          labelSection: 'Section',
-          labelSort: 'Sort',
-          placeholderSearch: 'Search ID, title, material, year, section',
-          resetBtn: 'Reset',
-          focusSearchBtn: 'Focus',
-          statusIdle: 'Idle',
-          statusLoading: 'Loading',
-          statusLoaded: 'Loaded',
-          statusFailed: 'Failed',
-          loadingScreen: 'Loading works.json.',
-          loadingScreenError: 'Unable to load works.json.',
-          resultUnit: ' works',
-          renderedPrefix: 'Visible ',
-          renderedSuffix: '',
-          activeFilterNone: 'No filters',
-          filteredPrefix: 'Filtered',
-          searchPrefix: 'Search',
-          sectionPrefix: 'Section',
-          yearPrefix: 'Year',
-          emptyState: 'No artworks match the current filters.',
-          loadMore: 'Load more',
-          footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: 'Untitled / No Caption',
-          noInfo: 'No information',
-          allSections: 'All sections',
-          lbMaterial: 'Material',
-          lbSize: 'Size',
-          lbYear: 'Year',
-          lbImage: 'Image',
-          lbZoom: 'Zoom',
-          openImage: 'Open image',
-          openZoom: 'Open zoom',
-          sortOptions: [
-            'Default',
-            'Late ID',
-            'Newest'
-          ]
+        en:{
+          heroModeLine:'English mode',statDescTotal:'Total works',statDescFiltered:'Current results',statDescSections:'Section count',
+          labelSearch:'Search',labelSection:'Section',labelSort:'Sort',placeholderSearch:'Search ID, title, material, year, section',
+          resetBtn:'Reset',focusSearchBtn:'Focus',statusIdle:'Idle',statusLoading:'Loading',statusLoaded:'Loaded',statusFailed:'Failed',
+          loadingScreen:'Loading works.json.',loadingScreenError:'Unable to load works.json.',
+          resultUnit:' works',renderedPrefix:'Visible ',renderedSuffix:'',activeFilterNone:'No filters',emptyState:'No artworks match the current filters.',
+          loadMore:'Load more',footerNote:'DUNGZAK CESTLAVIE LAB / Archive Pro / KR/EN reinforced search engine',
+          untitled:'Untitled / No Caption',noInfo:'No information',allSections:'All sections',
+          lbMaterial:'Material',lbSize:'Size',lbYear:'Year',lbImage:'Image',lbZoom:'Zoom',openImage:'Open image',openZoom:'Open zoom',
+          sortOptions:['Relevance','Default','Late ID','Newest','Oldest']
         },
-        both: {
-          heroModeLine: 'KR / EN',
-          statDescTotal: '전체 작품 수 / Total works',
-          statDescFiltered: '현재 검색 결과 / Current results',
-          statDescSections: '섹션 수 / Section count',
-          labelSearch: 'Search',
-          labelSection: 'Section',
-          labelSort: 'Sort',
-          placeholderSearch: 'ID, 제목, title, 재료, material, year, section',
-          resetBtn: '초기화 / Reset',
-          focusSearchBtn: '검색 / Focus',
-          statusIdle: '대기 / Idle',
-          statusLoading: '불러오는 중 / Loading',
-          statusLoaded: '로드 완료 / Loaded',
-          statusFailed: '로드 실패 / Failed',
-          loadingScreen: 'works.json을 불러오는 중입니다 / Loading works.json.',
-          loadingScreenError: 'works.json을 불러오지 못했습니다 / Unable to load works.json.',
-          resultUnit: '점 / works',
-          renderedPrefix: '표시 / Visible ',
-          renderedSuffix: '',
-          activeFilterNone: '필터 없음 / No filters',
-          filteredPrefix: '필터 적용됨 / Filtered',
-          searchPrefix: '검색 / Search',
-          sectionPrefix: '섹션 / Section',
-          yearPrefix: '연도 / Year',
-          emptyState: '조건에 맞는 작품이 없습니다 / No artworks match the current filters.',
-          loadMore: '더 보기 / Load more',
-          footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: '무제 / Untitled',
-          noInfo: '정보 없음 / No information',
-          allSections: '전체 섹션 / All sections',
-          lbMaterial: '재료 / Material',
-          lbSize: '크기 / Size',
-          lbYear: '연도 / Year',
-          lbImage: '이미지 / Image',
-          lbZoom: '줌 / Zoom',
-          openImage: '이미지 열기 / Open image',
-          openZoom: '줌 열기 / Open zoom',
-          sortOptions: [
-            '기본순 / Default',
-            '번호 늦은순 / Late ID',
-            '최신순 / Newest'
-          ]
+        both:{
+          heroModeLine:'KR / EN',statDescTotal:'전체 작품 수 / Total works',statDescFiltered:'현재 검색 결과 / Current results',statDescSections:'섹션 수 / Section count',
+          labelSearch:'Search',labelSection:'Section',labelSort:'Sort',placeholderSearch:'ID, 제목, title, 재료, material, year, section',
+          resetBtn:'초기화 / Reset',focusSearchBtn:'검색 / Focus',statusIdle:'대기 / Idle',statusLoading:'불러오는 중 / Loading',statusLoaded:'로드 완료 / Loaded',statusFailed:'로드 실패 / Failed',
+          loadingScreen:'works.json을 불러오는 중입니다 / Loading works.json.',loadingScreenError:'works.json을 불러오지 못했습니다 / Unable to load works.json.',
+          resultUnit:'점 / works',renderedPrefix:'표시 / Visible ',renderedSuffix:'',activeFilterNone:'필터 없음 / No filters',emptyState:'조건에 맞는 작품이 없습니다 / No artworks match the current filters.',
+          loadMore:'더 보기 / Load more',footerNote:'DUNGZAK CESTLAVIE LAB / Archive Pro / KR/EN reinforced search engine',
+          untitled:'무제 / Untitled',noInfo:'정보 없음 / No information',allSections:'전체 섹션 / All sections',
+          lbMaterial:'재료 / Material',lbSize:'크기 / Size',lbYear:'연도 / Year',lbImage:'이미지 / Image',lbZoom:'줌 / Zoom',openImage:'이미지 열기 / Open image',openZoom:'줌 열기 / Open zoom',
+          sortOptions:['관련도순 / Relevance','기본순 / Default','번호 늦은순 / Late ID','최신순 / Newest','오래된순 / Oldest']
         }
       };
 
-      const state = {
-        all: [],
-        filtered: [],
-        visibleCount: INITIAL_VISIBLE,
-        query: '',
-        section: 'all',
-        sort: 'section-id-asc',
-        lightboxItem: null,
-        lang: 'kr',
-        loadState: 'idle',
-        isLoaded: false
-      };
-
+      const state = { all:[], filtered:[], visibleCount:INITIAL_VISIBLE, query:'', section:'all', sort:RELEVANCE_ORDER, lightboxItem:null, lang:'kr', loadState:'idle', isLoaded:false };
       const els = {
-        statTotal: document.getElementById('statTotal'),
-        statFiltered: document.getElementById('statFiltered'),
-        statSections: document.getElementById('statSections'),
-        statDescTotal: document.getElementById('statDescTotal'),
-        statDescFiltered: document.getElementById('statDescFiltered'),
-        statDescSections: document.getElementById('statDescSections'),
-        heroModeLine: document.getElementById('heroModeLine'),
-        searchInput: document.getElementById('searchInput'),
-        sectionSelect: document.getElementById('sectionSelect'),
-        sortSelect: document.getElementById('sortSelect'),
-        resetBtn: document.getElementById('resetBtn'),
-        focusSearchBtn: document.getElementById('focusSearchBtn'),
-        labelSearch: document.getElementById('labelSearch'),
-        labelSection: document.getElementById('labelSection'),
-        labelSort: document.getElementById('labelSort'),
-        sourcePill: document.getElementById('sourcePill'),
-        loadedPill: document.getElementById('loadedPill'),
-        statusText: document.getElementById('statusText'),
-        loadingScreen: document.getElementById('loadingScreen'),
-        resultsMeta: document.getElementById('resultsMeta'),
-        resultText: document.getElementById('resultText'),
-        renderedText: document.getElementById('renderedText'),
-        activeFilterText: document.getElementById('activeFilterText'),
-        grid: document.getElementById('grid'),
-        emptyState: document.getElementById('emptyState'),
-        loadWrap: document.getElementById('loadWrap'),
-        loadMoreBtn: document.getElementById('loadMoreBtn'),
-        footerNote: document.getElementById('footerNote'),
-        lightbox: document.getElementById('lightbox'),
-        lightboxClose: document.getElementById('viewerCloseBtn') || document.getElementById('lightboxClose'),
-        lightboxImage: document.getElementById('lightboxImage'),
-        lightboxStage: document.querySelector('.lightbox-stage'),
-        lbId: document.getElementById('lbId'),
-        lbTitle: document.getElementById('lbTitle'),
-        lbSection: document.getElementById('lbSection'),
-        lbMaterialVal: document.getElementById('lbMaterial'),
-        lbSizeVal: document.getElementById('lbSize'),
-        lbYearVal: document.getElementById('lbYear'),
-        lbImagePath: document.getElementById('lbImagePath'),
-        lbZoomPath: document.getElementById('lbZoomPath'),
-        lbOpenImage: document.getElementById('lbOpenImage'),
-        lbOpenZoom: document.getElementById('lbOpenZoom'),
-        lbKeyMaterial: document.getElementById('lbKeyMaterial'),
-        lbKeySize: document.getElementById('lbKeySize'),
-        lbKeyYear: document.getElementById('lbKeyYear'),
-        lbKeyImage: document.getElementById('lbKeyImage'),
-        lbKeyZoom: document.getElementById('lbKeyZoom'),
-        langTabs: Array.from(document.querySelectorAll('.lang-tab')),
-        archiveHomeLink: document.getElementById('archiveHomeLink'),
-        entryBtn: document.getElementById('entryBtn'),
-        searchArea: document.getElementById('searchArea'),
-        sectionButtons: Array.from(document.querySelectorAll('.section-btn'))
+        statTotal:document.getElementById('statTotal'),statFiltered:document.getElementById('statFiltered'),statSections:document.getElementById('statSections'),
+        statDescTotal:document.getElementById('statDescTotal'),statDescFiltered:document.getElementById('statDescFiltered'),statDescSections:document.getElementById('statDescSections'),
+        heroModeLine:document.getElementById('heroModeLine'),searchInput:document.getElementById('searchInput'),sectionSelect:document.getElementById('sectionSelect'),sortSelect:document.getElementById('sortSelect'),
+        resetBtn:document.getElementById('resetBtn'),focusSearchBtn:document.getElementById('focusSearchBtn'),labelSearch:document.getElementById('labelSearch'),labelSection:document.getElementById('labelSection'),labelSort:document.getElementById('labelSort'),
+        sourcePill:document.getElementById('sourcePill'),loadedPill:document.getElementById('loadedPill'),statusText:document.getElementById('statusText'),loadingScreen:document.getElementById('loadingScreen'),
+        resultsMeta:document.getElementById('resultsMeta'),resultText:document.getElementById('resultText'),renderedText:document.getElementById('renderedText'),activeFilterText:document.getElementById('activeFilterText'),
+        grid:document.getElementById('grid'),emptyState:document.getElementById('emptyState'),loadWrap:document.getElementById('loadWrap'),loadMoreBtn:document.getElementById('loadMoreBtn'),footerNote:document.getElementById('footerNote'),
+        lightbox:document.getElementById('lightbox'),lightboxClose:document.getElementById('viewerCloseBtn'),lightboxImage:document.getElementById('lightboxImage'),lightboxStage:document.querySelector('.lightbox-stage'),
+        lbId:document.getElementById('lbId'),lbTitle:document.getElementById('lbTitle'),lbSection:document.getElementById('lbSection'),lbMaterialVal:document.getElementById('lbMaterial'),lbSizeVal:document.getElementById('lbSize'),lbYearVal:document.getElementById('lbYear'),
+        lbImagePath:document.getElementById('lbImagePath'),lbZoomPath:document.getElementById('lbZoomPath'),lbOpenImage:document.getElementById('lbOpenImage'),lbOpenZoom:document.getElementById('lbOpenZoom'),
+        lbKeyMaterial:document.getElementById('lbKeyMaterial'),lbKeySize:document.getElementById('lbKeySize'),lbKeyYear:document.getElementById('lbKeyYear'),lbKeyImage:document.getElementById('lbKeyImage'),lbKeyZoom:document.getElementById('lbKeyZoom'),
+        langTabs:Array.from(document.querySelectorAll('.lang-tab')),archiveHomeLink:document.getElementById('archiveHomeLink'),entryBtn:document.getElementById('entryBtn'),searchArea:document.getElementById('searchArea'),sectionButtons:Array.from(document.querySelectorAll('.section-btn'))
       };
 
       const numberFormat = new Intl.NumberFormat('ko-KR');
       let searchTimer = null;
       let archiveScrollY = 0;
       let closeClickBlockUntil = 0;
+      let viewerScale = 1, viewerX = 0, viewerY = 0, viewerStartX = 0, viewerStartY = 0, viewerLastX = 0, viewerLastY = 0, viewerStartTime = 0;
+      let viewerIsDragging = false, viewerIsZooming = false, viewerInitialDistance = 0, viewerLastTap = 0, viewerMouseDragging = false;
 
-      let viewerScale = 1;
-      let viewerX = 0;
-      let viewerY = 0;
-      let viewerStartX = 0;
-      let viewerStartY = 0;
-      let viewerLastX = 0;
-      let viewerLastY = 0;
-      let viewerStartTime = 0;
-      let viewerIsDragging = false;
-      let viewerIsZooming = false;
-      let viewerInitialDistance = 0;
-      let viewerLastTap = 0;
-      let viewerMouseDragging = false;
+      const lazyImageObserver = 'IntersectionObserver' in window ? new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          loadLazyImage(entry.target);
+          observer.unobserve(entry.target);
+        });
+      }, { root:null, rootMargin:'300px', threshold:.01 }) : null;
 
-      function isViewerOpen() {
-        return els.lightbox && els.lightbox.classList.contains('open') && document.body.classList.contains('viewer-open');
+      function t(key){ return uiText[state.lang][key]; }
+      function safeText(v){ return v === null || v === undefined ? '' : String(v).trim(); }
+      function toAbsoluteUrl(path){ const clean = safeText(path); if (!clean) return ''; if (/^https?:\/\//i.test(clean)) return clean; return new URL(clean.replace(/^\/+/, ''), SITE_ROOT).href; }
+      function debounce(fn, delay){ return (...args) => { window.clearTimeout(searchTimer); searchTimer = window.setTimeout(() => fn(...args), delay); }; }
+
+      function normalizeStatus(status) {
+        const value = safeText(status).toLowerCase();
+        if (!value) return '';
+        if (['available','available for collection','소장가능','소장 가능','for sale','collectable'].includes(value)) return 'available';
+        if (['reserved','예약','예약중','on hold'].includes(value)) return 'reserved';
+        if (['collected','sold','소장','소장완료','소장 완료','판매완료','판매 완료','sold out'].includes(value)) return 'collected';
+        return value;
       }
-
-      function applyViewerTransform() {
-        if (!els.lightboxImage) return;
-        els.lightboxImage.style.transform = `translate3d(${viewerX}px, ${viewerY}px, 0) scale(${viewerScale})`;
-        if (els.lightboxStage) els.lightboxStage.classList.toggle('is-zoomed', viewerScale > 1);
+      function getStatusLabel(status) {
+        const normalized = normalizeStatus(status);
+        if (normalized === 'available') return state.lang === 'en' ? 'available for collection' : state.lang === 'both' ? '소장 가능 / available for collection' : '소장 가능';
+        if (normalized === 'reserved') return state.lang === 'en' ? 'reserved' : state.lang === 'both' ? '예약 / reserved' : '예약';
+        if (normalized === 'collected') return state.lang === 'en' ? 'collected' : state.lang === 'both' ? '소장됨 / collected' : '소장됨';
+        return '';
       }
-
-      function resetViewerTransform() {
-        viewerScale = 1;
-        viewerX = 0;
-        viewerY = 0;
-        viewerIsDragging = false;
-        viewerIsZooming = false;
-        viewerMouseDragging = false;
-        if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging', 'is-zoomed');
-        applyViewerTransform();
+      function getInquiryText(){ return state.lang === 'en' ? 'inquiry via email -' : state.lang === 'both' ? '이메일 문의 - / inquiry via email -' : '이메일 문의 -'; }
+      function getInquiryLink(workId) {
+        const subject = encodeURIComponent('Artwork Inquiry - ' + workId);
+        const body = encodeURIComponent('Hello,\n\nI would like to inquire about this artwork.\n\nArtwork ID: ' + workId);
+        return 'mailto:' + ART_EMAIL + '?subject=' + subject + '&body=' + body;
       }
-
-      function getViewerDistance(t1, t2) {
-        return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-      }
-
-      function getCurrentViewerIndex() {
-        if (!state.lightboxItem || !state.filtered.length) return -1;
-        return state.filtered.findIndex((item) => item === state.lightboxItem || item.id === state.lightboxItem.id);
-      }
-
-      function openViewerByOffset(offset) {
-        if (!isViewerOpen() || !state.filtered.length) return;
-        const current = getCurrentViewerIndex();
-        if (current < 0) return;
-        const nextIndex = (current + offset + state.filtered.length) % state.filtered.length;
-        openLightbox(state.filtered[nextIndex]);
-      }
-
-      function nextViewer() { openViewerByOffset(1); }
-      function prevViewer() { openViewerByOffset(-1); }
-
-      const lazyImageObserver = 'IntersectionObserver' in window
-        ? new IntersectionObserver((entries, observer) => {
-            entries.forEach((entry) => {
-              if (!entry.isIntersecting) return;
-              loadLazyImage(entry.target);
-              observer.unobserve(entry.target);
-            });
-          }, { root: null, rootMargin: '300px', threshold: 0.01 })
-        : null;
-
-      function t(key) {
-        return uiText[state.lang][key];
-      }
-
-      function safeText(v) {
-        if (v === null || v === undefined) return '';
-        return String(v).trim();
-      }
-
-      function toAbsoluteUrl(path) {
-        const clean = safeText(path);
-        if (!clean) return '';
-        if (/^https?:\/\//i.test(clean)) return clean;
-        return new URL(clean.replace(/^\/+/, ''), SITE_ROOT).href;
-      }
-
-      function debounce(fn, delay) {
-        return (...args) => {
-          window.clearTimeout(searchTimer);
-          searchTimer = window.setTimeout(() => fn(...args), delay);
-        };
+      function renderStatusUI(work) {
+        if (work.section_id === 0) return '';
+        const status = normalizeStatus(work.status || 'available');
+        const label = getStatusLabel(status);
+        if (!label) return '';
+        if (status === 'available') {
+          return '<div class="work-status"><div class="status-label">' + label + '</div><a href="' + getInquiryLink(work.id) + '" class="status-inquiry">' + getInquiryText() + '</a></div>';
+        }
+        return '<div class="work-status"><div class="status-label">' + label + '</div></div>';
       }
 
       function syncDataLanguage(root = document) {
         root.querySelectorAll('[data-kr][data-en]').forEach((node) => {
-          const kr = node.dataset.kr || '';
-          const en = node.dataset.en || '';
-
+          const kr = node.dataset.kr || '', en = node.dataset.en || '';
           if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
-            node.placeholder = state.lang === 'en' ? en : (state.lang === 'both' ? `${kr}\n${en}` : kr);
-            return;
-          }
-
-          if (state.lang === 'en') node.textContent = en;
+            node.placeholder = state.lang === 'en' ? en : state.lang === 'both' ? `${kr}\n${en}` : kr;
+          } else if (state.lang === 'en') node.textContent = en;
           else if (state.lang === 'both') node.textContent = `${kr}\n${en}`;
           else node.textContent = kr;
         });
       }
-
       function setStatusByState() {
-        if (state.loadState === 'loading') els.statusText.textContent = t('statusLoading');
-        else if (state.loadState === 'loaded') els.statusText.textContent = t('statusLoaded');
-        else if (state.loadState === 'failed') els.statusText.textContent = t('statusFailed');
-        else els.statusText.textContent = t('statusIdle');
+        els.statusText.textContent = state.loadState === 'loading' ? t('statusLoading') : state.loadState === 'loaded' ? t('statusLoaded') : state.loadState === 'failed' ? t('statusFailed') : t('statusIdle');
         els.statusText.classList.toggle('error', state.loadState === 'failed');
       }
-
       function getSectionTextById(sectionId) {
         const sec = SECTION_MAP[sectionId];
-        if (!sec) return state.lang === 'en' ? 'Unsorted' : (state.lang === 'both' ? '미분류 / Unsorted' : '미분류');
+        if (!sec) return state.lang === 'en' ? 'Unsorted' : state.lang === 'both' ? '미분류 / Unsorted' : '미분류';
         if (state.lang === 'en') return sec.en;
         if (state.lang === 'both') return `${sec.kr} / ${sec.en}`;
         return sec.kr;
       }
-
       function getSectionPlainById(sectionId, lang) {
         const sec = SECTION_MAP[sectionId];
         if (!sec) return lang === 'en' ? 'Unsorted' : '미분류';
         return lang === 'en' ? sec.en : sec.kr;
       }
-
-      function getTitle(item) {
-        const kr = safeText(item.title_kr);
-        const en = safeText(item.title_en);
-        if (state.lang === 'en') return en || kr || '';
-        if (state.lang === 'both') {
-          if (kr && en && kr !== en) return `${kr} / ${en}`;
-          return kr || en || '';
-        }
-        return kr || en || '';
-      }
-
-      function getMaterial(item) {
-        const kr = safeText(item.material_kr);
-        const en = safeText(item.material_en);
-        if (state.lang === 'en') return en || kr;
-        if (state.lang === 'both') {
-          if (kr && en && kr !== en) return `${kr} / ${en}`;
-          return kr || en;
-        }
-        return kr || en;
-      }
-
-      function getSize(item) {
-        const kr = safeText(item.size_kr);
-        const en = safeText(item.size_en);
-        if (state.lang === 'en') return en || kr;
-        if (state.lang === 'both') {
-          if (kr && en && kr !== en) return `${kr} / ${en}`;
-          return kr || en;
-        }
-        return kr || en;
-      }
-
-      function getYear(item) {
-        return safeText(item.year);
-      }
-
-      function getOriginTitle() {
-        if (state.lang === 'en') return 'Untitled';
-        if (state.lang === 'both') return '무제 / Untitled';
-        return '무제';
-      }
-
-      function parseIdNumber(id) {
-        const match = safeText(id).match(/(\d+)(?!.*\d)/);
-        return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
-      }
-
-      function parseIdPrefix(id) {
-        return safeText(id)
-          .toLowerCase()
-          .replace(/[-_\s]*\d+.*$/i, '')
-          .replace(/[^a-z가-힣]/g, '');
-      }
-
-      function compareIdNatural(a, b, direction = 'asc') {
-        const ap = parseIdPrefix(a.id);
-        const bp = parseIdPrefix(b.id);
-        const prefixCompare = ap.localeCompare(bp, 'ko', { numeric: true, sensitivity: 'base' });
-        if (prefixCompare !== 0) return direction === 'desc' ? -prefixCompare : prefixCompare;
-
-        const an = parseIdNumber(a.id);
-        const bn = parseIdNumber(b.id);
+      function getTitle(item){ const kr = safeText(item.title_kr), en = safeText(item.title_en); if (state.lang === 'en') return en || kr || ''; if (state.lang === 'both') return kr && en && kr !== en ? `${kr} / ${en}` : kr || en || ''; return kr || en || ''; }
+      function getMaterial(item){ const kr = safeText(item.material_kr), en = safeText(item.material_en); if (state.lang === 'en') return en || kr; if (state.lang === 'both') return kr && en && kr !== en ? `${kr} / ${en}` : kr || en; return kr || en; }
+      function getSize(item){ const kr = safeText(item.size_kr), en = safeText(item.size_en); if (state.lang === 'en') return en || kr; if (state.lang === 'both') return kr && en && kr !== en ? `${kr} / ${en}` : kr || en; return kr || en; }
+      function getYear(item){ return safeText(item.year); }
+      function getOriginTitle(){ return state.lang === 'en' ? 'Untitled' : state.lang === 'both' ? '무제 / Untitled' : '무제'; }
+      function parseIdNumber(id){ const match = safeText(id).match(/(\d+)(?!.*\d)/); return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER; }
+      function parseIdPrefix(id){ return safeText(id).toLowerCase().replace(/[-_\s]*\d+.*$/i, '').replace(/[^a-z가-힣]/g, ''); }
+      function compareIdNatural(a,b,direction='asc') {
+        const ap = parseIdPrefix(a.id), bp = parseIdPrefix(b.id);
+        const pc = ap.localeCompare(bp, 'ko', { numeric:true, sensitivity:'base' });
+        if (pc !== 0) return direction === 'desc' ? -pc : pc;
+        const an = parseIdNumber(a.id), bn = parseIdNumber(b.id);
         if (an !== bn) return direction === 'desc' ? bn - an : an - bn;
-
-        const rawCompare = safeText(a.id).localeCompare(safeText(b.id), 'ko', { numeric: true, sensitivity: 'base' });
-        return direction === 'desc' ? -rawCompare : rawCompare;
+        const rc = safeText(a.id).localeCompare(safeText(b.id), 'ko', { numeric:true, sensitivity:'base' });
+        return direction === 'desc' ? -rc : rc;
       }
-
-      function parseYearNumbers(year) {
-        const matches = String(year || '').match(/\d{4}/g) || [];
-        const nums = matches
-          .map((v) => parseInt(v, 10))
-          .filter((v) => Number.isFinite(v));
-        return nums;
-      }
-
-      function parseYearNumber(year) {
-        const nums = parseYearNumbers(year);
-        return nums.length ? nums[0] : null;
-      }
-
-      function parseYearEndNumber(year) {
-        const nums = parseYearNumbers(year);
-        return nums.length ? nums[nums.length - 1] : null;
-      }
-
-      function getYearSearchValues(item) {
-        const raw = safeText(item.year);
-        const parsed = parseYearNumber(raw);
-        const values = [raw];
-        if (parsed !== null) values.push(String(parsed), `year ${parsed}`, `연도 ${parsed}`);
-        return values.filter(Boolean);
-      }
-
+      function parseYearNumbers(year){ return (String(year || '').match(/\d{4}/g) || []).map((v) => parseInt(v, 10)).filter(Number.isFinite); }
+      function parseYearNumber(year){ const nums = parseYearNumbers(year); return nums.length ? nums[0] : null; }
+      function parseYearEndNumber(year){ const nums = parseYearNumbers(year); return nums.length ? nums[nums.length - 1] : null; }
+      function getYearSearchValues(item){ const raw = safeText(item.year), parsed = parseYearNumber(raw); const values = [raw]; if (parsed !== null) values.push(String(parsed), `year ${parsed}`, `연도 ${parsed}`, `${parsed}년`); return values.filter(Boolean); }
       function getIdSearchValues(item) {
-        const id = safeText(item.id);
-        const compact = compactSearchToken(id);
-        const noDash = id.replace(/[-_\s]/g, '');
-        const number = parseIdNumber(id);
-        const prefix = id.replace(/[-_]?\d+$/i, '');
+        const id = safeText(item.id), compact = compactSearchToken(id), noDash = id.replace(/[-_\s]/g, ''), number = parseIdNumber(id), prefix = id.replace(/[-_]?\d+$/i, '');
         const values = [id, compact, noDash];
-        if (Number.isFinite(number) && number !== Number.MAX_SAFE_INTEGER) {
-          values.push(String(number), `${prefix}${number}`, `${prefix}${String(number).padStart(3, '0')}`);
-        }
+        if (Number.isFinite(number) && number !== Number.MAX_SAFE_INTEGER) values.push(String(number), `${prefix}${number}`, `${prefix}${String(number).padStart(3, '0')}`);
         return values.filter(Boolean);
       }
-
       function inferSectionId(item) {
-        const id = safeText(item.id);
-        const sid = Number(item.section_id);
-
-        /* SECTION ABSOLUTE RULE:
-           - OR-* is always Origins.
-           - All other works use JSON section_id only.
-           - No title/section text guessing, so sections never overlap by inference. */
+        const id = safeText(item.id), sid = Number(item.section_id);
         if (/^or[-_]?\d+/i.test(id)) return 0;
         if (Number.isFinite(sid) && sid >= 0 && sid <= 5) return sid;
         return 9999;
       }
-
       function normalizeImageUrl(url, kind, id, sectionId) {
-        const safeId = safeText(id);
-        const clean = safeText(url).replace(/\s+/g, '');
-        const folder = kind === 'zoom' ? 'zoom' : 'standard';
+        const safeId = safeText(id), clean = safeText(url).replace(/\s+/g, ''), folder = kind === 'zoom' ? 'zoom' : 'standard';
         const fileFromUrl = clean.match(/\/([^\/]+\.(?:jpg|jpeg|png|webp))(?:\?.*)?$/i)?.[1] || '';
         const fileName = fileFromUrl || (safeId ? `${safeId}.jpg` : '');
         if (!fileName) return '';
-
-        /* PATH ABSOLUTE RULE:
-           - Section 1 / Pray for Us keeps the exact JSON image path when it exists.
-             This prevents the Pray section from visually overlapping with Human when IDs repeat.
-           - Sections 2-5 resolve to dungzakcestlavie.github.io/images.
-           - Origins keeps the exact JSON image path when it exists; fallback goes to lab-images.
-        */
         const sid = Number(sectionId);
-
         if (sid === 1 && clean) return clean;
-
-        if (sid === 0) {
-          if (clean) return clean;
-          return `https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/${folder}/${fileName}`;
-        }
-
-        if (sid >= 2 && sid <= 5) {
-          return `https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/${folder}/${fileName}`;
-        }
-
+        if (sid === 0) return clean || `https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/${folder}/${fileName}`;
+        if (sid >= 2 && sid <= 5) return `https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/${folder}/${fileName}`;
         return clean || `https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/${folder}/${fileName}`;
       }
-
       function normalizeItem(raw, index) {
         const item = raw && typeof raw === 'object' ? raw : {};
         const sectionId = inferSectionId(item);
-        const status = sectionId === 0 ? '' : normalizeStatus(item.status || 'available');
-
         return {
-          _index: index,
-          id: safeText(item.id) || `item-${index + 1}`,
-          section_id: sectionId,
-          section_kr: safeText(item.section_kr),
-          section_en: safeText(item.section_en),
-          title_kr: safeText(item.title_kr),
-          title_en: safeText(item.title_en),
-          material_kr: safeText(item.material_kr),
-          material_en: safeText(item.material_en),
-          size_kr: safeText(item.size_kr),
-          size_en: safeText(item.size_en),
-          year: safeText(item.year),
-          image: normalizeImageUrl(item.image, 'standard', safeText(item.id), sectionId),
-          zoom: normalizeImageUrl(item.zoom, 'zoom', safeText(item.id), sectionId),
-          status: status
+          _index:index,id:safeText(item.id) || `item-${index + 1}`,section_id:sectionId,section_kr:safeText(item.section_kr),section_en:safeText(item.section_en),
+          title_kr:safeText(item.title_kr),title_en:safeText(item.title_en),material_kr:safeText(item.material_kr),material_en:safeText(item.material_en),
+          size_kr:safeText(item.size_kr),size_en:safeText(item.size_en),year:safeText(item.year),
+          image:normalizeImageUrl(item.image, 'standard', safeText(item.id), sectionId),zoom:normalizeImageUrl(item.zoom, 'zoom', safeText(item.id), sectionId),
+          status:sectionId === 0 ? '' : normalizeStatus(item.status || 'available')
         };
       }
 
       function normalizeSearchToken(value) {
         return safeText(value)
           .toLowerCase()
-          .normalize('NFKD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .normalize('NFKC')
-          .replace(/[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹ]/g, (m) => ({
-            'Ⅰ':'1', 'Ⅱ':'2', 'Ⅲ':'3', 'Ⅳ':'4', 'Ⅴ':'5', 'Ⅵ':'6', 'Ⅶ':'7', 'Ⅷ':'8', 'Ⅸ':'9', 'Ⅹ':'10',
-            'ⅰ':'1', 'ⅱ':'2', 'ⅲ':'3', 'ⅳ':'4', 'ⅴ':'5', 'ⅵ':'6', 'ⅶ':'7', 'ⅷ':'8', 'ⅸ':'9', 'ⅹ':'10'
-          }[m] || m))
+          .normalize('NFKD').replace(/[\u0300-\u036f]/g, '').normalize('NFKC')
+          .replace(/[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹ]/g, (m) => ({'Ⅰ':'1','Ⅱ':'2','Ⅲ':'3','Ⅳ':'4','Ⅴ':'5','Ⅵ':'6','Ⅶ':'7','Ⅷ':'8','Ⅸ':'9','Ⅹ':'10','ⅰ':'1','ⅱ':'2','ⅲ':'3','ⅳ':'4','ⅴ':'5','ⅵ':'6','ⅶ':'7','ⅷ':'8','ⅸ':'9','ⅹ':'10'}[m] || m))
           .replace(/[‐‑‒–—―]/g, '-')
           .replace(/&/g, ' and ')
+          .replace(/\+/g, ' plus ')
+          .replace(/\bcolour\b/g, 'color')
+          .replace(/\bcolours\b/g, 'colors')
+          .replace(/\bcentre\b/g, 'center')
+          .replace(/\bmetaconsciousness\b/g, 'meta consciousness')
+          .replace(/\boilstick\b/g, 'oil stick')
+          .replace(/\bmixedmedia\b/g, 'mixed media')
           .replace(/["'“”‘’]+/g, '')
           .replace(/[_:;,.\/\|()[\]{}<>]+/g, ' ')
           .replace(/\s+/g, ' ')
           .trim();
       }
-
-      function compactSearchToken(value) {
-        return normalizeSearchToken(value).replace(/[^a-z0-9가-힣ㄱ-ㅎ]/g, '');
-      }
-
+      function compactSearchToken(value){ return normalizeSearchToken(value).replace(/[^a-z0-9가-힣ㄱ-ㅎ]/g, ''); }
       function hangulInitials(value) {
         const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
         return safeText(value).split('').map((ch) => {
@@ -2125,308 +492,217 @@
           return ch;
         }).join('');
       }
-
+      const BILINGUAL_GROUPS = [
+        ['origin','origins','beginning','source','root','genesis','기원','시원','근원','원형','태초'],
+        ['pray','prays','prayer','prayers','pray for us','for us','기도','기도해','기도해주세요','우리를 위해 기도해 주세요','우리를위해기도해주세요','우리를위해기도'],
+        ['human','humans','human being','human beings','person','people','mankind','인간','사람','인류','존재자'],
+        ['mind','spirit','mental','psyche','consciousness','soul','정신','마음','의식','혼','영혼'],
+        ['rebirth','born again','renaissance','regeneration','resurrection','재탄생','부활','다시 태어남','다시태어남'],
+        ['being','existence','presence','entity','존재','실존','있음','현존'],
+        ['restoration','restore','recovery','recover','return','회복','복원','되찾음','회귀'],
+        ['light','lights','illumination','radiance','glow','luminous','빛','광','광휘','발광','밝음'],
+        ['metaconsciousness','meta consciousness','superconsciousness','higher consciousness','trans consciousness','초의식','상위의식','메타의식','빛의 초의식','빛의초의식'],
+        ['watercolour','watercolor','water colour','water color','aquarelle','수채','수채화'],
+        ['oil','oilstick','oil stick','oil pastel','오일','오일스틱','오일 파스텔'],
+        ['acrylic','acrylics','아크릴'],
+        ['canvas','캔버스'],
+        ['paper','종이','한지'],
+        ['pencil','colored pencil','colour pencil','color pencil','연필','색연필'],
+        ['pigment','powder pigment','분채','안료'],
+        ['cotton','unbleached cotton','raw cotton','광목','면천'],
+        ['ink','먹','잉크'],
+        ['mixed media','mixed-media','혼합재료','믹스드미디어'],
+        ['available','available for collection','for sale','collectable','inquiry','소장 가능','소장가능','구매 가능','문의 가능'],
+        ['reserved','on hold','예약','예약중'],
+        ['collected','sold','sold out','collection','소장 완료','소장완료','판매완료','판매 완료']
+      ];
       function getSearchAliases(value) {
-        const base = normalizeSearchToken(value);
-        const compact = compactSearchToken(value);
+        const base = normalizeSearchToken(value), compact = compactSearchToken(value);
         const aliases = [base, compact, hangulInitials(base), hangulInitials(compact)];
-
-        const groups = [
-          ['watercolour', 'watercolor', 'water colour', 'water color', '수채', '수채화'],
-          ['oilstick', 'oil stick', '오일스틱'],
-          ['acrylic', 'acrylics', '아크릴'],
-          ['canvas', '캔버스'],
-          ['paper', '종이'],
-          ['pencil', '연필'],
-          ['pigment', '분채'],
-          ['unbleached cotton', 'cotton', '광목'],
-          ['light', '빛'],
-          ['memory', '기억'],
-          ['being', '존재'],
-          ['human', '인간'],
-          ['mind', '정신'],
-          ['origin', 'origins', '기원'],
-          ['pray', 'prayer', '기도'],
-          ['available', 'available for collection', '소장 가능', '소장가능'],
-          ['reserved', '예약'],
-          ['collected', 'sold', '소장 완료', '소장완료']
-        ];
-
-        groups.forEach((group) => {
+        BILINGUAL_GROUPS.forEach((group) => {
           const normalizedGroup = group.map(normalizeSearchToken);
-          if (normalizedGroup.some((word) => base.includes(word) || compact.includes(compactSearchToken(word)))) {
-            aliases.push(...group, ...normalizedGroup, ...group.map(compactSearchToken));
+          const compactGroup = group.map(compactSearchToken);
+          if (normalizedGroup.some((word) => base.includes(word) || compact.includes(compactSearchToken(word))) || compactGroup.some((word) => word && compact.includes(word))) {
+            aliases.push(...group, ...normalizedGroup, ...compactGroup, ...group.map(hangulInitials));
           }
         });
-
         return Array.from(new Set(aliases.map(safeText).filter(Boolean)));
       }
-
       function getSectionAliases(sectionId) {
         const map = {
-          0: ['0', 'a', 'origin', 'origins', 'or', '기원', 'ㄱㅇ'],
-          1: ['1', 'i', 'pray', 'pray for us', 'prayer', '우리를 위해 기도해 주세요', '우리를 위해 기도', '기도', 'ㅇㄹㄹㅇㅎㄱㄷㅎㅈㅅㅇ', 'ㄱㄷ'],
-          2: ['2', 'ii', 'human', 'human being', '인간', 'ㅇㄱ'],
-          3: ['3', 'iii', 'rebirth', 'rebirth of mind', 'mind', '정신의 재탄생', '정신', 'ㅈㅅㅇㅈㅌㅅ', 'ㅈㅅ'],
-          4: ['4', 'iv', 'restoration', 'restoration of being', 'being', '존재의 회복', '존재', 'ㅈㅈㅇㅎㅂ', 'ㅈㅈ'],
-          5: ['5', 'v', 'metaconsciousness', 'metaconsciousness of light', 'light', '빛의 초의식', '빛', 'ㅂㅇㅊㅇㅅ', 'ㅂㅊㅇㅅ', 'ㅂ']
+          0:['0','a','origin','origins','기원','ㄱㅇ','시원','근원','or'],
+          1:['1','i','pray','pray for us','prayer','기도','우리를 위해 기도해 주세요','우리를 위해 기도','ㅇㄹㄹㅇㅎㄱㄷㅎㅈㅅㅇ','ㄱㄷ'],
+          2:['2','ii','human','human being','인간','사람','ㅇㄱ'],
+          3:['3','iii','rebirth','rebirth of mind','mind','정신의 재탄생','정신','재탄생','ㅈㅅㅇㅈㅌㅅ','ㅈㅅ'],
+          4:['4','iv','restoration','restoration of being','being','존재의 회복','존재','회복','ㅈㅈㅇㅎㅂ','ㅈㅈ'],
+          5:['5','v','metaconsciousness','metaconsciousness of light','meta consciousness','light','빛의 초의식','빛','초의식','ㅂㅇㅊㅇㅅ','ㅂㅊㅇㅅ','ㅂ']
         };
         return map[Number(sectionId)] || [];
       }
-
       function buildSearchText(item) {
         const sectionKr = getSectionPlainById(item.section_id, 'kr');
         const sectionEn = getSectionPlainById(item.section_id, 'en');
         const values = [
-          ...getIdSearchValues(item),
-          `section ${item.section_id}`,
-          `섹션 ${item.section_id}`,
-          item.section_id,
-          item.section_kr,
-          item.section_en,
-          sectionKr,
-          sectionEn,
-          getSectionTextById(item.section_id),
-          ...getSectionAliases(item.section_id),
-          item.title_kr,
-          item.title_en,
-          item.material_kr,
-          item.material_en,
-          item.size_kr,
-          item.size_en,
-          ...getYearSearchValues(item),
-          item.status,
-          item.image,
-          item.zoom
+          ...getIdSearchValues(item),`section ${item.section_id}`,`섹션 ${item.section_id}`,`${item.section_id}섹션`,item.section_id,
+          item.section_kr,item.section_en,sectionKr,sectionEn,getSectionTextById(item.section_id),...getSectionAliases(item.section_id),
+          item.title_kr,item.title_en,item.material_kr,item.material_en,item.size_kr,item.size_en,...getYearSearchValues(item),
+          item.status,getStatusLabel(item.status),item.image,item.zoom
         ];
-
         const expanded = values.flatMap(getSearchAliases);
         const normalized = expanded.map(normalizeSearchToken).filter(Boolean);
         const compacted = expanded.map(compactSearchToken).filter(Boolean);
         const initials = expanded.map(hangulInitials).map(compactSearchToken).filter(Boolean);
         return Array.from(new Set([...normalized, ...compacted, ...initials])).join(' ');
       }
-
       function getQueryTokens(rawQuery) {
-        const q = normalizeSearchToken(rawQuery);
-        const compact = compactSearchToken(rawQuery);
-        const tokens = q.split(' ').map(v => v.trim()).filter(Boolean);
+        const q = normalizeSearchToken(rawQuery), compact = compactSearchToken(rawQuery);
+        const tokens = q.split(' ').map((v) => v.trim()).filter(Boolean);
         const expanded = tokens.flatMap(getSearchAliases).map(normalizeSearchToken).filter(Boolean);
         const compacted = tokens.flatMap(getSearchAliases).map(compactSearchToken).filter(Boolean);
         const initials = [hangulInitials(q), hangulInitials(compact)].map(compactSearchToken).filter(Boolean);
-        return Array.from(new Set([...tokens, ...expanded, ...compacted, ...initials])).filter(Boolean);
+        const bilingualBoost = getSearchAliases(rawQuery).flatMap((v) => [normalizeSearchToken(v), compactSearchToken(v), compactSearchToken(hangulInitials(v))]).filter(Boolean);
+        return Array.from(new Set([...tokens, ...expanded, ...compacted, ...initials, ...bilingualBoost])).filter(Boolean);
       }
-
       function matchIdQuery(item, rawQuery) {
         const compact = compactSearchToken(rawQuery);
         if (!compact) return false;
-
-        const itemId = safeText(item.id);
-        const idCompact = compactSearchToken(itemId);
-        const idNumber = parseIdNumber(itemId);
-        const idPrefix = parseIdPrefix(itemId);
-        const numberMatch = compact.match(/(\d+)$/);
-        const queryNumber = numberMatch ? Number(numberMatch[1]) : null;
-        const queryPrefix = compact.replace(/\d+$/g, '');
-
+        const itemId = safeText(item.id), idCompact = compactSearchToken(itemId), idNumber = parseIdNumber(itemId), idPrefix = parseIdPrefix(itemId);
+        const numberMatch = compact.match(/(\d+)$/), queryNumber = numberMatch ? Number(numberMatch[1]) : null, queryPrefix = compact.replace(/\d+$/g, '');
         if (compact === idCompact) return true;
-        if (queryNumber !== null && Number.isFinite(queryNumber) && queryPrefix) {
-          if (idPrefix && compactSearchToken(idPrefix) === compactSearchToken(queryPrefix) && idNumber === queryNumber) return true;
-        }
+        if (queryNumber !== null && Number.isFinite(queryNumber) && queryPrefix && idPrefix && compactSearchToken(idPrefix) === compactSearchToken(queryPrefix) && idNumber === queryNumber) return true;
         if (/^\d+$/.test(compact) && Number(compact) === idNumber) return true;
         return false;
       }
-
+      function levenshtein(a, b) {
+        a = compactSearchToken(a); b = compactSearchToken(b);
+        if (!a || !b) return 999;
+        const dp = Array.from({ length:a.length + 1 }, (_, i) => [i]);
+        for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+        for (let i = 1; i <= a.length; i++) {
+          for (let j = 1; j <= b.length; j++) {
+            dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+          }
+        }
+        return dp[a.length][b.length];
+      }
+      function fuzzyIncludes(haystack, needle) {
+        const h = compactSearchToken(haystack), n = compactSearchToken(needle);
+        if (!h || !n) return false;
+        if (h.includes(n)) return true;
+        if (n.length < 4) return false;
+        const maxDistance = n.length <= 5 ? 1 : 2;
+        const words = h.match(/[a-z0-9가-힣ㄱ-ㅎ]+/g) || [];
+        return words.some((word) => word.includes(n) || n.includes(word) || levenshtein(word, n) <= maxDistance);
+      }
       function matchesSearch(item, rawQuery) {
-        const q = normalizeSearchToken(rawQuery);
-        const cq = compactSearchToken(rawQuery);
+        const q = normalizeSearchToken(rawQuery), cq = compactSearchToken(rawQuery);
         if (!q && !cq) return true;
-
-        const year = parseYearNumber(item.year);
-        const yearEnd = parseYearEndNumber(item.year);
-        const haystack = buildSearchText(item);
-        const hayCompact = compactSearchToken(haystack);
-        const hayInitials = compactSearchToken(hangulInitials(haystack));
+        const year = parseYearNumber(item.year), yearEnd = parseYearEndNumber(item.year), haystack = buildSearchText(item);
+        const hayCompact = compactSearchToken(haystack), hayInitials = compactSearchToken(hangulInitials(haystack));
         const sectionAliases = getSectionAliases(item.section_id).flatMap(getSearchAliases).map(normalizeSearchToken);
-
         if (matchIdQuery(item, rawQuery)) return true;
         if (/^\d{4}$/.test(cq) && (String(year) === cq || String(yearEnd) === cq)) return true;
         if (q && sectionAliases.includes(q)) return true;
         if (q && haystack.includes(q)) return true;
         if (cq && hayCompact.includes(cq)) return true;
         if (cq && hayInitials.includes(cq)) return true;
-
+        if (fuzzyIncludes(haystack, rawQuery)) return true;
         const tokens = getQueryTokens(rawQuery);
         if (!tokens.length) return true;
-
         return tokens.every((token) => {
-          const nt = normalizeSearchToken(token);
-          const ct = compactSearchToken(token);
+          const nt = normalizeSearchToken(token), ct = compactSearchToken(token);
           if (!nt && !ct) return true;
           if (/^\d{4}$/.test(ct) && (String(year) === ct || String(yearEnd) === ct)) return true;
           if (nt && sectionAliases.includes(nt)) return true;
           if (nt && haystack.includes(nt)) return true;
           if (ct && hayCompact.includes(ct)) return true;
           if (ct && hayInitials.includes(ct)) return true;
+          if (fuzzyIncludes(haystack, token)) return true;
           return false;
         });
       }
-
-      function compareIdAsc(a, b) {
-        return compareIdNatural(a, b, 'asc');
+      function scoreItem(item, rawQuery) {
+        const query = safeText(rawQuery), q = normalizeSearchToken(query), cq = compactSearchToken(query);
+        if (!q && !cq) return 0;
+        const titleKr = safeText(item.title_kr), titleEn = safeText(item.title_en), title = getTitle(item), id = safeText(item.id);
+        const section = getSectionTextById(item.section_id), material = getMaterial(item), size = getSize(item), year = getYear(item), status = getStatusLabel(item.status), haystack = buildSearchText(item);
+        const tokens = getQueryTokens(query);
+        let score = 0;
+        if (compactSearchToken(id) === cq) score += 140;
+        if (matchIdQuery(item, query)) score += 110;
+        [titleKr, titleEn, title].forEach((v) => {
+          const cv = compactSearchToken(v);
+          if (!cv) return;
+          if (cv === cq) score += 95;
+          if (cv.startsWith(cq)) score += 74;
+          if (cv.includes(cq)) score += 56;
+        });
+        if (compactSearchToken(section).includes(cq)) score += 42;
+        if (compactSearchToken(material).includes(cq)) score += 30;
+        if (compactSearchToken(size).includes(cq)) score += 16;
+        if (compactSearchToken(year).includes(cq)) score += 36;
+        if (compactSearchToken(status).includes(cq)) score += 22;
+        tokens.forEach((token) => {
+          if (fuzzyIncludes(titleKr, token) || fuzzyIncludes(titleEn, token) || fuzzyIncludes(title, token)) score += 20;
+          if (fuzzyIncludes(material, token)) score += 11;
+          if (fuzzyIncludes(section, token)) score += 13;
+          if (fuzzyIncludes(status, token)) score += 8;
+          if (fuzzyIncludes(haystack, token)) score += 5;
+        });
+        return score;
       }
-
-      function compareIdDesc(a, b) {
-        return compareIdNatural(a, b, 'desc');
-      }
-
-      function compareYearAsc(a, b) {
-        const ay = parseYearNumber(a.year);
-        const by = parseYearNumber(b.year);
-
-        // Year 없는 항목은 항상 뒤로 보낸다. 둘 다 없으면 ID 자연 정렬.
-        if (ay === null && by === null) return compareIdAsc(a, b);
-        if (ay === null) return 1;
-        if (by === null) return -1;
-
-        if (ay !== by) return ay - by;
-        return compareIdAsc(a, b);
-      }
-
-      function compareYearDesc(a, b) {
-        const ay = parseYearEndNumber(a.year);
-        const by = parseYearEndNumber(b.year);
-
-        // Year 없는 항목은 항상 뒤로 보낸다. 둘 다 없으면 ID 자연 정렬.
-        if (ay === null && by === null) return compareIdAsc(a, b);
-        if (ay === null) return 1;
-        if (by === null) return -1;
-
-        if (ay !== by) return by - ay;
-        return compareIdAsc(a, b);
-      }
-
-      function compareItems(a, b, mode) {
-        /* SORT HARD RULE:
-           - Section filter and section buttons are independent from sorting.
-           - Year sort always uses parsed numeric year first.
-           - If the year is the same, ID order is used as the stable tie-breaker.
-           - Section + Year keeps sections grouped, then orders works by year inside each section. */
+      function compareIdAsc(a,b){ return compareIdNatural(a,b,'asc'); }
+      function compareIdDesc(a,b){ return compareIdNatural(a,b,'desc'); }
+      function compareYearAsc(a,b){ const ay = parseYearNumber(a.year), by = parseYearNumber(b.year); if (ay === null && by === null) return compareIdAsc(a,b); if (ay === null) return 1; if (by === null) return -1; if (ay !== by) return ay - by; return compareIdAsc(a,b); }
+      function compareYearDesc(a,b){ const ay = parseYearEndNumber(a.year), by = parseYearEndNumber(b.year); if (ay === null && by === null) return compareIdAsc(a,b); if (ay === null) return 1; if (by === null) return -1; if (ay !== by) return by - ay; return compareIdAsc(a,b); }
+      function compareItems(a,b,mode) {
         switch (mode) {
-          case 'section-year-asc': {
+          case 'id-desc': return compareIdDesc(a,b);
+          case 'year-desc': return compareYearDesc(a,b);
+          case 'year-asc': return compareYearAsc(a,b);
+          case 'relevance':
+            if (state.query) {
+              const sd = scoreItem(b, state.query) - scoreItem(a, state.query);
+              if (sd !== 0) return sd;
+            }
             if (a.section_id !== b.section_id) return a.section_id - b.section_id;
-            return compareYearAsc(a, b);
-          }
-          case 'section-year-desc': {
-            if (a.section_id !== b.section_id) return a.section_id - b.section_id;
-            return compareYearDesc(a, b);
-          }
-          case 'id-asc':
-            return compareIdAsc(a, b);
-          case 'id-desc':
-            return compareIdDesc(a, b);
-          case 'year-desc':
-            return compareYearDesc(a, b);
-          case 'year-asc':
-            return compareYearAsc(a, b);
-          case 'title-asc': {
-            const at = getTitle(a) || a.id;
-            const bt = getTitle(b) || b.id;
-            const c = at.localeCompare(bt, 'ko', { numeric: true, sensitivity: 'base' });
-            if (c !== 0) return c;
-            return compareIdAsc(a, b);
-          }
+            return compareIdAsc(a,b);
           case 'section-id-asc':
-          default: {
+          default:
             if (a.section_id !== b.section_id) return a.section_id - b.section_id;
-            return compareIdAsc(a, b);
-          }
+            return compareIdAsc(a,b);
         }
       }
 
       function rebuildStaticTexts() {
-        els.heroModeLine.textContent = t('heroModeLine');
-        els.statDescTotal.textContent = t('statDescTotal');
-        els.statDescFiltered.textContent = t('statDescFiltered');
-        els.statDescSections.textContent = t('statDescSections');
-        els.labelSearch.textContent = t('labelSearch');
-        els.labelSection.textContent = t('labelSection');
-        els.labelSort.textContent = t('labelSort');
-        els.searchInput.placeholder = t('placeholderSearch');
-        els.resetBtn.textContent = t('resetBtn');
-        els.focusSearchBtn.textContent = t('focusSearchBtn');
-        els.emptyState.textContent = t('emptyState');
-        els.loadMoreBtn.textContent = t('loadMore');
-        els.footerNote.textContent = t('footerNote');
-        els.lbKeyMaterial.textContent = t('lbMaterial');
-        els.lbKeySize.textContent = t('lbSize');
-        els.lbKeyYear.textContent = t('lbYear');
-        els.lbKeyImage.textContent = t('lbImage');
-        els.lbKeyZoom.textContent = t('lbZoom');
-        els.lbOpenImage.textContent = t('openImage');
-        els.lbOpenZoom.textContent = t('openZoom');
-        els.loadingScreen.textContent = state.loadState === 'failed' ? t('loadingScreenError') : t('loadingScreen');
-
+        els.heroModeLine.textContent = t('heroModeLine'); els.statDescTotal.textContent = t('statDescTotal'); els.statDescFiltered.textContent = t('statDescFiltered'); els.statDescSections.textContent = t('statDescSections');
+        els.labelSearch.textContent = t('labelSearch'); els.labelSection.textContent = t('labelSection'); els.labelSort.textContent = t('labelSort'); els.searchInput.placeholder = t('placeholderSearch');
+        els.resetBtn.textContent = t('resetBtn'); els.focusSearchBtn.textContent = t('focusSearchBtn'); els.emptyState.textContent = t('emptyState'); els.loadMoreBtn.textContent = t('loadMore'); els.footerNote.textContent = t('footerNote');
+        els.lbKeyMaterial.textContent = t('lbMaterial'); els.lbKeySize.textContent = t('lbSize'); els.lbKeyYear.textContent = t('lbYear'); els.lbKeyImage.textContent = t('lbImage'); els.lbKeyZoom.textContent = t('lbZoom');
+        els.lbOpenImage.textContent = t('openImage'); els.lbOpenZoom.textContent = t('openZoom'); els.loadingScreen.textContent = state.loadState === 'failed' ? t('loadingScreenError') : t('loadingScreen');
         const sortTexts = t('sortOptions');
-        Array.from(els.sortSelect.options).forEach((opt, idx) => {
-          if (sortTexts[idx]) opt.textContent = sortTexts[idx];
-        });
-
-        syncDataLanguage();
-        setStatusByState();
+        Array.from(els.sortSelect.options).forEach((opt, idx) => { if (sortTexts[idx]) opt.textContent = sortTexts[idx]; });
+        syncDataLanguage(); setStatusByState();
       }
-
       function populateSections() {
         const prev = state.section;
         els.sectionSelect.innerHTML = '';
-
-        const allOpt = document.createElement('option');
-        allOpt.value = 'all';
-        allOpt.textContent = t('allSections');
-        els.sectionSelect.appendChild(allOpt);
-
-        Object.keys(SECTION_MAP)
-          .map(Number)
-          .sort((a, b) => a - b)
-          .forEach((sectionId) => {
-            const hasWorks = state.all.some(item => item.section_id === sectionId);
-            if (!hasWorks) return;
-
-            const opt = document.createElement('option');
-            opt.value = String(sectionId);
-            opt.textContent = getSectionTextById(sectionId);
-            els.sectionSelect.appendChild(opt);
-          });
-
-        const values = Array.from(els.sectionSelect.options).map(o => o.value);
+        const allOpt = document.createElement('option'); allOpt.value = 'all'; allOpt.textContent = t('allSections'); els.sectionSelect.appendChild(allOpt);
+        Object.keys(SECTION_MAP).map(Number).sort((a,b) => a - b).forEach((sectionId) => {
+          if (!state.all.some((item) => item.section_id === sectionId)) return;
+          const opt = document.createElement('option'); opt.value = String(sectionId); opt.textContent = getSectionTextById(sectionId); els.sectionSelect.appendChild(opt);
+        });
+        const values = Array.from(els.sectionSelect.options).map((o) => o.value);
         state.section = values.includes(prev) ? prev : 'all';
         els.sectionSelect.value = state.section;
-
         els.statSections.textContent = numberFormat.format(els.sectionSelect.options.length - 1);
         updateSectionButtonState();
       }
-
-      function updateSectionButtonState() {
-        els.sectionButtons.forEach((btn) => {
-          const active = state.section !== 'all' && btn.dataset.section === String(state.section);
-          btn.classList.toggle('active', active);
-        });
-      }
-
+      function updateSectionButtonState(){ els.sectionButtons.forEach((btn) => btn.classList.toggle('active', state.section !== 'all' && btn.dataset.section === String(state.section))); }
       function updateActiveFilterDataset() {
-        const krParts = [];
-        const enParts = [];
-
-        if (state.section !== 'all') {
-          krParts.push(`섹션 ${getSectionPlainById(Number(state.section), 'kr')}`);
-          enParts.push(`Section ${getSectionPlainById(Number(state.section), 'en')}`);
-        }
-
-        if (state.query) {
-          krParts.push(`검색 “${state.query}”`);
-          enParts.push(`Search “${state.query}”`);
-        }
-
+        const krParts = [], enParts = [];
+        if (state.section !== 'all') { krParts.push(`섹션 ${getSectionPlainById(Number(state.section), 'kr')}`); enParts.push(`Section ${getSectionPlainById(Number(state.section), 'en')}`); }
+        if (state.query) { krParts.push(`검색 "${state.query}"`); enParts.push(`Search "${state.query}"`); }
         const sortLabel = els.sortSelect?.selectedOptions?.[0]?.textContent || '';
         if (!krParts.length && !enParts.length) {
           els.activeFilterText.dataset.kr = sortLabel ? `정렬: ${sortLabel}` : '필터 없음';
@@ -2435,543 +711,223 @@
           els.activeFilterText.dataset.kr = `필터 적용됨: ${krParts.join(' + ')}${sortLabel ? ' / 정렬: ' + sortLabel : ''}`;
           els.activeFilterText.dataset.en = `Filtered: ${enParts.join(' + ')}${sortLabel ? ' / Sort: ' + sortLabel : ''}`;
         }
-
         syncDataLanguage(els.activeFilterText.parentElement);
       }
-
       function updateStats() {
         const visibleNow = Math.min(state.visibleCount, state.filtered.length);
-        els.statTotal.textContent = numberFormat.format(state.all.length);
-        els.statFiltered.textContent = numberFormat.format(state.filtered.length);
-        els.loadedPill.textContent = `Loaded: ${numberFormat.format(state.all.length)} items`;
-
+        els.statTotal.textContent = numberFormat.format(state.all.length); els.statFiltered.textContent = numberFormat.format(state.filtered.length); els.loadedPill.textContent = `Loaded: ${numberFormat.format(state.all.length)} items`;
         updateActiveFilterDataset();
-
-        if (state.lang === 'en') {
-          els.resultText.textContent = `${numberFormat.format(state.filtered.length)}${t('resultUnit')}`;
-          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}`;
-        } else {
-          els.resultText.textContent = `${numberFormat.format(state.filtered.length)}${t('resultUnit')}`;
-          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}${t('renderedSuffix')}`;
-        }
+        els.resultText.textContent = `${numberFormat.format(state.filtered.length)}${t('resultUnit')}`;
+        els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}${t('renderedSuffix')}`;
       }
-
       function loadLazyImage(img) {
         if (!img || img.dataset.loaded === 'true') return;
-
         const src = img.dataset.src || '';
-        if (!src) {
-          img.src = SVG_PLACEHOLDER;
-          img.classList.add('is-error');
-          img.dataset.loaded = 'true';
-          return;
-        }
-
-        img.dataset.loaded = 'true';
-        img.src = src;
+        if (!src) { img.src = SVG_PLACEHOLDER; img.classList.add('is-error'); img.dataset.loaded = 'true'; return; }
+        img.dataset.loaded = 'true'; img.src = src;
       }
-
       function observeLazyImages(root = els.grid) {
         const images = Array.from(root.querySelectorAll('img.thumb[data-src]:not([data-loaded="true"])'));
-
-        if (!lazyImageObserver) {
-          images.forEach(loadLazyImage);
-          return;
-        }
-
-        images.forEach((img) => lazyImageObserver.observe(img));
+        if (!lazyImageObserver) images.forEach(loadLazyImage);
+        else images.forEach((img) => lazyImageObserver.observe(img));
       }
-
       function createThumb(primarySrc, alt) {
         const img = document.createElement('img');
-        img.className = 'thumb';
-        img.alt = alt;
-        img.width = 800;
-        img.height = 800;
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        img.fetchPriority = 'low';
-
-        img.dataset.src = primarySrc || '';
-        img.dataset.loaded = 'false';
-
-        img.addEventListener('load', () => {
-          img.classList.add('is-loaded');
-        }, { once: true });
-
-        img.addEventListener('error', () => {
-          img.removeAttribute('data-src');
-          img.src = SVG_PLACEHOLDER;
-          img.classList.add('is-error');
-        }, { once: true });
-
-        if (!primarySrc) {
-          img.src = SVG_PLACEHOLDER;
-          img.classList.add('is-error');
-          img.dataset.loaded = 'true';
-        }
-
+        img.className = 'thumb'; img.alt = alt; img.width = 800; img.height = 800; img.loading = 'lazy'; img.decoding = 'async'; img.fetchPriority = 'low';
+        img.dataset.src = primarySrc || ''; img.dataset.loaded = 'false';
+        img.addEventListener('load', () => img.classList.add('is-loaded'), { once:true });
+        img.addEventListener('error', () => { img.removeAttribute('data-src'); img.src = SVG_PLACEHOLDER; img.classList.add('is-error'); }, { once:true });
+        if (!primarySrc) { img.src = SVG_PLACEHOLDER; img.classList.add('is-error'); img.dataset.loaded = 'true'; }
         return img;
       }
-
       function createCard(item) {
-        const isOrigin = Number(item.section_id) === 0;
-        const title = isOrigin ? getOriginTitle() : getTitle(item);
-        const material = isOrigin ? '' : getMaterial(item);
-        const size = isOrigin ? '' : getSize(item);
-        const year = isOrigin ? '' : getYear(item);
-        const infoLine = isOrigin ? '' : [material, size, year].filter(Boolean).join(' / ');
-        const imageSrc = toAbsoluteUrl(item.image || '');
-
-        const card = document.createElement('article');
-        card.className = 'card';
-        card.setAttribute('tabindex', '0');
-        card.setAttribute('role', 'button');
-        card.setAttribute('aria-label', `${item.id} 작품 보기`);
-
-        const thumbWrap = document.createElement('div');
-        thumbWrap.className = 'thumb-wrap';
-        thumbWrap.appendChild(createThumb(imageSrc, title || item.id));
-
-        const detailHover = document.createElement('span');
-        detailHover.className = 'detail-hover';
-        detailHover.dataset.kr = '상세 보기 →';
-        detailHover.dataset.en = 'View Detail →';
-        detailHover.textContent = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
-        thumbWrap.appendChild(detailHover);
-
-        const body = document.createElement('div');
-        body.className = 'card-body';
-
-        const top = document.createElement('div');
-        top.className = 'card-top';
-
-        const idEl = document.createElement('div');
-        idEl.className = 'work-id';
-        idEl.textContent = item.id;
-
-        const sectionEl = document.createElement('div');
-        sectionEl.className = 'section-tag';
-        sectionEl.textContent = getSectionTextById(item.section_id);
-
-        top.appendChild(idEl);
-        top.appendChild(sectionEl);
-
-        const titleEl = document.createElement('p');
-        titleEl.className = 'title' + (title ? '' : ' empty');
-        titleEl.textContent = title || t('untitled');
-
-        const captionEl = document.createElement('p');
-        captionEl.className = 'caption';
-        captionEl.textContent = infoLine || t('noInfo');
-
-        body.appendChild(top);
-        body.appendChild(titleEl);
-        if (!isOrigin) body.appendChild(captionEl);
-
+        const isOrigin = Number(item.section_id) === 0, title = isOrigin ? getOriginTitle() : getTitle(item);
+        const material = isOrigin ? '' : getMaterial(item), size = isOrigin ? '' : getSize(item), year = isOrigin ? '' : getYear(item);
+        const infoLine = isOrigin ? '' : [material, size, year].filter(Boolean).join(' / '), imageSrc = toAbsoluteUrl(item.image || '');
+        const card = document.createElement('article'); card.className = 'card'; card.tabIndex = 0; card.setAttribute('role','button'); card.setAttribute('aria-label', `${item.id} 작품 보기`);
+        const thumbWrap = document.createElement('div'); thumbWrap.className = 'thumb-wrap'; thumbWrap.appendChild(createThumb(imageSrc, title || item.id));
+        const detailHover = document.createElement('span'); detailHover.className = 'detail-hover'; detailHover.dataset.kr = '상세 보기 -'; detailHover.dataset.en = 'View Detail -'; detailHover.textContent = state.lang === 'en' ? 'View Detail -' : state.lang === 'both' ? '상세 보기 -\nView Detail -' : '상세 보기 -'; thumbWrap.appendChild(detailHover);
+        const body = document.createElement('div'); body.className = 'card-body';
+        const top = document.createElement('div'); top.className = 'card-top';
+        const idEl = document.createElement('div'); idEl.className = 'work-id'; idEl.textContent = item.id;
+        const sectionEl = document.createElement('div'); sectionEl.className = 'section-tag'; sectionEl.textContent = getSectionTextById(item.section_id);
+        top.appendChild(idEl); top.appendChild(sectionEl);
+        const titleEl = document.createElement('p'); titleEl.className = 'title' + (title ? '' : ' empty'); titleEl.textContent = title || t('untitled');
+        const captionEl = document.createElement('p'); captionEl.className = 'caption'; captionEl.textContent = infoLine || t('noInfo');
+        body.appendChild(top); body.appendChild(titleEl); if (!isOrigin) body.appendChild(captionEl);
         const statusHTML = renderStatusUI(item);
         if (statusHTML) {
-          const statusWrap = document.createElement('div');
-          statusWrap.innerHTML = statusHTML;
+          const statusWrap = document.createElement('div'); statusWrap.innerHTML = statusHTML;
           const statusLink = statusWrap.querySelector('.status-inquiry');
-          if (statusLink) {
-            statusLink.addEventListener('click', (e) => {
-              e.stopPropagation();
-            });
-            statusLink.addEventListener('keydown', (e) => {
-              e.stopPropagation();
-            });
-          }
+          if (statusLink) { statusLink.addEventListener('click', (e) => e.stopPropagation()); statusLink.addEventListener('keydown', (e) => e.stopPropagation()); }
           body.appendChild(statusWrap);
         }
-
-        card.appendChild(thumbWrap);
-        card.appendChild(body);
-
+        card.appendChild(thumbWrap); card.appendChild(body);
         const open = () => openLightbox(item);
         card.addEventListener('click', open);
-        card.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            open();
-          }
-        });
-
+        card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
         return card;
       }
-
       function render() {
-        els.loadingScreen.style.display = 'none';
-        els.resultsMeta.style.display = 'flex';
-
-        if (lazyImageObserver) {
-          els.grid.querySelectorAll('img.thumb[data-src]').forEach((img) => lazyImageObserver.unobserve(img));
-        }
-
-        els.grid.textContent = '';
-        els.emptyState.hidden = state.filtered.length !== 0;
-
-        if (!state.filtered.length) {
-          els.loadWrap.hidden = true;
-          updateStats();
-          return;
-        }
-
-        const visible = state.filtered.slice(0, state.visibleCount);
+        els.loadingScreen.style.display = 'none'; els.resultsMeta.style.display = 'flex';
+        if (lazyImageObserver) els.grid.querySelectorAll('img.thumb[data-src]').forEach((img) => lazyImageObserver.unobserve(img));
+        els.grid.textContent = ''; els.emptyState.hidden = state.filtered.length !== 0;
+        if (!state.filtered.length) { els.loadWrap.hidden = true; updateStats(); return; }
         const frag = document.createDocumentFragment();
-
-        visible.forEach((item) => {
-          frag.appendChild(createCard(item));
-        });
-
-        els.grid.appendChild(frag);
-        syncDataLanguage(els.grid);
-        observeLazyImages(els.grid);
-
-        els.loadWrap.hidden = visible.length >= state.filtered.length;
+        state.filtered.slice(0, state.visibleCount).forEach((item) => frag.appendChild(createCard(item)));
+        els.grid.appendChild(frag); syncDataLanguage(els.grid); observeLazyImages(els.grid);
+        els.loadWrap.hidden = Math.min(state.visibleCount, state.filtered.length) >= state.filtered.length;
         updateStats();
       }
 
+      function isViewerOpen(){ return els.lightbox && els.lightbox.classList.contains('open') && document.body.classList.contains('viewer-open'); }
+      function applyViewerTransform(){ if (!els.lightboxImage) return; els.lightboxImage.style.transform = `translate3d(${viewerX}px, ${viewerY}px, 0) scale(${viewerScale})`; if (els.lightboxStage) els.lightboxStage.classList.toggle('is-zoomed', viewerScale > 1); }
+      function resetViewerTransform(){ viewerScale = 1; viewerX = 0; viewerY = 0; viewerIsDragging = false; viewerIsZooming = false; viewerMouseDragging = false; if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging','is-zoomed'); applyViewerTransform(); }
+      function getViewerDistance(t1,t2){ return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY); }
+      function getCurrentViewerIndex(){ if (!state.lightboxItem || !state.filtered.length) return -1; return state.filtered.findIndex((item) => item === state.lightboxItem || item.id === state.lightboxItem.id); }
+      function openViewerByOffset(offset){ if (!isViewerOpen() || !state.filtered.length) return; const current = getCurrentViewerIndex(); if (current < 0) return; openLightbox(state.filtered[(current + offset + state.filtered.length) % state.filtered.length]); }
+      function nextViewer(){ openViewerByOffset(1); }
+      function prevViewer(){ openViewerByOffset(-1); }
       function openLightbox(item) {
-        archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-        state.lightboxItem = item;
-        resetViewerTransform();
-
-        const isOrigin = Number(item.section_id) === 0;
-        const title = isOrigin ? getOriginTitle() : (getTitle(item) || t('untitled'));
-        const material = isOrigin ? '—' : (getMaterial(item) || '—');
-        const size = isOrigin ? '—' : (getSize(item) || '—');
-        const year = isOrigin ? '—' : (getYear(item) || '—');
-        const imageUrl = toAbsoluteUrl(item.image || '');
-        const zoomUrl = toAbsoluteUrl(item.zoom || '');
-        const displayUrl = zoomUrl || imageUrl || SVG_PLACEHOLDER;
-
-        els.lbId.textContent = item.id;
-        els.lbTitle.textContent = title;
-        els.lbSection.textContent = getSectionTextById(item.section_id);
-        els.lbMaterialVal.textContent = material;
-        els.lbSizeVal.textContent = size;
-        els.lbYearVal.textContent = year;
-        els.lbImagePath.textContent = imageUrl || '—';
-        els.lbZoomPath.textContent = zoomUrl || '—';
-        els.lbOpenImage.href = imageUrl || '#';
-        els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
-
-        els.lightboxImage.alt = title;
-        els.lightboxImage.removeAttribute('src');
-        els.lightboxImage.loading = 'eager';
-        els.lightboxImage.decoding = 'async';
-        els.lightboxImage.fetchPriority = 'high';
-        els.lightboxImage.onerror = () => { els.lightboxImage.src = SVG_PLACEHOLDER; };
-        els.lightboxImage.src = displayUrl;
-
-        els.lightbox.classList.add('open');
-        els.lightbox.classList.add('active');
-        els.lightbox.style.display = '';
-        els.lightbox.setAttribute('aria-hidden', 'false');
-        document.documentElement.classList.add('viewer-open');
-        document.body.classList.add('viewer-open');
-        document.body.style.overflow = 'hidden';
+        if (!isViewerOpen()) archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        state.lightboxItem = item; resetViewerTransform();
+        const isOrigin = Number(item.section_id) === 0, title = isOrigin ? getOriginTitle() : (getTitle(item) || t('untitled'));
+        const material = isOrigin ? '-' : (getMaterial(item) || '-'), size = isOrigin ? '-' : (getSize(item) || '-'), year = isOrigin ? '-' : (getYear(item) || '-');
+        const imageUrl = toAbsoluteUrl(item.image || ''), zoomUrl = toAbsoluteUrl(item.zoom || ''), displayUrl = zoomUrl || imageUrl || SVG_PLACEHOLDER;
+        els.lbId.textContent = item.id; els.lbTitle.textContent = title; els.lbSection.textContent = getSectionTextById(item.section_id); els.lbMaterialVal.textContent = material; els.lbSizeVal.textContent = size; els.lbYearVal.textContent = year;
+        els.lbImagePath.textContent = imageUrl || '-'; els.lbZoomPath.textContent = zoomUrl || '-'; els.lbOpenImage.href = imageUrl || '#'; els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
+        els.lightboxImage.alt = title; els.lightboxImage.removeAttribute('src'); els.lightboxImage.loading = 'eager'; els.lightboxImage.decoding = 'async'; els.lightboxImage.fetchPriority = 'high'; els.lightboxImage.onerror = () => { els.lightboxImage.src = SVG_PLACEHOLDER; }; els.lightboxImage.src = displayUrl;
+        els.lightbox.classList.add('open','active'); els.lightbox.style.display = ''; els.lightbox.setAttribute('aria-hidden','false'); document.documentElement.classList.add('viewer-open'); document.body.classList.add('viewer-open'); document.body.style.overflow = 'hidden';
       }
-
       function armCloseNavigationShield() {
         closeClickBlockUntil = Date.now() + 1400;
-
         let shield = document.getElementById('viewerCloseShield');
         if (!shield) {
-          shield = document.createElement('div');
-          shield.id = 'viewerCloseShield';
-          shield.setAttribute('aria-hidden', 'true');
-          shield.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:transparent;pointer-events:auto;touch-action:none;';
-          const kill = function(ev) {
-            if (!ev) return;
-            if (typeof ev.preventDefault === 'function') ev.preventDefault();
-            if (typeof ev.stopPropagation === 'function') ev.stopPropagation();
-            if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
-          };
-          ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach(function(type) {
-            shield.addEventListener(type, kill, { capture:true, passive:false });
-          });
+          shield = document.createElement('div'); shield.id = 'viewerCloseShield'; shield.setAttribute('aria-hidden','true'); shield.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:transparent;pointer-events:auto;touch-action:none;';
+          const kill = (ev) => { if (!ev) return; ev.preventDefault?.(); ev.stopPropagation?.(); ev.stopImmediatePropagation?.(); };
+          ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach((type) => shield.addEventListener(type, kill, { capture:true, passive:false }));
           document.body.appendChild(shield);
         }
-
-        window.setTimeout(function() {
-          const currentShield = document.getElementById('viewerCloseShield');
-          if (currentShield && currentShield.parentNode) currentShield.parentNode.removeChild(currentShield);
-        }, 700);
+        window.setTimeout(() => { const currentShield = document.getElementById('viewerCloseShield'); if (currentShield && currentShield.parentNode) currentShield.parentNode.removeChild(currentShield); }, 700);
       }
-
-      function restoreArchiveScroll() {
-        requestAnimationFrame(function() {
-          window.scrollTo(0, archiveScrollY || 0);
+      function restoreArchiveScroll(){
+        const y = Math.max(0, Number(archiveScrollY) || 0);
+        requestAnimationFrame(() => {
+          window.scrollTo(0, y);
+          requestAnimationFrame(() => window.scrollTo(0, y));
         });
       }
-
-      function closeLightbox() {
+      function closeViewer(e) {
+        if (e) { e.preventDefault?.(); e.stopPropagation?.(); e.stopImmediatePropagation?.(); }
+        if (!els.lightbox) return;
         armCloseNavigationShield();
         state.lightboxItem = null;
         resetViewerTransform();
-        if (els.lightbox) {
-          els.lightbox.classList.remove('open');
-          els.lightbox.classList.remove('active');
-          els.lightbox.setAttribute('aria-hidden', 'true');
-          els.lightbox.style.display = 'none';
+        els.lightbox.classList.remove('open','active');
+        els.lightbox.setAttribute('aria-hidden','true');
+        els.lightbox.style.display = 'none';
+        if (els.lightboxImage) {
+          els.lightboxImage.onerror = null;
+          els.lightboxImage.removeAttribute('src');
         }
-        if (els.lightboxImage) els.lightboxImage.removeAttribute('src');
         document.documentElement.classList.remove('viewer-open');
         document.body.classList.remove('viewer-open');
         document.body.style.overflow = '';
         restoreArchiveScroll();
       }
-
-      function closeViewer() {
-        armCloseNavigationShield();
-        state.lightboxItem = null;
-        resetViewerTransform();
-
-        const viewer = document.querySelector('.viewer, .lightbox');
-        if (viewer) {
-          viewer.classList.remove('open');
-          viewer.classList.remove('active');
-          viewer.setAttribute('aria-hidden', 'true');
-          viewer.style.display = 'none';
-        }
-
-        if (els.lightboxImage) els.lightboxImage.removeAttribute('src');
-
-        document.documentElement.classList.remove('viewer-open');
-        document.body.classList.remove('viewer-open');
-        document.body.style.overflow = '';
-        restoreArchiveScroll();
-      }
-
       window.closeViewer = closeViewer;
 
       function applyFilters(resetVisible = true) {
-        /* Always read current control values before filtering/sorting.
-           This prevents the visual select state and internal state from drifting. */
         state.query = els.searchInput ? els.searchInput.value : state.query;
         state.section = els.sectionSelect ? els.sectionSelect.value : state.section;
         state.sort = els.sortSelect ? els.sortSelect.value : state.sort;
-
         state.filtered = state.all
-          .filter((item) => {
-            if (state.section !== 'all' && item.section_id !== Number(state.section)) return false;
-            return matchesSearch(item, state.query);
-          })
-          .sort((a, b) => compareItems(a, b, state.sort));
-
+          .filter((item) => state.section === 'all' || item.section_id === Number(state.section))
+          .filter((item) => matchesSearch(item, state.query))
+          .sort((a,b) => compareItems(a,b,state.sort));
         if (resetVisible) state.visibleCount = INITIAL_VISIBLE;
-
-        updateSectionButtonState();
-        render();
+        updateSectionButtonState(); render();
       }
-
-      const FAST_ORDER = 'section-id-asc';
-
-      function resetSortToFastOrder() {
-        state.sort = FAST_ORDER;
-        if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
-      }
-
       const debouncedSearch = debounce(() => {
         state.query = els.searchInput.value;
-        /* Search must not change section or sort.
-           The user-selected sort order remains active while searching. */
+        if (state.query && els.sortSelect.value === FAST_ORDER) { state.sort = RELEVANCE_ORDER; els.sortSelect.value = RELEVANCE_ORDER; }
         applyFilters(true);
       }, SEARCH_DEBOUNCE_MS);
-
       function setLanguage(lang) {
         state.lang = lang;
-        els.langTabs.forEach((tab) => {
-          const active = tab.dataset.lang === lang;
-          tab.classList.toggle('active', active);
-          tab.setAttribute('aria-pressed', active ? 'true' : 'false');
-        });
-        rebuildStaticTexts();
-        populateSections();
-        applyFilters(true);
-        if (state.lightboxItem) openLightbox(state.lightboxItem);
+        els.langTabs.forEach((tab) => { const active = tab.dataset.lang === lang; tab.classList.toggle('active', active); tab.setAttribute('aria-pressed', active ? 'true' : 'false'); });
+        rebuildStaticTexts(); populateSections(); applyFilters(true); if (state.lightboxItem) openLightbox(state.lightboxItem);
       }
-
       function goArchiveHome() {
-        state.query = '';
-        state.section = 'all';
-        state.sort = FAST_ORDER;
-        state.visibleCount = INITIAL_VISIBLE;
-
-        els.searchInput.value = '';
-        els.sectionSelect.value = 'all';
-        els.sortSelect.value = FAST_ORDER;
-
-        applyFilters(true);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        state.query = ''; state.section = 'all'; state.sort = RELEVANCE_ORDER; state.visibleCount = INITIAL_VISIBLE;
+        els.searchInput.value = ''; els.sectionSelect.value = 'all'; els.sortSelect.value = RELEVANCE_ORDER;
+        applyFilters(true); window.scrollTo({ top:0, behavior:'smooth' });
       }
-
       function parseWorksPayload(text) {
         let json = null;
-
-        try {
-          json = JSON.parse(text);
-        } catch (firstError) {
+        try { json = JSON.parse(text); }
+        catch (firstError) {
           const repaired = text
             .replace(/(\"status\"\s*:\s*\"(?:available|reserved|collected|sold)\"\s*)\n\s*\{/g, '$1\n    },\n    {')
             .replace(/(\"zoom\"\s*:\s*\"[^\"]+\"\s*)\n\s*(\"status\"\s*:)/g, '$1,\n      $2')
             .replace(/,\s*([}\]])/g, '$1');
-
-          try {
-            json = JSON.parse(repaired);
-          } catch (secondError) {
-            throw firstError;
-          }
+          try { json = JSON.parse(repaired); } catch { throw firstError; }
         }
-
         if (Array.isArray(json)) return json;
         if (json && Array.isArray(json.works)) return json.works;
         return [];
       }
-
       async function fetchWorksFromCandidates() {
         let lastError = null;
-
         for (const url of DATA_URLS) {
           try {
-            const response = await fetch(url, { cache: 'no-store' });
+            const response = await fetch(url, { cache:'no-store' });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const text = await response.text();
             const arr = parseWorksPayload(text);
             if (!Array.isArray(arr)) throw new Error('works payload is not an array');
             return { arr, url };
-          } catch (error) {
-            lastError = error;
-            console.warn('Archive Pro data load failed:', url, error);
-          }
+          } catch (error) { lastError = error; console.warn('Archive Pro data load failed:', url, error); }
         }
-
         throw lastError || new Error('Unable to load works.json');
       }
-
       async function loadData() {
         if (state.isLoaded || state.loadState === 'loading') return;
-
-        state.loadState = 'loading';
-        rebuildStaticTexts();
-        els.sourcePill.textContent = `Source: ${DATA_URLS[0]}`;
-
+        state.loadState = 'loading'; rebuildStaticTexts(); els.sourcePill.textContent = `Source: ${DATA_URLS[0]}`;
         try {
           const result = await fetchWorksFromCandidates();
-          const arr = result.arr;
-
-          state.all = arr.map(normalizeItem);
-          state.isLoaded = true;
-          state.loadState = 'loaded';
-
+          state.all = result.arr.map(normalizeItem); state.isLoaded = true; state.loadState = 'loaded';
           els.sourcePill.textContent = `Source: ${result.url}`;
-          rebuildStaticTexts();
-          populateSections();
-          applyFilters(true);
+          rebuildStaticTexts(); populateSections(); applyFilters(true);
         } catch (error) {
-          console.error(error);
-          state.all = [];
-          state.filtered = [];
-          state.loadState = 'failed';
-          rebuildStaticTexts();
-          els.loadingScreen.style.display = 'block';
+          console.error(error); state.all = []; state.filtered = []; state.loadState = 'failed'; rebuildStaticTexts(); els.loadingScreen.style.display = 'block';
         }
       }
-
       function resetFilters() {
-        state.query = '';
-        state.section = 'all';
-        state.sort = FAST_ORDER;
-        state.visibleCount = INITIAL_VISIBLE;
-
-        els.searchInput.value = '';
-        els.sectionSelect.value = 'all';
-        els.sortSelect.value = FAST_ORDER;
-
+        state.query = ''; state.section = 'all'; state.sort = RELEVANCE_ORDER; state.visibleCount = INITIAL_VISIBLE;
+        els.searchInput.value = ''; els.sectionSelect.value = 'all'; els.sortSelect.value = RELEVANCE_ORDER;
         applyFilters(true);
       }
-
-      function scrollToSearch() {
-        if (!els.searchArea) return;
-        els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-
+      function scrollToSearch(){ if (els.searchArea) els.searchArea.scrollIntoView({ behavior:'smooth', block:'start' }); }
       function bindEvents() {
         els.searchInput.addEventListener('input', debouncedSearch);
-
-        els.sectionSelect.addEventListener('change', () => {
-          state.section = els.sectionSelect.value;
-          /* Section change starts a clean section view.
-             This prevents the previous search word from making every section look the same. */
-          state.query = '';
-          state.sort = FAST_ORDER;
-          els.searchInput.value = '';
-          els.sortSelect.value = FAST_ORDER;
-          applyFilters(true);
-        });
-
-        els.sortSelect.addEventListener('change', () => {
-          state.sort = els.sortSelect.value;
-          applyFilters(true);
-        });
-
+        els.sectionSelect.addEventListener('change', () => { state.section = els.sectionSelect.value; state.query = ''; state.sort = RELEVANCE_ORDER; els.searchInput.value = ''; els.sortSelect.value = RELEVANCE_ORDER; applyFilters(true); });
+        els.sortSelect.addEventListener('change', () => { state.sort = els.sortSelect.value; applyFilters(true); });
         els.resetBtn.addEventListener('click', resetFilters);
+        els.focusSearchBtn.addEventListener('click', () => { els.searchInput.focus(); els.searchInput.select(); });
+        els.loadMoreBtn.addEventListener('click', () => { state.visibleCount += LOAD_STEP; render(); });
 
-        els.focusSearchBtn.addEventListener('click', () => {
-          els.searchInput.focus();
-          els.searchInput.select();
-        });
-
-        els.loadMoreBtn.addEventListener('click', () => {
-          state.visibleCount += LOAD_STEP;
-          render();
-        });
-
-        /* MOBILE X CLOSE FINAL FIX — close only the viewer, never navigate.
-           Capture the X event first, block bubbling/default, arm a temporary shield
-           against Safari ghost taps, then restore the exact archive scroll position. */
-        const getCloseButton = (e) => {
-          return e.target && e.target.closest
-            ? e.target.closest('#viewerCloseBtn, #lightboxClose, .viewer-close, .lightbox-close, .close-viewer')
-            : null;
-        };
-
-        const blockEvent = (e) => {
-          if (!e) return;
-          if (typeof e.preventDefault === 'function') e.preventDefault();
-          if (typeof e.stopPropagation === 'function') e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-        };
-
-        const blockGhostNavigation = (e) => {
-          if (Date.now() <= closeClickBlockUntil) blockEvent(e);
-        };
-
-        const closeFromX = (e) => {
-          const closeBtn = getCloseButton(e);
-          if (!closeBtn) return;
-          blockEvent(e);
-          closeViewer();
-        };
-
-        const consumeCloseTouch = (e) => {
-          const closeBtn = getCloseButton(e);
-          if (!closeBtn) return;
-          blockEvent(e);
-        };
-
+        const getCloseButton = (e) => e.target && e.target.closest ? e.target.closest('#viewerCloseBtn, #lightboxClose, .viewer-close, .lightbox-close, .close-viewer') : null;
+        const blockEvent = (e) => { if (!e) return; e.preventDefault?.(); e.stopPropagation?.(); e.stopImmediatePropagation?.(); };
+        const blockGhostNavigation = (e) => { if (Date.now() <= closeClickBlockUntil) blockEvent(e); };
+        const closeFromX = (e) => { const closeBtn = getCloseButton(e); if (!closeBtn) return; blockEvent(e); closeViewer(); };
+        const consumeCloseTouch = (e) => { const closeBtn = getCloseButton(e); if (!closeBtn) return; blockEvent(e); };
         document.addEventListener('pointerdown', consumeCloseTouch, true);
         document.addEventListener('touchstart', consumeCloseTouch, { capture:true, passive:false });
         document.addEventListener('pointerup', consumeCloseTouch, true);
         document.addEventListener('touchend', closeFromX, { capture:true, passive:false });
         document.addEventListener('click', closeFromX, true);
-
-        ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach((type) => {
-          document.addEventListener(type, blockGhostNavigation, { capture:true, passive:false });
-        });
-
+        ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach((type) => document.addEventListener(type, blockGhostNavigation, { capture:true, passive:false }));
         if (els.lightboxClose) {
           els.lightboxClose.addEventListener('pointerdown', consumeCloseTouch, { passive:false });
           els.lightboxClose.addEventListener('touchstart', consumeCloseTouch, { passive:false });
@@ -2979,46 +935,17 @@
           els.lightboxClose.addEventListener('touchend', closeFromX, { passive:false });
           els.lightboxClose.addEventListener('click', closeFromX, { passive:false });
         }
-
-        els.lightbox.addEventListener('click', (e) => {
-          if (e.target === els.lightbox) closeLightbox();
-        });
-
-        els.lightbox.addEventListener('dblclick', (e) => {
-          if (!isViewerOpen()) return;
-          e.preventDefault();
-          viewerScale = viewerScale > 1 ? 1 : 2;
-          viewerX = 0;
-          viewerY = 0;
-          applyViewerTransform();
-        });
-
+        els.lightbox.addEventListener('click', (e) => { if (e.target === els.lightbox) closeViewer(); });
+        els.lightbox.addEventListener('dblclick', (e) => { if (!isViewerOpen()) return; e.preventDefault(); viewerScale = viewerScale > 1 ? 1 : 2; viewerX = 0; viewerY = 0; applyViewerTransform(); });
         els.lightbox.addEventListener('touchstart', (e) => {
-          if (!isViewerOpen()) return;
-          e.preventDefault();
-
-          if (e.touches.length === 2) {
-            viewerIsZooming = true;
-            viewerIsDragging = false;
-            viewerInitialDistance = getViewerDistance(e.touches[0], e.touches[1]);
-            return;
-          }
-
+          if (!isViewerOpen()) return; e.preventDefault();
+          if (e.touches.length === 2) { viewerIsZooming = true; viewerIsDragging = false; viewerInitialDistance = getViewerDistance(e.touches[0], e.touches[1]); return; }
           if (e.touches.length !== 1) return;
-          const touch = e.touches[0];
-          viewerStartX = touch.clientX;
-          viewerStartY = touch.clientY;
-          viewerLastX = touch.clientX;
-          viewerLastY = touch.clientY;
-          viewerStartTime = Date.now();
-          viewerIsDragging = true;
+          const touch = e.touches[0]; viewerStartX = touch.clientX; viewerStartY = touch.clientY; viewerLastX = touch.clientX; viewerLastY = touch.clientY; viewerStartTime = Date.now(); viewerIsDragging = true;
           if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
         }, { passive:false });
-
         els.lightbox.addEventListener('touchmove', (e) => {
-          if (!isViewerOpen()) return;
-          e.preventDefault();
-
+          if (!isViewerOpen()) return; e.preventDefault();
           if (viewerIsZooming && e.touches.length === 2) {
             const newDistance = getViewerDistance(e.touches[0], e.touches[1]);
             if (!viewerInitialDistance) viewerInitialDistance = newDistance;
@@ -3026,127 +953,36 @@
             viewerScale = Math.min(Math.max(1, viewerScale * delta), 4);
             viewerInitialDistance = newDistance;
             if (viewerScale === 1) { viewerX = 0; viewerY = 0; }
-            applyViewerTransform();
-            return;
+            applyViewerTransform(); return;
           }
-
           if (!viewerIsDragging || e.touches.length !== 1) return;
-
-          const touch = e.touches[0];
-          const dx = touch.clientX - viewerLastX;
-          const dy = touch.clientY - viewerLastY;
-
-          if (viewerScale > 1) {
-            viewerX += dx;
-            viewerY += dy;
-            applyViewerTransform();
-          }
-
-          viewerLastX = touch.clientX;
-          viewerLastY = touch.clientY;
+          const touch = e.touches[0], dx = touch.clientX - viewerLastX, dy = touch.clientY - viewerLastY;
+          if (viewerScale > 1) { viewerX += dx; viewerY += dy; applyViewerTransform(); }
+          viewerLastX = touch.clientX; viewerLastY = touch.clientY;
         }, { passive:false });
-
         els.lightbox.addEventListener('touchend', (e) => {
           if (!isViewerOpen()) return;
-
-          if (viewerIsZooming) {
-            if (e.touches.length < 2) viewerIsZooming = false;
-            return;
-          }
-
-          const changed = e.changedTouches && e.changedTouches[0];
-          const endX = changed ? changed.clientX : viewerLastX;
-          const endY = changed ? changed.clientY : viewerLastY;
-          const totalDx = endX - viewerStartX;
-          const totalDy = endY - viewerStartY;
-          const elapsed = Date.now() - viewerStartTime;
-
-          if (viewerScale === 1 && Math.abs(totalDx) > 60 && Math.abs(totalDx) > Math.abs(totalDy) * 1.25) {
-            if (totalDx > 0) prevViewer();
-            else nextViewer();
-          }
-
+          if (viewerIsZooming) { if (e.touches.length < 2) viewerIsZooming = false; return; }
+          const changed = e.changedTouches && e.changedTouches[0], endX = changed ? changed.clientX : viewerLastX, endY = changed ? changed.clientY : viewerLastY;
+          const totalDx = endX - viewerStartX, totalDy = endY - viewerStartY, elapsed = Date.now() - viewerStartTime;
+          if (viewerScale === 1 && Math.abs(totalDx) > 60 && Math.abs(totalDx) > Math.abs(totalDy) * 1.25) { if (totalDx > 0) prevViewer(); else nextViewer(); }
           const now = Date.now();
-          if (Math.abs(totalDx) < 12 && Math.abs(totalDy) < 12 && elapsed < 320 && now - viewerLastTap < 300) {
-            viewerScale = viewerScale > 1 ? 1 : 2;
-            viewerX = 0;
-            viewerY = 0;
-            applyViewerTransform();
-            viewerLastTap = 0;
-          } else {
-            viewerLastTap = now;
-          }
-
-          viewerIsDragging = false;
-          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
+          if (Math.abs(totalDx) < 12 && Math.abs(totalDy) < 12 && elapsed < 320 && now - viewerLastTap < 300) { viewerScale = viewerScale > 1 ? 1 : 2; viewerX = 0; viewerY = 0; applyViewerTransform(); viewerLastTap = 0; }
+          else viewerLastTap = now;
+          viewerIsDragging = false; if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
         }, { passive:false });
-
-        els.lightbox.addEventListener('mousedown', (e) => {
-          if (!isViewerOpen() || viewerScale <= 1 || e.button !== 0) return;
-          e.preventDefault();
-          viewerMouseDragging = true;
-          viewerLastX = e.clientX;
-          viewerLastY = e.clientY;
-          if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
-        });
-
-        document.addEventListener('mousemove', (e) => {
-          if (!isViewerOpen() || !viewerMouseDragging || viewerScale <= 1) return;
-          const dx = e.clientX - viewerLastX;
-          const dy = e.clientY - viewerLastY;
-          viewerX += dx;
-          viewerY += dy;
-          viewerLastX = e.clientX;
-          viewerLastY = e.clientY;
-          applyViewerTransform();
-        });
-
-        document.addEventListener('mouseup', () => {
-          viewerMouseDragging = false;
-          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
-        });
-
-        document.addEventListener('keydown', (e) => {
-          if (!isViewerOpen()) return;
-          if (e.key === 'Escape') closeLightbox();
-          if (e.key === 'ArrowRight') nextViewer();
-          if (e.key === 'ArrowLeft') prevViewer();
-        });
-
-        els.langTabs.forEach((tab) => {
-          tab.addEventListener('click', () => setLanguage(tab.dataset.lang));
-        });
-
-        if (els.archiveHomeLink) {
-          els.archiveHomeLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (Date.now() <= closeClickBlockUntil) {
-              blockEvent(e);
-              return;
-            }
-            goArchiveHome();
-          });
-        }
-
-        if (els.entryBtn) {
-          els.entryBtn.addEventListener('click', scrollToSearch);
-        }
-
+        els.lightbox.addEventListener('mousedown', (e) => { if (!isViewerOpen() || viewerScale <= 1 || e.button !== 0) return; e.preventDefault(); viewerMouseDragging = true; viewerLastX = e.clientX; viewerLastY = e.clientY; if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging'); });
+        document.addEventListener('mousemove', (e) => { if (!isViewerOpen() || !viewerMouseDragging || viewerScale <= 1) return; viewerX += e.clientX - viewerLastX; viewerY += e.clientY - viewerLastY; viewerLastX = e.clientX; viewerLastY = e.clientY; applyViewerTransform(); });
+        document.addEventListener('mouseup', () => { viewerMouseDragging = false; if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging'); });
+        document.addEventListener('keydown', (e) => { if (!isViewerOpen()) return; if (e.key === 'Escape') closeViewer(); if (e.key === 'ArrowRight') nextViewer(); if (e.key === 'ArrowLeft') prevViewer(); });
+        els.langTabs.forEach((tab) => tab.addEventListener('click', () => setLanguage(tab.dataset.lang)));
+        if (els.archiveHomeLink) els.archiveHomeLink.addEventListener('click', (e) => { e.preventDefault(); if (Date.now() <= closeClickBlockUntil) { blockEvent(e); return; } goArchiveHome(); });
+        if (els.entryBtn) els.entryBtn.addEventListener('click', scrollToSearch);
         els.sectionButtons.forEach((btn) => {
           btn.addEventListener('click', () => {
-            /* Section buttons now open a clean section view.
-               Search text is cleared and sort returns to the simple default order. */
-            state.section = btn.dataset.section || 'all';
-            state.query = '';
-            state.sort = FAST_ORDER;
-            state.visibleCount = INITIAL_VISIBLE;
-
-            els.searchInput.value = '';
-            els.sectionSelect.value = state.section;
-            els.sortSelect.value = FAST_ORDER;
-
-            applyFilters(true);
-            scrollToSearch();
+            state.section = btn.dataset.section || 'all'; state.query = ''; state.sort = RELEVANCE_ORDER; state.visibleCount = INITIAL_VISIBLE;
+            els.searchInput.value = ''; els.sectionSelect.value = state.section; els.sortSelect.value = RELEVANCE_ORDER;
+            applyFilters(true); scrollToSearch();
           });
         });
       }

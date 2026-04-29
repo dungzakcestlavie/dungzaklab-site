@@ -3198,6 +3198,32 @@
       rebuildStaticTexts();
       loadData();
     })();
-  </script>
+  
+/* SEARCH PATCH */
+(function(){
+  function buildSearch(i){
+    return ((i.id||'')+' '+(i.title_kr||'')+' '+(i.title_en||'')+' '+(i.material_kr||'')+' '+(i.material_en||'')+' '+(i.year||''))
+    .toLowerCase().replace(/\s+/g,'');
+  }
+  if(window.state && Array.isArray(state.all)){
+    state.all = state.all.map(function(i){
+      i._search = buildSearch(i);
+      return i;
+    });
+  }
+  var input = document.getElementById('searchInput');
+  if(!input) return;
+  var raf=null;
+  input.addEventListener('input', function(e){
+    var q = e.target.value.toLowerCase().replace(/\s+/g,'');
+    state.query = q;
+    if(raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(function(){
+      if(typeof applyFilters === 'function') applyFilters();
+    });
+  });
+})();
+
+</script>
 </body>
 </html>

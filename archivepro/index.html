@@ -71,7 +71,7 @@
     .section-buttons{display:flex;flex-wrap:wrap;gap:10px}
     .section-btn{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--muted);white-space:pre-line;text-align:center}
     .section-btn.active{color:var(--gold);border-color:rgba(212,180,109,.54);background:rgba(212,180,109,.10)}
-    .controls{margin-top:16px;padding:16px;display:grid;grid-template-columns:minmax(260px,1.35fr) minmax(220px,.9fr) minmax(220px,.9fr) auto;gap:12px;align-items:end;scroll-margin-top:110px}
+    .controls{margin-top:16px;padding:16px;display:grid;grid-template-columns:minmax(280px,1.5fr) minmax(220px,.8fr) auto;gap:12px;align-items:end;scroll-margin-top:110px}
     .field{display:flex;flex-direction:column;gap:7px;min-width:0;position:relative}.field label{font-size:12px;color:var(--soft);letter-spacing:.08em;text-transform:uppercase}
     .input,.select{width:100%;height:52px;min-height:52px;line-height:52px;padding:0 16px;color:var(--text);background:#0c121b;border:1px solid rgba(244,239,230,.10);border-radius:14px;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
     .input{padding-right:48px}.input::placeholder{color:rgba(244,239,230,.42)}.input:hover,.select:hover{border-color:rgba(212,180,109,.34);background:#0e1621}
@@ -165,17 +165,11 @@
         <input id="searchInput" class="input" type="search" placeholder="ID, 제목, 재료, 연도, 섹션 검색" autocomplete="off" spellcheck="false" />
       </div>
       <div class="field">
-        <label for="sectionSelect" id="labelSection">Section</label>
-        <select id="sectionSelect" class="select" aria-label="섹션 선택"><option value="all">전체 섹션</option></select>
-      </div>
-      <div class="field">
         <label for="sortSelect" id="labelSort">Sort</label>
         <select id="sortSelect" class="select" aria-label="정렬 선택">
-          <option value="relevance" selected>관련도순</option>
-          <option value="section-id-asc">기본순</option>
-          <option value="id-desc">번호 늦은순</option>
+          <option value="section-id-asc" selected>기본순</option>
           <option value="year-desc">최신순</option>
-          <option value="year-asc">오래된순</option>
+          <option value="id-desc">번호 늦은순</option>
         </select>
       </div>
       <div class="control-actions">
@@ -255,7 +249,7 @@
       ];
       const INITIAL_VISIBLE = 12;
       const LOAD_STEP = 24;
-      const SEARCH_DEBOUNCE_MS = 180;
+      const SEARCH_DEBOUNCE_MS = 260;
       const ART_EMAIL = 'dungzakcestlavie@gmail.com';
       const FAST_ORDER = 'section-id-asc';
       const RELEVANCE_ORDER = 'relevance';
@@ -289,7 +283,7 @@
           loadMore:'더 보기',footerNote:'DUNGZAK CESTLAVIE LAB / Archive Pro / KR/EN reinforced search engine',
           untitled:'무제 / 캡션 없음',noInfo:'정보 없음',allSections:'전체 섹션',
           lbMaterial:'재료',lbSize:'크기',lbYear:'연도',lbImage:'이미지',lbZoom:'줌',openImage:'이미지 열기',openZoom:'줌 열기',
-          sortOptions:['관련도순','기본순','번호 늦은순','최신순','오래된순']
+          sortOptions:['기본순','최신순','번호 늦은순']
         },
         en:{
           heroModeLine:'English mode',statDescTotal:'Total works',statDescFiltered:'Current results',statDescSections:'Section count',
@@ -300,7 +294,7 @@
           loadMore:'Load more',footerNote:'DUNGZAK CESTLAVIE LAB / Archive Pro / KR/EN reinforced search engine',
           untitled:'Untitled / No Caption',noInfo:'No information',allSections:'All sections',
           lbMaterial:'Material',lbSize:'Size',lbYear:'Year',lbImage:'Image',lbZoom:'Zoom',openImage:'Open image',openZoom:'Open zoom',
-          sortOptions:['Relevance','Default','Late ID','Newest','Oldest']
+          sortOptions:['Default','Newest','Late ID']
         },
         both:{
           heroModeLine:'KR / EN',statDescTotal:'전체 작품 수 / Total works',statDescFiltered:'현재 검색 결과 / Current results',statDescSections:'섹션 수 / Section count',
@@ -311,11 +305,11 @@
           loadMore:'더 보기 / Load more',footerNote:'DUNGZAK CESTLAVIE LAB / Archive Pro / KR/EN reinforced search engine',
           untitled:'무제 / Untitled',noInfo:'정보 없음 / No information',allSections:'전체 섹션 / All sections',
           lbMaterial:'재료 / Material',lbSize:'크기 / Size',lbYear:'연도 / Year',lbImage:'이미지 / Image',lbZoom:'줌 / Zoom',openImage:'이미지 열기 / Open image',openZoom:'줌 열기 / Open zoom',
-          sortOptions:['관련도순 / Relevance','기본순 / Default','번호 늦은순 / Late ID','최신순 / Newest','오래된순 / Oldest']
+          sortOptions:['기본순 / Default','최신순 / Newest','번호 늦은순 / Late ID']
         }
       };
 
-      const state = { all:[], filtered:[], visibleCount:INITIAL_VISIBLE, query:'', section:'all', sort:RELEVANCE_ORDER, lightboxItem:null, lang:'kr', loadState:'idle', isLoaded:false };
+      const state = { all:[], filtered:[], visibleCount:INITIAL_VISIBLE, query:'', section:'all', sort:FAST_ORDER, lightboxItem:null, lang:'kr', loadState:'idle', isLoaded:false };
       const els = {
         statTotal:document.getElementById('statTotal'),statFiltered:document.getElementById('statFiltered'),statSections:document.getElementById('statSections'),
         statDescTotal:document.getElementById('statDescTotal'),statDescFiltered:document.getElementById('statDescFiltered'),statDescSections:document.getElementById('statDescSections'),
@@ -554,6 +548,22 @@
         const initials = expanded.map(hangulInitials).map(compactSearchToken).filter(Boolean);
         return Array.from(new Set([...normalized, ...compacted, ...initials])).join(' ');
       }
+
+      function prepareSearchIndex(item) {
+        const searchText = buildSearchText(item);
+        item._searchText = searchText;
+        item._searchCompact = compactSearchToken(searchText);
+        item._searchInitials = compactSearchToken(hangulInitials(searchText));
+        item._sectionAliases = getSectionAliases(item.section_id).flatMap(getSearchAliases).map(normalizeSearchToken);
+        return item;
+      }
+      function getItemSearchText(item) { return item._searchText || buildSearchText(item); }
+      function getItemSearchCompact(item) { return item._searchCompact || compactSearchToken(getItemSearchText(item)); }
+      function getItemSearchInitials(item) { return item._searchInitials || compactSearchToken(hangulInitials(getItemSearchText(item))); }
+      function getItemSectionAliases(item) { return item._sectionAliases || getSectionAliases(item.section_id).flatMap(getSearchAliases).map(normalizeSearchToken); }
+      function getActiveSort() {
+        return state.query && state.query.trim().length > 0 ? RELEVANCE_ORDER : state.sort;
+      }
       function getQueryTokens(rawQuery) {
         const q = normalizeSearchToken(rawQuery), compact = compactSearchToken(rawQuery);
         const tokens = q.split(' ').map((v) => v.trim()).filter(Boolean);
@@ -597,9 +607,9 @@
       function matchesSearch(item, rawQuery) {
         const q = normalizeSearchToken(rawQuery), cq = compactSearchToken(rawQuery);
         if (!q && !cq) return true;
-        const year = parseYearNumber(item.year), yearEnd = parseYearEndNumber(item.year), haystack = buildSearchText(item);
-        const hayCompact = compactSearchToken(haystack), hayInitials = compactSearchToken(hangulInitials(haystack));
-        const sectionAliases = getSectionAliases(item.section_id).flatMap(getSearchAliases).map(normalizeSearchToken);
+        const year = parseYearNumber(item.year), yearEnd = parseYearEndNumber(item.year), haystack = getItemSearchText(item);
+        const hayCompact = getItemSearchCompact(item), hayInitials = getItemSearchInitials(item);
+        const sectionAliases = getItemSectionAliases(item);
         if (matchIdQuery(item, rawQuery)) return true;
         if (/^\d{4}$/.test(cq) && (String(year) === cq || String(yearEnd) === cq)) return true;
         if (q && sectionAliases.includes(q)) return true;
@@ -625,7 +635,7 @@
         const query = safeText(rawQuery), q = normalizeSearchToken(query), cq = compactSearchToken(query);
         if (!q && !cq) return 0;
         const titleKr = safeText(item.title_kr), titleEn = safeText(item.title_en), title = getTitle(item), id = safeText(item.id);
-        const section = getSectionTextById(item.section_id), material = getMaterial(item), size = getSize(item), year = getYear(item), status = getStatusLabel(item.status), haystack = buildSearchText(item);
+        const section = getSectionTextById(item.section_id), material = getMaterial(item), size = getSize(item), year = getYear(item), status = getStatusLabel(item.status), haystack = getItemSearchText(item);
         const tokens = getQueryTokens(query);
         let score = 0;
         if (compactSearchToken(id) === cq) score += 140;
@@ -676,7 +686,7 @@
 
       function rebuildStaticTexts() {
         els.heroModeLine.textContent = t('heroModeLine'); els.statDescTotal.textContent = t('statDescTotal'); els.statDescFiltered.textContent = t('statDescFiltered'); els.statDescSections.textContent = t('statDescSections');
-        els.labelSearch.textContent = t('labelSearch'); els.labelSection.textContent = t('labelSection'); els.labelSort.textContent = t('labelSort'); els.searchInput.placeholder = t('placeholderSearch');
+        els.labelSearch.textContent = t('labelSearch'); if (els.labelSection) els.labelSection.textContent = t('labelSection'); els.labelSort.textContent = t('labelSort'); els.searchInput.placeholder = t('placeholderSearch');
         els.resetBtn.textContent = t('resetBtn'); els.focusSearchBtn.textContent = t('focusSearchBtn'); els.emptyState.textContent = t('emptyState'); els.loadMoreBtn.textContent = t('loadMore'); els.footerNote.textContent = t('footerNote');
         els.lbKeyMaterial.textContent = t('lbMaterial'); els.lbKeySize.textContent = t('lbSize'); els.lbKeyYear.textContent = t('lbYear'); els.lbKeyImage.textContent = t('lbImage'); els.lbKeyZoom.textContent = t('lbZoom');
         els.lbOpenImage.textContent = t('openImage'); els.lbOpenZoom.textContent = t('openZoom'); els.loadingScreen.textContent = state.loadState === 'failed' ? t('loadingScreenError') : t('loadingScreen');
@@ -685,17 +695,8 @@
         syncDataLanguage(); setStatusByState();
       }
       function populateSections() {
-        const prev = state.section;
-        els.sectionSelect.innerHTML = '';
-        const allOpt = document.createElement('option'); allOpt.value = 'all'; allOpt.textContent = t('allSections'); els.sectionSelect.appendChild(allOpt);
-        Object.keys(SECTION_MAP).map(Number).sort((a,b) => a - b).forEach((sectionId) => {
-          if (!state.all.some((item) => item.section_id === sectionId)) return;
-          const opt = document.createElement('option'); opt.value = String(sectionId); opt.textContent = getSectionTextById(sectionId); els.sectionSelect.appendChild(opt);
-        });
-        const values = Array.from(els.sectionSelect.options).map((o) => o.value);
-        state.section = values.includes(prev) ? prev : 'all';
-        els.sectionSelect.value = state.section;
-        els.statSections.textContent = numberFormat.format(els.sectionSelect.options.length - 1);
+        const activeSections = new Set(state.all.map((item) => Number(item.section_id)).filter((n) => Number.isFinite(n) && SECTION_MAP[n]));
+        els.statSections.textContent = numberFormat.format(activeSections.size);
         updateSectionButtonState();
       }
       function updateSectionButtonState(){ els.sectionButtons.forEach((btn) => btn.classList.toggle('active', state.section !== 'all' && btn.dataset.section === String(state.section))); }
@@ -703,7 +704,7 @@
         const krParts = [], enParts = [];
         if (state.section !== 'all') { krParts.push(`섹션 ${getSectionPlainById(Number(state.section), 'kr')}`); enParts.push(`Section ${getSectionPlainById(Number(state.section), 'en')}`); }
         if (state.query) { krParts.push(`검색 "${state.query}"`); enParts.push(`Search "${state.query}"`); }
-        const sortLabel = els.sortSelect?.selectedOptions?.[0]?.textContent || '';
+        const sortLabel = getActiveSort() === RELEVANCE_ORDER ? (state.lang === 'en' ? 'Auto relevance' : state.lang === 'both' ? '자동 관련도 / Auto relevance' : '자동 관련도') : (els.sortSelect?.selectedOptions?.[0]?.textContent || '');
         if (!krParts.length && !enParts.length) {
           els.activeFilterText.dataset.kr = sortLabel ? `정렬: ${sortLabel}` : '필터 없음';
           els.activeFilterText.dataset.en = sortLabel ? `Sort: ${sortLabel}` : 'No filters';
@@ -839,18 +840,17 @@
 
       function applyFilters(resetVisible = true) {
         state.query = els.searchInput ? els.searchInput.value : state.query;
-        state.section = els.sectionSelect ? els.sectionSelect.value : state.section;
         state.sort = els.sortSelect ? els.sortSelect.value : state.sort;
-        state.filtered = state.all
-          .filter((item) => state.section === 'all' || item.section_id === Number(state.section))
+        const activeSort = getActiveSort();
+        const source = state.section === 'all' ? state.all : state.all.filter((item) => item.section_id === Number(state.section));
+        state.filtered = source
           .filter((item) => matchesSearch(item, state.query))
-          .sort((a,b) => compareItems(a,b,state.sort));
+          .sort((a,b) => compareItems(a,b,activeSort));
         if (resetVisible) state.visibleCount = INITIAL_VISIBLE;
         updateSectionButtonState(); render();
       }
       const debouncedSearch = debounce(() => {
         state.query = els.searchInput.value;
-        if (state.query && els.sortSelect.value === FAST_ORDER) { state.sort = RELEVANCE_ORDER; els.sortSelect.value = RELEVANCE_ORDER; }
         applyFilters(true);
       }, SEARCH_DEBOUNCE_MS);
       function setLanguage(lang) {
@@ -859,8 +859,8 @@
         rebuildStaticTexts(); populateSections(); applyFilters(true); if (state.lightboxItem) openLightbox(state.lightboxItem);
       }
       function goArchiveHome() {
-        state.query = ''; state.section = 'all'; state.sort = RELEVANCE_ORDER; state.visibleCount = INITIAL_VISIBLE;
-        els.searchInput.value = ''; els.sectionSelect.value = 'all'; els.sortSelect.value = RELEVANCE_ORDER;
+        state.query = ''; state.section = 'all'; state.sort = FAST_ORDER; state.visibleCount = INITIAL_VISIBLE;
+        els.searchInput.value = ''; if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
         applyFilters(true); window.scrollTo({ top:0, behavior:'smooth' });
       }
       function parseWorksPayload(text) {
@@ -896,7 +896,7 @@
         state.loadState = 'loading'; rebuildStaticTexts(); els.sourcePill.textContent = `Source: ${DATA_URLS[0]}`;
         try {
           const result = await fetchWorksFromCandidates();
-          state.all = result.arr.map(normalizeItem); state.isLoaded = true; state.loadState = 'loaded';
+          state.all = result.arr.map(normalizeItem).map(prepareSearchIndex); state.isLoaded = true; state.loadState = 'loaded';
           els.sourcePill.textContent = `Source: ${result.url}`;
           rebuildStaticTexts(); populateSections(); applyFilters(true);
         } catch (error) {
@@ -904,14 +904,13 @@
         }
       }
       function resetFilters() {
-        state.query = ''; state.section = 'all'; state.sort = RELEVANCE_ORDER; state.visibleCount = INITIAL_VISIBLE;
-        els.searchInput.value = ''; els.sectionSelect.value = 'all'; els.sortSelect.value = RELEVANCE_ORDER;
+        state.query = ''; state.section = 'all'; state.sort = FAST_ORDER; state.visibleCount = INITIAL_VISIBLE;
+        els.searchInput.value = ''; if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
         applyFilters(true);
       }
       function scrollToSearch(){ if (els.searchArea) els.searchArea.scrollIntoView({ behavior:'smooth', block:'start' }); }
       function bindEvents() {
         els.searchInput.addEventListener('input', debouncedSearch);
-        els.sectionSelect.addEventListener('change', () => { state.section = els.sectionSelect.value; state.query = ''; state.sort = RELEVANCE_ORDER; els.searchInput.value = ''; els.sortSelect.value = RELEVANCE_ORDER; applyFilters(true); });
         els.sortSelect.addEventListener('change', () => { state.sort = els.sortSelect.value; applyFilters(true); });
         els.resetBtn.addEventListener('click', resetFilters);
         els.focusSearchBtn.addEventListener('click', () => { els.searchInput.focus(); els.searchInput.select(); });
@@ -980,8 +979,8 @@
         if (els.entryBtn) els.entryBtn.addEventListener('click', scrollToSearch);
         els.sectionButtons.forEach((btn) => {
           btn.addEventListener('click', () => {
-            state.section = btn.dataset.section || 'all'; state.query = ''; state.sort = RELEVANCE_ORDER; state.visibleCount = INITIAL_VISIBLE;
-            els.searchInput.value = ''; els.sectionSelect.value = state.section; els.sortSelect.value = RELEVANCE_ORDER;
+            state.section = btn.dataset.section || 'all'; state.query = ''; state.sort = FAST_ORDER; state.visibleCount = INITIAL_VISIBLE;
+            els.searchInput.value = ''; if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
             applyFilters(true); scrollToSearch();
           });
         });

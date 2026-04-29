@@ -28,7 +28,7 @@
 
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:var(--bg);color:var(--text)}
-    html{scroll-behavior:smooth}
+    html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
     body{
       font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Segoe UI",Roboto,sans-serif;
       min-height:100vh;
@@ -1290,6 +1290,40 @@
   <script>
     (() => {
       'use strict';
+
+
+      /* PAGE ZOOM LOCK — keep whole Archive Pro viewport fixed.
+         Lightbox image zoom still works through the existing custom viewerScale engine. */
+      const preventBrowserZoom = (e) => {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      };
+
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach((type) => {
+        document.addEventListener(type, preventBrowserZoom, { passive: false });
+        window.addEventListener(type, preventBrowserZoom, { passive: false });
+      });
+
+      document.addEventListener('touchmove', (e) => {
+        if (e.touches && e.touches.length > 1 && !document.body.classList.contains('viewer-open')) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      document.addEventListener('dblclick', (e) => {
+        const lightbox = document.getElementById('lightbox');
+        if (!lightbox || !lightbox.contains(e.target)) e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || e.metaKey) e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('keydown', (e) => {
+        const key = String(e.key || '').toLowerCase();
+        if ((e.ctrlKey || e.metaKey) && (key === '+' || key === '-' || key === '=' || key === '0')) {
+          e.preventDefault();
+        }
+      }, { passive: false });
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
       const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260429-search-boost-final';
@@ -2685,6 +2719,7 @@
 
         els.lightbox.addEventListener('touchstart', (e) => {
           if (!isViewerOpen()) return;
+          e.preventDefault();
 
           if (e.touches.length === 2) {
             viewerIsZooming = true;

@@ -659,7 +659,8 @@
       -webkit-backdrop-filter:blur(10px);
     }
 
-    .lightbox.open{display:block}
+    .lightbox.open,
+    .lightbox.active{display:block}
 
     .lightbox-close{
       position:absolute;
@@ -1417,7 +1418,7 @@
   </div>
 
   <div id="lightbox" class="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="작품 확대 보기">
-    <button id="lightboxClose" class="lightbox-close" type="button" aria-label="닫기">×</button>
+    <button id="viewerCloseBtn" class="lightbox-close viewer-close" type="button" aria-label="닫기">×</button>
 
     <div class="lightbox-inner">
       <div class="lightbox-stage">
@@ -1763,7 +1764,7 @@
         loadMoreBtn: document.getElementById('loadMoreBtn'),
         footerNote: document.getElementById('footerNote'),
         lightbox: document.getElementById('lightbox'),
-        lightboxClose: document.getElementById('lightboxClose'),
+        lightboxClose: document.getElementById('viewerCloseBtn') || document.getElementById('lightboxClose'),
         lightboxImage: document.getElementById('lightboxImage'),
         lightboxStage: document.querySelector('.lightbox-stage'),
         lbId: document.getElementById('lbId'),
@@ -1790,6 +1791,8 @@
 
       const numberFormat = new Intl.NumberFormat('ko-KR');
       let searchTimer = null;
+      let archiveScrollY = 0;
+      let closeClickBlockUntil = 0;
 
       let viewerScale = 1;
       let viewerX = 0;
@@ -2630,6 +2633,7 @@
       }
 
       function openLightbox(item) {
+        archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
         state.lightboxItem = item;
         resetViewerTransform();
 
@@ -2662,6 +2666,7 @@
         els.lightboxImage.src = displayUrl;
 
         els.lightbox.classList.add('open');
+        els.lightbox.classList.add('active');
         els.lightbox.style.display = '';
         els.lightbox.setAttribute('aria-hidden', 'false');
         document.documentElement.classList.add('viewer-open');
@@ -2669,11 +2674,46 @@
         document.body.style.overflow = 'hidden';
       }
 
+      function armCloseNavigationShield() {
+        closeClickBlockUntil = Date.now() + 1400;
+
+        let shield = document.getElementById('viewerCloseShield');
+        if (!shield) {
+          shield = document.createElement('div');
+          shield.id = 'viewerCloseShield';
+          shield.setAttribute('aria-hidden', 'true');
+          shield.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:transparent;pointer-events:auto;touch-action:none;';
+          const kill = function(ev) {
+            if (!ev) return;
+            if (typeof ev.preventDefault === 'function') ev.preventDefault();
+            if (typeof ev.stopPropagation === 'function') ev.stopPropagation();
+            if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+          };
+          ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach(function(type) {
+            shield.addEventListener(type, kill, { capture:true, passive:false });
+          });
+          document.body.appendChild(shield);
+        }
+
+        window.setTimeout(function() {
+          const currentShield = document.getElementById('viewerCloseShield');
+          if (currentShield && currentShield.parentNode) currentShield.parentNode.removeChild(currentShield);
+        }, 700);
+      }
+
+      function restoreArchiveScroll() {
+        requestAnimationFrame(function() {
+          window.scrollTo(0, archiveScrollY || 0);
+        });
+      }
+
       function closeLightbox() {
+        armCloseNavigationShield();
         state.lightboxItem = null;
         resetViewerTransform();
         if (els.lightbox) {
           els.lightbox.classList.remove('open');
+          els.lightbox.classList.remove('active');
           els.lightbox.setAttribute('aria-hidden', 'true');
           els.lightbox.style.display = 'none';
         }
@@ -2681,24 +2721,28 @@
         document.documentElement.classList.remove('viewer-open');
         document.body.classList.remove('viewer-open');
         document.body.style.overflow = '';
+        restoreArchiveScroll();
       }
 
       function closeViewer() {
+        armCloseNavigationShield();
         state.lightboxItem = null;
         resetViewerTransform();
 
-        const viewer = document.querySelector(".viewer, .lightbox");
+        const viewer = document.querySelector('.viewer, .lightbox');
         if (viewer) {
-          viewer.classList.remove("open");
-          viewer.setAttribute("aria-hidden", "true");
-          viewer.style.display = "none";
+          viewer.classList.remove('open');
+          viewer.classList.remove('active');
+          viewer.setAttribute('aria-hidden', 'true');
+          viewer.style.display = 'none';
         }
 
-        if (els.lightboxImage) els.lightboxImage.removeAttribute("src");
+        if (els.lightboxImage) els.lightboxImage.removeAttribute('src');
 
-        document.documentElement.classList.remove("viewer-open");
-        document.body.classList.remove("viewer-open");
-        document.body.style.overflow = "";
+        document.documentElement.classList.remove('viewer-open');
+        document.body.classList.remove('viewer-open');
+        document.body.style.overflow = '';
+        restoreArchiveScroll();
       }
 
       window.closeViewer = closeViewer;
@@ -2885,12 +2929,9 @@
           render();
         });
 
-        /* CLOSE X FINAL FIX — do not close on pointerdown.
-           Closing on pointerdown hides the overlay too early; the following click can hit
-           the underlying LAB / home link. We only consume pointerdown, then close on
-           click/touchend while blocking all navigation and bubbling. */
-        let closeClickBlockUntil = 0;
-
+        /* MOBILE X CLOSE FINAL FIX — close only the viewer, never navigate.
+           Capture the X event first, block bubbling/default, arm a temporary shield
+           against Safari ghost taps, then restore the exact archive scroll position. */
         const getCloseButton = (e) => {
           return e.target && e.target.closest
             ? e.target.closest('#viewerCloseBtn, #lightboxClose, .viewer-close, .lightbox-close, .close-viewer')
@@ -2904,36 +2945,39 @@
           if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
         };
 
-        const consumeCloseStart = (e) => {
-          const closeBtn = getCloseButton(e);
-          if (!closeBtn) return;
-          blockEvent(e);
+        const blockGhostNavigation = (e) => {
+          if (Date.now() <= closeClickBlockUntil) blockEvent(e);
         };
 
-        const forceCloseViewer = (e) => {
+        const closeFromX = (e) => {
           const closeBtn = getCloseButton(e);
           if (!closeBtn) return;
           blockEvent(e);
-          closeClickBlockUntil = Date.now() + 900;
           closeViewer();
         };
 
-        const blockAfterCloseClick = (e) => {
-          if (Date.now() > closeClickBlockUntil) return;
+        const consumeCloseTouch = (e) => {
+          const closeBtn = getCloseButton(e);
+          if (!closeBtn) return;
           blockEvent(e);
         };
 
-        document.addEventListener('pointerdown', consumeCloseStart, true);
-        document.addEventListener('touchstart', consumeCloseStart, { capture:true, passive:false });
-        document.addEventListener('touchend', forceCloseViewer, { capture:true, passive:false });
-        document.addEventListener('click', forceCloseViewer, true);
-        document.addEventListener('click', blockAfterCloseClick, true);
+        document.addEventListener('pointerdown', consumeCloseTouch, true);
+        document.addEventListener('touchstart', consumeCloseTouch, { capture:true, passive:false });
+        document.addEventListener('pointerup', consumeCloseTouch, true);
+        document.addEventListener('touchend', closeFromX, { capture:true, passive:false });
+        document.addEventListener('click', closeFromX, true);
+
+        ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach((type) => {
+          document.addEventListener(type, blockGhostNavigation, { capture:true, passive:false });
+        });
 
         if (els.lightboxClose) {
-          els.lightboxClose.addEventListener('pointerdown', consumeCloseStart, { passive:false });
-          els.lightboxClose.addEventListener('touchstart', consumeCloseStart, { passive:false });
-          els.lightboxClose.addEventListener('touchend', forceCloseViewer, { passive:false });
-          els.lightboxClose.addEventListener('click', forceCloseViewer, { passive:false });
+          els.lightboxClose.addEventListener('pointerdown', consumeCloseTouch, { passive:false });
+          els.lightboxClose.addEventListener('touchstart', consumeCloseTouch, { passive:false });
+          els.lightboxClose.addEventListener('pointerup', consumeCloseTouch, { passive:false });
+          els.lightboxClose.addEventListener('touchend', closeFromX, { passive:false });
+          els.lightboxClose.addEventListener('click', closeFromX, { passive:false });
         }
 
         els.lightbox.addEventListener('click', (e) => {
@@ -3076,6 +3120,10 @@
         if (els.archiveHomeLink) {
           els.archiveHomeLink.addEventListener('click', (e) => {
             e.preventDefault();
+            if (Date.now() <= closeClickBlockUntil) {
+              blockEvent(e);
+              return;
+            }
             goArchiveHome();
           });
         }

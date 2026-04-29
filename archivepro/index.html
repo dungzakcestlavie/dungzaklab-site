@@ -2885,27 +2885,55 @@
           render();
         });
 
-        const forceCloseViewer = (e) => {
-          const closeBtn = e.target && e.target.closest
+        /* CLOSE X FINAL FIX — do not close on pointerdown.
+           Closing on pointerdown hides the overlay too early; the following click can hit
+           the underlying LAB / home link. We only consume pointerdown, then close on
+           click/touchend while blocking all navigation and bubbling. */
+        let closeClickBlockUntil = 0;
+
+        const getCloseButton = (e) => {
+          return e.target && e.target.closest
             ? e.target.closest('#viewerCloseBtn, #lightboxClose, .viewer-close, .lightbox-close, .close-viewer')
             : null;
+        };
 
+        const blockEvent = (e) => {
+          if (!e) return;
+          if (typeof e.preventDefault === 'function') e.preventDefault();
+          if (typeof e.stopPropagation === 'function') e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+        };
+
+        const consumeCloseStart = (e) => {
+          const closeBtn = getCloseButton(e);
           if (!closeBtn) return;
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+          blockEvent(e);
+        };
+
+        const forceCloseViewer = (e) => {
+          const closeBtn = getCloseButton(e);
+          if (!closeBtn) return;
+          blockEvent(e);
+          closeClickBlockUntil = Date.now() + 900;
           closeViewer();
         };
 
-        document.addEventListener('pointerdown', forceCloseViewer, true);
+        const blockAfterCloseClick = (e) => {
+          if (Date.now() > closeClickBlockUntil) return;
+          blockEvent(e);
+        };
+
+        document.addEventListener('pointerdown', consumeCloseStart, true);
+        document.addEventListener('touchstart', consumeCloseStart, { capture:true, passive:false });
+        document.addEventListener('touchend', forceCloseViewer, { capture:true, passive:false });
         document.addEventListener('click', forceCloseViewer, true);
+        document.addEventListener('click', blockAfterCloseClick, true);
+
         if (els.lightboxClose) {
-          els.lightboxClose.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
-            closeViewer();
-          }, { passive:false });
+          els.lightboxClose.addEventListener('pointerdown', consumeCloseStart, { passive:false });
+          els.lightboxClose.addEventListener('touchstart', consumeCloseStart, { passive:false });
+          els.lightboxClose.addEventListener('touchend', forceCloseViewer, { passive:false });
+          els.lightboxClose.addEventListener('click', forceCloseViewer, { passive:false });
         }
 
         els.lightbox.addEventListener('click', (e) => {

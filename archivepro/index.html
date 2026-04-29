@@ -1253,6 +1253,12 @@
       pointer-events:auto;
     }
 
+
+    /* SEARCH SPEED PATCH — layout/paint containment only, no design change */
+    #grid{ contain:layout paint style; }
+    .card{ content-visibility:auto; contain-intrinsic-size:360px 520px; will-change:auto; }
+    .thumb{ will-change:auto; }
+
   </style>
 </head>
 <body>
@@ -1494,7 +1500,7 @@
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
       const LOAD_STEP = 24;
-      const SEARCH_DEBOUNCE_MS = 260;
+      const SEARCH_DEBOUNCE_MS = 220;
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
 
@@ -2250,6 +2256,25 @@
         return aliases;
       }
 
+
+      /* FAST SEARCH CACHE — created once when works.json loads */
+      function buildFastSearchText(item) {
+        return [
+          item.id, item.title_kr, item.title_en, item.material_kr, item.material_en,
+          item.size_kr, item.size_en, item.year, item.section_kr, item.section_en,
+          getSectionPlainById(item.section_id, 'kr'), getSectionPlainById(item.section_id, 'en'),
+          getSectionAliases(item.section_id).join(' ')
+        ].map(safeText).join(' ').toLowerCase().replace(/\s+/g, '');
+      }
+
+      function prepareFastSearchCache(item) {
+        buildSearchText(item);
+        item._fastSearch = buildFastSearchText(item);
+        item._yearEndNumber = parseYearEndNumber(item.year) || 0;
+        item._yearStartNumber = parseYearNumber(item.year) || 0;
+        return item;
+      }
+
       function getQueryTokens(rawQuery) {
         const q = normalizeSearchToken(rawQuery);
         const compact = compactSearchToken(rawQuery);
@@ -2281,38 +2306,22 @@
       }
 
       function matchesSearch(item, rawQuery) {
-        const q = normalizeSearchToken(rawQuery);
-        const cq = compactSearchToken(rawQuery);
-        if (!q && !cq) return true;
+        const compact = compactSearchToken(rawQuery);
+        if (!compact) return true;
 
-        const year = parseYearNumber(item.year);
-        const yearEnd = parseYearEndNumber(item.year);
-        const haystack = buildSearchText(item);
-        const hayCompact = getItemSearchCompact(item, haystack);
-        const hayInitials = getItemSearchInitials(item, haystack);
-        const sectionAliases = getItemSectionAliases(item);
+        /* One-character live search causes broad matches and heavy UI churn.
+           Section buttons handle single-section navigation; text search begins at 2 chars. */
+        if (compact.length < 2) return true;
 
-        if (matchIdQuery(item, rawQuery)) return true;
-        if (/^\d{4}$/.test(cq) && (String(year) === cq || String(yearEnd) === cq)) return true;
-        if (q && sectionAliases.includes(q)) return true;
-        if (q && haystack.includes(q)) return true;
-        if (cq && hayCompact.includes(cq)) return true;
-        if (cq && hayInitials.includes(cq)) return true;
+        if (item._fastSearch && item._fastSearch.includes(compact)) return true;
+        if (item._searchCompact && item._searchCompact.includes(compact)) return true;
+        if (item._searchInitials && item._searchInitials.includes(compact)) return true;
 
-        const tokens = getQueryTokens(rawQuery);
-        if (!tokens.length) return true;
+        if (/^\d{4}$/.test(compact)) {
+          return String(item._yearStartNumber || '') === compact || String(item._yearEndNumber || '') === compact;
+        }
 
-        return tokens.every((token) => {
-          const nt = normalizeSearchToken(token);
-          const ct = compactSearchToken(token);
-          if (!nt && !ct) return true;
-          if (/^\d{4}$/.test(ct) && (String(year) === ct || String(yearEnd) === ct)) return true;
-          if (nt && sectionAliases.includes(nt)) return true;
-          if (nt && haystack.includes(nt)) return true;
-          if (ct && hayCompact.includes(ct)) return true;
-          if (ct && hayInitials.includes(ct)) return true;
-          return false;
-        });
+        return false;
       }
 
       function compareIdAsc(a, b) {
@@ -2646,15 +2655,10 @@
       function render() {
         els.loadingScreen.style.display = 'none';
         els.resultsMeta.style.display = 'flex';
-
-        if (lazyImageObserver) {
-          els.grid.querySelectorAll('img.thumb[data-src]').forEach((img) => lazyImageObserver.unobserve(img));
-        }
-
-        els.grid.textContent = '';
         els.emptyState.hidden = state.filtered.length !== 0;
 
         if (!state.filtered.length) {
+          els.grid.replaceChildren();
           els.loadWrap.hidden = true;
           updateStats();
           return;
@@ -2663,11 +2667,11 @@
         const visible = state.filtered.slice(0, state.visibleCount);
         const frag = document.createDocumentFragment();
 
-        visible.forEach((item) => {
-          frag.appendChild(createCard(item));
-        });
+        for (let i = 0; i < visible.length; i += 1) {
+          frag.appendChild(createCard(visible[i]));
+        }
 
-        els.grid.appendChild(frag);
+        els.grid.replaceChildren(frag);
         syncDataLanguage(els.grid);
         observeLazyImages(els.grid);
 
@@ -2905,7 +2909,7 @@
           const result = await fetchWorksFromCandidates();
           const arr = result.arr;
 
-          state.all = arr.map(normalizeItem);
+          state.all = arr.map(normalizeItem).map(prepareFastSearchCache);
           state.isLoaded = true;
           state.loadState = 'loaded';
 
@@ -3199,31 +3203,6 @@
       loadData();
     })();
   
-/* SEARCH PATCH */
-(function(){
-  function buildSearch(i){
-    return ((i.id||'')+' '+(i.title_kr||'')+' '+(i.title_en||'')+' '+(i.material_kr||'')+' '+(i.material_en||'')+' '+(i.year||''))
-    .toLowerCase().replace(/\s+/g,'');
-  }
-  if(window.state && Array.isArray(state.all)){
-    state.all = state.all.map(function(i){
-      i._search = buildSearch(i);
-      return i;
-    });
-  }
-  var input = document.getElementById('searchInput');
-  if(!input) return;
-  var raf=null;
-  input.addEventListener('input', function(e){
-    var q = e.target.value.toLowerCase().replace(/\s+/g,'');
-    state.query = q;
-    if(raf) cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(function(){
-      if(typeof applyFilters === 'function') applyFilters();
-    });
-  });
-})();
-
 </script>
 </body>
 </html>

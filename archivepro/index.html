@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f14" />
   <meta name="color-scheme" content="dark" />
   <meta name="format-detection" content="telephone=no,address=no,email=no" />
@@ -1021,6 +1021,79 @@
       .section-buttons{display:grid;grid-template-columns:1fr 1fr}
       .section-btn{width:100%}
     }
+
+    /* ARCHIVE PRO VIEWPORT LOCK + LIGHTBOX ONLY ZOOM */
+    html,
+    body{
+      width:100%;
+      max-width:100%;
+      overflow-x:hidden;
+      touch-action:pan-y;
+      overscroll-behavior-x:none;
+    }
+
+    body.viewer-open{
+      overflow:hidden !important;
+      touch-action:none;
+      overscroll-behavior:none;
+    }
+
+    .archive-root,
+    .app,
+    .site-shell,
+    main,
+    .grid,
+    .work-grid,
+    .cards,
+    .card{
+      max-width:100%;
+      overflow-x:hidden;
+    }
+
+    .card,
+    .work-card,
+    .card img,
+    .work-card img,
+    button,
+    a{
+      touch-action:manipulation;
+    }
+
+    .viewer,
+    .lightbox,
+    #viewer,
+    #lightbox{
+      touch-action:none;
+      overscroll-behavior:none;
+    }
+
+    .viewer img,
+    .lightbox img,
+    #viewer img,
+    #lightbox img{
+      touch-action:none;
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+
+    .lightbox-stage{
+      overflow:hidden;
+      touch-action:none;
+      cursor:default;
+    }
+
+    .lightbox-stage img{
+      will-change:transform;
+      transform-origin:center center;
+      transform:translate3d(0,0,0) scale(1);
+      transition:transform .05s linear;
+      user-select:none;
+      -webkit-user-drag:none;
+      touch-action:none;
+    }
+
+    body.viewer-open .lightbox-stage.is-zoomed{ cursor:grab; }
+    body.viewer-open .lightbox-stage.is-zoomed.is-dragging{ cursor:grabbing; }
   </style>
 </head>
 <body>
@@ -1500,6 +1573,7 @@
         lightbox: document.getElementById('lightbox'),
         lightboxClose: document.getElementById('lightboxClose'),
         lightboxImage: document.getElementById('lightboxImage'),
+        lightboxStage: document.querySelector('.lightbox-stage'),
         lbId: document.getElementById('lbId'),
         lbTitle: document.getElementById('lbTitle'),
         lbSection: document.getElementById('lbSection'),
@@ -1524,6 +1598,61 @@
 
       const numberFormat = new Intl.NumberFormat('ko-KR');
       let searchTimer = null;
+
+      let viewerScale = 1;
+      let viewerX = 0;
+      let viewerY = 0;
+      let viewerStartX = 0;
+      let viewerStartY = 0;
+      let viewerLastX = 0;
+      let viewerLastY = 0;
+      let viewerStartTime = 0;
+      let viewerIsDragging = false;
+      let viewerIsZooming = false;
+      let viewerInitialDistance = 0;
+      let viewerLastTap = 0;
+      let viewerMouseDragging = false;
+
+      function isViewerOpen() {
+        return els.lightbox && els.lightbox.classList.contains('open') && document.body.classList.contains('viewer-open');
+      }
+
+      function applyViewerTransform() {
+        if (!els.lightboxImage) return;
+        els.lightboxImage.style.transform = `translate3d(${viewerX}px, ${viewerY}px, 0) scale(${viewerScale})`;
+        if (els.lightboxStage) els.lightboxStage.classList.toggle('is-zoomed', viewerScale > 1);
+      }
+
+      function resetViewerTransform() {
+        viewerScale = 1;
+        viewerX = 0;
+        viewerY = 0;
+        viewerIsDragging = false;
+        viewerIsZooming = false;
+        viewerMouseDragging = false;
+        if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging', 'is-zoomed');
+        applyViewerTransform();
+      }
+
+      function getViewerDistance(t1, t2) {
+        return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      }
+
+      function getCurrentViewerIndex() {
+        if (!state.lightboxItem || !state.filtered.length) return -1;
+        return state.filtered.findIndex((item) => item === state.lightboxItem || item.id === state.lightboxItem.id);
+      }
+
+      function openViewerByOffset(offset) {
+        if (!isViewerOpen() || !state.filtered.length) return;
+        const current = getCurrentViewerIndex();
+        if (current < 0) return;
+        const nextIndex = (current + offset + state.filtered.length) % state.filtered.length;
+        openLightbox(state.filtered[nextIndex]);
+      }
+
+      function nextViewer() { openViewerByOffset(1); }
+      function prevViewer() { openViewerByOffset(-1); }
 
       const lazyImageObserver = 'IntersectionObserver' in window
         ? new IntersectionObserver((entries, observer) => {
@@ -2310,6 +2439,7 @@
 
       function openLightbox(item) {
         state.lightboxItem = item;
+        resetViewerTransform();
 
         const isOrigin = Number(item.section_id) === 0;
         const title = isOrigin ? getOriginTitle() : (getTitle(item) || t('untitled'));
@@ -2341,15 +2471,18 @@
 
         els.lightbox.classList.add('open');
         els.lightbox.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('viewer-open');
         document.body.style.overflow = 'hidden';
       }
 
       function closeLightbox() {
         state.lightboxItem = null;
+        resetViewerTransform();
         els.lightbox.classList.remove('open');
         els.lightbox.setAttribute('aria-hidden', 'true');
         els.lightboxImage.removeAttribute('src');
         els.lightboxImage.onerror = null;
+        document.body.classList.remove('viewer-open');
         document.body.style.overflow = '';
       }
 
@@ -2541,8 +2674,132 @@
           if (e.target === els.lightbox) closeLightbox();
         });
 
+        els.lightbox.addEventListener('dblclick', (e) => {
+          if (!isViewerOpen()) return;
+          e.preventDefault();
+          viewerScale = viewerScale > 1 ? 1 : 2;
+          viewerX = 0;
+          viewerY = 0;
+          applyViewerTransform();
+        });
+
+        els.lightbox.addEventListener('touchstart', (e) => {
+          if (!isViewerOpen()) return;
+
+          if (e.touches.length === 2) {
+            viewerIsZooming = true;
+            viewerIsDragging = false;
+            viewerInitialDistance = getViewerDistance(e.touches[0], e.touches[1]);
+            return;
+          }
+
+          if (e.touches.length !== 1) return;
+          const touch = e.touches[0];
+          viewerStartX = touch.clientX;
+          viewerStartY = touch.clientY;
+          viewerLastX = touch.clientX;
+          viewerLastY = touch.clientY;
+          viewerStartTime = Date.now();
+          viewerIsDragging = true;
+          if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
+        }, { passive:false });
+
+        els.lightbox.addEventListener('touchmove', (e) => {
+          if (!isViewerOpen()) return;
+          e.preventDefault();
+
+          if (viewerIsZooming && e.touches.length === 2) {
+            const newDistance = getViewerDistance(e.touches[0], e.touches[1]);
+            if (!viewerInitialDistance) viewerInitialDistance = newDistance;
+            const delta = newDistance / viewerInitialDistance;
+            viewerScale = Math.min(Math.max(1, viewerScale * delta), 4);
+            viewerInitialDistance = newDistance;
+            if (viewerScale === 1) { viewerX = 0; viewerY = 0; }
+            applyViewerTransform();
+            return;
+          }
+
+          if (!viewerIsDragging || e.touches.length !== 1) return;
+
+          const touch = e.touches[0];
+          const dx = touch.clientX - viewerLastX;
+          const dy = touch.clientY - viewerLastY;
+
+          if (viewerScale > 1) {
+            viewerX += dx;
+            viewerY += dy;
+            applyViewerTransform();
+          }
+
+          viewerLastX = touch.clientX;
+          viewerLastY = touch.clientY;
+        }, { passive:false });
+
+        els.lightbox.addEventListener('touchend', (e) => {
+          if (!isViewerOpen()) return;
+
+          if (viewerIsZooming) {
+            if (e.touches.length < 2) viewerIsZooming = false;
+            return;
+          }
+
+          const changed = e.changedTouches && e.changedTouches[0];
+          const endX = changed ? changed.clientX : viewerLastX;
+          const endY = changed ? changed.clientY : viewerLastY;
+          const totalDx = endX - viewerStartX;
+          const totalDy = endY - viewerStartY;
+          const elapsed = Date.now() - viewerStartTime;
+
+          if (viewerScale === 1 && Math.abs(totalDx) > 60 && Math.abs(totalDx) > Math.abs(totalDy) * 1.25) {
+            if (totalDx > 0) prevViewer();
+            else nextViewer();
+          }
+
+          const now = Date.now();
+          if (Math.abs(totalDx) < 12 && Math.abs(totalDy) < 12 && elapsed < 320 && now - viewerLastTap < 300) {
+            viewerScale = viewerScale > 1 ? 1 : 2;
+            viewerX = 0;
+            viewerY = 0;
+            applyViewerTransform();
+            viewerLastTap = 0;
+          } else {
+            viewerLastTap = now;
+          }
+
+          viewerIsDragging = false;
+          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
+        }, { passive:false });
+
+        els.lightbox.addEventListener('mousedown', (e) => {
+          if (!isViewerOpen() || viewerScale <= 1 || e.button !== 0) return;
+          e.preventDefault();
+          viewerMouseDragging = true;
+          viewerLastX = e.clientX;
+          viewerLastY = e.clientY;
+          if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isViewerOpen() || !viewerMouseDragging || viewerScale <= 1) return;
+          const dx = e.clientX - viewerLastX;
+          const dy = e.clientY - viewerLastY;
+          viewerX += dx;
+          viewerY += dy;
+          viewerLastX = e.clientX;
+          viewerLastY = e.clientY;
+          applyViewerTransform();
+        });
+
+        document.addEventListener('mouseup', () => {
+          viewerMouseDragging = false;
+          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
+        });
+
         document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && els.lightbox.classList.contains('open')) closeLightbox();
+          if (!isViewerOpen()) return;
+          if (e.key === 'Escape') closeLightbox();
+          if (e.key === 'ArrowRight') nextViewer();
+          if (e.key === 'ArrowLeft') prevViewer();
         });
 
         els.langTabs.forEach((tab) => {

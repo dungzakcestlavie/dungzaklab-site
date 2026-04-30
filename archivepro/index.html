@@ -1315,17 +1315,17 @@
       <aside class="panel stats" aria-label="아카이브 통계">
         <div class="stat">
           <div class="k" id="statLabelTotal">Total</div>
-          <div class="v" id="statTotal">1,352</div>
+          <div class="v" id="statTotal">0</div>
           <div class="d" id="statDescTotal">전체 작품 수</div>
         </div>
         <div class="stat">
           <div class="k" id="statLabelFiltered">Filtered</div>
-          <div class="v" id="statFiltered">1,352</div>
+          <div class="v" id="statFiltered">0</div>
           <div class="d" id="statDescFiltered">현재 검색 결과</div>
         </div>
         <div class="stat">
           <div class="k" id="statLabelSections">Sections</div>
-          <div class="v" id="statSections">6</div>
+          <div class="v" id="statSections">0</div>
           <div class="d" id="statDescSections">섹션 수</div>
         </div>
       </aside>
@@ -1389,7 +1389,7 @@
     <div class="meta-row">
       <div class="meta-left">
         <span class="meta-pill" id="sourcePill">Source: data/works.json</span>
-        <span class="meta-pill" id="loadedPill">Data: 1,352 items</span>
+        <span class="meta-pill" id="loadedPill">Data: 0 items</span>
       </div>
       <div class="meta-right">
         <span id="statusText" class="status">준비됨</span>
@@ -1401,7 +1401,7 @@
 
       <div id="resultsMeta" class="meta-row" style="display:flex;">
         <div class="meta-left">
-          <strong id="resultText">1,352점</strong>
+          <strong id="resultText">0점</strong>
           <span class="meta-pill" id="renderedText">표시 24점</span>
         </div>
         <div class="meta-right">
@@ -1497,7 +1497,7 @@
       }, { passive: false });
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'data/works.json';
+      const DATA_URL = './data/works.json';
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const MOBILE_FIRST_RENDER_COUNT = 24;
       const DESKTOP_FIRST_RENDER_COUNT = 24;
@@ -2124,8 +2124,8 @@
           size_kr: safeText(item.size_kr),
           size_en: safeText(item.size_en),
           year: safeText(item.year),
-          image: normalizeImageUrl(item.image, 'standard', safeText(item.id), sectionId),
-          zoom: normalizeImageUrl(item.zoom, 'zoom', safeText(item.id), sectionId),
+          image: safeText(item.image),
+          zoom: safeText(item.zoom || item.image),
           status: status
         };
       }
@@ -2924,6 +2924,8 @@
       function parseWorksPayload(raw) {
         if (Array.isArray(raw)) return raw;
         if (raw && Array.isArray(raw.works)) return raw.works;
+        if (raw && raw.data && Array.isArray(raw.data.works)) return raw.data.works;
+        if (raw && raw.archive && Array.isArray(raw.archive.works)) return raw.archive.works;
         return [];
       }
 
@@ -2941,7 +2943,9 @@
           })
           .then((raw) => {
             const works = parseWorksPayload(raw);
-            if (!Array.isArray(works)) throw new Error('works payload is not an array');
+            if (!Array.isArray(works) || works.length === 0) {
+              throw new Error('works.json parsed but works array is empty');
+            }
             return works;
           });
 
@@ -2966,6 +2970,8 @@
           const works = await fetchWorksDirect();
 
           state.all = Array.isArray(works) ? works.map(normalizeItem) : [];
+          console.log('[Archive Pro] works loaded:', state.all.length);
+          console.log('[Archive Pro] first item:', state.all[0]);
           state.query = '';
           state.section = 'all';
           state.sort = FAST_ORDER;

@@ -1270,6 +1270,12 @@
     #grid{ contain:layout paint style; }
     .card{ content-visibility:auto; contain-intrinsic-size:360px 520px; will-change:auto; }
     .thumb{ will-change:auto; }
+
+    /* NO LOADING STATE — no 0 / … / loading flash */
+    #loadingScreen{
+      display:none !important;
+    }
+
 </style>
 </head>
 <body>
@@ -1394,20 +1400,20 @@
     <div class="meta-row">
       <div class="meta-left">
         <span class="meta-pill" id="sourcePill">Source: data/works.json</span>
-        <span class="meta-pill" id="loadedPill">Loaded: —</span>
+        <span class="meta-pill" id="loadedPill">Data: —</span>
       </div>
       <div class="meta-right">
-        <span id="statusText" class="status">대기 중</span>
+        <span id="statusText" class="status">준비됨</span>
       </div>
     </div>
 
     <main id="archiveMain" aria-live="polite">
-      <div id="loadingScreen" class="panel loading-screen">works.json을 불러오는 중입니다.</div>
+      <div id="loadingScreen" class="panel loading-screen" hidden></div>
 
       <div id="resultsMeta" class="meta-row" style="display:none;">
         <div class="meta-left">
-          <strong id="resultText">0점</strong>
-          <span class="meta-pill" id="renderedText">표시 0점</span>
+          <strong id="resultText">—</strong>
+          <span class="meta-pill" id="renderedText">표시 —</span>
         </div>
         <div class="meta-right">
           <span
@@ -1502,7 +1508,7 @@
       }, { passive: false });
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://dungzak.art/data/works.json';
+      const DATA_URL = 'data/works.json';
       const DATA_URLS = [
         'https://dungzak.art/data/works.json',
         'https://dungzakcestlavie.github.io/data/works.json',
@@ -1620,10 +1626,10 @@
           resetBtn: '초기화',
           focusSearchBtn: '검색 집중',
           statusIdle: '대기 중',
-          statusLoading: '불러오는 중',
+          statusLoading: '준비됨',
           statusLoaded: '로드 완료',
           statusFailed: '로드 실패',
-          loadingScreen: 'works.json을 불러오는 중입니다.',
+          loadingScreen: '',
           loadingScreenError: 'works.json을 불러오지 못했습니다. 경로 또는 접근 권한을 확인해 주세요.',
           resultUnit: '점',
           renderedPrefix: '표시 ',
@@ -1664,10 +1670,10 @@
           resetBtn: 'Reset',
           focusSearchBtn: 'Focus',
           statusIdle: 'Idle',
-          statusLoading: 'Loading',
+          statusLoading: 'Ready',
           statusLoaded: 'Loaded',
           statusFailed: 'Failed',
-          loadingScreen: 'Loading works.json.',
+          loadingScreen: '',
           loadingScreenError: 'Unable to load works.json.',
           resultUnit: ' works',
           renderedPrefix: 'Visible ',
@@ -1708,10 +1714,10 @@
           resetBtn: '초기화 / Reset',
           focusSearchBtn: '검색 / Focus',
           statusIdle: '대기 / Idle',
-          statusLoading: '불러오는 중 / Loading',
+          statusLoading: '준비됨 / Ready',
           statusLoaded: '로드 완료 / Loaded',
           statusFailed: '로드 실패 / Failed',
-          loadingScreen: 'works.json을 불러오는 중입니다 / Loading works.json.',
+          loadingScreen: '',
           loadingScreenError: 'works.json을 불러오지 못했습니다 / Unable to load works.json.',
           resultUnit: '점 / works',
           renderedPrefix: '표시 / Visible ',
@@ -2528,7 +2534,7 @@
         const visibleNow = Math.min(state.visibleCount, CURRENT_LIST.length);
         els.statTotal.textContent = numberFormat.format(WORKS_DATA.length);
         els.statFiltered.textContent = numberFormat.format(CURRENT_LIST.length);
-        els.loadedPill.textContent = `Loaded: ${numberFormat.format(WORKS_DATA.length)} items`;
+        els.loadedPill.textContent = `Data: ${numberFormat.format(WORKS_DATA.length)} items`;
 
         updateActiveFilterDataset();
 
@@ -2671,7 +2677,7 @@
       function render() {
         if (!els.grid) return;
 
-        if (els.loadingScreen) els.loadingScreen.style.display = 'none';
+        if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; }
         if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
         if (els.emptyState) els.emptyState.hidden = state.filtered.length !== 0;
 
@@ -2907,10 +2913,7 @@
       }
 
       function withCacheBust(url) {
-        const value = safeText(url);
-        if (!value) return value;
-        const sep = value.includes('?') ? '&' : '?';
-        return `${value}${sep}v=${Date.now()}`;
+        return safeText(url);
       }
 
       async function fetchWithTimeout(url, timeoutMs = 4500) {
@@ -2918,8 +2921,8 @@
         const timer = window.setTimeout(() => controller.abort(), timeoutMs);
 
         try {
-          const response = await fetch(withCacheBust(url), {
-            cache: 'no-store',
+          const response = await fetch(url, {
+            cache: 'force-cache',
             signal: controller.signal
           });
           return response;
@@ -2953,15 +2956,19 @@
       }
 
       function showArchiveShellImmediately() {
-        if (els.loadingScreen) els.loadingScreen.style.display = 'block';
+        if (els.loadingScreen) {
+          els.loadingScreen.hidden = true;
+          els.loadingScreen.style.display = 'none';
+          els.loadingScreen.textContent = '';
+        }
         if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
         if (els.grid && !state.isLoaded) els.grid.innerHTML = '';
-        if (els.statTotal && els.statTotal.textContent === '—') els.statTotal.textContent = '0';
-        if (els.statFiltered && els.statFiltered.textContent === '—') els.statFiltered.textContent = '0';
-        if (els.statSections && els.statSections.textContent === '—') els.statSections.textContent = '0';
-        if (els.loadedPill) els.loadedPill.textContent = 'Loaded: 0 items';
-        if (els.resultText) els.resultText.textContent = '0점';
-        if (els.renderedText) els.renderedText.textContent = '표시 0점';
+        if (els.statTotal && els.statTotal.textContent === '—') els.statTotal.textContent = '—';
+        if (els.statFiltered && els.statFiltered.textContent === '—') els.statFiltered.textContent = '—';
+        if (els.statSections && els.statSections.textContent === '—') els.statSections.textContent = '—';
+        if (els.loadedPill) els.loadedPill.textContent = 'Data: —';
+        if (els.resultText) els.resultText.textContent = '—';
+        if (els.renderedText) els.renderedText.textContent = '표시 —';
       }
 
       async function loadWorksOnce() {
@@ -2969,7 +2976,8 @@
         if (worksLoadPromise) return worksLoadPromise;
 
         worksLoadPromise = (async () => {
-          state.loadState = 'loading';
+          state.loadState = 'idle';
+          if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; els.loadingScreen.textContent = ''; }
           rebuildStaticTexts();
           els.sourcePill.textContent = `Source: ${DATA_URLS[0]}`;
 
@@ -3011,7 +3019,7 @@
           state.filtered = [];
           state.loadState = 'failed';
           rebuildStaticTexts();
-          if (els.loadingScreen) els.loadingScreen.style.display = 'block';
+          if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; }
         }
       }
 
@@ -3318,7 +3326,7 @@
               CURRENT_LIST = [];
               state.loadState = 'failed';
               rebuildStaticTexts();
-              if (els.loadingScreen) els.loadingScreen.style.display = 'block';
+              if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; }
             }
 
             if (els.searchArea) els.searchArea.scrollIntoView({ behavior: 'auto', block: 'start' });
@@ -3375,7 +3383,7 @@
           CURRENT_LIST = [];
           state.loadState = 'failed';
           rebuildStaticTexts();
-          if (els.loadingScreen) els.loadingScreen.style.display = 'block';
+          if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; }
         }
       });
     })();

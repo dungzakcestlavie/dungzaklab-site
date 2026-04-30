@@ -3261,7 +3261,7 @@
         }
       }
 
-      function resetFilters() {
+      function resetFilters(shouldScrollTop = true) {
         state.query = '';
         state.section = 'all';
         state.sort = FAST_ORDER;
@@ -3277,7 +3277,7 @@
         if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
 
         renderAll();
-        window.scrollTo({ top: 0, behavior: 'auto' });
+        if (shouldScrollTop) window.scrollTo({ top: 0, behavior: 'auto' });
       }
 
       function scrollToSearch() {
@@ -3538,11 +3538,29 @@
         }
 
         if (els.entryBtn) {
-          els.entryBtn.addEventListener('click', () => {
+          els.entryBtn.addEventListener('click', (e) => {
+            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+            /* Entry click latency fix:
+               respond visually first, then defer the heavier grid reset/render. */
             showArchiveShellImmediately();
-            resetFilters();
             if (els.searchArea) els.searchArea.scrollIntoView({ behavior: 'auto', block: 'start' });
-          });
+
+            if (!state.isLoaded || !state.all.length) return;
+
+            const alreadyDefault =
+              !state.query &&
+              state.section === 'all' &&
+              state.sort === FAST_ORDER &&
+              state.visibleCount === getInitialVisibleCount();
+
+            if (alreadyDefault) return;
+
+            requestAnimationFrame(() => {
+              resetFilters(false);
+              if (els.searchArea) els.searchArea.scrollIntoView({ behavior: 'auto', block: 'start' });
+            });
+          }, { passive:false });
         }
 
         els.sectionButtons.forEach((btn) => {

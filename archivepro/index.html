@@ -1509,13 +1509,6 @@
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
       const DATA_URL = 'data/works.json';
-      const DATA_URLS = [
-        'https://dungzak.art/data/works.json',
-        'https://dungzakcestlavie.github.io/data/works.json',
-        'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json',
-        '../data/works.json',
-        'data/works.json'
-      ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const MOBILE_FIRST_RENDER_COUNT = 12;
       const DESKTOP_FIRST_RENDER_COUNT = 24;
@@ -2119,7 +2112,7 @@
       };
 
       function getInitialVisibleCount() {
-        return FIRST_RENDER_COUNT;
+        return window.matchMedia('(max-width: 768px)').matches ? MOBILE_FIRST_RENDER_COUNT : DESKTOP_FIRST_RENDER_COUNT;
       }
 
       function readWorksCache() {
@@ -3045,7 +3038,7 @@
         const imageSrc = toAbsoluteUrl(item.image || '');
         const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(item);
-        const isEagerThumb = index < 4;
+        const isEagerThumb = index < INITIAL_VISIBLE;
         const thumbLoading = isEagerThumb ? 'eager' : 'lazy';
         const thumbPriority = isEagerThumb ? 'high' : 'low';
         const thumbSrcAttr = isEagerThumb ? ' src="' + escapeHTML(imageSrc) + '"' : '';
@@ -3338,43 +3331,14 @@
         return safeText(url);
       }
 
-      async function fetchWithTimeout(url, timeoutMs = 4500) {
-        const controller = new AbortController();
-        const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+      async function fetchWorksDirect() {
+        const response = await fetch(DATA_URL, { cache: 'force-cache' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-        try {
-          const response = await fetch(url, {
-            cache: 'force-cache',
-            signal: controller.signal
-          });
-          return response;
-        } finally {
-          window.clearTimeout(timer);
-        }
-      }
-
-      async function fetchWorksFromCandidates() {
-        let best = { arr: [], url: DATA_URLS[0] };
-        const errors = [];
-
-        for (const url of DATA_URLS) {
-          try {
-            const response = await fetchWithTimeout(url, 4500);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-            const text = await response.text();
-            const arr = parseWorksPayload(text);
-            if (!Array.isArray(arr)) throw new Error('works payload is not an array');
-
-            if (arr.length > best.arr.length) best = { arr, url };
-            if (arr.length > 1) return { arr, url };
-          } catch (error) {
-            errors.push(`${url}: ${error && error.message ? error.message : String(error)}`);
-          }
-        }
-
-        if (best.arr.length) return best;
-        throw new Error(errors.join(' | ') || 'Unable to load works.json');
+        const text = await response.text();
+        const arr = parseWorksPayload(text);
+        if (!Array.isArray(arr)) throw new Error('works payload is not an array');
+        return arr;
       }
 
       function showArchiveShellImmediately() {
@@ -3423,9 +3387,8 @@
         backgroundFetchStarted = true;
 
         try {
-          const result = await fetchWorksFromCandidates();
-          const arr = Array.isArray(result.arr) ? result.arr : [];
-          if (!arr.length || arr.length < INITIAL_WORKS_DATA.length) return;
+          const arr = await fetchWorksDirect();
+          if (!Array.isArray(arr) || !arr.length || arr.length < INITIAL_WORKS_DATA.length) return;
 
           writeWorksCache(arr);
           state.all = arr.map(normalizeItem).map(prepareFastSearchCache);
@@ -3434,44 +3397,25 @@
           WORKS_READY = true;
           WORKS_DATA = state.all;
 
-          if (els.sourcePill) els.sourcePill.textContent = `Source: ${result.url}`;
+          if (els.sourcePill) els.sourcePill.textContent = `Source: ${DATA_URL}`;
           populateSections();
           applyFilters(false);
         } catch (error) {
-          console.error(error);
-          state.loadState = 'idle';
-          state.isLoaded = false;
+          console.warn('works.json background load failed', error);
+          state.loadState = state.all.length ? 'loaded' : 'idle';
+          state.isLoaded = !!state.all.length;
           if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; els.loadingScreen.textContent = ''; }
           updateStats();
         }
       }
 
       async function loadWorksOnce() {
-        if (state.isLoaded && state.all.length) return state.all;
+        if (state.all.length) return state.all;
         if (worksLoadPromise) return worksLoadPromise;
 
         worksLoadPromise = (async () => {
-          state.loadState = 'idle';
-          if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; els.loadingScreen.textContent = ''; }
-          rebuildStaticTexts();
-          els.sourcePill.textContent = `Source: ${DATA_URLS[0]}`;
-
-          const result = await fetchWorksFromCandidates();
-          const arr = result.arr;
-
-          state.all = arr.map(normalizeItem).map(prepareFastSearchCache);
-          state.filtered = state.all;
-          state.visibleCount = getInitialVisibleCount();
-          WORKS_DATA = state.all;
-          CURRENT_LIST = state.filtered;
-          visibleCount = state.visibleCount;
-          state.isLoaded = true;
-          WORKS_READY = true;
-          state.loadState = 'loaded';
-
-          els.sourcePill.textContent = `Source: ${result.url}`;
-          rebuildStaticTexts();
-          populateSections();
+          showArchiveShellImmediately();
+          bootInitialArchive();
           return state.all;
         })();
 
@@ -3790,7 +3734,11 @@
         bindEvents();
         showArchiveShellImmediately();
         bootInitialArchive();
-        loadFullWorksInBackground();
+
+        window.requestAnimationFrame(() => {
+          render();
+          loadFullWorksInBackground();
+        });
       });
     })();
   

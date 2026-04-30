@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<style>
+  html, body {
+    background: #070A14 !important;
+  }
+</style>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f14" />
@@ -1338,9 +1343,19 @@
       }
     }
 
+
+
+    /* FIRST PAINT INSTANT FIX — background skeleton only */
+    #instant-bg{
+      position:fixed;
+      inset:0;
+      background:#070A14;
+      z-index:9999;
+    }
 </style>
 </head>
 <body>
+  <div id="instant-bg"></div>
   <div class="site-bg" aria-hidden="true"></div>
 
   <header class="site-header">
@@ -3692,6 +3707,12 @@
       });
     })();
   
+
+
+    window.addEventListener('load', () => {
+      const bg = document.getElementById('instant-bg');
+      if (bg) bg.remove();
+    });
 </script>
 </body>
 </html>

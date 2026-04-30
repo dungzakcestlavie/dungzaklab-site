@@ -2077,39 +2077,33 @@
       }
 
       function normalizeImageUrl(url, kind, id, sectionId) {
-        const safeId = safeText(id);
-        const clean = safeText(url).replace(/\s+/g, '');
-        const folder = kind === 'zoom' ? 'zoom' : 'standard';
-        const fileFromUrl = clean.match(/\/([^\/]+\.(?:jpg|jpeg|png|webp))(?:\?.*)?$/i)?.[1] || '';
-        const fileName = fileFromUrl || (safeId ? `${safeId}.jpg` : '');
-        if (!fileName) return '';
-
-        /* PATH ABSOLUTE RULE:
-           - Section 1 / Pray for Us keeps the exact JSON image path when it exists.
-             This prevents the Pray section from visually overlapping with Human when IDs repeat.
-           - Sections 2-5 resolve to dungzakcestlavie.github.io/images.
-           - Origins keeps the exact JSON image path when it exists; fallback goes to lab-images.
+        /*
+          Image rule:
+          1) If works.json has image / zoom, use that exact URL.
+          2) Only when the JSON field is empty, create a safe fallback.
+          This keeps dungzak.art images and dungzaklab-images mixed paths alive.
         */
+        const clean = safeText(url).replace(/\s+/g, '');
+        if (clean) return clean;
+
+        const safeId = safeText(id);
+        if (!safeId) return '';
+
+        const folder = kind === 'zoom' ? 'zoom' : 'standard';
         const sid = Number(sectionId);
+        const base = sid === 0
+          ? 'https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro'
+          : 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images';
 
-        if (sid === 1 && clean) return clean;
-
-        if (sid === 0) {
-          if (clean) return clean;
-          return `https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/${folder}/${fileName}`;
-        }
-
-        if (sid >= 2 && sid <= 5) {
-          return `https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/${folder}/${fileName}`;
-        }
-
-        return clean || `https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/${folder}/${fileName}`;
+        return `${base}/${folder}/${safeId}.jpg`;
       }
 
       function normalizeItem(raw, index) {
         const item = raw && typeof raw === 'object' ? raw : {};
         const id = String(item.id || '').trim() || 'item-' + (index + 1);
-        const sectionId = Number(item.section_id ?? 0);
+        const sectionId = inferSectionId({ id, section_id: item.section_id });
+        const image = normalizeImageUrl(item.image, 'image', id, sectionId);
+        const zoom = normalizeImageUrl(item.zoom || item.image, 'zoom', id, sectionId);
 
         return {
           _index: index,
@@ -2124,8 +2118,8 @@
           size_kr: String(item.size_kr || '').trim(),
           size_en: String(item.size_en || '').trim(),
           year: String(item.year || '').trim(),
-          image: String(item.image || '').trim(),
-          zoom: String(item.zoom || item.image || '').trim(),
+          image,
+          zoom,
           status: String(item.status || '').trim()
         };
       }
@@ -2550,13 +2544,24 @@
       }
 
       function loadLazyImage(img) {
-        const src = img.dataset.src;
-        if (!src) return;
-        img.onload = () => img.classList.add('is-loaded');
+        const src = img.dataset.src || img.getAttribute('data-src') || '';
+        if (!src) {
+          img.src = SVG_PLACEHOLDER;
+          img.classList.add('is-error');
+          return;
+        }
+
+        img.onload = () => {
+          img.classList.add('is-loaded');
+          img.classList.remove('is-error');
+        };
+
         img.onerror = () => {
           img.classList.add('is-error');
+          img.classList.add('is-loaded');
           img.src = SVG_PLACEHOLDER;
         };
+
         img.src = src;
         img.removeAttribute('data-src');
       }
@@ -2611,7 +2616,7 @@
         const size = isOrigin ? '' : getSize(item);
         const year = isOrigin ? '' : getYear(item);
         const infoLine = isOrigin ? '' : [material, size, year].filter(Boolean).join(' / ');
-        const imageSrc = item.image || '';
+        const imageSrc = item.image || SVG_PLACEHOLDER;
         const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(item);
         const thumbClass = 'thumb';
@@ -2900,13 +2905,55 @@
       }
 
       function parseWorksPayload(json) {
-        if (Array.isArray(json)) return json;
-        if (json && Array.isArray(json.works)) return json.works;
-        if (json && Array.isArray(json.data)) return json.data;
-        if (json && Array.isArray(json.items)) return json.items;
-        if (json && json.data && Array.isArray(json.data.works)) return json.data.works;
-        if (json && json.archive && Array.isArray(json.archive.works)) return json.archive.works;
-        return [];
+        /*
+          Archive Pro must read the real works array, not a wrapper object.
+          This prevents the "Total 1 / Data 1 items" failure when works.json
+          is accidentally wrapped as [{ works: [...] }] or { data:{ works:[...] } }.
+        */
+        const seen = new Set();
+
+        function unwrap(value) {
+          if (!value || seen.has(value)) return [];
+          if (typeof value === 'object') seen.add(value);
+
+          if (Array.isArray(value)) {
+            if (value.length === 1) {
+              const nested = unwrap(value[0]);
+              if (nested.length) return nested;
+            }
+
+            if (value.length && value.every(item => item && typeof item === 'object' && ('id' in item || 'image' in item || 'zoom' in item))) {
+              return value;
+            }
+
+            for (const item of value) {
+              const nested = unwrap(item);
+              if (nested.length) return nested;
+            }
+
+            return value;
+          }
+
+          if (Array.isArray(value.works)) return value.works;
+          if (Array.isArray(value.items)) return value.items;
+          if (Array.isArray(value.data)) return unwrap(value.data);
+          if (value.data && typeof value.data === 'object') {
+            const nested = unwrap(value.data);
+            if (nested.length) return nested;
+          }
+          if (value.archive && typeof value.archive === 'object') {
+            const nested = unwrap(value.archive);
+            if (nested.length) return nested;
+          }
+          if (value.payload && typeof value.payload === 'object') {
+            const nested = unwrap(value.payload);
+            if (nested.length) return nested;
+          }
+
+          return [];
+        }
+
+        return unwrap(json).filter(item => item && typeof item === 'object');
       }
 
       function withCacheBust(url) {
@@ -2921,10 +2968,16 @@
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const json = await res.json();
             const works = parseWorksPayload(json);
+
             if (!Array.isArray(works) || works.length === 0) {
               throw new Error('works.json parsed but works array is empty');
             }
+
             return works;
+          })
+          .catch((error) => {
+            worksLoadPromise = null;
+            throw error;
           });
 
         return worksLoadPromise;
@@ -2939,17 +2992,18 @@
         if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
       }
 
-      async function loadArchiveData() {
+      async async function loadArchiveData() {
         showArchiveShellImmediately();
         state.loadState = 'loading';
         setStatusByState();
 
         try {
           const works = await fetchWorksDirect();
+          const normalized = works
+            .map(normalizeItem)
+            .filter(item => item && item.id && item.image);
 
-          state.all = Array.isArray(works) ? works.map(normalizeItem) : [];
-          console.log('[Archive Pro] works loaded:', state.all.length);
-          console.log('[Archive Pro] first item:', state.all[0]);
+          state.all = normalized;
           state.query = '';
           state.section = 'all';
           state.sort = FAST_ORDER;
@@ -2971,6 +3025,15 @@
 
           rebuildStaticTexts();
           renderAll();
+
+          window.__ARCHIVE_PRO_SIMULATION__ = {
+            loaded: WORKS_DATA.length,
+            filtered: CURRENT_LIST.length,
+            sections: new Set(WORKS_DATA.map(item => Number(item.section_id))).size,
+            first: WORKS_DATA[0] || null,
+            last: WORKS_DATA[WORKS_DATA.length - 1] || null
+          };
+          console.info('[Archive Pro] simulation:', window.__ARCHIVE_PRO_SIMULATION__);
         } catch (error) {
           console.error('Load error:', error);
           state.loadState = 'failed';

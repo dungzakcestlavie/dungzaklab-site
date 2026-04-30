@@ -1292,6 +1292,52 @@
       }
     }
 
+
+    /* ARCHIVE PRO FINAL SPEED FIX — no design/data change, only initial work reduction */
+    .entry-btn{
+      transition:none !important;
+      animation:none !important;
+      will-change:auto !important;
+    }
+
+    #grid{
+      contain:layout paint style;
+    }
+
+    .card{
+      content-visibility:auto;
+      contain-intrinsic-size:360px 520px;
+      will-change:auto !important;
+    }
+
+    .thumb{
+      will-change:auto !important;
+    }
+
+    @media (max-width:768px){
+      .site-header,
+      header,
+      .panel,
+      .lightbox,
+      .detail-hover{
+        backdrop-filter:none !important;
+        -webkit-backdrop-filter:none !important;
+      }
+
+      .entry-btn,
+      .card,
+      .btn,
+      .section-btn,
+      .back-link,
+      .hero-home-link,
+      .lb-link,
+      .lang-tab,
+      .brand-home-link{
+        transition:none !important;
+        animation:none !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -1429,7 +1475,7 @@
       <div id="resultsMeta" class="meta-row" style="display:flex;">
         <div class="meta-left">
           <strong id="resultText">0점</strong>
-          <span class="meta-pill" id="renderedText">표시 24점</span>
+          <span class="meta-pill" id="renderedText">표시 8점</span>
         </div>
         <div class="meta-right">
           <span
@@ -1527,14 +1573,14 @@
       const DATA_URL = 'https://dungzak.art/data/works.json';
       const MIN_EXPECTED_WORKS = 100;
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
-      const MOBILE_FIRST_RENDER_COUNT = 12;
-      const DESKTOP_FIRST_RENDER_COUNT = 18;
+      const MOBILE_FIRST_RENDER_COUNT = 8;
+      const DESKTOP_FIRST_RENDER_COUNT = 16;
       const FIRST_RENDER_COUNT = DESKTOP_FIRST_RENDER_COUNT;
       const FAST_ORDER = 'section-id-asc';
       const LOAD_MORE_COUNT = 24;
       const INITIAL_VISIBLE = getInitialVisibleCount();
       const LOAD_STEP = LOAD_MORE_COUNT;
-      const SEARCH_DEBOUNCE_MS = 160;
+      const SEARCH_DEBOUNCE_MS = 120;
       const ASSET_VERSION = 'section-image-sim-' + String(Date.now());
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
@@ -2881,7 +2927,7 @@
           setTimeout(() => {
             render();
             scheduleFullSearchIndex();
-          }, 80);
+          }, 60);
         });
       }
 
@@ -3242,7 +3288,7 @@
           state.sort = FAST_ORDER;
           state.visibleCount = getInitialVisibleCount();
           state._searchPrepared = false;
-          state.filtered = applyFilterSort(state.all);
+          state.filtered = state.all;
           state.loadState = 'loaded';
           state.isLoaded = true;
 
@@ -3637,7 +3683,9 @@
 
       document.addEventListener('DOMContentLoaded', () => {
         bindEvents();
-        loadArchiveData();
+        requestAnimationFrame(() => {
+          setTimeout(loadArchiveData, 50);
+        });
       });
     })();
   

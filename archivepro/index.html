@@ -1259,6 +1259,12 @@
     .card{ content-visibility:auto; contain-intrinsic-size:360px 520px; will-change:auto; }
     .thumb{ will-change:auto; }
 
+
+    /* RESET / INITIAL RENDER SPEED PATCH — no visual change */
+    #grid{ contain:layout paint style; }
+    .card{ content-visibility:auto; contain-intrinsic-size:360px 520px; will-change:auto; }
+    .thumb{ will-change:auto; }
+
   </style>
 </head>
 <body>
@@ -1797,6 +1803,8 @@
 
       const numberFormat = new Intl.NumberFormat('ko-KR');
       let searchTimer = null;
+      let defaultGridSnapshot = null;
+      let defaultGridSnapshotLang = '';
       let archiveScrollY = 0;
       let closeClickBlockUntil = 0;
 
@@ -2652,6 +2660,34 @@
         return card;
       }
 
+      function isDefaultFastView() {
+        return !state.query && state.section === 'all' && state.sort === FAST_ORDER && state.visibleCount === INITIAL_VISIBLE;
+      }
+
+      function cacheDefaultGridSnapshot() {
+        if (!isDefaultFastView() || !els.grid || !els.grid.children.length) return;
+        defaultGridSnapshot = Array.from(els.grid.children);
+        defaultGridSnapshotLang = state.lang;
+      }
+
+      function restoreDefaultGridSnapshot() {
+        if (!defaultGridSnapshot || defaultGridSnapshotLang !== state.lang) return false;
+
+        state.filtered = state.all;
+        state.visibleCount = INITIAL_VISIBLE;
+
+        els.loadingScreen.style.display = 'none';
+        els.resultsMeta.style.display = 'flex';
+        els.emptyState.hidden = true;
+        els.grid.replaceChildren(...defaultGridSnapshot);
+        els.loadWrap.hidden = INITIAL_VISIBLE >= state.filtered.length;
+
+        updateSectionButtonState();
+        updateStats();
+        observeLazyImages(els.grid);
+        return true;
+      }
+
       function render() {
         els.loadingScreen.style.display = 'none';
         els.resultsMeta.style.display = 'flex';
@@ -2677,6 +2713,7 @@
 
         els.loadWrap.hidden = visible.length >= state.filtered.length;
         updateStats();
+        cacheDefaultGridSnapshot();
       }
 
       function openLightbox(item) {
@@ -2801,14 +2838,21 @@
         state.section = els.sectionSelect ? els.sectionSelect.value : state.section;
         state.sort = els.sortSelect ? els.sortSelect.value : state.sort;
 
+        if (resetVisible) state.visibleCount = INITIAL_VISIBLE;
+
+        if (!state.query && state.section === 'all' && state.sort === FAST_ORDER) {
+          state.filtered = state.all;
+          updateSectionButtonState();
+          if (!restoreDefaultGridSnapshot()) render();
+          return;
+        }
+
         state.filtered = state.all
           .filter((item) => {
             if (state.section !== 'all' && item.section_id !== Number(state.section)) return false;
             return matchesSearch(item, state.query);
           })
           .sort((a, b) => compareItems(a, b, state.sort));
-
-        if (resetVisible) state.visibleCount = INITIAL_VISIBLE;
 
         updateSectionButtonState();
         render();
@@ -2851,7 +2895,7 @@
         els.sectionSelect.value = 'all';
         els.sortSelect.value = FAST_ORDER;
 
-        applyFilters(true);
+        if (!restoreDefaultGridSnapshot()) applyFilters(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
@@ -2937,7 +2981,7 @@
         els.sectionSelect.value = 'all';
         els.sortSelect.value = FAST_ORDER;
 
-        applyFilters(true);
+        if (!restoreDefaultGridSnapshot()) applyFilters(true);
       }
 
       function scrollToSearch() {

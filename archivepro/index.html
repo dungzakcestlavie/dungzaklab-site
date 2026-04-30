@@ -1393,7 +1393,7 @@
 
     <div class="meta-row">
       <div class="meta-left">
-        <span class="meta-pill" id="sourcePill">Source: https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json</span>
+        <span class="meta-pill" id="sourcePill">Source: data/works.json</span>
         <span class="meta-pill" id="loadedPill">Loaded: —</span>
       </div>
       <div class="meta-right">
@@ -1502,15 +1502,13 @@
       }, { passive: false });
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260430-stable-light-search';
-      const DATA_URLS = [
-        DATA_URL,
-        'https://dungzakcestlavie.github.io/data/works.json?v=20260430-stable-light-search',
-        'https://dungzak.art/data/works.json?v=20260430-stable-light-search'
-      ];
+      const DATA_URL = 'data/works.json';
+      const DATA_URLS = [DATA_URL];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
-      const INITIAL_VISIBLE = 12;
-      const LOAD_STEP = 24;
+      const FIRST_RENDER_COUNT = 12;
+      const LOAD_MORE_COUNT = 24;
+      const INITIAL_VISIBLE = FIRST_RENDER_COUNT;
+      const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 220;
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
@@ -1808,6 +1806,7 @@
 
       const numberFormat = new Intl.NumberFormat('ko-KR');
       let searchTimer = null;
+      let worksLoadPromise = null;
       let archiveScrollY = 0;
       let closeClickBlockUntil = 0;
 
@@ -1883,6 +1882,15 @@
       function safeText(v) {
         if (v === null || v === undefined) return '';
         return String(v).trim();
+      }
+
+      function escapeHTML(value) {
+        return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
       }
 
       function toAbsoluteUrl(path) {
@@ -2523,6 +2531,20 @@
         if (!img || img.dataset.loaded === 'true') return;
 
         const src = img.dataset.src || '';
+        if (!img.dataset.listenerReady) {
+          img.addEventListener('load', () => {
+            img.classList.add('is-loaded');
+          }, { once: true });
+
+          img.addEventListener('error', () => {
+            img.removeAttribute('data-src');
+            img.src = SVG_PLACEHOLDER;
+            img.classList.add('is-error');
+          }, { once: true });
+
+          img.dataset.listenerReady = 'true';
+        }
+
         if (!src) {
           img.src = SVG_PLACEHOLDER;
           img.classList.add('is-error');
@@ -2577,7 +2599,7 @@
         return img;
       }
 
-      function createCard(item) {
+      function createCardHTML(item) {
         const isOrigin = Number(item.section_id) === 0;
         const title = isOrigin ? getOriginTitle() : getTitle(item);
         const material = isOrigin ? '' : getMaterial(item);
@@ -2585,82 +2607,26 @@
         const year = isOrigin ? '' : getYear(item);
         const infoLine = isOrigin ? '' : [material, size, year].filter(Boolean).join(' / ');
         const imageSrc = toAbsoluteUrl(item.image || '');
-
-        const card = document.createElement('article');
-        card.className = 'card';
-        card.setAttribute('tabindex', '0');
-        card.setAttribute('role', 'button');
-        card.setAttribute('aria-label', `${item.id} 작품 보기`);
-
-        const thumbWrap = document.createElement('div');
-        thumbWrap.className = 'thumb-wrap';
-        thumbWrap.appendChild(createThumb(imageSrc, title || item.id));
-
-        const detailHover = document.createElement('span');
-        detailHover.className = 'detail-hover';
-        detailHover.dataset.kr = '상세 보기 →';
-        detailHover.dataset.en = 'View Detail →';
-        detailHover.textContent = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
-        thumbWrap.appendChild(detailHover);
-
-        const body = document.createElement('div');
-        body.className = 'card-body';
-
-        const top = document.createElement('div');
-        top.className = 'card-top';
-
-        const idEl = document.createElement('div');
-        idEl.className = 'work-id';
-        idEl.textContent = item.id;
-
-        const sectionEl = document.createElement('div');
-        sectionEl.className = 'section-tag';
-        sectionEl.textContent = getSectionTextById(item.section_id);
-
-        top.appendChild(idEl);
-        top.appendChild(sectionEl);
-
-        const titleEl = document.createElement('p');
-        titleEl.className = 'title' + (title ? '' : ' empty');
-        titleEl.textContent = title || t('untitled');
-
-        const captionEl = document.createElement('p');
-        captionEl.className = 'caption';
-        captionEl.textContent = infoLine || t('noInfo');
-
-        body.appendChild(top);
-        body.appendChild(titleEl);
-        if (!isOrigin) body.appendChild(captionEl);
-
+        const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(item);
-        if (statusHTML) {
-          const statusWrap = document.createElement('div');
-          statusWrap.innerHTML = statusHTML;
-          const statusLink = statusWrap.querySelector('.status-inquiry');
-          if (statusLink) {
-            statusLink.addEventListener('click', (e) => {
-              e.stopPropagation();
-            });
-            statusLink.addEventListener('keydown', (e) => {
-              e.stopPropagation();
-            });
-          }
-          body.appendChild(statusWrap);
-        }
 
-        card.appendChild(thumbWrap);
-        card.appendChild(body);
-
-        const open = () => openLightbox(item);
-        card.addEventListener('click', open);
-        card.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            open();
-          }
-        });
-
-        return card;
+        return [
+          '<article class="card" tabindex="0" role="button" data-id="', escapeHTML(item.id), '" aria-label="', escapeHTML(item.id), ' 작품 보기">',
+            '<div class="thumb-wrap">',
+              '<img class="thumb" alt="', escapeHTML(title || item.id), '" width="800" height="800" loading="lazy" decoding="async" fetchpriority="low" data-src="', escapeHTML(imageSrc), '" data-zoom="', escapeHTML(toAbsoluteUrl(item.zoom || '')), '" data-loaded="false">',
+              '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
+            '</div>',
+            '<div class="card-body">',
+              '<div class="card-top">',
+                '<div class="work-id">', escapeHTML(item.id), '</div>',
+                '<div class="section-tag">', escapeHTML(getSectionTextById(item.section_id)), '</div>',
+              '</div>',
+              '<p class="title', title ? '' : ' empty', '">', escapeHTML(title || t('untitled')), '</p>',
+              isOrigin ? '' : '<p class="caption">' + escapeHTML(infoLine || t('noInfo')) + '</p>',
+              statusHTML,
+            '</div>',
+          '</article>'
+        ].join('');
       }
 
       function isDefaultFastView() {
@@ -2675,6 +2641,17 @@
         return false;
       }
 
+      function getVisibleItems() {
+        return state.filtered.slice(0, state.visibleCount);
+      }
+
+      function renderCards(items) {
+        if (!els.grid) return;
+        els.grid.innerHTML = items.map(createCardHTML).join('');
+        syncDataLanguage(els.grid);
+        observeLazyImages(els.grid);
+      }
+
       function render() {
         if (!els.grid) return;
 
@@ -2683,22 +2660,14 @@
         if (els.emptyState) els.emptyState.hidden = state.filtered.length !== 0;
 
         if (!state.filtered.length) {
-          els.grid.replaceChildren();
+          els.grid.innerHTML = '';
           if (els.loadWrap) els.loadWrap.hidden = true;
           updateStats();
           return;
         }
 
-        const visible = state.filtered.slice(0, state.visibleCount);
-        const frag = document.createDocumentFragment();
-
-        for (let i = 0; i < visible.length; i += 1) {
-          frag.appendChild(createCard(visible[i]));
-        }
-
-        els.grid.replaceChildren(frag);
-        syncDataLanguage(els.grid);
-        observeLazyImages(els.grid);
+        const visible = getVisibleItems();
+        renderCards(visible);
 
         if (els.loadWrap) els.loadWrap.hidden = visible.length >= state.filtered.length;
         updateStats();
@@ -2923,7 +2892,7 @@
 
         try {
           const response = await fetch(url, {
-            cache: 'default',
+            cache: 'force-cache',
             signal: controller.signal
           });
           return response;
@@ -2933,53 +2902,72 @@
       }
 
       async function fetchWorksFromCandidates() {
-        let lastError = null;
+        const url = DATA_URLS[0];
+        const response = await fetchWithTimeout(url, 3500);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-        for (const url of DATA_URLS) {
-          try {
-            const response = await fetchWithTimeout(url, 3500);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-            const text = await response.text();
-            const arr = parseWorksPayload(text);
-
-            if (!Array.isArray(arr)) throw new Error('works payload is not an array');
-            return { arr, url };
-          } catch (error) {
-            lastError = error;
-            console.warn('Archive Pro data load failed:', url, error);
-          }
-        }
-
-        throw lastError || new Error('Unable to load works.json');
+        const text = await response.text();
+        const arr = parseWorksPayload(text);
+        if (!Array.isArray(arr)) throw new Error('works payload is not an array');
+        return { arr, url };
       }
 
-      async function loadData() {
-        if (state.isLoaded || state.loadState === 'loading') return;
+      function showArchiveShellImmediately() {
+        if (els.loadingScreen) els.loadingScreen.style.display = 'block';
+        if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
+        if (els.grid && !state.isLoaded) els.grid.innerHTML = '';
+        if (els.statTotal && els.statTotal.textContent === '—') els.statTotal.textContent = '0';
+        if (els.statFiltered && els.statFiltered.textContent === '—') els.statFiltered.textContent = '0';
+        if (els.statSections && els.statSections.textContent === '—') els.statSections.textContent = '0';
+        if (els.loadedPill) els.loadedPill.textContent = 'Loaded: 0 items';
+        if (els.resultText) els.resultText.textContent = '0점';
+        if (els.renderedText) els.renderedText.textContent = '표시 0점';
+      }
 
-        state.loadState = 'loading';
-        rebuildStaticTexts();
-        els.sourcePill.textContent = `Source: ${DATA_URLS[0]}`;
+      async function loadWorksOnce() {
+        if (state.isLoaded && state.all.length) return state.all;
+        if (worksLoadPromise) return worksLoadPromise;
 
-        try {
+        worksLoadPromise = (async () => {
+          state.loadState = 'loading';
+          rebuildStaticTexts();
+          els.sourcePill.textContent = `Source: ${DATA_URLS[0]}`;
+
           const result = await fetchWorksFromCandidates();
           const arr = result.arr;
 
           state.all = arr.map(normalizeItem).map(prepareFastSearchCache);
+          state.filtered = state.all;
           state.isLoaded = true;
           state.loadState = 'loaded';
 
           els.sourcePill.textContent = `Source: ${result.url}`;
           rebuildStaticTexts();
           populateSections();
+          return state.all;
+        })();
+
+        return worksLoadPromise;
+      }
+
+      async function loadData() {
+        showArchiveShellImmediately();
+        if (state.isLoaded && state.all.length) {
+          applyFilters(true);
+          return;
+        }
+
+        try {
+          await loadWorksOnce();
           applyFilters(true);
         } catch (error) {
           console.error(error);
+          worksLoadPromise = null;
           state.all = [];
           state.filtered = [];
           state.loadState = 'failed';
           rebuildStaticTexts();
-          els.loadingScreen.style.display = 'block';
+          if (els.loadingScreen) els.loadingScreen.style.display = 'block';
         }
       }
 
@@ -2987,7 +2975,7 @@
         state.query = '';
         state.section = 'all';
         state.sort = FAST_ORDER;
-        state.visibleCount = INITIAL_VISIBLE;
+        state.visibleCount = FIRST_RENDER_COUNT;
         state.filtered = state.all;
 
         if (els.searchInput) els.searchInput.value = '';
@@ -2996,6 +2984,7 @@
 
         updateSectionButtonState();
         render();
+        window.scrollTo({ top: 0, behavior: 'auto' });
       }
 
       function scrollToSearch() {
@@ -3033,6 +3022,25 @@
           state.visibleCount += LOAD_STEP;
           render();
         });
+
+        if (els.grid) {
+          els.grid.addEventListener('click', (e) => {
+            if (e.target && e.target.closest && e.target.closest('.status-inquiry')) return;
+            const card = e.target && e.target.closest ? e.target.closest('.card[data-id]') : null;
+            if (!card) return;
+            const item = state.filtered.find((work) => work.id === card.dataset.id);
+            if (item) openLightbox(item);
+          });
+
+          els.grid.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const card = e.target && e.target.closest ? e.target.closest('.card[data-id]') : null;
+            if (!card) return;
+            e.preventDefault();
+            const item = state.filtered.find((work) => work.id === card.dataset.id);
+            if (item) openLightbox(item);
+          });
+        }
 
         /* MOBILE X CLOSE FINAL FIX — close only the viewer, never navigate.
            Capture the X event first, block bubbling/default, arm a temporary shield
@@ -3234,7 +3242,11 @@
         }
 
         if (els.entryBtn) {
-          els.entryBtn.addEventListener('click', scrollToSearch);
+          els.entryBtn.addEventListener('click', () => {
+            showArchiveShellImmediately();
+            loadData();
+            if (els.searchArea) els.searchArea.scrollIntoView({ behavior: 'auto', block: 'start' });
+          });
         }
 
         els.sectionButtons.forEach((btn) => {
@@ -3257,6 +3269,7 @@
       }
 
       bindEvents();
+      showArchiveShellImmediately();
       rebuildStaticTexts();
       loadData();
     })();

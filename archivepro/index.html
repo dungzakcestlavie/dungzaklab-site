@@ -1517,13 +1517,18 @@
         'data/works.json'
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
-      const FIRST_RENDER_COUNT = 24;
+      const MOBILE_FIRST_RENDER_COUNT = 12;
+      const DESKTOP_FIRST_RENDER_COUNT = 24;
+      const FIRST_RENDER_COUNT = DESKTOP_FIRST_RENDER_COUNT;
       const LOAD_MORE_COUNT = 24;
+      const WORKS_CACHE_KEY = 'archivepro_works_cache_v2';
+      const WORKS_CACHE_TIME_KEY = 'archivepro_works_cache_time_v2';
+      const WORKS_CACHE_MAX_AGE = 1000 * 60 * 60 * 24;
       const TOTAL_WORKS_SNAPSHOT = 1352;
       const TOTAL_SECTIONS_SNAPSHOT = 6;
-      const INITIAL_VISIBLE = FIRST_RENDER_COUNT;
+      const INITIAL_VISIBLE = getInitialVisibleCount();
       const LOAD_STEP = LOAD_MORE_COUNT;
-      const SEARCH_DEBOUNCE_MS = 220;
+      const SEARCH_DEBOUNCE_MS = 160;
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
 
@@ -2113,10 +2118,37 @@
         }
       };
 
+      function getInitialVisibleCount() {
+        return window.matchMedia && window.matchMedia('(max-width: 768px)').matches
+          ? MOBILE_FIRST_RENDER_COUNT
+          : DESKTOP_FIRST_RENDER_COUNT;
+      }
+
+      function readWorksCache() {
+        try {
+          const raw = localStorage.getItem(WORKS_CACHE_KEY);
+          const time = Number(localStorage.getItem(WORKS_CACHE_TIME_KEY) || 0);
+          if (!raw || !time) return null;
+          if (Date.now() - time > WORKS_CACHE_MAX_AGE) return null;
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) && parsed.length ? parsed : null;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function writeWorksCache(list) {
+        try {
+          if (!Array.isArray(list) || !list.length) return;
+          localStorage.setItem(WORKS_CACHE_KEY, JSON.stringify(list));
+          localStorage.setItem(WORKS_CACHE_TIME_KEY, String(Date.now()));
+        } catch (error) {}
+      }
+
       const state = {
         all: [],
         filtered: [],
-        visibleCount: FIRST_RENDER_COUNT,
+        visibleCount: getInitialVisibleCount(),
         query: '',
         section: 'all',
         sort: 'section-id-asc',
@@ -2126,7 +2158,7 @@
         isLoaded: false
       };
 
-      let visibleCount = FIRST_RENDER_COUNT;
+      let visibleCount = getInitialVisibleCount();
       let WORKS_DATA = INITIAL_WORKS_DATA.slice();
       let CURRENT_LIST = INITIAL_WORKS_DATA.slice();
 
@@ -2188,6 +2220,7 @@
       const numberFormat = new Intl.NumberFormat('ko-KR');
       let searchTimer = null;
       let worksLoadPromise = null;
+      let backgroundFetchStarted = false;
       let archiveScrollY = 0;
       let closeClickBlockUntil = 0;
 
@@ -2903,34 +2936,16 @@
         CURRENT_LIST = state.filtered;
         visibleCount = state.visibleCount;
 
-        const isFullDataReady =
-          state.isLoaded &&
-          Array.isArray(state.all) &&
-          state.all.length >= INITIAL_WORKS_DATA.length &&
-          state.all.length > FIRST_RENDER_COUNT;
-
-        const hasActiveFilter =
-          Boolean(state.query) ||
-          state.section !== 'all' ||
-          state.sort !== FAST_ORDER;
-
         const visibleNow = Math.min(state.visibleCount, CURRENT_LIST.length);
-
-        const totalCount = isFullDataReady
+        const totalCount = Array.isArray(WORKS_DATA) && WORKS_DATA.length
           ? WORKS_DATA.length
-          : TOTAL_WORKS_SNAPSHOT;
-
-        const filteredCount = isFullDataReady
-          ? CURRENT_LIST.length
-          : (hasActiveFilter ? CURRENT_LIST.length : TOTAL_WORKS_SNAPSHOT);
-
-        const sectionCount = isFullDataReady
-          ? new Set(
-              WORKS_DATA
-                .map(item => Number(item.section_id || 0))
-                .filter(n => !Number.isNaN(n))
-            ).size
-          : TOTAL_SECTIONS_SNAPSHOT;
+          : INITIAL_WORKS_DATA.length;
+        const filteredCount = Array.isArray(CURRENT_LIST) ? CURRENT_LIST.length : 0;
+        const sectionCount = new Set(
+          (Array.isArray(WORKS_DATA) ? WORKS_DATA : [])
+            .map(item => Number(item.section_id || 0))
+            .filter(n => !Number.isNaN(n))
+        ).size || TOTAL_SECTIONS_SNAPSHOT;
 
         els.statTotal.textContent = numberFormat.format(totalCount);
         els.statFiltered.textContent = numberFormat.format(filteredCount);
@@ -3020,7 +3035,7 @@
         return img;
       }
 
-      function createCardHTML(item) {
+      function createCardHTML(item, index = 0) {
         const isOrigin = Number(item.section_id) === 0;
         const title = isOrigin ? getOriginTitle() : getTitle(item);
         const material = isOrigin ? '' : getMaterial(item);
@@ -3030,11 +3045,17 @@
         const imageSrc = toAbsoluteUrl(item.image || '');
         const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(item);
+        const isEagerThumb = index < 4;
+        const thumbLoading = isEagerThumb ? 'eager' : 'lazy';
+        const thumbPriority = isEagerThumb ? 'high' : 'low';
+        const thumbSrcAttr = isEagerThumb ? ' src="' + escapeHTML(imageSrc) + '"' : '';
+        const thumbClass = isEagerThumb ? 'thumb is-loaded' : 'thumb';
+        const thumbLoaded = isEagerThumb ? 'true' : 'false';
 
         return [
           '<article class="card" tabindex="0" role="button" data-id="', escapeHTML(item.id), '" aria-label="', escapeHTML(item.id), ' 작품 보기">',
             '<div class="thumb-wrap">',
-              '<img class="thumb" alt="', escapeHTML(title || item.id), '" width="800" height="800" loading="lazy" decoding="async" fetchpriority="low" data-src="', escapeHTML(imageSrc), '" data-zoom="', escapeHTML(toAbsoluteUrl(item.zoom || '')), '" data-loaded="false">',
+              '<img class="', thumbClass, '" alt="', escapeHTML(title || item.id), '" width="800" height="800" loading="', thumbLoading, '" decoding="async" fetchpriority="', thumbPriority, '"', thumbSrcAttr, ' data-src="', escapeHTML(imageSrc), '" data-zoom="', escapeHTML(toAbsoluteUrl(item.zoom || '')), '" data-loaded="', thumbLoaded, '">',
               '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
             '</div>',
             '<div class="card-body">',
@@ -3070,7 +3091,7 @@
 
       function renderCards(items) {
         if (!els.grid) return;
-        els.grid.innerHTML = items.map(createCardHTML).join('');
+        els.grid.innerHTML = items.map((item, index) => createCardHTML(item, index)).join('');
         syncDataLanguage(els.grid);
         observeLazyImages(els.grid);
       }
@@ -3166,9 +3187,9 @@
       }
 
       function restoreArchiveScroll() {
-        requestAnimationFrame(function() {
+        window.setTimeout(function() {
           window.scrollTo(0, archiveScrollY || 0);
-        });
+        }, 0);
       }
 
       function closeLightbox() {
@@ -3216,7 +3237,7 @@
         state.section = els.sectionSelect ? els.sectionSelect.value : state.section;
         state.sort = els.sortSelect ? els.sortSelect.value : state.sort;
 
-        if (resetVisible) state.visibleCount = FIRST_RENDER_COUNT;
+        if (resetVisible) state.visibleCount = getInitialVisibleCount();
 
         if (!state.query && state.section === 'all' && state.sort === FAST_ORDER) {
           state.filtered = state.all;
@@ -3280,7 +3301,7 @@
         state.query = '';
         state.section = 'all';
         state.sort = FAST_ORDER;
-        state.visibleCount = INITIAL_VISIBLE;
+        state.visibleCount = getInitialVisibleCount();
 
         els.searchInput.value = '';
         els.sectionSelect.value = 'all';
@@ -3366,15 +3387,18 @@
       }
 
       function bootInitialArchive() {
-        const initial = INITIAL_WORKS_DATA.map(normalizeItem).map(prepareFastSearchCache);
+        const cached = readWorksCache();
+        const source = cached && cached.length ? cached : INITIAL_WORKS_DATA;
+        const initial = source.map(normalizeItem).map(prepareFastSearchCache);
+
         state.all = initial;
         state.filtered = initial;
         state.query = '';
         state.section = 'all';
         state.sort = FAST_ORDER;
-        state.visibleCount = FIRST_RENDER_COUNT;
-        state.loadState = 'idle';
-        state.isLoaded = false;
+        state.visibleCount = getInitialVisibleCount();
+        state.loadState = cached && cached.length ? 'loaded' : 'idle';
+        state.isLoaded = !!(cached && cached.length);
 
         WORKS_DATA = state.all;
         CURRENT_LIST = state.filtered;
@@ -3383,6 +3407,7 @@
         if (els.searchInput) els.searchInput.value = '';
         if (els.sectionSelect) els.sectionSelect.value = 'all';
         if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
+        if (cached && cached.length && els.sourcePill) els.sourcePill.textContent = 'Source: localStorage cache + background sync';
         if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; els.loadingScreen.textContent = ''; }
         if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
 
@@ -3393,11 +3418,15 @@
       }
 
       async function loadFullWorksInBackground() {
+        if (backgroundFetchStarted) return;
+        backgroundFetchStarted = true;
+
         try {
           const result = await fetchWorksFromCandidates();
           const arr = Array.isArray(result.arr) ? result.arr : [];
           if (!arr.length || arr.length < INITIAL_WORKS_DATA.length) return;
 
+          writeWorksCache(arr);
           state.all = arr.map(normalizeItem).map(prepareFastSearchCache);
           state.loadState = 'loaded';
           state.isLoaded = true;
@@ -3430,7 +3459,7 @@
 
           state.all = arr.map(normalizeItem).map(prepareFastSearchCache);
           state.filtered = state.all;
-          state.visibleCount = FIRST_RENDER_COUNT;
+          state.visibleCount = getInitialVisibleCount();
           WORKS_DATA = state.all;
           CURRENT_LIST = state.filtered;
           visibleCount = state.visibleCount;
@@ -3457,7 +3486,7 @@
         state.query = '';
         state.section = 'all';
         state.sort = FAST_ORDER;
-        state.visibleCount = FIRST_RENDER_COUNT;
+        state.visibleCount = getInitialVisibleCount();
         state.filtered = state.all;
         WORKS_DATA = state.all;
         CURRENT_LIST = state.filtered;
@@ -3742,7 +3771,7 @@
             state.section = btn.dataset.section || 'all';
             state.query = '';
             state.sort = FAST_ORDER;
-            state.visibleCount = INITIAL_VISIBLE;
+            state.visibleCount = getInitialVisibleCount();
 
             els.searchInput.value = '';
             els.sectionSelect.value = state.section;

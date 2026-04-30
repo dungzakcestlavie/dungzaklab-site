@@ -1497,7 +1497,8 @@
       }, { passive: false });
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'data/works.json';
+      const DATA_URL = 'https://dungzak.art/data/works.json';
+      const MIN_EXPECTED_WORKS = 100;
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const MOBILE_FIRST_RENDER_COUNT = 24;
       const DESKTOP_FIRST_RENDER_COUNT = 24;
@@ -2961,11 +2962,25 @@
       }
 
       function buildWorksJsonUrls() {
+        /*
+          Archive Pro source order:
+          1) Always read the latest official dungzak.art works.json first.
+          2) Then try the GitHub Pages mirror.
+          3) Then try the local Archive Pro data file only as a fallback.
+
+          This prevents the failure where an old local
+          /archivepro/data/works.json containing only 1 test item overrides
+          the real, current works.json.
+        */
         const urls = [];
         const add = (url) => {
           const clean = safeText(url);
           if (clean && !urls.includes(clean)) urls.push(clean);
         };
+
+        add('https://dungzak.art/data/works.json');
+        add('https://dungzakcestlavie.github.io/data/works.json');
+        add('https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json');
 
         try {
           add(new URL('data/works.json', window.location.href).href);
@@ -2999,21 +3014,33 @@
         worksLoadPromise = (async () => {
           const urls = buildWorksJsonUrls();
           let lastError = null;
+          let smallFallback = null;
 
           for (const url of urls) {
             try {
               const json = await fetchJsonNoStore(url);
               const works = parseWorksPayload(json);
 
-              if (Array.isArray(works) && works.length > 0) {
+              if (Array.isArray(works) && works.length >= MIN_EXPECTED_WORKS) {
                 if (els.sourcePill) els.sourcePill.textContent = `Source: ${url}`;
                 return works;
               }
 
-              lastError = new Error('works.json parsed but works array is empty');
+              if (Array.isArray(works) && works.length > 0 && !smallFallback) {
+                smallFallback = { url, works };
+                lastError = new Error(`works.json at ${url} has only ${works.length} item(s), so Archive Pro continues searching for the latest full JSON.`);
+                continue;
+              }
+
+              lastError = new Error(`works.json at ${url} parsed but works array is empty`);
             } catch (error) {
               lastError = error;
             }
+          }
+
+          if (smallFallback) {
+            if (els.sourcePill) els.sourcePill.textContent = `Source: ${smallFallback.url}`;
+            return smallFallback.works;
           }
 
           throw lastError || new Error('Unable to load works.json');

@@ -1412,6 +1412,91 @@
       min-height:56px;
     }
 
+
+
+    /* CRITICAL FIRST PAINT FIX — above-the-fold visible before JSON/render */
+    html,
+    body{
+      background:#070A14 !important;
+    }
+
+    body{
+      overflow-anchor:none;
+    }
+
+    header,
+    .site-header,
+    .header-inner,
+    .brand-wrap,
+    .brand-row,
+    .hero,
+    .archive-shell,
+    .archive-top,
+    .entry-panel,
+    .entry-layer,
+    .archive-entry,
+    .archive-entry-wrap,
+    .archive-enter,
+    .enter-archive,
+    .entry-btn,
+    #archiveEntry,
+    #enterArchive,
+    #enterArchivePro,
+    #entryBtn,
+    .lang-panel,
+    .hero-card,
+    .hero-topbar,
+    .lang-tabs,
+    .lang-tab,
+    .stats-panel,
+    .stats,
+    .stat-card,
+    .stat,
+    #statTotal,
+    #statFiltered,
+    #statSections{
+      opacity:1 !important;
+      transform:none !important;
+      translate:none !important;
+      filter:none !important;
+      visibility:visible !important;
+      animation:none !important;
+      transition:none !important;
+      transition-delay:0s !important;
+      animation-delay:0s !important;
+      will-change:auto !important;
+    }
+
+    .entry-layer,
+    .entry-panel,
+    .archive-entry-wrap,
+    .archive-entry{
+      min-height:84px;
+      contain:layout paint;
+    }
+
+    #entryBtn,
+    #enterArchive,
+    #enterArchivePro,
+    .archive-enter,
+    .entry-btn{
+      min-height:56px;
+    }
+
+    .hero,
+    .hero-card,
+    .stats,
+    .stats-panel,
+    main,
+    .site-shell,
+    .archive-shell{
+      contain:layout paint;
+    }
+
+    .stat,
+    .stat-card{
+      min-height:128px;
+    }
 </style>
 </head>
 <body>

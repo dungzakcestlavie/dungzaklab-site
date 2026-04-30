@@ -1344,7 +1344,7 @@
     }
 
 
-    /* INSTANT ABOVE-THE-FOLD FIX — no first-screen motion / no anchor shift */
+    /* ENTRY BUTTON FIRST PAINT FIX — fixed DOM presence / no first-screen motion */
     body{
       overflow-anchor:none;
     }
@@ -1361,11 +1361,31 @@
     .stat,
     #statTotal,
     #statFiltered,
-    #statSections{
+    #statSections,
+    .entry-panel,
+    .archive-entry,
+    .archive-enter,
+    .enter-archive,
+    #archiveEntry,
+    #enterArchive,
+    #enterArchivePro,
+    #entryBtn{
+      opacity:1 !important;
+      transform:none !important;
+      translate:none !important;
       animation:none !important;
       transition:none !important;
+      will-change:auto !important;
+    }
+
+    .hero,
+    .site-shell,
+    .main-panel,
+    .panel,
+    .card{
+      animation:none !important;
+      transition-property:border-color, background-color !important;
       transform:none !important;
-      opacity:1 !important;
     }
 
     main,
@@ -1378,8 +1398,18 @@
       min-height:128px;
     }
 
-    .entry-layer{
+    .entry-layer,
+    .entry-panel,
+    .archive-entry-wrap{
       min-height:84px;
+      contain:layout paint;
+    }
+
+    #entryBtn,
+    #enterArchive,
+    #enterArchivePro,
+    .archive-enter{
+      min-height:56px;
     }
 
 </style>
@@ -1432,17 +1462,17 @@
       <aside class="panel stats" aria-label="아카이브 통계">
         <div class="stat">
           <div class="k" id="statLabelTotal">Total</div>
-          <div class="v" id="statTotal">1,368</div>
+          <div class="v" id="statTotal">—</div>
           <div class="d" id="statDescTotal">전체 작품 수</div>
         </div>
         <div class="stat">
           <div class="k" id="statLabelFiltered">Filtered</div>
-          <div class="v" id="statFiltered">1,368</div>
+          <div class="v" id="statFiltered">—</div>
           <div class="d" id="statDescFiltered">현재 검색 결과</div>
         </div>
         <div class="stat">
           <div class="k" id="statLabelSections">Sections</div>
-          <div class="v" id="statSections">6</div>
+          <div class="v" id="statSections">—</div>
           <div class="d" id="statDescSections">섹션 수</div>
         </div>
       </aside>
@@ -1506,7 +1536,7 @@
     <div class="meta-row">
       <div class="meta-left">
         <span class="meta-pill" id="sourcePill">Source: data/works.json</span>
-        <span class="meta-pill" id="loadedPill">Data: 1,368 items</span>
+        <span class="meta-pill" id="loadedPill">Data: — items</span>
       </div>
       <div class="meta-right">
         <span id="statusText" class="status">준비됨</span>
@@ -1518,8 +1548,8 @@
 
       <div id="resultsMeta" class="meta-row" style="display:flex;">
         <div class="meta-left">
-          <strong id="resultText">1,368점</strong>
-          <span class="meta-pill" id="renderedText">표시 16점</span>
+          <strong id="resultText">—</strong>
+          <span class="meta-pill" id="renderedText">표시 —</span>
         </div>
         <div class="meta-right">
           <span

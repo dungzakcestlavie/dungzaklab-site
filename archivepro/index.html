@@ -2143,7 +2143,7 @@
       const INITIAL_VISIBLE = getInitialVisibleCount();
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 120;
-      const ASSET_VERSION = 'section-image-sim-' + String(Date.now());
+      const ASSET_VERSION = 'ap-img';
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
 
@@ -2519,7 +2519,7 @@
               loadLazyImage(entry.target);
               observer.unobserve(entry.target);
             });
-          }, { root: null, rootMargin: '900px 0px', threshold: 0.001 })
+          }, { root: null, rootMargin: '360px 0px', threshold: 0.001 })
         : null;
 
       function t(key) {
@@ -3300,8 +3300,6 @@
         if (!img || img.dataset.loaded === 'true') return;
 
         const src = img.dataset.src || img.getAttribute('data-src') || '';
-        const card = img.closest ? img.closest('.card[data-key]') : null;
-        const boundKey = card ? safeText(card.dataset.key) : '';
 
         if (!src) {
           img.src = SVG_PLACEHOLDER;
@@ -3310,31 +3308,21 @@
           return;
         }
 
-        const test = new Image();
-        test.decoding = 'async';
-
-        test.onload = () => {
-          const currentCard = img.closest ? img.closest('.card[data-key]') : null;
-          const currentKey = currentCard ? safeText(currentCard.dataset.key) : '';
-          if (boundKey && currentKey !== boundKey) return;
-          img.src = src;
+        img.onload = () => {
           img.classList.add('is-loaded');
           img.classList.remove('is-error');
           img.dataset.loaded = 'true';
           img.removeAttribute('data-src');
         };
 
-        test.onerror = () => {
-          const currentCard = img.closest ? img.closest('.card[data-key]') : null;
-          const currentKey = currentCard ? safeText(currentCard.dataset.key) : '';
-          if (boundKey && currentKey !== boundKey) return;
+        img.onerror = () => {
           img.classList.add('is-error', 'is-loaded');
           img.dataset.loaded = 'true';
           img.removeAttribute('data-src');
           img.src = SVG_PLACEHOLDER;
         };
 
-        test.src = src;
+        img.src = src;
       }
 
       function observeLazyImages(root = els.grid) {
@@ -3756,38 +3744,17 @@
 
       function buildWorksJsonUrls() {
         /*
-          Archive Pro latest JSON rule:
-          - Try the local Archive Pro data file first, because 등작 can update it directly.
-          - Reject any accidental one-item / test JSON.
-          - Then try raw GitHub and public mirrors with cache-busting.
-          - The first valid dataset with enough works is accepted.
+          Archive Pro Image Loading Zero-Lag Strategy:
+          JSON is fetched once from the single source of truth.
+          Images are not preloaded here; card thumbnails load only through
+          eager priority for the first 1-2 items and IntersectionObserver for the rest.
         */
-        const urls = [];
-        const add = (url) => {
-          const clean = safeText(url);
-          if (clean && !urls.includes(clean)) urls.push(clean);
-        };
-
-        if (window.ARCHIVE_PRO_WORKS_URL) add(window.ARCHIVE_PRO_WORKS_URL);
-
-        try {
-          add(new URL('./data/works.json', window.location.href).href);
-          add(new URL('data/works.json', window.location.href).href);
-        } catch (_) {
-          add('./data/works.json');
-          add('data/works.json');
-        }
-
-        add('https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json');
-        add('https://dungzakcestlavie.github.io/data/works.json');
-        add('https://dungzak.art/data/works.json');
-
-        return urls;
+        return [DATA_URL];
       }
 
       async function fetchJsonNoStore(url) {
         const res = await fetch(url, {
-          cache: 'force-cache',
+          cache: 'no-store',
           mode: 'cors',
           credentials: 'omit'
         });

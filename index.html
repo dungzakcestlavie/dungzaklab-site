@@ -12,10 +12,18 @@
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://dungzaklab.art/">
 
-<link rel="preload" href="/archivepro/index.html" as="document">
-<link rel="prefetch" href="/archivepro/index.html">
+<link rel="preconnect" href="https://dungzak.art" crossorigin>
+<link rel="dns-prefetch" href="//dungzak.art">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
-<link rel="dns-prefetch" href="https://raw.githubusercontent.com">
+<link rel="dns-prefetch" href="//raw.githubusercontent.com">
+<link rel="prefetch" href="/archivepro/index.html" as="document">
+<link rel="prefetch" href="https://dungzak.art/data/works.json" as="fetch" crossorigin>
+<script type="speculationrules">
+{
+  "prefetch": [{ "source": "list", "urls": ["/archivepro/index.html"] }],
+  "prerender": [{ "source": "list", "urls": ["/archivepro/index.html"] }]
+}
+</script>
 
 <link rel="alternate" href="https://dungzaklab.art/" hreflang="ko">
 <link rel="alternate" href="https://dungzaklab.art/?lang=en" hreflang="en">
@@ -775,14 +783,24 @@ button,
 
 
 
-/* ARCHIVE PRO LINK INSTANT FIX — pure browser navigation, no transition */
-a[href="/archivepro/index.html"]{
+/* ARCHIVE PRO PERCEIVED INSTANT LOAD FIX — no design change */
+a[href="/archivepro/index.html"],
+[data-archive-pro-link]{
   animation:none !important;
+  -webkit-tap-highlight-color:rgba(184,150,62,0.20);
 }
+
 #enterArchivePro,
-.selector-link[href="/archivepro/index.html"]{
+.selector-link[href="/archivepro/index.html"],
+[data-archive-pro-link]{
   transition:none !important;
   animation:none !important;
+}
+
+body.is-leaving-archive #enterArchivePro,
+body.is-leaving-archive [data-archive-pro-link]{
+  opacity:0.72;
+  transform:translateY(0);
 }
 
 /* RESPONSIVE */
@@ -980,7 +998,7 @@ a[href="/archivepro/index.html"]{
 <div class="menu" id="menu" aria-hidden="true">
   <a href="#" onclick="openOcean(); return false;">OCEAN ENERGY</a>
   <a href="#" onclick="openArchive(); return false;">ARCHIVE</a>
-  <a href="/archivepro/index.html">ARCHIVE PRO</a>
+  <a href="/archivepro/index.html" data-archive-pro-link>ARCHIVE PRO</a>
   <a href="#" onclick="openBooks(); return false;">BOOKS</a>
   <a href="#" onclick="openAbout(); return false;">ABOUT</a>
   <a href="https://dungzak.art" target="_blank" rel="noopener" onclick="closeMenu()">DUNGZAK.ART</a>
@@ -999,7 +1017,7 @@ a[href="/archivepro/index.html"]{
     </div>
 
     <div class="home-selector">
-      <a id="enterArchivePro" href="/archivepro/index.html" class="selector-link">ENTER ARCHIVE PRO →</a>
+      <a id="enterArchivePro" href="/archivepro/index.html" class="selector-link" data-archive-pro-link>ENTER ARCHIVE PRO →</a>
       <a href="#" class="selector-link" onclick="openOcean(); return false;">OCEAN ENERGY</a>
       <a href="#" class="selector-link" onclick="openArchive(); return false;">ARCHIVE</a>
       <a href="#" class="selector-link" onclick="openBooks(); return false;">BOOKS</a>
@@ -1194,14 +1212,6 @@ and interactive relationships.
   </div>
 </div>
 
-<iframe
-  id="archivePreload"
-  src="/archivepro/index.html"
-  loading="eager"
-  aria-hidden="true"
-  tabindex="-1"
-  style="position:fixed; width:0; height:0; border:0; opacity:0; pointer-events:none;"
-></iframe>
 <script>
 const menu = document.getElementById('menu');
 const menuOverlay = document.getElementById('menuOverlay');
@@ -1500,42 +1510,50 @@ setLanguage(savedLang === 'en' ? 'en' : 'ko');
 let archiveNavigating = false;
 let archiveProWarmed = false;
 
-const enterArchivePro = document.getElementById('enterArchivePro');
+const archiveProLinks = document.querySelectorAll('a[href="/archivepro/index.html"], [data-archive-pro-link]');
 
 function warmArchivePro(){
   if(archiveProWarmed) return;
   archiveProWarmed = true;
 
-  const frame = document.getElementById('archivePreload');
-  if(frame && !frame.getAttribute('src')){
-    frame.setAttribute('src', '/archivepro/index.html');
-  }
+  const urls = [
+    { href: '/archivepro/index.html', as: 'document', crossorigin: false },
+    { href: 'https://dungzak.art/data/works.json', as: 'fetch', crossorigin: true }
+  ];
 
-  const l = document.createElement('link');
-  l.rel = 'prefetch';
-  l.href = '/archivepro/index.html';
-  document.head.appendChild(l);
+  urls.forEach(item => {
+    if(document.head.querySelector('link[rel="prefetch"][href="' + item.href + '"]')) return;
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = item.href;
+    link.as = item.as;
+    if(item.crossorigin) link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+  });
 }
 
-if(enterArchivePro){
-  enterArchivePro.addEventListener('pointerdown', function(e){
+function goArchivePro(link){
+  if(archiveNavigating || !link) return;
+  archiveNavigating = true;
+  document.body.classList.add('is-leaving-archive');
+  const url = link.href || '/archivepro/index.html';
+  window.location.href = url;
+}
+
+archiveProLinks.forEach(link => {
+  link.addEventListener('pointerdown', function(e){
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    goArchivePro(link);
+  }, { passive: true });
+
+  link.addEventListener('click', function(e){
     e.preventDefault();
-    if(archiveNavigating) return;
-    archiveNavigating = true;
+    goArchivePro(link);
+  });
 
-    const url = enterArchivePro.getAttribute('href') || '/archivepro/index.html';
-    const iframe = document.getElementById('archivePreload');
-
-    if(iframe && iframe.contentWindow){
-      window.location.replace(url);
-    }else{
-      window.location.href = url;
-    }
-  }, { passive: false });
-
-  enterArchivePro.addEventListener('mouseenter', warmArchivePro, { once: true });
-  enterArchivePro.addEventListener('touchstart', warmArchivePro, { once: true, passive: true });
-}
+  link.addEventListener('mouseenter', warmArchivePro, { once: true });
+  link.addEventListener('touchstart', warmArchivePro, { once: true, passive: true });
+});
 
 window.__DZLAB_BOOT_READY__ = true;
 

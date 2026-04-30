@@ -2108,25 +2108,23 @@
 
       function normalizeItem(raw, index) {
         const item = raw && typeof raw === 'object' ? raw : {};
-        const sectionId = inferSectionId(item);
-        const status = sectionId === 0 ? '' : normalizeStatus(item.status || 'available');
 
         return {
           _index: index,
-          id: safeText(item.id) || `item-${index + 1}`,
-          section_id: sectionId,
-          section_kr: safeText(item.section_kr),
-          section_en: safeText(item.section_en),
-          title_kr: safeText(item.title_kr),
-          title_en: safeText(item.title_en),
-          material_kr: safeText(item.material_kr),
-          material_en: safeText(item.material_en),
-          size_kr: safeText(item.size_kr),
-          size_en: safeText(item.size_en),
-          year: safeText(item.year),
-          image: safeText(item.image),
-          zoom: safeText(item.zoom || item.image),
-          status: status
+          id: String(item.id || '').trim() || 'item-' + (index + 1),
+          section_id: Number(item.section_id ?? 0),
+          section_kr: String(item.section_kr || '').trim(),
+          section_en: String(item.section_en || '').trim(),
+          title_kr: String(item.title_kr || '').trim(),
+          title_en: String(item.title_en || '').trim(),
+          material_kr: String(item.material_kr || '').trim(),
+          material_en: String(item.material_en || '').trim(),
+          size_kr: String(item.size_kr || '').trim(),
+          size_en: String(item.size_en || '').trim(),
+          year: String(item.year || '').trim(),
+          image: String(item.image || '').trim(),
+          zoom: String(item.zoom || item.image || '').trim(),
+          status: String(item.status || '').trim()
         };
       }
 
@@ -2524,62 +2522,45 @@
         CURRENT_LIST = state.filtered;
         visibleCount = state.visibleCount;
 
-        const totalCount = Array.isArray(state.all) ? state.all.length : 0;
-        const filteredCount = Array.isArray(state.filtered) ? state.filtered.length : 0;
-        const visibleNow = Math.min(state.visibleCount, filteredCount);
-        const sectionCount = new Set(
-          (Array.isArray(state.all) ? state.all : [])
-            .map((item) => Number(item.section_id))
-            .filter((n) => !Number.isNaN(n))
+        const total = state.all.length;
+        const filtered = state.filtered.length;
+        const sections = new Set(
+          state.all
+            .map(item => Number(item.section_id))
+            .filter(n => Number.isFinite(n))
         ).size;
+        const visibleNow = Math.min(state.visibleCount, filtered);
 
-        els.statTotal.textContent = numberFormat.format(totalCount);
-        els.statFiltered.textContent = numberFormat.format(filteredCount);
-        els.statSections.textContent = numberFormat.format(sectionCount);
-        els.loadedPill.textContent = `Data: ${numberFormat.format(totalCount)} items`;
+        els.statTotal.textContent = numberFormat.format(total);
+        els.statFiltered.textContent = numberFormat.format(filtered);
+        els.statSections.textContent = numberFormat.format(sections);
+        els.loadedPill.textContent = `Data: ${numberFormat.format(total)} items`;
 
         updateActiveFilterDataset();
 
         if (state.lang === 'en') {
-          els.resultText.textContent = `${numberFormat.format(filteredCount)}${t('resultUnit')}`;
+          els.resultText.textContent = `${numberFormat.format(filtered)}${t('resultUnit')}`;
           els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}`;
         } else {
-          els.resultText.textContent = `${numberFormat.format(filteredCount)}${t('resultUnit')}`;
+          els.resultText.textContent = `${numberFormat.format(filtered)}${t('resultUnit')}`;
           els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}${t('renderedSuffix')}`;
         }
       }
 
       function loadLazyImage(img) {
-        if (!img || img.dataset.loaded === 'true') return;
-
-        const src = img.dataset.src || '';
-        if (!img.dataset.listenerReady) {
-          img.addEventListener('load', () => {
-            img.classList.add('is-loaded');
-          }, { once: true });
-
-          img.addEventListener('error', () => {
-            img.removeAttribute('data-src');
-            img.src = SVG_PLACEHOLDER;
-            img.classList.add('is-error');
-          }, { once: true });
-
-          img.dataset.listenerReady = 'true';
-        }
-
-        if (!src) {
-          img.src = SVG_PLACEHOLDER;
+        const src = img.dataset.src;
+        if (!src) return;
+        img.onload = () => img.classList.add('is-loaded');
+        img.onerror = () => {
           img.classList.add('is-error');
-          img.dataset.loaded = 'true';
-          return;
-        }
-
-        img.dataset.loaded = 'true';
+          img.src = SVG_PLACEHOLDER;
+        };
         img.src = src;
+        img.removeAttribute('data-src');
       }
 
       function observeLazyImages(root = els.grid) {
-        const images = Array.from(root.querySelectorAll('img.thumb[data-src]:not([data-loaded="true"])'));
+        const images = Array.from(root.querySelectorAll('img.thumb[data-src]'));
 
         if (!lazyImageObserver) {
           images.forEach(loadLazyImage);
@@ -2628,20 +2609,15 @@
         const size = isOrigin ? '' : getSize(item);
         const year = isOrigin ? '' : getYear(item);
         const infoLine = isOrigin ? '' : [material, size, year].filter(Boolean).join(' / ');
-        const imageSrc = toAbsoluteUrl(item.image || '');
+        const imageSrc = item.image || '';
         const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(item);
-        const isEagerThumb = index < INITIAL_VISIBLE;
-        const thumbLoading = isEagerThumb ? 'eager' : 'lazy';
-        const thumbPriority = isEagerThumb ? 'high' : 'low';
-        const thumbSrcAttr = isEagerThumb ? ' src="' + escapeHTML(imageSrc) + '"' : '';
-        const thumbClass = isEagerThumb ? 'thumb is-loaded' : 'thumb';
-        const thumbLoaded = isEagerThumb ? 'true' : 'false';
+        const thumbClass = 'thumb';
 
         return [
           '<article class="card" tabindex="0" role="button" data-id="', escapeHTML(item.id), '" aria-label="', escapeHTML(item.id), ' 작품 보기">',
             '<div class="thumb-wrap">',
-              '<img class="', thumbClass, '" alt="', escapeHTML(title || item.id), '" width="800" height="800" loading="', thumbLoading, '" decoding="async" fetchpriority="', thumbPriority, '"', thumbSrcAttr, ' data-src="', escapeHTML(imageSrc), '" data-zoom="', escapeHTML(toAbsoluteUrl(item.zoom || '')), '" data-loaded="', thumbLoaded, '">',
+              '<img class="', thumbClass, '" data-src="', escapeHTML(imageSrc), '" alt="', escapeHTML(title || item.id), '" loading="lazy" decoding="async" data-zoom="', escapeHTML(item.zoom || ''), '">',
               '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
             '</div>',
             '<div class="card-body">',
@@ -2921,11 +2897,11 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
-      function parseWorksPayload(raw) {
-        if (Array.isArray(raw)) return raw;
-        if (raw && Array.isArray(raw.works)) return raw.works;
-        if (raw && raw.data && Array.isArray(raw.data.works)) return raw.data.works;
-        if (raw && raw.archive && Array.isArray(raw.archive.works)) return raw.archive.works;
+      function parseWorksPayload(json) {
+        if (Array.isArray(json)) return json;
+        if (json && Array.isArray(json.works)) return json.works;
+        if (json && json.data && Array.isArray(json.data.works)) return json.data.works;
+        if (json && json.archive && Array.isArray(json.archive.works)) return json.archive.works;
         return [];
       }
 
@@ -2937,12 +2913,10 @@
         if (worksLoadPromise) return worksLoadPromise;
 
         worksLoadPromise = fetch(`${DATA_URL}?ts=${Date.now()}`, { cache: 'no-store' })
-          .then((response) => {
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return response.json();
-          })
-          .then((raw) => {
-            const works = parseWorksPayload(raw);
+          .then(async (res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const json = await res.json();
+            const works = parseWorksPayload(json);
             if (!Array.isArray(works) || works.length === 0) {
               throw new Error('works.json parsed but works array is empty');
             }

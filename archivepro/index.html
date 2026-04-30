@@ -1265,7 +1265,12 @@
     .card{ content-visibility:auto; contain-intrinsic-size:360px 520px; will-change:auto; }
     .thumb{ will-change:auto; }
 
-  </style>
+  
+    /* MOBILE LOAD FAILSAFE / FAST INITIAL PAINT */
+    #grid{ contain:layout paint style; }
+    .card{ content-visibility:auto; contain-intrinsic-size:360px 520px; will-change:auto; }
+    .thumb{ will-change:auto; }
+</style>
 </head>
 <body>
   <div class="site-bg" aria-hidden="true"></div>
@@ -1499,9 +1504,9 @@
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
       const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260430-stable-light-search';
       const DATA_URLS = [
-        'https://dungzak.art/data/works.json?v=20260430-stable-light-search',
+        DATA_URL,
         'https://dungzakcestlavie.github.io/data/works.json?v=20260430-stable-light-search',
-        DATA_URL
+        'https://dungzak.art/data/works.json?v=20260430-stable-light-search'
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
@@ -2673,13 +2678,13 @@
       function render() {
         if (!els.grid) return;
 
-        els.loadingScreen.style.display = 'none';
-        els.resultsMeta.style.display = 'flex';
-        els.emptyState.hidden = state.filtered.length !== 0;
+        if (els.loadingScreen) els.loadingScreen.style.display = 'none';
+        if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
+        if (els.emptyState) els.emptyState.hidden = state.filtered.length !== 0;
 
         if (!state.filtered.length) {
           els.grid.replaceChildren();
-          els.loadWrap.hidden = true;
+          if (els.loadWrap) els.loadWrap.hidden = true;
           updateStats();
           return;
         }
@@ -2695,7 +2700,7 @@
         syncDataLanguage(els.grid);
         observeLazyImages(els.grid);
 
-        els.loadWrap.hidden = visible.length >= state.filtered.length;
+        if (els.loadWrap) els.loadWrap.hidden = visible.length >= state.filtered.length;
         updateStats();
       }
 
@@ -2885,9 +2890,7 @@
         els.sectionSelect.value = 'all';
         els.sortSelect.value = FAST_ORDER;
 
-        state.filtered = state.all;
-        updateSectionButtonState();
-        render();
+        applyFilters(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
@@ -2914,13 +2917,13 @@
         return [];
       }
 
-      async function fetchWithTimeout(url, timeoutMs = 6500) {
+      async function fetchWithTimeout(url, timeoutMs = 3500) {
         const controller = new AbortController();
         const timer = window.setTimeout(() => controller.abort(), timeoutMs);
 
         try {
           const response = await fetch(url, {
-            cache: 'no-store',
+            cache: 'default',
             signal: controller.signal
           });
           return response;
@@ -2934,7 +2937,7 @@
 
         for (const url of DATA_URLS) {
           try {
-            const response = await fetchWithTimeout(url, 6500);
+            const response = await fetchWithTimeout(url, 3500);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             const text = await response.text();
@@ -2987,9 +2990,9 @@
         state.visibleCount = INITIAL_VISIBLE;
         state.filtered = state.all;
 
-        els.searchInput.value = '';
-        els.sectionSelect.value = 'all';
-        els.sortSelect.value = FAST_ORDER;
+        if (els.searchInput) els.searchInput.value = '';
+        if (els.sectionSelect) els.sectionSelect.value = 'all';
+        if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
 
         updateSectionButtonState();
         render();

@@ -525,7 +525,8 @@
     }
 
     .thumb.is-loaded,
-    .thumb.is-error{
+    .thumb.is-error,
+    .thumb.is-priority{
       opacity:1;
     }
 
@@ -1883,7 +1884,7 @@
               loadLazyImage(entry.target);
               observer.unobserve(entry.target);
             });
-          }, { root: null, rootMargin: '300px', threshold: 0.01 })
+          }, { root: null, rootMargin: '900px 0px', threshold: 0.001 })
         : null;
 
       function t(key) {
@@ -2292,11 +2293,28 @@
       }
 
       function prepareFastSearchCache(item) {
-        buildSearchText(item);
         item._fastSearch = buildFastSearchText(item);
         item._yearEndNumber = parseYearEndNumber(item.year) || 0;
         item._yearStartNumber = parseYearNumber(item.year) || 0;
         return item;
+      }
+
+      function scheduleFullSearchIndex() {
+        const list = state.all || [];
+        let i = 0;
+        const run = (deadline) => {
+          const hasTime = () => !deadline || deadline.timeRemaining() > 6;
+          while (i < list.length && hasTime()) {
+            buildSearchText(list[i]);
+            i += 1;
+          }
+          if (i < list.length) {
+            if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 1200 });
+            else window.setTimeout(() => run(null), 16);
+          }
+        };
+        if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 1200 });
+        else window.setTimeout(() => run(null), 16);
       }
 
       function getQueryTokens(rawQuery) {
@@ -2545,21 +2563,26 @@
       }
 
       function loadLazyImage(img) {
+        if (!img || img.dataset.loaded === 'true') return;
+
         const src = img.dataset.src || img.getAttribute('data-src') || '';
         if (!src) {
           img.src = SVG_PLACEHOLDER;
-          img.classList.add('is-error');
+          img.classList.add('is-error', 'is-loaded');
+          img.dataset.loaded = 'true';
           return;
         }
 
         img.onload = () => {
           img.classList.add('is-loaded');
           img.classList.remove('is-error');
+          img.dataset.loaded = 'true';
         };
 
         img.onerror = () => {
-          img.classList.add('is-error');
-          img.classList.add('is-loaded');
+          img.classList.add('is-error', 'is-loaded');
+          img.dataset.loaded = 'true';
+          img.removeAttribute('data-src');
           img.src = SVG_PLACEHOLDER;
         };
 
@@ -2620,12 +2643,17 @@
         const imageSrc = item.image || SVG_PLACEHOLDER;
         const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(item);
-        const thumbClass = 'thumb';
+        const priority = index < 8;
+        const imgSrc = priority ? imageSrc : SVG_PLACEHOLDER;
+        const dataSrc = priority ? '' : ' data-src="' + escapeHTML(imageSrc) + '"';
+        const loading = priority ? 'eager' : 'lazy';
+        const fetchPriority = index < 4 ? 'high' : 'low';
+        const loadedClass = priority ? ' is-priority' : '';
 
         return [
           '<article class="card" tabindex="0" role="button" data-id="', escapeHTML(item.id), '" aria-label="', escapeHTML(item.id), ' 작품 보기">',
             '<div class="thumb-wrap">',
-              '<img class="', thumbClass, '" src="', escapeHTML(SVG_PLACEHOLDER), '" data-src="', escapeHTML(imageSrc), '" alt="', escapeHTML(title || item.id), '" loading="lazy" decoding="async" data-zoom="', escapeHTML(item.zoom || ''), '">',
+              '<img class="thumb', loadedClass, '" src="', escapeHTML(imgSrc), '"', dataSrc, ' alt="', escapeHTML(title || item.id), '" loading="', loading, '" decoding="async" fetchpriority="', fetchPriority, '" data-zoom="', escapeHTML(item.zoom || ''), '">',
               '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
             '</div>',
             '<div class="card-body">',
@@ -2963,14 +2991,11 @@
 
       function buildWorksJsonUrls() {
         /*
-          Archive Pro source order:
-          1) Always read the latest official dungzak.art works.json first.
-          2) Then try the GitHub Pages mirror.
-          3) Then try the local Archive Pro data file only as a fallback.
-
-          This prevents the failure where an old local
-          /archivepro/data/works.json containing only 1 test item overrides
-          the real, current works.json.
+          Archive Pro latest JSON rule:
+          - Try the local Archive Pro data file first, because 등작 can update it directly.
+          - Reject any accidental one-item / test JSON.
+          - Then try raw GitHub and public mirrors with cache-busting.
+          - The first valid dataset with enough works is accepted.
         */
         const urls = [];
         const add = (url) => {
@@ -2978,18 +3003,19 @@
           if (clean && !urls.includes(clean)) urls.push(clean);
         };
 
-        add('https://dungzak.art/data/works.json');
-        add('https://dungzakcestlavie.github.io/data/works.json');
-        add('https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json');
+        if (window.ARCHIVE_PRO_WORKS_URL) add(window.ARCHIVE_PRO_WORKS_URL);
 
         try {
+          add(new URL('./data/works.json', window.location.href).href);
           add(new URL('data/works.json', window.location.href).href);
         } catch (_) {
+          add('./data/works.json');
           add('data/works.json');
         }
 
-        add('./data/works.json');
-        add('data/works.json');
+        add('https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json');
+        add('https://dungzakcestlavie.github.io/data/works.json');
+        add('https://dungzak.art/data/works.json');
 
         return urls;
       }
@@ -2999,10 +3025,8 @@
         const finalUrl = `${url}${separator}ts=${Date.now()}`;
         const res = await fetch(finalUrl, {
           cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
+          mode: 'cors',
+          credentials: 'omit'
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -3013,37 +3037,28 @@
 
         worksLoadPromise = (async () => {
           const urls = buildWorksJsonUrls();
-          let lastError = null;
-          let smallFallback = null;
+          const failures = [];
 
           for (const url of urls) {
             try {
               const json = await fetchJsonNoStore(url);
               const works = parseWorksPayload(json);
+              const count = Array.isArray(works) ? works.length : 0;
 
-              if (Array.isArray(works) && works.length >= MIN_EXPECTED_WORKS) {
+              if (count >= MIN_EXPECTED_WORKS) {
                 if (els.sourcePill) els.sourcePill.textContent = `Source: ${url}`;
                 return works;
               }
 
-              if (Array.isArray(works) && works.length > 0 && !smallFallback) {
-                smallFallback = { url, works };
-                lastError = new Error(`works.json at ${url} has only ${works.length} item(s), so Archive Pro continues searching for the latest full JSON.`);
-                continue;
-              }
-
-              lastError = new Error(`works.json at ${url} parsed but works array is empty`);
+              failures.push(`${url} → ${count} item(s), skipped`);
+              console.warn('[Archive Pro] skipped small/invalid works.json:', url, count);
             } catch (error) {
-              lastError = error;
+              failures.push(`${url} → ${error && error.message ? error.message : error}`);
+              console.warn('[Archive Pro] load failed:', url, error);
             }
           }
 
-          if (smallFallback) {
-            if (els.sourcePill) els.sourcePill.textContent = `Source: ${smallFallback.url}`;
-            return smallFallback.works;
-          }
-
-          throw lastError || new Error('Unable to load works.json');
+          throw new Error('No valid works.json found. ' + failures.join(' | '));
         })().catch((error) => {
           worksLoadPromise = null;
           throw error;
@@ -3070,7 +3085,8 @@
           const works = await fetchWorksDirect();
           const normalized = works
             .map(normalizeItem)
-            .filter(item => item && item.id);
+            .filter(item => item && item.id)
+            .map(prepareFastSearchCache);
 
           state.all = normalized;
           state.query = '';
@@ -3094,6 +3110,7 @@
 
           rebuildStaticTexts();
           renderAll();
+          scheduleFullSearchIndex();
 
           window.__ARCHIVE_PRO_SIMULATION__ = {
             loaded: WORKS_DATA.length,
@@ -3426,9 +3443,9 @@
         });
       }
 
-      document.addEventListener('DOMContentLoaded', async () => {
+      document.addEventListener('DOMContentLoaded', () => {
         bindEvents();
-        await loadArchiveData();
+        loadArchiveData();
       });
     })();
   

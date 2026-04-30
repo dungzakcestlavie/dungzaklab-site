@@ -1403,17 +1403,17 @@
       <aside class="panel stats" aria-label="아카이브 통계">
         <div class="stat">
           <div class="k" id="statLabelTotal">Total</div>
-          <div class="v" id="statTotal">0</div>
+          <div class="v" id="statTotal">—</div>
           <div class="d" id="statDescTotal">전체 작품 수</div>
         </div>
         <div class="stat">
           <div class="k" id="statLabelFiltered">Filtered</div>
-          <div class="v" id="statFiltered">0</div>
+          <div class="v" id="statFiltered">—</div>
           <div class="d" id="statDescFiltered">현재 검색 결과</div>
         </div>
         <div class="stat">
           <div class="k" id="statLabelSections">Sections</div>
-          <div class="v" id="statSections">0</div>
+          <div class="v" id="statSections">—</div>
           <div class="d" id="statDescSections">섹션 수</div>
         </div>
       </aside>
@@ -1477,7 +1477,7 @@
     <div class="meta-row">
       <div class="meta-left">
         <span class="meta-pill" id="sourcePill">Source: data/works.json</span>
-        <span class="meta-pill" id="loadedPill">Data: 0 items</span>
+        <span class="meta-pill" id="loadedPill">Data: — items</span>
       </div>
       <div class="meta-right">
         <span id="statusText" class="status">준비됨</span>
@@ -1489,8 +1489,8 @@
 
       <div id="resultsMeta" class="meta-row" style="display:flex;">
         <div class="meta-left">
-          <strong id="resultText">0점</strong>
-          <span class="meta-pill" id="renderedText">표시 8점</span>
+          <strong id="resultText">—</strong>
+          <span class="meta-pill" id="renderedText">표시 —</span>
         </div>
         <div class="meta-right">
           <span
@@ -2719,6 +2719,17 @@
         CURRENT_LIST = state.filtered;
         visibleCount = state.visibleCount;
 
+        if (!state.isLoaded && !state.all.length) {
+          if (els.statTotal) els.statTotal.textContent = '—';
+          if (els.statFiltered) els.statFiltered.textContent = '—';
+          if (els.statSections) els.statSections.textContent = '—';
+          if (els.loadedPill) els.loadedPill.textContent = 'Data: — items';
+          if (els.resultText) els.resultText.textContent = '—';
+          if (els.renderedText) els.renderedText.textContent = state.lang === 'en' ? 'Visible —' : (state.lang === 'both' ? '표시 / Visible —' : '표시 —');
+          updateActiveFilterDataset();
+          return;
+        }
+
         const total = state.all.length;
         const filtered = state.filtered.length;
         const sections = new Set(
@@ -3699,12 +3710,8 @@
         });
       }
 
-      document.addEventListener('DOMContentLoaded', () => {
-        bindEvents();
-        requestAnimationFrame(() => {
-          setTimeout(loadArchiveData, 50);
-        });
-      });
+      bindEvents();
+      loadArchiveData();
     })();
   
 

@@ -1974,9 +1974,9 @@
       </article>
 
       <aside class="stats-inline" aria-label="아카이브 통계">
-        <span id="statTotal">1,368</span> works ·
-        <span id="statFiltered">1,368</span> results ·
-        <span id="statSections">6</span> sections
+        <span id="statTotal">—</span> works ·
+        <span id="statFiltered">—</span> results ·
+        <span id="statSections">—</span> sections
         <span id="statDescTotal" class="visually-hidden">전체 작품 수</span>
         <span id="statDescFiltered" class="visually-hidden">현재 검색 결과</span>
         <span id="statDescSections" class="visually-hidden">섹션 수</span>
@@ -2023,7 +2023,7 @@
     <div class="meta-row">
       <div class="meta-left">
         <span class="meta-pill" id="sourcePill">Source: data/works.json</span>
-        <span class="meta-pill" id="loadedPill">Data: 1,368 items</span>
+        <span class="meta-pill" id="loadedPill">Data: — items</span>
       </div>
       <div class="meta-right">
         <span id="statusText" class="status">준비됨</span>
@@ -2036,8 +2036,8 @@
 
       <div id="resultsMeta" class="meta-row" style="display:flex;">
         <div class="meta-left">
-          <strong id="resultText">1,368점</strong>
-          <span class="meta-pill" id="renderedText">표시 16점</span>
+          <strong id="resultText">—</strong>
+          <span class="meta-pill" id="renderedText">표시 0점</span>
         </div>
         <div class="meta-right">
           <span
@@ -2135,8 +2135,8 @@
       const DATA_URL = 'https://dungzak.art/data/works.json';
       const MIN_EXPECTED_WORKS = 100;
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
-      const MOBILE_FIRST_RENDER_COUNT = 8;
-      const DESKTOP_FIRST_RENDER_COUNT = 16;
+      const MOBILE_FIRST_RENDER_COUNT = 12;
+      const DESKTOP_FIRST_RENDER_COUNT = 12;
       const FIRST_RENDER_COUNT = DESKTOP_FIRST_RENDER_COUNT;
       const FAST_ORDER = 'section-id-asc';
       const LOAD_MORE_COUNT = 24;
@@ -3786,10 +3786,8 @@
       }
 
       async function fetchJsonNoStore(url) {
-        const separator = url.includes('?') ? '&' : '?';
-        const finalUrl = `${url}${separator}ts=${Date.now()}`;
-        const res = await fetch(finalUrl, {
-          cache: 'no-store',
+        const res = await fetch(url, {
+          cache: 'force-cache',
           mode: 'cors',
           credentials: 'omit'
         });
@@ -4253,14 +4251,20 @@
 
       bindEvents();
 
+      let archiveLoadStarted = false;
+
       function startLoad() {
-        loadArchiveData();
+        if (archiveLoadStarted) return;
+        archiveLoadStarted = true;
+        requestAnimationFrame(() => {
+          loadArchiveData();
+        });
       }
 
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(startLoad, { timeout: 300 });
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startLoad, { once: true });
       } else {
-        setTimeout(startLoad, 0);
+        startLoad();
       }
     })();
 

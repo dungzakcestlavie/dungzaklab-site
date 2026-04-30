@@ -1504,11 +1504,6 @@
       const FIRST_RENDER_COUNT = DESKTOP_FIRST_RENDER_COUNT;
       const FAST_ORDER = 'section-id-asc';
       const LOAD_MORE_COUNT = 24;
-      const WORKS_CACHE_KEY = 'archivepro_works_cache_v1';
-      const WORKS_CACHE_TIME_KEY = 'archivepro_works_cache_time_v1';
-      const WORKS_CACHE_MAX_AGE = 1000 * 60 * 60 * 24;
-      const TOTAL_WORKS_SNAPSHOT = 1352;
-      const TOTAL_SECTIONS_SNAPSHOT = 6;
       const INITIAL_VISIBLE = getInitialVisibleCount();
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 160;
@@ -1744,26 +1739,6 @@
         return window.matchMedia('(max-width: 768px)').matches ? MOBILE_FIRST_RENDER_COUNT : DESKTOP_FIRST_RENDER_COUNT;
       }
 
-      function readWorksCache() {
-        try {
-          const raw = localStorage.getItem(WORKS_CACHE_KEY);
-          const time = Number(localStorage.getItem(WORKS_CACHE_TIME_KEY) || 0);
-          if (!raw || !time) return null;
-          if (Date.now() - time > WORKS_CACHE_MAX_AGE) return null;
-          const parsed = JSON.parse(raw);
-          return Array.isArray(parsed) && parsed.length ? parsed : null;
-        } catch (error) {
-          return null;
-        }
-      }
-
-      function writeWorksCache(list) {
-        try {
-          if (!Array.isArray(list) || !list.length) return;
-          localStorage.setItem(WORKS_CACHE_KEY, JSON.stringify(list));
-          localStorage.setItem(WORKS_CACHE_TIME_KEY, String(Date.now()));
-        } catch (error) {}
-      }
 
       const state = {
         all: [],
@@ -1842,7 +1817,6 @@
       const numberFormat = new Intl.NumberFormat('ko-KR');
       let searchTimer = null;
       let worksLoadPromise = null;
-      let backgroundFetchStarted = false;
       let archiveScrollY = 0;
       let closeClickBlockUntil = 0;
 
@@ -2509,14 +2483,6 @@
         state.section = values.includes(prev) ? prev : 'all';
         els.sectionSelect.value = state.section;
 
-        const fullSectionsCount = new Set(
-          state.all
-            .map(item => Number(item.section_id || 0))
-            .filter(n => !Number.isNaN(n))
-        ).size;
-        els.statSections.textContent = numberFormat.format(
-          state.isLoaded ? fullSectionsCount : TOTAL_SECTIONS_SNAPSHOT
-        );
         updateSectionButtonState();
       }
 
@@ -2558,17 +2524,14 @@
         CURRENT_LIST = state.filtered;
         visibleCount = state.visibleCount;
 
-        const visibleNow = Math.min(state.visibleCount, CURRENT_LIST.length);
-        const hasData = Array.isArray(WORKS_DATA) && WORKS_DATA.length > 0;
-        const totalCount = hasData ? WORKS_DATA.length : TOTAL_WORKS_SNAPSHOT;
-        const filteredCount = hasData ? (Array.isArray(CURRENT_LIST) ? CURRENT_LIST.length : totalCount) : TOTAL_WORKS_SNAPSHOT;
-        const sectionCount = hasData
-          ? (new Set(
-              WORKS_DATA
-                .map(item => Number(item.section_id || 0))
-                .filter(n => !Number.isNaN(n))
-            ).size || TOTAL_SECTIONS_SNAPSHOT)
-          : TOTAL_SECTIONS_SNAPSHOT;
+        const totalCount = Array.isArray(state.all) ? state.all.length : 0;
+        const filteredCount = Array.isArray(state.filtered) ? state.filtered.length : 0;
+        const visibleNow = Math.min(state.visibleCount, filteredCount);
+        const sectionCount = new Set(
+          (Array.isArray(state.all) ? state.all : [])
+            .map((item) => Number(item.section_id))
+            .filter((n) => !Number.isNaN(n))
+        ).size;
 
         els.statTotal.textContent = numberFormat.format(totalCount);
         els.statFiltered.textContent = numberFormat.format(filteredCount);
@@ -2719,7 +2682,7 @@
         observeLazyImages(els.grid);
       }
 
-      function render() {
+      function renderGrid() {
         if (!els.grid) return;
 
         if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; }
@@ -2738,6 +2701,30 @@
 
         if (els.loadWrap) els.loadWrap.hidden = visible.length >= state.filtered.length;
         updateStats();
+      }
+
+      function renderSectionOptions() {
+        populateSections();
+      }
+
+      function renderSectionButtons() {
+        updateSectionButtonState();
+      }
+
+      function updateMeta() {
+        updateStats();
+      }
+
+      function renderAll() {
+        updateStats();
+        renderSectionOptions();
+        renderSectionButtons();
+        renderGrid();
+        updateMeta();
+      }
+
+      function render() {
+        renderGrid();
       }
 
       function openLightbox(item) {
@@ -2855,49 +2842,44 @@
 
       window.closeViewer = closeViewer;
 
+      function applyFilterSort(sourceList = state.all) {
+        let result = Array.isArray(sourceList) ? sourceList : [];
+
+        const sectionValue = state.section || 'all';
+        if (sectionValue !== 'all') {
+          const sectionNumber = Number(sectionValue);
+          result = result.filter((item) => Number(item.section_id) === sectionNumber);
+        }
+
+        const queryValue = safeText(state.query);
+        if (queryValue && compactSearchToken(queryValue).length >= 2) {
+          if (!state._searchPrepared) {
+            state.all = state.all.map(prepareFastSearchCache);
+            result = result.map(prepareFastSearchCache);
+            state._searchPrepared = true;
+          }
+          result = result.filter((item) => matchesSearch(item, queryValue));
+        }
+
+        if (state.sort && state.sort !== FAST_ORDER) {
+          result = result.slice().sort((a, b) => compareItems(a, b, state.sort));
+        }
+
+        return result;
+      }
+
       function applyFilters(resetVisible = true) {
         state.query = els.searchInput ? els.searchInput.value : state.query;
         state.section = els.sectionSelect ? els.sectionSelect.value : state.section;
         state.sort = els.sortSelect ? els.sortSelect.value : state.sort;
 
-        if (state.query && compactSearchToken(state.query).length >= 2 && !state._searchPrepared) {
-          state.all = state.all.map(prepareFastSearchCache);
-          state.filtered = state.all;
-          WORKS_DATA = state.all;
-          state._searchPrepared = true;
-        }
+        if (resetVisible) state.visibleCount = getInitialVisibleCount();
 
-        if (resetVisible) state.visibleCount = FIRST_RENDER_COUNT;
-
-        if (!state.query && state.section === 'all' && state.sort === FAST_ORDER) {
-          state.filtered = state.all;
-          CURRENT_LIST = state.filtered;
-          visibleCount = state.visibleCount;
-          updateSectionButtonState();
-          render();
-          return;
-        }
-
-        let result = state.all;
-
-        if (state.section !== 'all') {
-          const sectionNumber = Number(state.section);
-          result = result.filter((item) => item.section_id === sectionNumber);
-        }
-
-        if (state.query && compactSearchToken(state.query).length >= 2) {
-          result = result.filter((item) => matchesSearch(item, state.query));
-        }
-
-        if (state.sort !== FAST_ORDER) {
-          result = result.slice().sort((a, b) => compareItems(a, b, state.sort));
-        }
-
-        state.filtered = result;
+        state.filtered = applyFilterSort(state.all);
         CURRENT_LIST = state.filtered;
         visibleCount = state.visibleCount;
-        updateSectionButtonState();
-        render();
+
+        renderAll();
       }
 
       function resetSortToFastOrder() {
@@ -2939,26 +2921,9 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
-      function parseWorksPayload(text) {
-        let json = null;
-
-        try {
-          json = JSON.parse(text);
-        } catch (firstError) {
-          const repaired = text
-            .replace(/(\"status\"\s*:\s*\"(?:available|reserved|collected|sold)\"\s*)\n\s*\{/g, '$1\n    },\n    {')
-            .replace(/(\"zoom\"\s*:\s*\"[^\"]+\"\s*)\n\s*(\"status\"\s*:)/g, '$1,\n      $2')
-            .replace(/,\s*([}\]])/g, '$1');
-
-          try {
-            json = JSON.parse(repaired);
-          } catch (secondError) {
-            throw firstError;
-          }
-        }
-
-        if (Array.isArray(json)) return json;
-        if (json && Array.isArray(json.works)) return json.works;
+      function parseWorksPayload(raw) {
+        if (Array.isArray(raw)) return raw;
+        if (raw && Array.isArray(raw.works)) return raw.works;
         return [];
       }
 
@@ -2967,13 +2932,20 @@
       }
 
       async function fetchWorksDirect() {
-        const response = await fetch(DATA_URL, { cache: 'force-cache' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (worksLoadPromise) return worksLoadPromise;
 
-        const text = await response.text();
-        const arr = parseWorksPayload(text);
-        if (!Array.isArray(arr)) throw new Error('works payload is not an array');
-        return arr;
+        worksLoadPromise = fetch(`${DATA_URL}?ts=${Date.now()}`, { cache: 'no-store' })
+          .then((response) => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+          })
+          .then((raw) => {
+            const works = parseWorksPayload(raw);
+            if (!Array.isArray(works)) throw new Error('works payload is not an array');
+            return works;
+          });
+
+        return worksLoadPromise;
       }
 
       function showArchiveShellImmediately() {
@@ -2988,18 +2960,21 @@
       async function loadArchiveData() {
         showArchiveShellImmediately();
         state.loadState = 'loading';
+        setStatusByState();
 
         try {
-          const arr = await fetchWorksDirect();
-          state.all = Array.isArray(arr) ? arr.map(normalizeItem) : [];
-          state.filtered = state.all;
+          const works = await fetchWorksDirect();
+
+          state.all = Array.isArray(works) ? works.map(normalizeItem) : [];
           state.query = '';
           state.section = 'all';
           state.sort = FAST_ORDER;
-          state.visibleCount = FIRST_RENDER_COUNT;
+          state.visibleCount = getInitialVisibleCount();
+          state._searchPrepared = false;
+          state.filtered = applyFilterSort(state.all);
           state.loadState = 'loaded';
           state.isLoaded = true;
-          state._searchPrepared = false;
+
           WORKS_READY = true;
           WORKS_DATA = state.all;
           CURRENT_LIST = state.filtered;
@@ -3011,9 +2986,7 @@
           if (els.sourcePill) els.sourcePill.textContent = `Source: ${DATA_URL}`;
 
           rebuildStaticTexts();
-          populateSections();
-          updateSectionButtonState();
-          render();
+          renderAll();
         } catch (error) {
           console.error('Load error:', error);
           state.loadState = 'failed';
@@ -3021,6 +2994,9 @@
           WORKS_READY = false;
           WORKS_DATA = [];
           CURRENT_LIST = [];
+          state.all = [];
+          state.filtered = [];
+
           if (els.statusText) {
             els.statusText.textContent = t('statusFailed');
             els.statusText.classList.add('error');
@@ -3038,7 +3014,8 @@
         state.section = 'all';
         state.sort = FAST_ORDER;
         state.visibleCount = getInitialVisibleCount();
-        state.filtered = state.all;
+        state.filtered = applyFilterSort(state.all);
+
         WORKS_DATA = state.all;
         CURRENT_LIST = state.filtered;
         visibleCount = state.visibleCount;
@@ -3047,8 +3024,7 @@
         if (els.sectionSelect) els.sectionSelect.value = 'all';
         if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
 
-        updateSectionButtonState();
-        render();
+        renderAll();
         window.scrollTo({ top: 0, behavior: 'auto' });
       }
 
@@ -3086,7 +3062,7 @@
         els.loadMoreBtn.addEventListener('click', () => {
           state.visibleCount += LOAD_MORE_COUNT;
           visibleCount = state.visibleCount;
-          render();
+          renderGrid();
         });
 
         if (els.grid) {

@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<style>
+  html, body {
+    background: #070A14 !important;
+  }
+</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="format-detection" content="telephone=no">
@@ -785,6 +790,15 @@ a[href="/archivepro/index.html"]{
   animation:none !important;
 }
 
+
+/* INSTANT FIRST PAINT BACKGROUND */
+#instant-bg{
+  position:fixed;
+  inset:0;
+  background:#070A14;
+  z-index:9999;
+}
+
 /* RESPONSIVE */
 @media (max-width:640px){
   :root{
@@ -959,6 +973,8 @@ a[href="/archivepro/index.html"]{
 </script>
 </head>
 <body>
+
+<div id="instant-bg"></div>
 
 <div class="header">
   <div class="menu-btn" id="menuBtn" aria-label="menu" role="button" tabindex="0">
@@ -1532,6 +1548,12 @@ if(window.__DZLAB_EARLY_VIEW__ === 'ocean'){
 }else{
   openHome();
 }
+
+
+window.addEventListener('load', function(){
+  const bg = document.getElementById('instant-bg');
+  if(bg) bg.remove();
+});
 </script>
 
 </body>

@@ -1499,9 +1499,9 @@
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
       const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json?v=20260430-stable-light-search';
       const DATA_URLS = [
-        DATA_URL,
+        'https://dungzak.art/data/works.json?v=20260430-stable-light-search',
         'https://dungzakcestlavie.github.io/data/works.json?v=20260430-stable-light-search',
-        'https://dungzak.art/data/works.json?v=20260430-stable-light-search'
+        DATA_URL
       ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const INITIAL_VISIBLE = 12;
@@ -1803,8 +1803,6 @@
 
       const numberFormat = new Intl.NumberFormat('ko-KR');
       let searchTimer = null;
-      let defaultGridSnapshot = null;
-      let defaultGridSnapshotLang = '';
       let archiveScrollY = 0;
       let closeClickBlockUntil = 0;
 
@@ -2665,30 +2663,16 @@
       }
 
       function cacheDefaultGridSnapshot() {
-        if (!isDefaultFastView() || !els.grid || !els.grid.children.length) return;
-        defaultGridSnapshot = Array.from(els.grid.children);
-        defaultGridSnapshotLang = state.lang;
+        return;
       }
 
       function restoreDefaultGridSnapshot() {
-        if (!defaultGridSnapshot || defaultGridSnapshotLang !== state.lang) return false;
-
-        state.filtered = state.all;
-        state.visibleCount = INITIAL_VISIBLE;
-
-        els.loadingScreen.style.display = 'none';
-        els.resultsMeta.style.display = 'flex';
-        els.emptyState.hidden = true;
-        els.grid.replaceChildren(...defaultGridSnapshot);
-        els.loadWrap.hidden = INITIAL_VISIBLE >= state.filtered.length;
-
-        updateSectionButtonState();
-        updateStats();
-        observeLazyImages(els.grid);
-        return true;
+        return false;
       }
 
       function render() {
+        if (!els.grid) return;
+
         els.loadingScreen.style.display = 'none';
         els.resultsMeta.style.display = 'flex';
         els.emptyState.hidden = state.filtered.length !== 0;
@@ -2713,7 +2697,6 @@
 
         els.loadWrap.hidden = visible.length >= state.filtered.length;
         updateStats();
-        cacheDefaultGridSnapshot();
       }
 
       function openLightbox(item) {
@@ -2832,8 +2815,6 @@
       window.closeViewer = closeViewer;
 
       function applyFilters(resetVisible = true) {
-        /* Always read current control values before filtering/sorting.
-           This prevents the visual select state and internal state from drifting. */
         state.query = els.searchInput ? els.searchInput.value : state.query;
         state.section = els.sectionSelect ? els.sectionSelect.value : state.section;
         state.sort = els.sortSelect ? els.sortSelect.value : state.sort;
@@ -2843,17 +2824,26 @@
         if (!state.query && state.section === 'all' && state.sort === FAST_ORDER) {
           state.filtered = state.all;
           updateSectionButtonState();
-          if (!restoreDefaultGridSnapshot()) render();
+          render();
           return;
         }
 
-        state.filtered = state.all
-          .filter((item) => {
-            if (state.section !== 'all' && item.section_id !== Number(state.section)) return false;
-            return matchesSearch(item, state.query);
-          })
-          .sort((a, b) => compareItems(a, b, state.sort));
+        let result = state.all;
 
+        if (state.section !== 'all') {
+          const sectionNumber = Number(state.section);
+          result = result.filter((item) => item.section_id === sectionNumber);
+        }
+
+        if (state.query && compactSearchToken(state.query).length >= 2) {
+          result = result.filter((item) => matchesSearch(item, state.query));
+        }
+
+        if (state.sort !== FAST_ORDER) {
+          result = result.slice().sort((a, b) => compareItems(a, b, state.sort));
+        }
+
+        state.filtered = result;
         updateSectionButtonState();
         render();
       }
@@ -2895,7 +2885,9 @@
         els.sectionSelect.value = 'all';
         els.sortSelect.value = FAST_ORDER;
 
-        if (!restoreDefaultGridSnapshot()) applyFilters(true);
+        state.filtered = state.all;
+        updateSectionButtonState();
+        render();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
@@ -2922,15 +2914,32 @@
         return [];
       }
 
+      async function fetchWithTimeout(url, timeoutMs = 6500) {
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+
+        try {
+          const response = await fetch(url, {
+            cache: 'no-store',
+            signal: controller.signal
+          });
+          return response;
+        } finally {
+          window.clearTimeout(timer);
+        }
+      }
+
       async function fetchWorksFromCandidates() {
         let lastError = null;
 
         for (const url of DATA_URLS) {
           try {
-            const response = await fetch(url, { cache: 'no-store' });
+            const response = await fetchWithTimeout(url, 6500);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
             const text = await response.text();
             const arr = parseWorksPayload(text);
+
             if (!Array.isArray(arr)) throw new Error('works payload is not an array');
             return { arr, url };
           } catch (error) {
@@ -2976,12 +2985,14 @@
         state.section = 'all';
         state.sort = FAST_ORDER;
         state.visibleCount = INITIAL_VISIBLE;
+        state.filtered = state.all;
 
         els.searchInput.value = '';
         els.sectionSelect.value = 'all';
         els.sortSelect.value = FAST_ORDER;
 
-        if (!restoreDefaultGridSnapshot()) applyFilters(true);
+        updateSectionButtonState();
+        render();
       }
 
       function scrollToSearch() {

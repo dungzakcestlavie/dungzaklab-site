@@ -1497,7 +1497,7 @@
       }, { passive: false });
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = './data/works.json';
+      const DATA_URL = 'data/works.json';
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const MOBILE_FIRST_RENDER_COUNT = 24;
       const DESKTOP_FIRST_RENDER_COUNT = 24;
@@ -2960,25 +2960,67 @@
         return safeText(url);
       }
 
+      function buildWorksJsonUrls() {
+        const urls = [];
+        const add = (url) => {
+          const clean = safeText(url);
+          if (clean && !urls.includes(clean)) urls.push(clean);
+        };
+
+        try {
+          add(new URL('data/works.json', window.location.href).href);
+        } catch (_) {
+          add('data/works.json');
+        }
+
+        add('./data/works.json');
+        add('data/works.json');
+
+        return urls;
+      }
+
+      async function fetchJsonNoStore(url) {
+        const separator = url.includes('?') ? '&' : '?';
+        const finalUrl = `${url}${separator}ts=${Date.now()}`;
+        const res = await fetch(finalUrl, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      }
+
       async function fetchWorksDirect() {
         if (worksLoadPromise) return worksLoadPromise;
 
-        worksLoadPromise = fetch(`${DATA_URL}?ts=${Date.now()}`, { cache: 'no-store' })
-          .then(async (res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const json = await res.json();
-            const works = parseWorksPayload(json);
+        worksLoadPromise = (async () => {
+          const urls = buildWorksJsonUrls();
+          let lastError = null;
 
-            if (!Array.isArray(works) || works.length === 0) {
-              throw new Error('works.json parsed but works array is empty');
+          for (const url of urls) {
+            try {
+              const json = await fetchJsonNoStore(url);
+              const works = parseWorksPayload(json);
+
+              if (Array.isArray(works) && works.length > 0) {
+                if (els.sourcePill) els.sourcePill.textContent = `Source: ${url}`;
+                return works;
+              }
+
+              lastError = new Error('works.json parsed but works array is empty');
+            } catch (error) {
+              lastError = error;
             }
+          }
 
-            return works;
-          })
-          .catch((error) => {
-            worksLoadPromise = null;
-            throw error;
-          });
+          throw lastError || new Error('Unable to load works.json');
+        })().catch((error) => {
+          worksLoadPromise = null;
+          throw error;
+        });
 
         return worksLoadPromise;
       }
@@ -2992,7 +3034,7 @@
         if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
       }
 
-      async async function loadArchiveData() {
+      async function loadArchiveData() {
         showArchiveShellImmediately();
         state.loadState = 'loading';
         setStatusByState();
@@ -3001,7 +3043,7 @@
           const works = await fetchWorksDirect();
           const normalized = works
             .map(normalizeItem)
-            .filter(item => item && item.id && item.image);
+            .filter(item => item && item.id);
 
           state.all = normalized;
           state.query = '';
@@ -3021,7 +3063,7 @@
           if (els.searchInput) els.searchInput.value = '';
           if (els.sectionSelect) els.sectionSelect.value = 'all';
           if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
-          if (els.sourcePill) els.sourcePill.textContent = `Source: ${DATA_URL}`;
+          if (els.sourcePill && !els.sourcePill.textContent.startsWith('Source: http')) els.sourcePill.textContent = `Source: ${DATA_URL}`;
 
           rebuildStaticTexts();
           renderAll();

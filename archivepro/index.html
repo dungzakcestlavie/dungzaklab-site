@@ -1614,6 +1614,44 @@
     .stats-panel{
       contain:layout paint;
     }
+
+
+    /* ENTRY BUTTON VISUAL BALANCE + LANGUAGE SYNC FIX */
+    .entry-panel{
+      padding:18px 24px !important;
+      min-height:auto !important;
+      border-color:rgba(212,180,109,.22) !important;
+    }
+
+    #enterArchivePro,
+    .archive-enter,
+    .critical-entry-btn{
+      min-height:48px !important;
+      height:auto !important;
+      box-sizing:border-box;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      border-radius:999px !important;
+      border:1px solid rgba(212,180,109,.48) !important;
+      font-size:20px !important;
+      line-height:1.4 !important;
+      text-align:center !important;
+      white-space:pre-line !important;
+      padding:6px 18px !important;
+    }
+
+    @media (max-width:640px){
+      .entry-panel{
+        padding:14px !important;
+      }
+
+      #enterArchivePro,
+      .archive-enter,
+      .critical-entry-btn{
+        font-size:18px !important;
+      }
+    }
 </style>
 </head>
 <body>
@@ -1637,7 +1675,7 @@
   <div class="site-shell">
     <section class="panel entry-layer archive-entry-wrap" aria-label="Archive entry">
       <div class="entry-panel">
-        <a id="enterArchivePro" class="critical-entry-btn" href="#archiveWorks">아카이브 입장 →</a>
+        <a id="enterArchivePro" class="critical-entry-btn" href="#archiveWorks" data-kr="아카이브 입장 →" data-en="Enter Archive →">아카이브 입장 →</a>
       </div>
     </section>
 

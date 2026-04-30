@@ -2195,13 +2195,12 @@
 
         const groups = [
           ['watercolour', 'watercolor', 'water colour', 'water color', 'aquarelle', '수채', '수채화'],
-          ['oil', 'oils', 'oil paint', 'oil painting', 'oil on canvas', 'oilstick', 'oil stick', 'oil pastel', 'oil bar', '오일', '오일스틱', '오일 파스텔', '유채', '유화'],
-          ['acrylic', 'acrylics', 'acryl', 'acrylic paint', '아크릴', '아크릴 물감'],
-          ['canvas', 'linen', 'cloth', '캔버스', '천'],
-          ['paper', 'papers', 'hanji', '종이', '한지'],
-          ['pencil', 'pencils', 'colored pencil', 'coloured pencil', 'colour pencil', 'color pencil', 'graphite', '연필', '색연필'],
-          ['watercolour', 'watercolor', 'water colour', 'water color', 'aquarelle', '수채', '수채화'],
-          ['pigment', 'powder pigment', 'mineral pigment', '분채', '안료'],
+          ['oilstick', 'oil stick', 'oil pastel', '오일스틱', '오일 파스텔'],
+          ['acrylic', 'acrylics', '아크릴'],
+          ['canvas', '캔버스'],
+          ['paper', '종이', '한지'],
+          ['pencil', 'colored pencil', 'colour pencil', 'color pencil', '연필', '색연필'],
+          ['pigment', 'powder pigment', '분채', '안료'],
           ['unbleached cotton', 'cotton', 'raw cotton', '광목', '면천'],
           ['mixed media', 'mixed-media', '혼합재료'],
           ['light', 'illumination', 'radiance', '빛', '광', '광휘'],
@@ -2309,30 +2308,16 @@
 
       /* FAST SEARCH CACHE — created once when works.json loads */
       function buildFastSearchText(item) {
-        const values = [
-          ...getIdSearchValues(item),
-          item.title_kr, item.title_en,
-          item.material_kr, item.material_en,
-          item.size_kr, item.size_en,
-          ...getYearSearchValues(item),
-          item.section_kr, item.section_en,
+        return [
+          item.id, item.title_kr, item.title_en, item.material_kr, item.material_en,
+          item.size_kr, item.size_en, item.year, item.section_kr, item.section_en,
           getSectionPlainById(item.section_id, 'kr'), getSectionPlainById(item.section_id, 'en'),
-          ...getSectionAliases(item.section_id),
-          item.status
-        ];
-        const expanded = values.flatMap(getSearchAliases);
-        return Array.from(new Set([
-          ...expanded.map(normalizeSearchToken),
-          ...expanded.map(compactSearchToken),
-          ...expanded.map(hangulInitials).map(compactSearchToken)
-        ].filter(Boolean))).join(' ');
+          getSectionAliases(item.section_id).join(' ')
+        ].map(safeText).join(' ').toLowerCase().replace(/\s+/g, '');
       }
 
       function prepareFastSearchCache(item) {
         item._fastSearch = buildFastSearchText(item);
-        item._searchText = item._fastSearch;
-        item._searchCompact = compactSearchToken(item._fastSearch);
-        item._searchInitials = compactSearchToken(hangulInitials(item._fastSearch));
         item._yearEndNumber = parseYearEndNumber(item.year) || 0;
         item._yearStartNumber = parseYearNumber(item.year) || 0;
         return item;
@@ -2386,41 +2371,6 @@
         return false;
       }
 
-      function getFocusedQueryTokenGroups(rawQuery) {
-        const normalized = normalizeSearchToken(rawQuery);
-        const compactRaw = compactSearchToken(rawQuery);
-        const baseTokens = normalized.split(' ').map(v => v.trim()).filter(Boolean);
-
-        const groups = baseTokens.map((token) => {
-          const aliases = getSearchAliases(token);
-          return Array.from(new Set([
-            token,
-            normalizeSearchToken(token),
-            compactSearchToken(token),
-            hangulInitials(token),
-            compactSearchToken(hangulInitials(token)),
-            ...aliases,
-            ...aliases.map(normalizeSearchToken),
-            ...aliases.map(compactSearchToken),
-            ...aliases.map(hangulInitials).map(compactSearchToken)
-          ].map(safeText).filter(Boolean)));
-        });
-
-        if (!groups.length && compactRaw) groups.push([compactRaw]);
-        return groups;
-      }
-
-      function tokenGroupMatchesSearch(item, group, haystackText, haystackCompact, haystackInitials) {
-        return group.some((token) => {
-          const n = normalizeSearchToken(token);
-          const c = compactSearchToken(token);
-          const i = compactSearchToken(hangulInitials(token));
-          return (n && haystackText.includes(n)) ||
-                 (c && haystackCompact.includes(c)) ||
-                 (i && haystackInitials.includes(i));
-        });
-      }
-
       function matchesSearch(item, rawQuery) {
         const compact = compactSearchToken(rawQuery);
         if (!compact) return true;
@@ -2429,25 +2379,15 @@
            Section buttons handle single-section navigation; text search begins at 2 chars. */
         if (compact.length < 2) return true;
 
-        if (matchIdQuery(item, rawQuery)) return true;
-
-        const haystackText = item._fastSearch || buildSearchText(item);
-        const haystackCompact = item._searchCompact || compactSearchToken(haystackText);
-        const haystackInitials = item._searchInitials || compactSearchToken(hangulInitials(haystackText));
-
-        if (haystackCompact.includes(compact)) return true;
-        if (haystackInitials.includes(compact)) return true;
+        if (item._fastSearch && item._fastSearch.includes(compact)) return true;
+        if (item._searchCompact && item._searchCompact.includes(compact)) return true;
+        if (item._searchInitials && item._searchInitials.includes(compact)) return true;
 
         if (/^\d{4}$/.test(compact)) {
           return String(item._yearStartNumber || '') === compact || String(item._yearEndNumber || '') === compact;
         }
 
-        const groups = getFocusedQueryTokenGroups(rawQuery);
-        if (!groups.length) return true;
-
-        /* Multi-word search is AND-based: pencil oil finds works that contain both
-           pencil and oil/oil pastel/oilstick aliases anywhere in title/material/section/year. */
-        return groups.every((group) => tokenGroupMatchesSearch(item, group, haystackText, haystackCompact, haystackInitials));
+        return false;
       }
 
       function compareIdAsc(a, b) {

@@ -1326,17 +1326,17 @@
       <aside class="panel stats" aria-label="아카이브 통계">
         <div class="stat">
           <div class="k" id="statLabelTotal">Total</div>
-          <div class="v" id="statTotal">24</div>
+          <div class="v" id="statTotal">1,352</div>
           <div class="d" id="statDescTotal">전체 작품 수</div>
         </div>
         <div class="stat">
           <div class="k" id="statLabelFiltered">Filtered</div>
-          <div class="v" id="statFiltered">24</div>
+          <div class="v" id="statFiltered">1,352</div>
           <div class="d" id="statDescFiltered">현재 검색 결과</div>
         </div>
         <div class="stat">
           <div class="k" id="statLabelSections">Sections</div>
-          <div class="v" id="statSections">1</div>
+          <div class="v" id="statSections">6</div>
           <div class="d" id="statDescSections">섹션 수</div>
         </div>
       </aside>
@@ -1400,7 +1400,7 @@
     <div class="meta-row">
       <div class="meta-left">
         <span class="meta-pill" id="sourcePill">Source: data/works.json</span>
-        <span class="meta-pill" id="loadedPill">Data: 24 items</span>
+        <span class="meta-pill" id="loadedPill">Data: 1,352 items</span>
       </div>
       <div class="meta-right">
         <span id="statusText" class="status">준비됨</span>
@@ -1412,7 +1412,7 @@
 
       <div id="resultsMeta" class="meta-row" style="display:flex;">
         <div class="meta-left">
-          <strong id="resultText">24점</strong>
+          <strong id="resultText">1,352점</strong>
           <span class="meta-pill" id="renderedText">표시 24점</span>
         </div>
         <div class="meta-right">
@@ -1519,6 +1519,8 @@
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const FIRST_RENDER_COUNT = 24;
       const LOAD_MORE_COUNT = 24;
+      const TOTAL_WORKS_SNAPSHOT = 1352;
+      const TOTAL_SECTIONS_SNAPSHOT = 6;
       const INITIAL_VISIBLE = FIRST_RENDER_COUNT;
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 220;
@@ -2852,7 +2854,14 @@
         state.section = values.includes(prev) ? prev : 'all';
         els.sectionSelect.value = state.section;
 
-        els.statSections.textContent = numberFormat.format(els.sectionSelect.options.length - 1);
+        const fullSectionsCount = new Set(
+          state.all
+            .map(item => Number(item.section_id || 0))
+            .filter(n => !Number.isNaN(n))
+        ).size;
+        els.statSections.textContent = numberFormat.format(
+          state.isLoaded ? fullSectionsCount : TOTAL_SECTIONS_SNAPSHOT
+        );
         updateSectionButtonState();
       }
 
@@ -2894,18 +2903,47 @@
         CURRENT_LIST = state.filtered;
         visibleCount = state.visibleCount;
 
+        const isFullDataReady =
+          state.isLoaded &&
+          Array.isArray(state.all) &&
+          state.all.length >= INITIAL_WORKS_DATA.length &&
+          state.all.length > FIRST_RENDER_COUNT;
+
+        const hasActiveFilter =
+          Boolean(state.query) ||
+          state.section !== 'all' ||
+          state.sort !== FAST_ORDER;
+
         const visibleNow = Math.min(state.visibleCount, CURRENT_LIST.length);
-        els.statTotal.textContent = numberFormat.format(WORKS_DATA.length);
-        els.statFiltered.textContent = numberFormat.format(CURRENT_LIST.length);
-        els.loadedPill.textContent = `Data: ${numberFormat.format(WORKS_DATA.length)} items`;
+
+        const totalCount = isFullDataReady
+          ? WORKS_DATA.length
+          : TOTAL_WORKS_SNAPSHOT;
+
+        const filteredCount = isFullDataReady
+          ? CURRENT_LIST.length
+          : (hasActiveFilter ? CURRENT_LIST.length : TOTAL_WORKS_SNAPSHOT);
+
+        const sectionCount = isFullDataReady
+          ? new Set(
+              WORKS_DATA
+                .map(item => Number(item.section_id || 0))
+                .filter(n => !Number.isNaN(n))
+            ).size
+          : TOTAL_SECTIONS_SNAPSHOT;
+
+        els.statTotal.textContent = numberFormat.format(totalCount);
+        els.statFiltered.textContent = numberFormat.format(filteredCount);
+        els.statSections.textContent = numberFormat.format(sectionCount);
+        els.loadedPill.textContent = `Data: ${numberFormat.format(totalCount)} items`;
 
         updateActiveFilterDataset();
 
         if (state.lang === 'en') {
-          els.resultText.textContent = `${numberFormat.format(state.filtered.length)}${t('resultUnit')}`;
+          els.resultText.textContent = `${numberFormat.format(filteredCount)}${t('resultUnit')}`;
           els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}`;
         } else {
-          els.resultText.textContent = `${numberFormat.format(state.filtered.length)}${t('resultUnit')}`;
+          els.resultText.textContent = `${numberFormat.format(filteredCount)}${t('resultUnit')}`;
           els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}${t('renderedSuffix')}`;
         }
       }
@@ -3336,7 +3374,7 @@
         state.sort = FAST_ORDER;
         state.visibleCount = FIRST_RENDER_COUNT;
         state.loadState = 'idle';
-        state.isLoaded = true;
+        state.isLoaded = false;
 
         WORKS_DATA = state.all;
         CURRENT_LIST = state.filtered;
@@ -3371,7 +3409,9 @@
         } catch (error) {
           console.error(error);
           state.loadState = 'idle';
+          state.isLoaded = false;
           if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; els.loadingScreen.textContent = ''; }
+          updateStats();
         }
       }
 

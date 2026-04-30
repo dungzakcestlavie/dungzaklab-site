@@ -909,127 +909,27 @@ button,
   window.__DZLAB_BOOT_READY__ = false;
   window.__DZLAB_EARLY_VIEW__ = '';
 
-  function el(id){ return document.getElementById(id); }
-
-  function clearViewsFast(){
-    ['home','ocean','archive','books','about'].forEach(function(id){
-      var node = el(id);
-      if(node) node.classList.remove('active');
-    });
-    window.scrollTo(0, 0);
-  }
-
-  window.openMenu = function(){
-    var menu = el('menu');
-    var overlay = el('menuOverlay');
-    if(menu){
-      menu.classList.add('open');
-      menu.setAttribute('aria-hidden','false');
-    }
-    if(overlay) overlay.classList.add('show');
-    if(document.body) document.body.classList.add('menu-open');
-  };
-
-  window.closeMenu = function(){
-    var menu = el('menu');
-    var overlay = el('menuOverlay');
-    if(menu){
-      menu.classList.remove('open');
-      menu.setAttribute('aria-hidden','true');
-    }
-    if(overlay) overlay.classList.remove('show');
-    if(document.body) document.body.classList.remove('menu-open');
-  };
-
-  window.toggleMenu = function(){
-    var menu = el('menu');
-    if(menu && menu.classList.contains('open')) window.closeMenu();
-    else window.openMenu();
-  };
-
-  window.openHome = function(){
-    window.__DZLAB_EARLY_VIEW__ = 'home';
-    clearViewsFast();
-    var node = el('home');
-    if(node) node.classList.add('active');
-    window.closeMenu();
-  };
-
-  window.openOcean = function(){
-    window.__DZLAB_EARLY_VIEW__ = 'ocean';
-    clearViewsFast();
-    var node = el('ocean');
-    if(node) node.classList.add('active');
-    window.closeMenu();
-  };
-
-  window.openArchive = function(){
-    window.__DZLAB_EARLY_VIEW__ = 'archive';
-    clearViewsFast();
-    var node = el('archive');
-    if(node) node.classList.add('active');
-    window.closeMenu();
-  };
-
-  window.openBooks = function(){
-    window.__DZLAB_EARLY_VIEW__ = 'books';
-    clearViewsFast();
-    var node = el('books');
-    if(node) node.classList.add('active');
-    window.closeMenu();
-  };
-
-  window.openAbout = function(){
-    window.__DZLAB_EARLY_VIEW__ = 'about';
-    clearViewsFast();
-    var node = el('about');
-    if(node) node.classList.add('active');
-    window.closeMenu();
-  };
-
-  function goArchiveProNow(e){
-    if(e && typeof e.preventDefault === 'function') e.preventDefault();
-    if(e && typeof e.stopPropagation === 'function') e.stopPropagation();
-    window.__DZLAB_ARCHIVE_NAVIGATING__ = true;
-    window.location.href = '/archivepro/index.html';
-  }
-
-  window.goArchiveProNow = goArchiveProNow;
-
-  document.addEventListener('click', function(e){
-    var t = e.target;
-    if(!t || !t.closest) return;
-    var a = t.closest('[data-fast-archive]');
-    if(a) goArchiveProNow(e);
-  }, {capture:true, passive:false});
-
-
   document.addEventListener('pointerdown', function(e){
-    var t = e.target;
+    const t = e.target;
     if(!t || !t.closest) return;
 
-    var btn = t.closest('#menuBtn');
-    if(btn && !window.__DZLAB_BOOT_READY__){
+    const btn = t.closest('#menuBtn');
+    if(btn){
       e.preventDefault();
-      window.toggleMenu();
+      if(typeof window.toggleMenu === 'function') window.toggleMenu();
       btn.classList.add('is-pressing');
       return;
     }
 
-    var archiveLink = t.closest('[data-fast-archive]');
-    if(archiveLink){
-      archiveLink.classList.add('is-pressing');
-      goArchiveProNow(e);
-      return;
+    const clickable = t.closest('a, button, .menu-btn, .selector-link, .proposal-link, .report-item, .book-item');
+    if(clickable){
+      clickable.classList.add('is-pressing');
     }
-
-    var clickable = t.closest('a, button, .menu-btn, .selector-link, .proposal-link, .report-item, .book-item');
-    if(clickable) clickable.classList.add('is-pressing');
   }, {capture:true, passive:false});
 
   function releasePress(){
-    document.querySelectorAll('.is-pressing').forEach(function(node){
-      node.classList.remove('is-pressing');
+    document.querySelectorAll('.is-pressing').forEach(function(el){
+      el.classList.remove('is-pressing');
     });
   }
 
@@ -1061,7 +961,7 @@ button,
 <div class="menu" id="menu" aria-hidden="true">
   <a href="#" onclick="openOcean(); return false;">OCEAN ENERGY</a>
   <a href="#" onclick="openArchive(); return false;">ARCHIVE</a>
-  <a href="/archivepro/index.html" data-fast-archive>ARCHIVE PRO</a>
+  <a href="/archivepro/index.html">ARCHIVE PRO</a>
   <a href="#" onclick="openBooks(); return false;">BOOKS</a>
   <a href="#" onclick="openAbout(); return false;">ABOUT</a>
   <a href="https://dungzak.art" target="_blank" rel="noopener" onclick="closeMenu()">DUNGZAK.ART</a>
@@ -1080,7 +980,7 @@ button,
     </div>
 
     <div class="home-selector">
-      <a href="/archivepro/index.html" class="selector-link" data-fast-archive>ENTER ARCHIVE PRO →</a>
+      <a href="/archivepro/index.html" class="selector-link">ENTER ARCHIVE PRO →</a>
       <a href="#" class="selector-link" onclick="openOcean(); return false;">OCEAN ENERGY</a>
       <a href="#" class="selector-link" onclick="openArchive(); return false;">ARCHIVE</a>
       <a href="#" class="selector-link" onclick="openBooks(); return false;">BOOKS</a>
@@ -1408,6 +1308,15 @@ function openAbout(){
   closeMenu();
 }
 
+window.openMenu = openMenu;
+window.closeMenu = closeMenu;
+window.toggleMenu = toggleMenu;
+window.openHome = openHome;
+window.openOcean = openOcean;
+window.openArchive = openArchive;
+window.openBooks = openBooks;
+window.openAbout = openAbout;
+
 function setLanguage(lang){
   currentLang = lang === 'en' ? 'en' : 'ko';
 
@@ -1543,11 +1452,6 @@ globalLangBtns.forEach(btn => {
     setLanguage(btn.dataset.lang);
   });
 });
-
-menuBtn.addEventListener('pointerdown', (e) => {
-  e.preventDefault();
-  toggleMenu();
-}, { passive:false });
 
 menuBtn.addEventListener('keydown', (e) => {
   if(e.key === 'Enter' || e.key === ' '){

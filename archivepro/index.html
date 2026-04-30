@@ -1739,7 +1739,7 @@
       const state = {
         all: [],
         filtered: [],
-        visibleCount: INITIAL_VISIBLE,
+        visibleCount: FIRST_RENDER_COUNT,
         query: '',
         section: 'all',
         sort: 'section-id-asc',
@@ -1748,6 +1748,10 @@
         loadState: 'idle',
         isLoaded: false
       };
+
+      let visibleCount = FIRST_RENDER_COUNT;
+      let WORKS_DATA = [];
+      let CURRENT_LIST = [];
 
       const els = {
         statTotal: document.getElementById('statTotal'),
@@ -2511,10 +2515,14 @@
       }
 
       function updateStats() {
-        const visibleNow = Math.min(state.visibleCount, state.filtered.length);
-        els.statTotal.textContent = numberFormat.format(state.all.length);
-        els.statFiltered.textContent = numberFormat.format(state.filtered.length);
-        els.loadedPill.textContent = `Loaded: ${numberFormat.format(state.all.length)} items`;
+        WORKS_DATA = state.all;
+        CURRENT_LIST = state.filtered;
+        visibleCount = state.visibleCount;
+
+        const visibleNow = Math.min(state.visibleCount, CURRENT_LIST.length);
+        els.statTotal.textContent = numberFormat.format(WORKS_DATA.length);
+        els.statFiltered.textContent = numberFormat.format(CURRENT_LIST.length);
+        els.loadedPill.textContent = `Loaded: ${numberFormat.format(WORKS_DATA.length)} items`;
 
         updateActiveFilterDataset();
 
@@ -2642,7 +2650,9 @@
       }
 
       function getVisibleItems() {
-        return state.filtered.slice(0, state.visibleCount);
+        CURRENT_LIST = state.filtered;
+        visibleCount = state.visibleCount;
+        return CURRENT_LIST.slice(0, visibleCount);
       }
 
       function renderCards(items) {
@@ -2793,10 +2803,12 @@
         state.section = els.sectionSelect ? els.sectionSelect.value : state.section;
         state.sort = els.sortSelect ? els.sortSelect.value : state.sort;
 
-        if (resetVisible) state.visibleCount = INITIAL_VISIBLE;
+        if (resetVisible) state.visibleCount = FIRST_RENDER_COUNT;
 
         if (!state.query && state.section === 'all' && state.sort === FAST_ORDER) {
           state.filtered = state.all;
+          CURRENT_LIST = state.filtered;
+          visibleCount = state.visibleCount;
           updateSectionButtonState();
           render();
           return;
@@ -2818,6 +2830,8 @@
         }
 
         state.filtered = result;
+        CURRENT_LIST = state.filtered;
+        visibleCount = state.visibleCount;
         updateSectionButtonState();
         render();
       }
@@ -2938,6 +2952,10 @@
 
           state.all = arr.map(normalizeItem).map(prepareFastSearchCache);
           state.filtered = state.all;
+          state.visibleCount = FIRST_RENDER_COUNT;
+          WORKS_DATA = state.all;
+          CURRENT_LIST = state.filtered;
+          visibleCount = state.visibleCount;
           state.isLoaded = true;
           state.loadState = 'loaded';
 
@@ -2977,6 +2995,9 @@
         state.sort = FAST_ORDER;
         state.visibleCount = FIRST_RENDER_COUNT;
         state.filtered = state.all;
+        WORKS_DATA = state.all;
+        CURRENT_LIST = state.filtered;
+        visibleCount = state.visibleCount;
 
         if (els.searchInput) els.searchInput.value = '';
         if (els.sectionSelect) els.sectionSelect.value = 'all';
@@ -3019,7 +3040,8 @@
         });
 
         els.loadMoreBtn.addEventListener('click', () => {
-          state.visibleCount += LOAD_STEP;
+          state.visibleCount += LOAD_MORE_COUNT;
+          visibleCount = state.visibleCount;
           render();
         });
 
@@ -3242,9 +3264,37 @@
         }
 
         if (els.entryBtn) {
-          els.entryBtn.addEventListener('click', () => {
+          els.entryBtn.addEventListener('click', async () => {
             showArchiveShellImmediately();
-            loadData();
+
+            try {
+              await loadWorksOnce();
+              state.section = 'all';
+              state.query = '';
+              state.sort = FAST_ORDER;
+              state.visibleCount = FIRST_RENDER_COUNT;
+              WORKS_DATA = state.all;
+              CURRENT_LIST = WORKS_DATA;
+              visibleCount = state.visibleCount;
+
+              if (els.searchInput) els.searchInput.value = '';
+              if (els.sectionSelect) els.sectionSelect.value = 'all';
+              if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
+
+              updateSectionButtonState();
+              render();
+            } catch (error) {
+              console.error(error);
+              worksLoadPromise = null;
+              state.all = [];
+              state.filtered = [];
+              WORKS_DATA = [];
+              CURRENT_LIST = [];
+              state.loadState = 'failed';
+              rebuildStaticTexts();
+              if (els.loadingScreen) els.loadingScreen.style.display = 'block';
+            }
+
             if (els.searchArea) els.searchArea.scrollIntoView({ behavior: 'auto', block: 'start' });
           });
         }
@@ -3268,10 +3318,40 @@
         });
       }
 
-      bindEvents();
-      showArchiveShellImmediately();
-      rebuildStaticTexts();
-      loadData();
+      document.addEventListener('DOMContentLoaded', async () => {
+        bindEvents();
+        showArchiveShellImmediately();
+        rebuildStaticTexts();
+
+        try {
+          await loadWorksOnce();
+
+          state.section = 'all';
+          state.query = '';
+          state.sort = FAST_ORDER;
+          state.visibleCount = FIRST_RENDER_COUNT;
+          WORKS_DATA = state.all;
+          CURRENT_LIST = WORKS_DATA;
+          visibleCount = state.visibleCount;
+
+          if (els.searchInput) els.searchInput.value = '';
+          if (els.sectionSelect) els.sectionSelect.value = 'all';
+          if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
+
+          updateSectionButtonState();
+          render();
+        } catch (error) {
+          console.error(error);
+          worksLoadPromise = null;
+          state.all = [];
+          state.filtered = [];
+          WORKS_DATA = [];
+          CURRENT_LIST = [];
+          state.loadState = 'failed';
+          rebuildStaticTexts();
+          if (els.loadingScreen) els.loadingScreen.style.display = 'block';
+        }
+      });
     })();
   
 </script>

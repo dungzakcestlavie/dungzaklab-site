@@ -1260,17 +1260,6 @@
     .thumb{ will-change:auto; }
 
 
-    /* RESET / INITIAL RENDER SPEED PATCH — no visual change */
-    #grid{ contain:layout paint style; }
-    .card{ content-visibility:auto; contain-intrinsic-size:360px 520px; will-change:auto; }
-    .thumb{ will-change:auto; }
-
-  
-    /* MOBILE LOAD FAILSAFE / FAST INITIAL PAINT */
-    #grid{ contain:layout paint style; }
-    .card{ content-visibility:auto; contain-intrinsic-size:360px 520px; will-change:auto; }
-    .thumb{ will-change:auto; }
-
     /* NO LOADING STATE — no 0 / … / loading flash */
     #loadingScreen{
       display:none !important;
@@ -1510,9 +1499,10 @@
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
       const DATA_URL = 'data/works.json';
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
-      const MOBILE_FIRST_RENDER_COUNT = 12;
+      const MOBILE_FIRST_RENDER_COUNT = 24;
       const DESKTOP_FIRST_RENDER_COUNT = 24;
       const FIRST_RENDER_COUNT = DESKTOP_FIRST_RENDER_COUNT;
+      const FAST_ORDER = 'section-id-asc';
       const LOAD_MORE_COUNT = 24;
       const WORKS_CACHE_KEY = 'archivepro_works_cache_v1';
       const WORKS_CACHE_TIME_KEY = 'archivepro_works_cache_time_v1';
@@ -1525,368 +1515,7 @@
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
 
-      const INITIAL_WORKS_DATA = [
-        {
-                "id": "OR-1",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-1.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-1.jpg"
-        },
-        {
-                "id": "OR-2",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-2.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-2.jpg"
-        },
-        {
-                "id": "OR-3",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-3.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-3.jpg"
-        },
-        {
-                "id": "OR-4",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-4.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-4.jpg"
-        },
-        {
-                "id": "OR-5",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-5.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-5.jpg"
-        },
-        {
-                "id": "OR-6",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-6.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-6.jpg"
-        },
-        {
-                "id": "OR-7",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-7.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-7.jpg"
-        },
-        {
-                "id": "OR-8",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-8.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-8.jpg"
-        },
-        {
-                "id": "OR-9",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-9.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-9.jpg"
-        },
-        {
-                "id": "OR-10",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-10.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-10.jpg"
-        },
-        {
-                "id": "OR-11",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-11.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-11.jpg"
-        },
-        {
-                "id": "OR-12",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-12.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-12.jpg"
-        },
-        {
-                "id": "OR-13",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-13.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-13.jpg"
-        },
-        {
-                "id": "OR-14",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-14.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-14.jpg"
-        },
-        {
-                "id": "OR-15",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-15.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-15.jpg"
-        },
-        {
-                "id": "OR-16",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-16.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-16.jpg"
-        },
-        {
-                "id": "OR-17",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-17.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-17.jpg"
-        },
-        {
-                "id": "OR-18",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-18.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-18.jpg"
-        },
-        {
-                "id": "OR-19",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-19.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-19.jpg"
-        },
-        {
-                "id": "OR-20",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-20.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-20.jpg"
-        },
-        {
-                "id": "OR-21",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-21.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-21.jpg"
-        },
-        {
-                "id": "OR-22",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-22.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-22.jpg"
-        },
-        {
-                "id": "OR-23",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-23.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-23.jpg"
-        },
-        {
-                "id": "OR-24",
-                "section_id": 0,
-                "section_kr": "A 기원",
-                "section_en": "Origins",
-                "title_kr": "",
-                "title_en": "",
-                "material_kr": "",
-                "material_en": "",
-                "size_kr": "",
-                "size_en": "",
-                "year": "",
-                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-24.jpg",
-                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-24.jpg"
-        }
-];
+
 
       function normalizeStatus(status) {
         const value = safeText(status).toLowerCase();
@@ -2146,13 +1775,14 @@
         lightboxItem: null,
         lang: 'kr',
         loadState: 'idle',
-        isLoaded: false
+        isLoaded: false,
+        _searchPrepared: false
       };
 
       let visibleCount = getInitialVisibleCount();
-      let WORKS_DATA = INITIAL_WORKS_DATA.slice();
+      let WORKS_DATA = [];
       let WORKS_READY = false;
-      let CURRENT_LIST = INITIAL_WORKS_DATA.slice();
+      let CURRENT_LIST = [];
 
       const els = {
         statTotal: document.getElementById('statTotal'),
@@ -2929,10 +2559,10 @@
         visibleCount = state.visibleCount;
 
         const visibleNow = Math.min(state.visibleCount, CURRENT_LIST.length);
-        const hasFullData = WORKS_READY && Array.isArray(WORKS_DATA) && WORKS_DATA.length > INITIAL_WORKS_DATA.length;
-        const totalCount = hasFullData ? WORKS_DATA.length : TOTAL_WORKS_SNAPSHOT;
-        const filteredCount = hasFullData ? (Array.isArray(CURRENT_LIST) ? CURRENT_LIST.length : TOTAL_WORKS_SNAPSHOT) : TOTAL_WORKS_SNAPSHOT;
-        const sectionCount = hasFullData
+        const hasData = Array.isArray(WORKS_DATA) && WORKS_DATA.length > 0;
+        const totalCount = hasData ? WORKS_DATA.length : TOTAL_WORKS_SNAPSHOT;
+        const filteredCount = hasData ? (Array.isArray(CURRENT_LIST) ? CURRENT_LIST.length : totalCount) : TOTAL_WORKS_SNAPSHOT;
+        const sectionCount = hasData
           ? (new Set(
               WORKS_DATA
                 .map(item => Number(item.section_id || 0))
@@ -3230,7 +2860,14 @@
         state.section = els.sectionSelect ? els.sectionSelect.value : state.section;
         state.sort = els.sortSelect ? els.sortSelect.value : state.sort;
 
-        if (resetVisible) state.visibleCount = getInitialVisibleCount();
+        if (state.query && compactSearchToken(state.query).length >= 2 && !state._searchPrepared) {
+          state.all = state.all.map(prepareFastSearchCache);
+          state.filtered = state.all;
+          WORKS_DATA = state.all;
+          state._searchPrepared = true;
+        }
+
+        if (resetVisible) state.visibleCount = FIRST_RENDER_COUNT;
 
         if (!state.query && state.section === 'all' && state.sort === FAST_ORDER) {
           state.filtered = state.all;
@@ -3262,8 +2899,6 @@
         updateSectionButtonState();
         render();
       }
-
-      const FAST_ORDER = 'section-id-asc';
 
       function resetSortToFastOrder() {
         state.sort = FAST_ORDER;
@@ -3350,83 +2985,52 @@
         if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
       }
 
-      function bootInitialArchive() {
-        const cached = readWorksCache();
-        const source = cached && cached.length ? cached : INITIAL_WORKS_DATA;
-        const initial = source.map(normalizeItem).map(prepareFastSearchCache);
-
-        state.all = initial;
-        state.filtered = initial;
-        state.query = '';
-        state.section = 'all';
-        state.sort = FAST_ORDER;
-        state.visibleCount = getInitialVisibleCount();
-        state.loadState = cached && cached.length ? 'loaded' : 'idle';
-        state.isLoaded = !!(cached && cached.length);
-        WORKS_READY = !!(cached && cached.length && cached.length > INITIAL_WORKS_DATA.length);
-
-        WORKS_DATA = state.all;
-        CURRENT_LIST = state.filtered;
-        visibleCount = state.visibleCount;
-
-        if (els.searchInput) els.searchInput.value = '';
-        if (els.sectionSelect) els.sectionSelect.value = 'all';
-        if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
-        if (cached && cached.length && els.sourcePill) els.sourcePill.textContent = 'Source: localStorage cache + background sync';
-        if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; els.loadingScreen.textContent = ''; }
-        if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
-
-        rebuildStaticTexts();
-        populateSections();
-        updateSectionButtonState();
-        render();
-      }
-
-      async function loadFullWorksInBackground() {
-        if (backgroundFetchStarted) return;
-        backgroundFetchStarted = true;
+      async function loadArchiveData() {
+        showArchiveShellImmediately();
+        state.loadState = 'loading';
 
         try {
           const arr = await fetchWorksDirect();
-          if (!Array.isArray(arr) || !arr.length || arr.length < INITIAL_WORKS_DATA.length) return;
-
-          writeWorksCache(arr);
-          state.all = arr.map(normalizeItem).map(prepareFastSearchCache);
+          state.all = Array.isArray(arr) ? arr.map(normalizeItem) : [];
+          state.filtered = state.all;
+          state.query = '';
+          state.section = 'all';
+          state.sort = FAST_ORDER;
+          state.visibleCount = FIRST_RENDER_COUNT;
           state.loadState = 'loaded';
           state.isLoaded = true;
+          state._searchPrepared = false;
           WORKS_READY = true;
           WORKS_DATA = state.all;
+          CURRENT_LIST = state.filtered;
+          visibleCount = state.visibleCount;
 
+          if (els.searchInput) els.searchInput.value = '';
+          if (els.sectionSelect) els.sectionSelect.value = 'all';
+          if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
           if (els.sourcePill) els.sourcePill.textContent = `Source: ${DATA_URL}`;
+
+          rebuildStaticTexts();
           populateSections();
-          applyFilters(false);
+          updateSectionButtonState();
+          render();
         } catch (error) {
-          console.warn('works.json background load failed', error);
-          state.loadState = state.all.length ? 'loaded' : 'idle';
-          state.isLoaded = !!state.all.length;
-          if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; els.loadingScreen.textContent = ''; }
+          console.error('Load error:', error);
+          state.loadState = 'failed';
+          state.isLoaded = false;
+          WORKS_READY = false;
+          WORKS_DATA = [];
+          CURRENT_LIST = [];
+          if (els.statusText) {
+            els.statusText.textContent = t('statusFailed');
+            els.statusText.classList.add('error');
+          }
+          if (els.emptyState) {
+            els.emptyState.hidden = false;
+            els.emptyState.textContent = t('loadingScreenError');
+          }
           updateStats();
         }
-      }
-
-      async function loadWorksOnce() {
-        if (state.all.length) return state.all;
-        if (worksLoadPromise) return worksLoadPromise;
-
-        worksLoadPromise = (async () => {
-          showArchiveShellImmediately();
-          bootInitialArchive();
-          return state.all;
-        })();
-
-        return worksLoadPromise;
-      }
-
-      async function loadData() {
-        showArchiveShellImmediately();
-        if (!state.all.length) bootInitialArchive();
-        applyFilters(false);
-        loadFullWorksInBackground();
       }
 
       function resetFilters() {
@@ -3730,15 +3334,9 @@
         });
       }
 
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('DOMContentLoaded', async () => {
         bindEvents();
-        showArchiveShellImmediately();
-        bootInitialArchive();
-
-        window.requestAnimationFrame(() => {
-          render();
-          loadFullWorksInBackground();
-        });
+        await loadArchiveData();
       });
     })();
   

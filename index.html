@@ -14,7 +14,7 @@
 
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="//raw.githubusercontent.com">
-<link rel="prefetch" href="/archivepro/index.html" as="document">
+<link rel="prefetch" href="/archivepro/index.html">
 
 <link rel="alternate" href="https://dungzaklab.art/" hreflang="ko">
 <link rel="alternate" href="https://dungzaklab.art/?lang=en" hreflang="en">
@@ -774,37 +774,13 @@ button,
 
 
 
-/* ARCHIVE PRO DIRECT LINK — instant navigation only, no JS feedback delay */
-.archive-pro-direct,
-.archive-pro-direct:hover,
-.archive-pro-direct:active,
-.archive-pro-direct:focus-visible{
+/* ARCHIVE PRO LINK INSTANT FIX — pure browser navigation, no transition */
+a[href="/archivepro/index.html"]{
+  animation:none !important;
+}
+.selector-link[href="/archivepro/index.html"]{
   transition:none !important;
   animation:none !important;
-  transform:none !important;
-  box-shadow:var(--shadow) !important;
-  will-change:auto !important;
-}
-
-.menu .archive-pro-direct,
-.menu .archive-pro-direct:hover,
-.menu .archive-pro-direct:active,
-.menu .archive-pro-direct:focus-visible{
-  transition:none !important;
-  animation:none !important;
-  transform:none !important;
-  box-shadow:none !important;
-  will-change:auto !important;
-}
-
-.archive-pro-direct.is-pressing{
-  transform:none !important;
-  box-shadow:var(--shadow) !important;
-}
-
-.menu .archive-pro-direct.is-pressing{
-  transform:none !important;
-  box-shadow:none !important;
 }
 
 /* RESPONSIVE */
@@ -949,6 +925,11 @@ button,
     const t = e.target;
     if(!t || !t.closest) return;
 
+    const archiveLink = t.closest('a[href="/archivepro/index.html"]');
+    if(archiveLink){
+      return;
+    }
+
     const btn = t.closest('#menuBtn');
     if(btn){
       e.preventDefault();
@@ -957,12 +938,7 @@ button,
       return;
     }
 
-    const archiveDirect = t.closest('a[href="/archivepro/index.html"], a[href="archivepro/index.html"], a[href$="/archivepro/index.html"]');
-    if(archiveDirect){
-      return;
-    }
-
-    const clickable = t.closest('button, .menu-btn, .selector-link, .proposal-link, .report-item, .book-item');
+    const clickable = t.closest('a, button, .menu-btn, .selector-link, .proposal-link, .report-item, .book-item');
     if(clickable){
       clickable.classList.add('is-pressing');
     }
@@ -1002,7 +978,7 @@ button,
 <div class="menu" id="menu" aria-hidden="true">
   <a href="#" onclick="openOcean(); return false;">OCEAN ENERGY</a>
   <a href="#" onclick="openArchive(); return false;">ARCHIVE</a>
-  <a href="/archivepro/index.html" class="archive-pro-direct">ARCHIVE PRO</a>
+  <a href="/archivepro/index.html">ARCHIVE PRO</a>
   <a href="#" onclick="openBooks(); return false;">BOOKS</a>
   <a href="#" onclick="openAbout(); return false;">ABOUT</a>
   <a href="https://dungzak.art" target="_blank" rel="noopener" onclick="closeMenu()">DUNGZAK.ART</a>
@@ -1021,7 +997,7 @@ button,
     </div>
 
     <div class="home-selector">
-      <a href="/archivepro/index.html" class="selector-link archive-pro-direct">ENTER ARCHIVE PRO →</a>
+      <a href="/archivepro/index.html" class="selector-link">ENTER ARCHIVE PRO →</a>
       <a href="#" class="selector-link" onclick="openOcean(); return false;">OCEAN ENERGY</a>
       <a href="#" class="selector-link" onclick="openArchive(); return false;">ARCHIVE</a>
       <a href="#" class="selector-link" onclick="openBooks(); return false;">BOOKS</a>

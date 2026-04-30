@@ -778,6 +778,7 @@ button,
 a[href="/archivepro/index.html"]{
   animation:none !important;
 }
+#enterArchive,
 .selector-link[href="/archivepro/index.html"]{
   transition:none !important;
   animation:none !important;
@@ -997,7 +998,7 @@ a[href="/archivepro/index.html"]{
     </div>
 
     <div class="home-selector">
-      <a href="/archivepro/index.html" class="selector-link">ENTER ARCHIVE PRO →</a>
+      <a id="enterArchive" class="selector-link" role="link" tabindex="0">ENTER ARCHIVE PRO →</a>
       <a href="#" class="selector-link" onclick="openOcean(); return false;">OCEAN ENERGY</a>
       <a href="#" class="selector-link" onclick="openArchive(); return false;">ARCHIVE</a>
       <a href="#" class="selector-link" onclick="openBooks(); return false;">BOOKS</a>
@@ -1485,6 +1486,21 @@ document.addEventListener('keydown', (e) => {
 
 const savedLang = localStorage.getItem('dzlab_lang');
 setLanguage(savedLang === 'en' ? 'en' : 'ko');
+
+const archiveBtn = document.getElementById('enterArchive');
+
+if(archiveBtn){
+  archiveBtn.addEventListener('pointerdown', function(){
+    window.location.href = '/archivepro/index.html';
+  });
+
+  archiveBtn.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      window.location.href = '/archivepro/index.html';
+    }
+  });
+}
 
 window.__DZLAB_BOOT_READY__ = true;
 

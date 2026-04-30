@@ -1460,2018 +1460,977 @@
   </div>
 
   <script>
-    (() => {
-      'use strict';
+(() => {
+  'use strict';
 
+  const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json';
+  const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
+  const ART_EMAIL = 'dungzakcestlavie@gmail.com';
+  const MOBILE_FIRST_RENDER_COUNT = 24;
+  const DESKTOP_FIRST_RENDER_COUNT = 24;
+  const LOAD_MORE_COUNT = 24;
+  const SEARCH_DEBOUNCE_MS = 160;
+  const ASSET_VERSION = String(Date.now());
 
-      /* PAGE ZOOM LOCK — keep whole Archive Pro viewport fixed.
-         Lightbox image zoom still works through the existing custom viewerScale engine. */
-      const preventBrowserZoom = (e) => {
-        if (e && typeof e.preventDefault === 'function') e.preventDefault();
-      };
+  const SVG_PLACEHOLDER = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+      <rect width="800" height="800" fill="#091018"/>
+      <circle cx="400" cy="400" r="180" fill="rgba(212,180,109,.08)"/>
+      <circle cx="400" cy="400" r="120" fill="rgba(212,180,109,.10)"/>
+      <path d="M250 520 L360 400 L455 485 L550 360 L650 520" fill="none" stroke="#7a6740" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="305" cy="270" r="42" fill="#7a6740"/>
+    </svg>
+  `)}`;
 
-      ['gesturestart', 'gesturechange', 'gestureend'].forEach((type) => {
-        document.addEventListener(type, preventBrowserZoom, { passive: false });
-        window.addEventListener(type, preventBrowserZoom, { passive: false });
+  const uiText = {
+    kr: {
+      heroModeLine: '한국어 기준',
+      statDescTotal: '전체 작품 수',
+      statDescFiltered: '현재 검색 결과',
+      statDescSections: '섹션 수',
+      placeholderSearch: 'ID, 제목, 재료, 연도, 섹션 검색',
+      resetBtn: '초기화',
+      focusSearchBtn: '검색 집중',
+      statusIdle: '대기 중',
+      statusLoading: '준비됨',
+      statusLoaded: '로드 완료',
+      statusFailed: '로드 실패',
+      resultUnit: '점',
+      renderedPrefix: '표시 ',
+      renderedSuffix: '점',
+      activeFilterNone: '필터 없음',
+      filteredPrefix: '필터 적용됨',
+      searchPrefix: '검색',
+      sectionPrefix: '섹션',
+      emptyState: '조건에 맞는 작품이 없습니다.',
+      loadMore: '더 보기',
+      footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
+      untitled: '무제 / 캡션 없음',
+      noInfo: '정보 없음',
+      allSections: '전체 섹션',
+      lbMaterial: '재료',
+      lbSize: '크기',
+      lbYear: '연도',
+      lbImage: '이미지',
+      lbZoom: '줌',
+      openImage: '이미지 열기',
+      openZoom: '줌 열기',
+      detail: '상세 보기',
+      sortOptions: ['기본순','번호 늦은순','최신순']
+    },
+    en: {
+      heroModeLine: 'English mode',
+      statDescTotal: 'Total works',
+      statDescFiltered: 'Current results',
+      statDescSections: 'Section count',
+      placeholderSearch: 'Search ID, title, material, year, section',
+      resetBtn: 'Reset',
+      focusSearchBtn: 'Focus',
+      statusIdle: 'Idle',
+      statusLoading: 'Ready',
+      statusLoaded: 'Loaded',
+      statusFailed: 'Failed',
+      resultUnit: ' works',
+      renderedPrefix: 'Visible ',
+      renderedSuffix: '',
+      activeFilterNone: 'No filters',
+      filteredPrefix: 'Filtered',
+      searchPrefix: 'Search',
+      sectionPrefix: 'Section',
+      emptyState: 'No artworks match the current filters.',
+      loadMore: 'Load more',
+      footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
+      untitled: 'Untitled / No Caption',
+      noInfo: 'No information',
+      allSections: 'All sections',
+      lbMaterial: 'Material',
+      lbSize: 'Size',
+      lbYear: 'Year',
+      lbImage: 'Image',
+      lbZoom: 'Zoom',
+      openImage: 'Open image',
+      openZoom: 'Open zoom',
+      detail: 'View detail',
+      sortOptions: ['Default','Late ID','Newest']
+    },
+    both: {
+      heroModeLine: 'KR / EN',
+      statDescTotal: '전체 작품 수 / Total works',
+      statDescFiltered: '현재 검색 결과 / Current results',
+      statDescSections: '섹션 수 / Section count',
+      placeholderSearch: 'ID, 제목, title, 재료, material, year, section',
+      resetBtn: '초기화 / Reset',
+      focusSearchBtn: '검색 / Focus',
+      statusIdle: '대기 / Idle',
+      statusLoading: '준비됨 / Ready',
+      statusLoaded: '로드 완료 / Loaded',
+      statusFailed: '로드 실패 / Failed',
+      resultUnit: '점 / works',
+      renderedPrefix: '표시 / Visible ',
+      renderedSuffix: '',
+      activeFilterNone: '필터 없음 / No filters',
+      filteredPrefix: '필터 적용됨 / Filtered',
+      searchPrefix: '검색 / Search',
+      sectionPrefix: '섹션 / Section',
+      emptyState: '조건에 맞는 작품이 없습니다 / No artworks match the current filters.',
+      loadMore: '더 보기 / Load more',
+      footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
+      untitled: '무제 / Untitled',
+      noInfo: '정보 없음 / No information',
+      allSections: '전체 섹션 / All sections',
+      lbMaterial: '재료 / Material',
+      lbSize: '크기 / Size',
+      lbYear: '연도 / Year',
+      lbImage: '이미지 / Image',
+      lbZoom: '줌 / Zoom',
+      openImage: '이미지 열기 / Open image',
+      openZoom: '줌 열기 / Open zoom',
+      detail: '상세 보기 / View detail',
+      sortOptions: ['기본순 / Default','번호 늦은순 / Late ID','최신순 / Newest']
+    }
+  };
+
+  const state = {
+    all: [],
+    filtered: [],
+    sections: [],
+    visibleCount: getInitialVisibleCount(),
+    query: '',
+    section: 'all',
+    sort: 'section-id-asc',
+    lang: 'kr',
+    loadState: 'idle',
+    lightboxItem: null
+  };
+
+  let WORKS_DATA = [];
+  let WORKS_READY = false;
+  let CURRENT_LIST = [];
+  let searchTimer = null;
+  let archiveScrollY = 0;
+
+  const els = {
+    statTotal: byId('statTotal'),
+    statFiltered: byId('statFiltered'),
+    statSections: byId('statSections'),
+    statDescTotal: byId('statDescTotal'),
+    statDescFiltered: byId('statDescFiltered'),
+    statDescSections: byId('statDescSections'),
+    heroModeLine: byId('heroModeLine'),
+    searchInput: byId('searchInput'),
+    sectionSelect: byId('sectionSelect'),
+    sortSelect: byId('sortSelect'),
+    resetBtn: byId('resetBtn'),
+    focusSearchBtn: byId('focusSearchBtn'),
+    sourcePill: byId('sourcePill'),
+    loadedPill: byId('loadedPill'),
+    statusText: byId('statusText'),
+    resultText: byId('resultText'),
+    renderedText: byId('renderedText'),
+    activeFilterText: byId('activeFilterText'),
+    grid: byId('grid'),
+    emptyState: byId('emptyState'),
+    loadWrap: byId('loadWrap'),
+    loadMoreBtn: byId('loadMoreBtn'),
+    footerNote: byId('footerNote'),
+    lightbox: byId('lightbox'),
+    lightboxClose: byId('viewerCloseBtn') || byId('lightboxClose'),
+    lightboxImage: byId('lightboxImage'),
+    lbId: byId('lbId'),
+    lbTitle: byId('lbTitle'),
+    lbSection: byId('lbSection'),
+    lbMaterialVal: byId('lbMaterial'),
+    lbSizeVal: byId('lbSize'),
+    lbYearVal: byId('lbYear'),
+    lbImagePath: byId('lbImagePath'),
+    lbZoomPath: byId('lbZoomPath'),
+    lbOpenImage: byId('lbOpenImage'),
+    lbOpenZoom: byId('lbOpenZoom'),
+    lbKeyMaterial: byId('lbKeyMaterial'),
+    lbKeySize: byId('lbKeySize'),
+    lbKeyYear: byId('lbKeyYear'),
+    lbKeyImage: byId('lbKeyImage'),
+    lbKeyZoom: byId('lbKeyZoom'),
+    entryBtn: byId('entryBtn'),
+    archiveHomeLink: byId('archiveHomeLink'),
+    searchArea: byId('searchArea'),
+    langTabs: Array.from(document.querySelectorAll('.lang-tab')),
+    sectionButtons: Array.from(document.querySelectorAll('.section-btn'))
+  };
+
+  const lazyImageObserver = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          loadLazyImage(entry.target);
+          observer.unobserve(entry.target);
+        });
+      }, { root: null, rootMargin: '900px 0px', threshold: 0.001 })
+    : null;
+
+  function byId(id){ return document.getElementById(id); }
+
+  function getInitialVisibleCount(){
+    return window.matchMedia('(max-width: 768px)').matches ? MOBILE_FIRST_RENDER_COUNT : DESKTOP_FIRST_RENDER_COUNT;
+  }
+
+  function t(key){
+    return (uiText[state.lang] && uiText[state.lang][key]) || uiText.kr[key] || '';
+  }
+
+  function safeText(v){
+    return v === null || v === undefined ? '' : String(v).trim();
+  }
+
+  function escapeHTML(value){
+    return String(value ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+  }
+
+  function toAbsoluteUrl(path){
+    const clean = safeText(path);
+    if(!clean) return '';
+    if(/^https?:\/\//i.test(clean)) return clean;
+    return new URL(clean.replace(/^\/+/, ''), SITE_ROOT).href;
+  }
+
+  function withCacheBust(url){
+    const clean = safeText(url);
+    if(!clean || clean.startsWith('data:') || clean.startsWith('blob:')) return clean;
+    return `${clean}${clean.includes('?') ? '&' : '?'}v=${ASSET_VERSION}`;
+  }
+
+  function formatNumber(n){
+    return new Intl.NumberFormat('ko-KR').format(Number(n || 0));
+  }
+
+  function normalizeSearchText(value){
+    return safeText(value)
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .replace(/\s+/g,' ')
+      .trim();
+  }
+
+  function compactSearchToken(value){
+    return normalizeSearchText(value).replace(/[-_\s\.]/g,'');
+  }
+
+  function parseYearNumbers(year){
+    return (String(year || '').match(/\d{4}/g) || [])
+      .map(v => parseInt(v,10))
+      .filter(Number.isFinite);
+  }
+
+  function parseYearEndNumber(year){
+    const nums = parseYearNumbers(year);
+    return nums.length ? nums[nums.length - 1] : 0;
+  }
+
+  function parseIdNumber(id){
+    const match = safeText(id).match(/(\d+)(?!.*\d)/);
+    return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
+  }
+
+  function parseIdPrefix(id){
+    return safeText(id).toUpperCase().replace(/[-_\s]*\d+.*$/,'');
+  }
+
+  function compareIdNatural(a,b,direction='asc'){
+    const ap = parseIdPrefix(a.id);
+    const bp = parseIdPrefix(b.id);
+    const pc = ap.localeCompare(bp, 'ko', { numeric:true, sensitivity:'base' });
+    if(pc !== 0) return direction === 'desc' ? -pc : pc;
+
+    const an = parseIdNumber(a.id);
+    const bn = parseIdNumber(b.id);
+    if(an !== bn) return direction === 'desc' ? bn - an : an - bn;
+
+    const rc = safeText(a.id).localeCompare(safeText(b.id), 'ko', { numeric:true, sensitivity:'base' });
+    return direction === 'desc' ? -rc : rc;
+  }
+
+  function normalizeWork(raw, index){
+    const work = { ...raw };
+
+    work.id = safeText(work.id) || `WORK-${String(index + 1).padStart(4,'0')}`;
+
+    /*
+      IMPORTANT:
+      섹션은 추론하지 않는다.
+      section_kr / section_en 문자열로 덮어쓰지 않는다.
+      works.json 안의 section_id, section_kr, section_en을 그대로 신뢰한다.
+    */
+    work.section_id = Number.isFinite(Number(raw.section_id)) ? Number(raw.section_id) : 999;
+    work.section_kr = safeText(raw.section_kr);
+    work.section_en = safeText(raw.section_en);
+
+    work.title_kr = safeText(raw.title_kr);
+    work.title_en = safeText(raw.title_en);
+    work.material_kr = safeText(raw.material_kr);
+    work.material_en = safeText(raw.material_en);
+    work.size_kr = safeText(raw.size_kr);
+    work.size_en = safeText(raw.size_en);
+    work.year = safeText(raw.year);
+    work.image = safeText(raw.image);
+    work.zoom = safeText(raw.zoom || raw.image);
+    work.status = safeText(raw.status);
+    work._yearEnd = parseYearEndNumber(work.year);
+    work._sourceIndex = index;
+
+    work._searchText = normalizeSearchText([
+      work.id,
+      compactSearchToken(work.id),
+      work.title_kr,
+      work.title_en,
+      work.material_kr,
+      work.material_en,
+      work.size_kr,
+      work.size_en,
+      work.year,
+      work.section_kr,
+      work.section_en,
+      String(work.section_id)
+    ].join(' '));
+
+    return work;
+  }
+
+  function buildSectionsFromWorks(works){
+    const map = new Map();
+
+    works.forEach((work) => {
+      const sid = Number(work.section_id);
+      if(!Number.isFinite(sid)) return;
+
+      if(!map.has(sid)){
+        map.set(sid, {
+          id: sid,
+          kr: safeText(work.section_kr) || `Section ${sid}`,
+          en: safeText(work.section_en) || safeText(work.section_kr) || `Section ${sid}`,
+          count: 0
+        });
+      }
+
+      const entry = map.get(sid);
+      entry.count += 1;
+
+      if(!entry.kr && safeText(work.section_kr)) entry.kr = safeText(work.section_kr);
+      if(!entry.en && safeText(work.section_en)) entry.en = safeText(work.section_en);
+    });
+
+    return Array.from(map.values()).sort((a,b) => a.id - b.id);
+  }
+
+  function getSectionRecord(sectionId){
+    const sid = Number(sectionId);
+    return state.sections.find(sec => Number(sec.id) === sid) || null;
+  }
+
+  function getSectionTextByWork(work){
+    const kr = safeText(work.section_kr);
+    const en = safeText(work.section_en);
+
+    if(state.lang === 'en') return en || kr || `Section ${work.section_id}`;
+    if(state.lang === 'both'){
+      if(kr && en && kr !== en) return `${kr} / ${en}`;
+      return kr || en || `Section ${work.section_id}`;
+    }
+    return kr || en || `섹션 ${work.section_id}`;
+  }
+
+  function getSectionTextById(sectionId){
+    const sec = getSectionRecord(sectionId);
+    if(!sec) return state.lang === 'en' ? 'Unsorted' : (state.lang === 'both' ? '미분류 / Unsorted' : '미분류');
+    if(state.lang === 'en') return sec.en || sec.kr || `Section ${sec.id}`;
+    if(state.lang === 'both'){
+      if(sec.kr && sec.en && sec.kr !== sec.en) return `${sec.kr} / ${sec.en}`;
+      return sec.kr || sec.en || `Section ${sec.id}`;
+    }
+    return sec.kr || sec.en || `섹션 ${sec.id}`;
+  }
+
+  function getTitle(work){
+    const kr = safeText(work.title_kr);
+    const en = safeText(work.title_en);
+    if(state.lang === 'en') return en || kr || '';
+    if(state.lang === 'both') return kr && en && kr !== en ? `${kr} / ${en}` : (kr || en || '');
+    return kr || en || '';
+  }
+
+  function getMaterial(work){
+    const kr = safeText(work.material_kr);
+    const en = safeText(work.material_en);
+    if(state.lang === 'en') return en || kr;
+    if(state.lang === 'both') return kr && en && kr !== en ? `${kr} / ${en}` : (kr || en);
+    return kr || en;
+  }
+
+  function getSize(work){
+    const kr = safeText(work.size_kr);
+    const en = safeText(work.size_en);
+    if(state.lang === 'en') return en || kr;
+    if(state.lang === 'both') return kr && en && kr !== en ? `${kr} / ${en}` : (kr || en);
+    return kr || en;
+  }
+
+  function getYear(work){
+    return safeText(work.year);
+  }
+
+  function getOriginTitle(){
+    if(state.lang === 'en') return 'Untitled';
+    if(state.lang === 'both') return '무제 / Untitled';
+    return '무제';
+  }
+
+  function normalizeStatus(status){
+    const value = safeText(status).toLowerCase();
+    if(!value) return '';
+    if(['available','available for collection','소장가능','소장 가능'].includes(value)) return 'available';
+    if(['reserved','예약','예약중'].includes(value)) return 'reserved';
+    if(['collected','sold','소장','소장완료','소장 완료','판매완료','판매 완료'].includes(value)) return 'collected';
+    return value;
+  }
+
+  function getStatusLabel(status){
+    const normalized = normalizeStatus(status);
+    if(normalized === 'available') return state.lang === 'en' ? 'available for collection' : (state.lang === 'both' ? '소장 가능 / available for collection' : '소장 가능');
+    if(normalized === 'reserved') return state.lang === 'en' ? 'reserved' : (state.lang === 'both' ? '예약 / reserved' : '예약');
+    if(normalized === 'collected') return state.lang === 'en' ? 'collected' : (state.lang === 'both' ? '소장됨 / collected' : '소장됨');
+    return '';
+  }
+
+  function getInquiryText(){
+    return state.lang === 'en' ? 'inquiry via email →' : (state.lang === 'both' ? '이메일 문의 → / inquiry via email →' : '이메일 문의 →');
+  }
+
+  function getInquiryLink(workId){
+    const subject = encodeURIComponent(`Artwork Inquiry — ${workId}`);
+    const body = encodeURIComponent(`Hello,\n\nI would like to inquire about this artwork.\n\nArtwork ID: ${workId}`);
+    return `mailto:${ART_EMAIL}?subject=${subject}&body=${body}`;
+  }
+
+  function renderStatusUI(work){
+    if(Number(work.section_id) === 0) return '';
+    const status = normalizeStatus(work.status || 'available');
+    const label = getStatusLabel(status);
+    if(!label) return '';
+
+    if(status === 'available'){
+      return `<div class="work-status"><div class="status-label">${escapeHTML(label)}</div><a href="${escapeHTML(getInquiryLink(work.id))}" class="status-inquiry">${escapeHTML(getInquiryText())}</a></div>`;
+    }
+
+    return `<div class="work-status"><div class="status-label">${escapeHTML(label)}</div></div>`;
+  }
+
+  function sortWorks(list){
+    const arr = list.slice();
+
+    if(state.sort === 'year-desc'){
+      return arr.sort((a,b) => {
+        const ya = Number(a._yearEnd || 0);
+        const yb = Number(b._yearEnd || 0);
+        if(ya !== yb) return yb - ya;
+        return compareIdNatural(a,b,'asc');
       });
-
-      document.addEventListener('touchmove', (e) => {
-        if (e.touches && e.touches.length > 1 && !document.body.classList.contains('viewer-open')) {
-          e.preventDefault();
-        }
-      }, { passive: false });
-
-      document.addEventListener('dblclick', (e) => {
-        const lightbox = document.getElementById('lightbox');
-        if (!lightbox || !lightbox.contains(e.target)) e.preventDefault();
-      }, { passive: false });
-
-      document.addEventListener('wheel', (e) => {
-        if (e.ctrlKey || e.metaKey) e.preventDefault();
-      }, { passive: false });
-
-      document.addEventListener('keydown', (e) => {
-        const key = String(e.key || '').toLowerCase();
-        if ((e.ctrlKey || e.metaKey) && (key === '+' || key === '-' || key === '=' || key === '0')) {
-          e.preventDefault();
-        }
-      }, { passive: false });
-
-      const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://dungzak.art/data/works.json';
-      const MIN_EXPECTED_WORKS = 100;
-      const AUTO_AVAILABLE_AFTER_COUNT = 1345;
-      const MOBILE_FIRST_RENDER_COUNT = 24;
-      const DESKTOP_FIRST_RENDER_COUNT = 24;
-      const FIRST_RENDER_COUNT = DESKTOP_FIRST_RENDER_COUNT;
-      const FAST_ORDER = 'section-id-asc';
-      const LOAD_MORE_COUNT = 24;
-      const INITIAL_VISIBLE = getInitialVisibleCount();
-      const LOAD_STEP = LOAD_MORE_COUNT;
-      const SEARCH_DEBOUNCE_MS = 160;
-      const ASSET_VERSION = String(Date.now());
-
-      const ART_EMAIL = "dungzakcestlavie@gmail.com";
-
-
-
-      function normalizeStatus(status) {
-        const value = safeText(status).toLowerCase();
-        if (!value) return '';
-        if (['available', 'available for collection', '소장가능', '소장 가능'].includes(value)) return 'available';
-        if (['reserved', '예약', '예약중'].includes(value)) return 'reserved';
-        if (['collected', 'sold', '소장', '소장완료', '소장 완료', '판매완료', '판매 완료'].includes(value)) return 'collected';
-        return value;
-      }
-
-      function getStatusLabel(status) {
-        const normalized = normalizeStatus(status);
-        if (normalized === 'available') {
-          if (state.lang === 'en') return 'available for collection';
-          if (state.lang === 'both') return '소장 가능 / available for collection';
-          return '소장 가능';
-        }
-        if (normalized === 'reserved') {
-          if (state.lang === 'en') return 'reserved';
-          if (state.lang === 'both') return '예약 / reserved';
-          return '예약';
-        }
-        if (normalized === 'collected') {
-          if (state.lang === 'en') return 'collected';
-          if (state.lang === 'both') return '소장됨 / collected';
-          return '소장됨';
-        }
-        return '';
-      }
-
-      function getInquiryText() {
-        if (state.lang === 'en') return 'inquiry via email →';
-        if (state.lang === 'both') return '이메일 문의 → / inquiry via email →';
-        return '이메일 문의 →';
-      }
-
-      function getInquiryLink(workId) {
-        const subject = encodeURIComponent("Artwork Inquiry — " + workId);
-        const body = encodeURIComponent(
-          "Hello,\n\nI would like to inquire about this artwork.\n\nArtwork ID: " + workId
-        );
-        return "mailto:" + ART_EMAIL + "?subject=" + subject + "&body=" + body;
-      }
-
-      function renderStatusUI(work) {
-        if (work.section_id === 0) return '';
-
-        const status = normalizeStatus(work.status || 'available');
-        const label = getStatusLabel(status);
-        if (!label) return '';
-
-        if (status === 'available') {
-          return [
-            '<div class="work-status">',
-            '<div class="status-label">' + label + '</div>',
-            '<a href="' + getInquiryLink(work.id) + '" class="status-inquiry">',
-            getInquiryText(),
-            '</a>',
-            '</div>'
-          ].join('');
-        }
-
-        return [
-          '<div class="work-status">',
-          '<div class="status-label">' + label + '</div>',
-          '</div>'
-        ].join('');
-      }
-
-
-      const SECTION_MAP = {
-        0: { kr: 'A 기원', en: 'Origins' },
-        1: { kr: 'I 우리를 위해 기도해 주세요', en: 'Pray for Us' },
-        2: { kr: 'II 인간', en: 'Human Being' },
-        3: { kr: 'III 정신의 재탄생', en: 'Rebirth of Mind' },
-        4: { kr: 'IV 존재의 회복', en: 'Restoration of Being' },
-        5: { kr: 'V 빛의 초의식', en: 'Metaconsciousness of Light' }
-      };
-
-      const SVG_PLACEHOLDER = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
-          <rect width="800" height="800" fill="#091018"/>
-          <circle cx="400" cy="400" r="180" fill="rgba(212,180,109,.08)"/>
-          <circle cx="400" cy="400" r="120" fill="rgba(212,180,109,.10)"/>
-          <path d="M250 520 L360 400 L455 485 L550 360 L650 520" fill="none" stroke="#7a6740" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="305" cy="270" r="42" fill="#7a6740"/>
-        </svg>
-      `)}`;
-
-      const uiText = {
-        kr: {
-          heroModeLine: '한국어 기준',
-          statDescTotal: '전체 작품 수',
-          statDescFiltered: '현재 검색 결과',
-          statDescSections: '섹션 수',
-          labelSearch: 'Search',
-          labelSection: 'Section',
-          labelSort: 'Sort',
-          placeholderSearch: 'ID, 제목, 재료, 연도, 섹션 검색',
-          resetBtn: '초기화',
-          focusSearchBtn: '검색 집중',
-          statusIdle: '대기 중',
-          statusLoading: '준비됨',
-          statusLoaded: '로드 완료',
-          statusFailed: '로드 실패',
-          loadingScreen: '',
-          loadingScreenError: 'works.json을 불러오지 못했습니다. 경로 또는 접근 권한을 확인해 주세요.',
-          resultUnit: '점',
-          renderedPrefix: '표시 ',
-          renderedSuffix: '점',
-          activeFilterNone: '필터 없음',
-          filteredPrefix: '필터 적용됨',
-          searchPrefix: '검색',
-          sectionPrefix: '섹션',
-          yearPrefix: '연도',
-          emptyState: '조건에 맞는 작품이 없습니다.',
-          loadMore: '더 보기',
-          footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: '무제 / 캡션 없음',
-          noInfo: '정보 없음',
-          allSections: '전체 섹션',
-          lbMaterial: '재료',
-          lbSize: '크기',
-          lbYear: '연도',
-          lbImage: '이미지',
-          lbZoom: '줌',
-          openImage: '이미지 열기',
-          openZoom: '줌 열기',
-          sortOptions: [
-            '기본순',
-            '번호 늦은순',
-            '최신순'
-          ]
-        },
-        en: {
-          heroModeLine: 'English mode',
-          statDescTotal: 'Total works',
-          statDescFiltered: 'Current results',
-          statDescSections: 'Section count',
-          labelSearch: 'Search',
-          labelSection: 'Section',
-          labelSort: 'Sort',
-          placeholderSearch: 'Search ID, title, material, year, section',
-          resetBtn: 'Reset',
-          focusSearchBtn: 'Focus',
-          statusIdle: 'Idle',
-          statusLoading: 'Ready',
-          statusLoaded: 'Loaded',
-          statusFailed: 'Failed',
-          loadingScreen: '',
-          loadingScreenError: 'Unable to load works.json.',
-          resultUnit: ' works',
-          renderedPrefix: 'Visible ',
-          renderedSuffix: '',
-          activeFilterNone: 'No filters',
-          filteredPrefix: 'Filtered',
-          searchPrefix: 'Search',
-          sectionPrefix: 'Section',
-          yearPrefix: 'Year',
-          emptyState: 'No artworks match the current filters.',
-          loadMore: 'Load more',
-          footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: 'Untitled / No Caption',
-          noInfo: 'No information',
-          allSections: 'All sections',
-          lbMaterial: 'Material',
-          lbSize: 'Size',
-          lbYear: 'Year',
-          lbImage: 'Image',
-          lbZoom: 'Zoom',
-          openImage: 'Open image',
-          openZoom: 'Open zoom',
-          sortOptions: [
-            'Default',
-            'Late ID',
-            'Newest'
-          ]
-        },
-        both: {
-          heroModeLine: 'KR / EN',
-          statDescTotal: '전체 작품 수 / Total works',
-          statDescFiltered: '현재 검색 결과 / Current results',
-          statDescSections: '섹션 수 / Section count',
-          labelSearch: 'Search',
-          labelSection: 'Section',
-          labelSort: 'Sort',
-          placeholderSearch: 'ID, 제목, title, 재료, material, year, section',
-          resetBtn: '초기화 / Reset',
-          focusSearchBtn: '검색 / Focus',
-          statusIdle: '대기 / Idle',
-          statusLoading: '준비됨 / Ready',
-          statusLoaded: '로드 완료 / Loaded',
-          statusFailed: '로드 실패 / Failed',
-          loadingScreen: '',
-          loadingScreenError: 'works.json을 불러오지 못했습니다 / Unable to load works.json.',
-          resultUnit: '점 / works',
-          renderedPrefix: '표시 / Visible ',
-          renderedSuffix: '',
-          activeFilterNone: '필터 없음 / No filters',
-          filteredPrefix: '필터 적용됨 / Filtered',
-          searchPrefix: '검색 / Search',
-          sectionPrefix: '섹션 / Section',
-          yearPrefix: '연도 / Year',
-          emptyState: '조건에 맞는 작품이 없습니다 / No artworks match the current filters.',
-          loadMore: '더 보기 / Load more',
-          footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: '무제 / Untitled',
-          noInfo: '정보 없음 / No information',
-          allSections: '전체 섹션 / All sections',
-          lbMaterial: '재료 / Material',
-          lbSize: '크기 / Size',
-          lbYear: '연도 / Year',
-          lbImage: '이미지 / Image',
-          lbZoom: '줌 / Zoom',
-          openImage: '이미지 열기 / Open image',
-          openZoom: '줌 열기 / Open zoom',
-          sortOptions: [
-            '기본순 / Default',
-            '번호 늦은순 / Late ID',
-            '최신순 / Newest'
-          ]
-        }
-      };
-
-      function getInitialVisibleCount() {
-        return window.matchMedia('(max-width: 768px)').matches ? MOBILE_FIRST_RENDER_COUNT : DESKTOP_FIRST_RENDER_COUNT;
-      }
-
-
-      const state = {
-        all: [],
-        filtered: [],
-        visibleCount: getInitialVisibleCount(),
-        query: '',
-        section: 'all',
-        sort: 'section-id-asc',
-        lightboxItem: null,
-        lang: 'kr',
-        loadState: 'idle',
-        isLoaded: false,
-        _searchPrepared: false
-      };
-
-      let visibleCount = getInitialVisibleCount();
-      let WORKS_DATA = [];
-      let WORKS_READY = false;
-      let CURRENT_LIST = [];
-
-      const els = {
-        statTotal: document.getElementById('statTotal'),
-        statFiltered: document.getElementById('statFiltered'),
-        statSections: document.getElementById('statSections'),
-        statDescTotal: document.getElementById('statDescTotal'),
-        statDescFiltered: document.getElementById('statDescFiltered'),
-        statDescSections: document.getElementById('statDescSections'),
-        heroModeLine: document.getElementById('heroModeLine'),
-        searchInput: document.getElementById('searchInput'),
-        sectionSelect: document.getElementById('sectionSelect'),
-        sortSelect: document.getElementById('sortSelect'),
-        resetBtn: document.getElementById('resetBtn'),
-        focusSearchBtn: document.getElementById('focusSearchBtn'),
-        labelSearch: document.getElementById('labelSearch'),
-        labelSection: document.getElementById('labelSection'),
-        labelSort: document.getElementById('labelSort'),
-        sourcePill: document.getElementById('sourcePill'),
-        loadedPill: document.getElementById('loadedPill'),
-        statusText: document.getElementById('statusText'),
-        loadingScreen: document.getElementById('loadingScreen'),
-        resultsMeta: document.getElementById('resultsMeta'),
-        resultText: document.getElementById('resultText'),
-        renderedText: document.getElementById('renderedText'),
-        activeFilterText: document.getElementById('activeFilterText'),
-        grid: document.getElementById('grid'),
-        emptyState: document.getElementById('emptyState'),
-        loadWrap: document.getElementById('loadWrap'),
-        loadMoreBtn: document.getElementById('loadMoreBtn'),
-        footerNote: document.getElementById('footerNote'),
-        lightbox: document.getElementById('lightbox'),
-        lightboxClose: document.getElementById('viewerCloseBtn') || document.getElementById('lightboxClose'),
-        lightboxImage: document.getElementById('lightboxImage'),
-        lightboxStage: document.querySelector('.lightbox-stage'),
-        lbId: document.getElementById('lbId'),
-        lbTitle: document.getElementById('lbTitle'),
-        lbSection: document.getElementById('lbSection'),
-        lbMaterialVal: document.getElementById('lbMaterial'),
-        lbSizeVal: document.getElementById('lbSize'),
-        lbYearVal: document.getElementById('lbYear'),
-        lbImagePath: document.getElementById('lbImagePath'),
-        lbZoomPath: document.getElementById('lbZoomPath'),
-        lbOpenImage: document.getElementById('lbOpenImage'),
-        lbOpenZoom: document.getElementById('lbOpenZoom'),
-        lbKeyMaterial: document.getElementById('lbKeyMaterial'),
-        lbKeySize: document.getElementById('lbKeySize'),
-        lbKeyYear: document.getElementById('lbKeyYear'),
-        lbKeyImage: document.getElementById('lbKeyImage'),
-        lbKeyZoom: document.getElementById('lbKeyZoom'),
-        langTabs: Array.from(document.querySelectorAll('.lang-tab')),
-        archiveHomeLink: document.getElementById('archiveHomeLink'),
-        entryBtn: document.getElementById('entryBtn'),
-        searchArea: document.getElementById('searchArea'),
-        sectionButtons: Array.from(document.querySelectorAll('.section-btn'))
-      };
-
-      const numberFormat = new Intl.NumberFormat('ko-KR');
-      let searchTimer = null;
-      let worksLoadPromise = null;
-      let archiveScrollY = 0;
-      let closeClickBlockUntil = 0;
-
-      let viewerScale = 1;
-      let viewerX = 0;
-      let viewerY = 0;
-      let viewerStartX = 0;
-      let viewerStartY = 0;
-      let viewerLastX = 0;
-      let viewerLastY = 0;
-      let viewerStartTime = 0;
-      let viewerIsDragging = false;
-      let viewerIsZooming = false;
-      let viewerInitialDistance = 0;
-      let viewerLastTap = 0;
-      let viewerMouseDragging = false;
-
-      function isViewerOpen() {
-        return els.lightbox && els.lightbox.classList.contains('open') && document.body.classList.contains('viewer-open');
-      }
-
-      function applyViewerTransform() {
-        if (!els.lightboxImage) return;
-        els.lightboxImage.style.transform = `translate3d(${viewerX}px, ${viewerY}px, 0) scale(${viewerScale})`;
-        if (els.lightboxStage) els.lightboxStage.classList.toggle('is-zoomed', viewerScale > 1);
-      }
-
-      function resetViewerTransform() {
-        viewerScale = 1;
-        viewerX = 0;
-        viewerY = 0;
-        viewerIsDragging = false;
-        viewerIsZooming = false;
-        viewerMouseDragging = false;
-        if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging', 'is-zoomed');
-        applyViewerTransform();
-      }
-
-      function getViewerDistance(t1, t2) {
-        return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-      }
-
-      function getCurrentViewerIndex() {
-        if (!state.lightboxItem || !state.filtered.length) return -1;
-        return state.filtered.findIndex((item) => item === state.lightboxItem || item.id === state.lightboxItem.id);
-      }
-
-      function openViewerByOffset(offset) {
-        if (!isViewerOpen() || !state.filtered.length) return;
-        const current = getCurrentViewerIndex();
-        if (current < 0) return;
-        const nextIndex = (current + offset + state.filtered.length) % state.filtered.length;
-        openLightbox(state.filtered[nextIndex]);
-      }
-
-      function nextViewer() { openViewerByOffset(1); }
-      function prevViewer() { openViewerByOffset(-1); }
-
-      const lazyImageObserver = 'IntersectionObserver' in window
-        ? new IntersectionObserver((entries, observer) => {
-            entries.forEach((entry) => {
-              if (!entry.isIntersecting) return;
-              loadLazyImage(entry.target);
-              observer.unobserve(entry.target);
-            });
-          }, { root: null, rootMargin: '900px 0px', threshold: 0.001 })
-        : null;
-
-      function t(key) {
-        return uiText[state.lang][key];
-      }
-
-      function safeText(v) {
-        if (v === null || v === undefined) return '';
-        return String(v).trim();
-      }
-
-      function escapeHTML(value) {
-        return String(value ?? '')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#039;');
-      }
-
-      function toAbsoluteUrl(path) {
-        const clean = safeText(path);
-        if (!clean) return '';
-        if (/^https?:\/\//i.test(clean)) return clean;
-        return new URL(clean.replace(/^\/+/, ''), SITE_ROOT).href;
-      }
-
-      function debounce(fn, delay) {
-        return (...args) => {
-          window.clearTimeout(searchTimer);
-          searchTimer = window.setTimeout(() => fn(...args), delay);
-        };
-      }
-
-      function syncDataLanguage(root = document) {
-        root.querySelectorAll('[data-kr][data-en]').forEach((node) => {
-          const kr = node.dataset.kr || '';
-          const en = node.dataset.en || '';
-
-          if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
-            node.placeholder = state.lang === 'en' ? en : (state.lang === 'both' ? `${kr}\n${en}` : kr);
-            return;
-          }
-
-          if (state.lang === 'en') node.textContent = en;
-          else if (state.lang === 'both') node.textContent = `${kr}\n${en}`;
-          else node.textContent = kr;
-        });
-      }
-
-      function setStatusByState() {
-        if (state.loadState === 'loading') els.statusText.textContent = t('statusLoading');
-        else if (state.loadState === 'loaded') els.statusText.textContent = t('statusLoaded');
-        else if (state.loadState === 'failed') els.statusText.textContent = t('statusFailed');
-        else els.statusText.textContent = t('statusIdle');
-        els.statusText.classList.toggle('error', state.loadState === 'failed');
-      }
-
-      function getSectionTextById(sectionId) {
-        const sec = SECTION_MAP[sectionId];
-        if (!sec) return state.lang === 'en' ? 'Unsorted' : (state.lang === 'both' ? '미분류 / Unsorted' : '미분류');
-        if (state.lang === 'en') return sec.en;
-        if (state.lang === 'both') return `${sec.kr} / ${sec.en}`;
-        return sec.kr;
-      }
-
-      function getSectionPlainById(sectionId, lang) {
-        const sec = SECTION_MAP[sectionId];
-        if (!sec) return lang === 'en' ? 'Unsorted' : '미분류';
-        return lang === 'en' ? sec.en : sec.kr;
-      }
-
-      function getTitle(item) {
-        const kr = safeText(item.title_kr);
-        const en = safeText(item.title_en);
-        if (state.lang === 'en') return en || kr || '';
-        if (state.lang === 'both') {
-          if (kr && en && kr !== en) return `${kr} / ${en}`;
-          return kr || en || '';
-        }
-        return kr || en || '';
-      }
-
-      function getMaterial(item) {
-        const kr = safeText(item.material_kr);
-        const en = safeText(item.material_en);
-        if (state.lang === 'en') return en || kr;
-        if (state.lang === 'both') {
-          if (kr && en && kr !== en) return `${kr} / ${en}`;
-          return kr || en;
-        }
-        return kr || en;
-      }
-
-      function getSize(item) {
-        const kr = safeText(item.size_kr);
-        const en = safeText(item.size_en);
-        if (state.lang === 'en') return en || kr;
-        if (state.lang === 'both') {
-          if (kr && en && kr !== en) return `${kr} / ${en}`;
-          return kr || en;
-        }
-        return kr || en;
-      }
-
-      function getYear(item) {
-        return safeText(item.year);
-      }
-
-      function getOriginTitle() {
-        if (state.lang === 'en') return 'Untitled';
-        if (state.lang === 'both') return '무제 / Untitled';
-        return '무제';
-      }
-
-      function parseIdNumber(id) {
-        const match = safeText(id).match(/(\d+)(?!.*\d)/);
-        return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
-      }
-
-      function parseIdPrefix(id) {
-        return safeText(id)
-          .toLowerCase()
-          .replace(/[-_\s]*\d+.*$/i, '')
-          .replace(/[^a-z가-힣]/g, '');
-      }
-
-      function compareIdNatural(a, b, direction = 'asc') {
-        const ap = parseIdPrefix(a.id);
-        const bp = parseIdPrefix(b.id);
-        const prefixCompare = ap.localeCompare(bp, 'ko', { numeric: true, sensitivity: 'base' });
-        if (prefixCompare !== 0) return direction === 'desc' ? -prefixCompare : prefixCompare;
-
-        const an = parseIdNumber(a.id);
-        const bn = parseIdNumber(b.id);
-        if (an !== bn) return direction === 'desc' ? bn - an : an - bn;
-
-        const rawCompare = safeText(a.id).localeCompare(safeText(b.id), 'ko', { numeric: true, sensitivity: 'base' });
-        return direction === 'desc' ? -rawCompare : rawCompare;
-      }
-
-      function parseYearNumbers(year) {
-        const matches = String(year || '').match(/\d{4}/g) || [];
-        const nums = matches
-          .map((v) => parseInt(v, 10))
-          .filter((v) => Number.isFinite(v));
-        return nums;
-      }
-
-      function parseYearNumber(year) {
-        const nums = parseYearNumbers(year);
-        return nums.length ? nums[0] : null;
-      }
-
-      function parseYearEndNumber(year) {
-        const nums = parseYearNumbers(year);
-        return nums.length ? nums[nums.length - 1] : null;
-      }
-
-      function getYearSearchValues(item) {
-        const raw = safeText(item.year);
-        const parsed = parseYearNumber(raw);
-        const values = [raw];
-        if (parsed !== null) values.push(String(parsed), `year ${parsed}`, `연도 ${parsed}`);
-        return values.filter(Boolean);
-      }
-
-      function getIdSearchValues(item) {
-        const id = safeText(item.id);
-        const compact = compactSearchToken(id);
-        const noDash = id.replace(/[-_\s]/g, '');
-        const number = parseIdNumber(id);
-        const prefix = id.replace(/[-_]?\d+$/i, '');
-        const values = [id, compact, noDash];
-        if (Number.isFinite(number) && number !== Number.MAX_SAFE_INTEGER) {
-          values.push(String(number), `${prefix}${number}`, `${prefix}${String(number).padStart(3, '0')}`);
-        }
-        return values.filter(Boolean);
-      }
-
-      function inferSectionId(item) {
-        const id = safeText(item.id);
-        const sid = Number(item.section_id);
-
-        /* SECTION ABSOLUTE RULE:
-           - OR-* is always Origins.
-           - All other works use JSON section_id only.
-           - No title/section text guessing, so sections never overlap by inference. */
-        if (/^or[-_]?\d+/i.test(id)) return 0;
-        if (Number.isFinite(sid) && sid >= 0 && sid <= 5) return sid;
-        return 9999;
-      }
-
-      function normalizeImageUrl(url, kind, id, sectionId) {
-        /*
-          Image rule:
-          1) If works.json has image / zoom, use that exact URL.
-          2) Only when the JSON field is empty, create a safe fallback.
-          This keeps dungzak.art images and dungzaklab-images mixed paths alive.
-        */
-        const clean = safeText(url).replace(/\s+/g, '');
-        if (clean) return clean;
-
-        const safeId = safeText(id);
-        if (!safeId) return '';
-
-        const folder = kind === 'zoom' ? 'zoom' : 'standard';
-        const sid = Number(sectionId);
-        const base = sid === 0
-          ? 'https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro'
-          : 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images';
-
-        return `${base}/${folder}/${safeId}.jpg`;
-      }
-
-      function normalizeItem(raw, index) {
-        const item = raw && typeof raw === 'object' ? raw : {};
-        const id = String(item.id || '').trim() || 'item-' + (index + 1);
-        const sectionId = inferSectionId({ id, section_id: item.section_id });
-        const image = normalizeImageUrl(item.image, 'image', id, sectionId);
-        const zoom = normalizeImageUrl(item.zoom || item.image, 'zoom', id, sectionId);
-
-        return {
-          _index: index,
-          id,
-          section_id: sectionId,
-          section_kr: String(item.section_kr || '').trim(),
-          section_en: String(item.section_en || '').trim(),
-          title_kr: String(item.title_kr || '').trim(),
-          title_en: String(item.title_en || '').trim(),
-          material_kr: String(item.material_kr || '').trim(),
-          material_en: String(item.material_en || '').trim(),
-          size_kr: String(item.size_kr || '').trim(),
-          size_en: String(item.size_en || '').trim(),
-          year: String(item.year || '').trim(),
-          image,
-          zoom,
-          status: String(item.status || '').trim()
-        };
-      }
-
-      function normalizeSearchToken(value) {
-        return safeText(value)
-          .toLowerCase()
-          .normalize('NFKD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .normalize('NFKC')
-          .replace(/[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹ]/g, (m) => ({
-            'Ⅰ':'1', 'Ⅱ':'2', 'Ⅲ':'3', 'Ⅳ':'4', 'Ⅴ':'5', 'Ⅵ':'6', 'Ⅶ':'7', 'Ⅷ':'8', 'Ⅸ':'9', 'Ⅹ':'10',
-            'ⅰ':'1', 'ⅱ':'2', 'ⅲ':'3', 'ⅳ':'4', 'ⅴ':'5', 'ⅵ':'6', 'ⅶ':'7', 'ⅷ':'8', 'ⅸ':'9', 'ⅹ':'10'
-          }[m] || m))
-          .replace(/[‐‑‒–—―]/g, '-')
-          .replace(/&/g, ' and ')
-          .replace(/\+/g, ' plus ')
-          .replace(/\bcolour\b/g, 'color')
-          .replace(/\bcolours\b/g, 'colors')
-          .replace(/\bcentre\b/g, 'center')
-          .replace(/\bmetaconsciousness\b/g, 'meta consciousness')
-          .replace(/\boilstick\b/g, 'oil stick')
-          .replace(/\bmixedmedia\b/g, 'mixed media')
-          .replace(/["'“”‘’]+/g, '')
-          .replace(/[_:;,.\/\|()[\]{}<>]+/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-      }
-
-      function compactSearchToken(value) {
-        return normalizeSearchToken(value).replace(/[^a-z0-9가-힣ㄱ-ㅎ]/g, '');
-      }
-
-      function hangulInitials(value) {
-        const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-        return safeText(value).split('').map((ch) => {
-          const code = ch.charCodeAt(0) - 0xAC00;
-          if (code >= 0 && code <= 11171) return CHO[Math.floor(code / 588)] || ch;
-          return ch;
-        }).join('');
-      }
-
-      function getSearchAliases(value) {
-        const base = normalizeSearchToken(value);
-        const compact = compactSearchToken(value);
-        const aliases = [base, compact, hangulInitials(base), hangulInitials(compact)];
-
-        const groups = [
-          ['watercolour', 'watercolor', 'water colour', 'water color', 'aquarelle', '수채', '수채화'],
-          ['oilstick', 'oil stick', 'oil pastel', '오일스틱', '오일 파스텔'],
-          ['acrylic', 'acrylics', '아크릴'],
-          ['canvas', '캔버스'],
-          ['paper', '종이', '한지'],
-          ['pencil', 'colored pencil', 'colour pencil', 'color pencil', '연필', '색연필'],
-          ['pigment', 'powder pigment', '분채', '안료'],
-          ['unbleached cotton', 'cotton', 'raw cotton', '광목', '면천'],
-          ['mixed media', 'mixed-media', '혼합재료'],
-          ['light', 'illumination', 'radiance', '빛', '광', '광휘'],
-          ['memory', '기억'],
-          ['being', 'existence', 'presence', '존재', '실존'],
-          ['human', 'human being', 'people', '인간', '사람'],
-          ['mind', 'spirit', 'consciousness', '정신', '마음', '의식'],
-          ['rebirth', 'regeneration', '정신의 재탄생', '재탄생'],
-          ['restoration', 'recovery', '존재의 회복', '회복'],
-          ['metaconsciousness', 'meta consciousness', '빛의 초의식', '초의식'],
-          ['origin', 'origins', 'beginning', 'source', '기원', '근원'],
-          ['pray', 'prayer', 'pray for us', '기도', '우리를 위해 기도'],
-          ['available', 'available for collection', 'for sale', 'inquiry', '소장 가능', '소장가능', '문의'],
-          ['reserved', 'on hold', '예약', '예약중'],
-          ['collected', 'sold', 'sold out', '소장 완료', '소장완료', '소장됨', '판매완료']
-        ];
-
-        groups.forEach((group) => {
-          const normalizedGroup = group.map(normalizeSearchToken);
-          if (normalizedGroup.some((word) => base.includes(word) || compact.includes(compactSearchToken(word)))) {
-            aliases.push(...group, ...normalizedGroup, ...group.map(compactSearchToken));
-          }
-        });
-
-        return Array.from(new Set(aliases.map(safeText).filter(Boolean)));
-      }
-
-      function getSectionAliases(sectionId) {
-        const map = {
-          0: ['0', 'a', 'origin', 'origins', 'or', 'beginning', 'source', '기원', '근원', 'ㄱㅇ'],
-          1: ['1', 'i', 'pray', 'pray for us', 'prayer', '우리를 위해 기도해 주세요', '우리를 위해 기도', '기도', 'ㅇㄹㄹㅇㅎㄱㄷㅎㅈㅅㅇ', 'ㄱㄷ'],
-          2: ['2', 'ii', 'human', 'human being', 'people', '인간', '사람', 'ㅇㄱ'],
-          3: ['3', 'iii', 'rebirth', 'rebirth of mind', 'mind', 'spirit', '정신의 재탄생', '정신', '재탄생', 'ㅈㅅㅇㅈㅌㅅ', 'ㅈㅅ'],
-          4: ['4', 'iv', 'restoration', 'restoration of being', 'being', 'existence', '존재의 회복', '존재', '회복', 'ㅈㅈㅇㅎㅂ', 'ㅈㅈ'],
-          5: ['5', 'v', 'metaconsciousness', 'meta consciousness', 'metaconsciousness of light', 'light', '빛의 초의식', '빛', '초의식', 'ㅂㅇㅊㅇㅅ', 'ㅂㅊㅇㅅ', 'ㅂ']
-        };
-        return map[Number(sectionId)] || [];
-      }
-
-      function buildSearchText(item) {
-        if (item && item._searchText) return item._searchText;
-
-        const sectionKr = getSectionPlainById(item.section_id, 'kr');
-        const sectionEn = getSectionPlainById(item.section_id, 'en');
-        const values = [
-          ...getIdSearchValues(item),
-          `section ${item.section_id}`,
-          `섹션 ${item.section_id}`,
-          `${item.section_id}섹션`,
-          item.section_id,
-          item.section_kr,
-          item.section_en,
-          sectionKr,
-          sectionEn,
-          ...getSectionAliases(item.section_id),
-          item.title_kr,
-          item.title_en,
-          item.material_kr,
-          item.material_en,
-          item.size_kr,
-          item.size_en,
-          ...getYearSearchValues(item),
-          item.status,
-          item.image,
-          item.zoom
-        ];
-
-        const expanded = values.flatMap(getSearchAliases);
-        const normalized = expanded.map(normalizeSearchToken).filter(Boolean);
-        const compacted = expanded.map(compactSearchToken).filter(Boolean);
-        const initials = expanded.map(hangulInitials).map(compactSearchToken).filter(Boolean);
-        const searchText = Array.from(new Set([...normalized, ...compacted, ...initials])).join(' ');
-
-        if (item) {
-          item._searchText = searchText;
-          item._searchCompact = compactSearchToken(searchText);
-          item._searchInitials = compactSearchToken(hangulInitials(searchText));
-          item._sectionAliases = getSectionAliases(item.section_id).flatMap(getSearchAliases).map(normalizeSearchToken);
-        }
-
-        return searchText;
-      }
-
-      function getItemSearchCompact(item, haystack) {
-        if (item && item._searchCompact) return item._searchCompact;
-        const compact = compactSearchToken(haystack || buildSearchText(item));
-        if (item) item._searchCompact = compact;
-        return compact;
-      }
-
-      function getItemSearchInitials(item, haystack) {
-        if (item && item._searchInitials) return item._searchInitials;
-        const initials = compactSearchToken(hangulInitials(haystack || buildSearchText(item)));
-        if (item) item._searchInitials = initials;
-        return initials;
-      }
-
-      function getItemSectionAliases(item) {
-        if (item && item._sectionAliases) return item._sectionAliases;
-        const aliases = getSectionAliases(item.section_id).flatMap(getSearchAliases).map(normalizeSearchToken);
-        if (item) item._sectionAliases = aliases;
-        return aliases;
-      }
-
-
-      /* FAST SEARCH CACHE — created once when works.json loads */
-      function buildFastSearchText(item) {
-        return [
-          item.id, item.title_kr, item.title_en, item.material_kr, item.material_en,
-          item.size_kr, item.size_en, item.year, item.section_kr, item.section_en,
-          getSectionPlainById(item.section_id, 'kr'), getSectionPlainById(item.section_id, 'en'),
-          getSectionAliases(item.section_id).join(' ')
-        ].map(safeText).join(' ').toLowerCase().replace(/\s+/g, '');
-      }
-
-      function prepareFastSearchCache(item) {
-        item._fastSearch = buildFastSearchText(item);
-        item._yearEndNumber = parseYearEndNumber(item.year) || 0;
-        item._yearStartNumber = parseYearNumber(item.year) || 0;
-        return item;
-      }
-
-      function scheduleFullSearchIndex() {
-        const list = state.all || [];
-        let i = 0;
-        const run = (deadline) => {
-          const hasTime = () => !deadline || deadline.timeRemaining() > 6;
-          while (i < list.length && hasTime()) {
-            buildSearchText(list[i]);
-            i += 1;
-          }
-          if (i < list.length) {
-            if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 1200 });
-            else window.setTimeout(() => run(null), 16);
-          }
-        };
-        if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 1200 });
-        else window.setTimeout(() => run(null), 16);
-      }
-
-      function getQueryTokens(rawQuery) {
-        const q = normalizeSearchToken(rawQuery);
-        const compact = compactSearchToken(rawQuery);
-        const tokens = q.split(' ').map(v => v.trim()).filter(Boolean);
-        const expanded = tokens.flatMap(getSearchAliases).map(normalizeSearchToken).filter(Boolean);
-        const compacted = tokens.flatMap(getSearchAliases).map(compactSearchToken).filter(Boolean);
-        const initials = [hangulInitials(q), hangulInitials(compact)].map(compactSearchToken).filter(Boolean);
-        return Array.from(new Set([...tokens, ...expanded, ...compacted, ...initials])).filter(Boolean);
-      }
-
-      function matchIdQuery(item, rawQuery) {
-        const compact = compactSearchToken(rawQuery);
-        if (!compact) return false;
-
-        const itemId = safeText(item.id);
-        const idCompact = compactSearchToken(itemId);
-        const idNumber = parseIdNumber(itemId);
-        const idPrefix = parseIdPrefix(itemId);
-        const numberMatch = compact.match(/(\d+)$/);
-        const queryNumber = numberMatch ? Number(numberMatch[1]) : null;
-        const queryPrefix = compact.replace(/\d+$/g, '');
-
-        if (compact === idCompact) return true;
-        if (queryNumber !== null && Number.isFinite(queryNumber) && queryPrefix) {
-          if (idPrefix && compactSearchToken(idPrefix) === compactSearchToken(queryPrefix) && idNumber === queryNumber) return true;
-        }
-        if (/^\d+$/.test(compact) && Number(compact) === idNumber) return true;
-        return false;
-      }
-
-      function matchesSearch(item, rawQuery) {
-        const compact = compactSearchToken(rawQuery);
-        if (!compact) return true;
-
-        /* One-character live search causes broad matches and heavy UI churn.
-           Section buttons handle single-section navigation; text search begins at 2 chars. */
-        if (compact.length < 2) return true;
-
-        if (item._fastSearch && item._fastSearch.includes(compact)) return true;
-        if (item._searchCompact && item._searchCompact.includes(compact)) return true;
-        if (item._searchInitials && item._searchInitials.includes(compact)) return true;
-
-        if (/^\d{4}$/.test(compact)) {
-          return String(item._yearStartNumber || '') === compact || String(item._yearEndNumber || '') === compact;
-        }
-
-        return false;
-      }
-
-      function compareIdAsc(a, b) {
-        return compareIdNatural(a, b, 'asc');
-      }
-
-      function compareIdDesc(a, b) {
-        return compareIdNatural(a, b, 'desc');
-      }
-
-      function compareYearAsc(a, b) {
-        const ay = parseYearNumber(a.year);
-        const by = parseYearNumber(b.year);
-
-        // Year 없는 항목은 항상 뒤로 보낸다. 둘 다 없으면 ID 자연 정렬.
-        if (ay === null && by === null) return compareIdAsc(a, b);
-        if (ay === null) return 1;
-        if (by === null) return -1;
-
-        if (ay !== by) return ay - by;
-        return compareIdAsc(a, b);
-      }
-
-      function compareYearDesc(a, b) {
-        const ay = parseYearEndNumber(a.year);
-        const by = parseYearEndNumber(b.year);
-
-        // Year 없는 항목은 항상 뒤로 보낸다. 둘 다 없으면 ID 자연 정렬.
-        if (ay === null && by === null) return compareIdAsc(a, b);
-        if (ay === null) return 1;
-        if (by === null) return -1;
-
-        if (ay !== by) return by - ay;
-        return compareIdAsc(a, b);
-      }
-
-      function compareItems(a, b, mode) {
-        /* SORT HARD RULE:
-           - Section filter and section buttons are independent from sorting.
-           - Year sort always uses parsed numeric year first.
-           - If the year is the same, ID order is used as the stable tie-breaker.
-           - Section + Year keeps sections grouped, then orders works by year inside each section. */
-        switch (mode) {
-          case 'section-year-asc': {
-            if (a.section_id !== b.section_id) return a.section_id - b.section_id;
-            return compareYearAsc(a, b);
-          }
-          case 'section-year-desc': {
-            if (a.section_id !== b.section_id) return a.section_id - b.section_id;
-            return compareYearDesc(a, b);
-          }
-          case 'id-asc':
-            return compareIdAsc(a, b);
-          case 'id-desc':
-            return compareIdDesc(a, b);
-          case 'year-desc':
-            return compareYearDesc(a, b);
-          case 'year-asc':
-            return compareYearAsc(a, b);
-          case 'title-asc': {
-            const at = getTitle(a) || a.id;
-            const bt = getTitle(b) || b.id;
-            const c = at.localeCompare(bt, 'ko', { numeric: true, sensitivity: 'base' });
-            if (c !== 0) return c;
-            return compareIdAsc(a, b);
-          }
-          case 'section-id-asc':
-          default: {
-            if (a.section_id !== b.section_id) return a.section_id - b.section_id;
-            return compareIdAsc(a, b);
-          }
-        }
-      }
-
-      function rebuildStaticTexts() {
-        els.heroModeLine.textContent = t('heroModeLine');
-        els.statDescTotal.textContent = t('statDescTotal');
-        els.statDescFiltered.textContent = t('statDescFiltered');
-        els.statDescSections.textContent = t('statDescSections');
-        els.labelSearch.textContent = t('labelSearch');
-        els.labelSection.textContent = t('labelSection');
-        els.labelSort.textContent = t('labelSort');
-        els.searchInput.placeholder = t('placeholderSearch');
-        els.resetBtn.textContent = t('resetBtn');
-        els.focusSearchBtn.textContent = t('focusSearchBtn');
-        els.emptyState.textContent = t('emptyState');
-        els.loadMoreBtn.textContent = t('loadMore');
-        els.footerNote.textContent = t('footerNote');
-        els.lbKeyMaterial.textContent = t('lbMaterial');
-        els.lbKeySize.textContent = t('lbSize');
-        els.lbKeyYear.textContent = t('lbYear');
-        els.lbKeyImage.textContent = t('lbImage');
-        els.lbKeyZoom.textContent = t('lbZoom');
-        els.lbOpenImage.textContent = t('openImage');
-        els.lbOpenZoom.textContent = t('openZoom');
-        els.loadingScreen.textContent = state.loadState === 'failed' ? t('loadingScreenError') : t('loadingScreen');
-
-        const sortTexts = t('sortOptions');
-        Array.from(els.sortSelect.options).forEach((opt, idx) => {
-          if (sortTexts[idx]) opt.textContent = sortTexts[idx];
-        });
-
-        syncDataLanguage();
-        setStatusByState();
-      }
-
-      function populateSections() {
-        const prev = state.section;
-        els.sectionSelect.innerHTML = '';
-
-        const allOpt = document.createElement('option');
-        allOpt.value = 'all';
-        allOpt.textContent = t('allSections');
-        els.sectionSelect.appendChild(allOpt);
-
-        Object.keys(SECTION_MAP)
-          .map(Number)
-          .sort((a, b) => a - b)
-          .forEach((sectionId) => {
-            const hasWorks = state.all.some(item => item.section_id === sectionId);
-            if (!hasWorks) return;
-
-            const opt = document.createElement('option');
-            opt.value = String(sectionId);
-            opt.textContent = getSectionTextById(sectionId);
-            els.sectionSelect.appendChild(opt);
-          });
-
-        const values = Array.from(els.sectionSelect.options).map(o => o.value);
-        state.section = values.includes(prev) ? prev : 'all';
-        els.sectionSelect.value = state.section;
-
-        updateSectionButtonState();
-      }
-
-      function updateSectionButtonState() {
-        els.sectionButtons.forEach((btn) => {
-          const active = state.section !== 'all' && btn.dataset.section === String(state.section);
-          btn.classList.toggle('active', active);
-        });
-      }
-
-      function updateActiveFilterDataset() {
-        const krParts = [];
-        const enParts = [];
-
-        if (state.section !== 'all') {
-          krParts.push(`섹션 ${getSectionPlainById(Number(state.section), 'kr')}`);
-          enParts.push(`Section ${getSectionPlainById(Number(state.section), 'en')}`);
-        }
-
-        if (state.query) {
-          krParts.push(`검색 “${state.query}”`);
-          enParts.push(`Search “${state.query}”`);
-        }
-
-        const sortLabel = els.sortSelect?.selectedOptions?.[0]?.textContent || '';
-        if (!krParts.length && !enParts.length) {
-          els.activeFilterText.dataset.kr = sortLabel ? `정렬: ${sortLabel}` : '필터 없음';
-          els.activeFilterText.dataset.en = sortLabel ? `Sort: ${sortLabel}` : 'No filters';
-        } else {
-          els.activeFilterText.dataset.kr = `필터 적용됨: ${krParts.join(' + ')}${sortLabel ? ' / 정렬: ' + sortLabel : ''}`;
-          els.activeFilterText.dataset.en = `Filtered: ${enParts.join(' + ')}${sortLabel ? ' / Sort: ' + sortLabel : ''}`;
-        }
-
-        syncDataLanguage(els.activeFilterText.parentElement);
-      }
-
-      function updateStats() {
-        WORKS_DATA = state.all;
-        CURRENT_LIST = state.filtered;
-        visibleCount = state.visibleCount;
-
-        const total = state.all.length;
-        const filtered = state.filtered.length;
-        const sections = new Set(
-          state.all
-            .map(item => Number(item.section_id))
-            .filter(n => Number.isFinite(n))
-        ).size;
-        const visibleNow = Math.min(state.visibleCount, filtered);
-
-        els.statTotal.textContent = numberFormat.format(total);
-        els.statFiltered.textContent = numberFormat.format(filtered);
-        els.statSections.textContent = numberFormat.format(sections);
-        els.loadedPill.textContent = `Data: ${numberFormat.format(total)} items`;
-
-        updateActiveFilterDataset();
-
-        if (state.lang === 'en') {
-          els.resultText.textContent = `${numberFormat.format(filtered)}${t('resultUnit')}`;
-          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}`;
-        } else {
-          els.resultText.textContent = `${numberFormat.format(filtered)}${t('resultUnit')}`;
-          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}${t('renderedSuffix')}`;
-        }
-      }
-
-      function loadLazyImage(img) {
-        if (!img || img.dataset.loaded === 'true') return;
-
-        const src = img.dataset.src || img.getAttribute('data-src') || '';
-        const card = img.closest ? img.closest('.card[data-id]') : null;
-        const boundId = card ? safeText(card.dataset.id) : '';
-
-        if (!src) {
-          img.src = SVG_PLACEHOLDER;
-          img.classList.add('is-error', 'is-loaded');
-          img.dataset.loaded = 'true';
-          return;
-        }
-
-        const test = new Image();
-        test.decoding = 'async';
-
-        test.onload = () => {
-          const currentCard = img.closest ? img.closest('.card[data-id]') : null;
-          const currentId = currentCard ? safeText(currentCard.dataset.id) : '';
-          if (boundId && currentId !== boundId) return;
-          img.src = src;
-          img.classList.add('is-loaded');
-          img.classList.remove('is-error');
-          img.dataset.loaded = 'true';
-          img.removeAttribute('data-src');
-        };
-
-        test.onerror = () => {
-          const currentCard = img.closest ? img.closest('.card[data-id]') : null;
-          const currentId = currentCard ? safeText(currentCard.dataset.id) : '';
-          if (boundId && currentId !== boundId) return;
-          img.classList.add('is-error', 'is-loaded');
-          img.dataset.loaded = 'true';
-          img.removeAttribute('data-src');
-          img.src = SVG_PLACEHOLDER;
-        };
-
-        test.src = src;
-      }
-
-      function observeLazyImages(root = els.grid) {
-        const images = Array.from(root.querySelectorAll('img.thumb[data-src]'));
-
-        if (!lazyImageObserver) {
-          images.forEach(loadLazyImage);
-          return;
-        }
-
-        images.forEach((img) => lazyImageObserver.observe(img));
-      }
-
-      function createThumb(primarySrc, alt) {
-        const img = document.createElement('img');
-        img.className = 'thumb';
-        img.alt = alt;
-        img.width = 800;
-        img.height = 800;
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        img.fetchPriority = 'low';
-
-        img.dataset.src = primarySrc || '';
-        img.dataset.loaded = 'false';
-
-        img.addEventListener('load', () => {
-          img.classList.add('is-loaded');
-        }, { once: true });
-
-        img.addEventListener('error', () => {
-          img.removeAttribute('data-src');
-          img.src = SVG_PLACEHOLDER;
-          img.classList.add('is-error');
-        }, { once: true });
-
-        if (!primarySrc) {
-          img.src = SVG_PLACEHOLDER;
-          img.classList.add('is-error');
-          img.dataset.loaded = 'true';
-        }
-
-        return img;
-      }
-
-      function createCardHTML(item, index = 0) {
-        const isOrigin = Number(item.section_id) === 0;
-        const title = isOrigin ? getOriginTitle() : getTitle(item);
-        const material = isOrigin ? '' : getMaterial(item);
-        const size = isOrigin ? '' : getSize(item);
-        const year = isOrigin ? '' : getYear(item);
-        const infoLine = isOrigin ? '' : [material, size, year].filter(Boolean).join(' / ');
-        const imageSrc = withCacheBust(item.image || SVG_PLACEHOLDER);
-        const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
-        const statusHTML = renderStatusUI(item);
-        const priority = index < 8;
-        const imgSrc = priority ? imageSrc : SVG_PLACEHOLDER;
-        const dataSrc = priority ? '' : ' data-src="' + escapeHTML(imageSrc) + '"';
-        const loading = priority ? 'eager' : 'lazy';
-        const fetchPriority = index < 4 ? 'high' : 'low';
-        const loadedClass = priority ? ' is-priority' : '';
-
-        return [
-          '<article class="card" tabindex="0" role="button" data-id="', escapeHTML(item.id), '" aria-label="', escapeHTML(item.id), ' 작품 보기">',
-            '<div class="thumb-wrap">',
-              '<img class="thumb', loadedClass, '" src="', escapeHTML(imgSrc), '"', dataSrc, ' alt="', escapeHTML(title || item.id), '" loading="', loading, '" decoding="async" fetchpriority="', fetchPriority, '" data-zoom="', escapeHTML(item.zoom || ''), '">',
-              '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
-            '</div>',
-            '<div class="card-body">',
-              '<div class="card-top">',
-                '<div class="work-id">', escapeHTML(item.id), '</div>',
-                '<div class="section-tag">', escapeHTML(getSectionTextById(item.section_id)), '</div>',
-              '</div>',
-              '<p class="title', title ? '' : ' empty', '">', escapeHTML(title || t('untitled')), '</p>',
-              isOrigin ? '' : '<p class="caption">' + escapeHTML(infoLine || t('noInfo')) + '</p>',
-              statusHTML,
-            '</div>',
-          '</article>'
-        ].join('');
-      }
-
-      function isDefaultFastView() {
-        return !state.query && state.section === 'all' && state.sort === FAST_ORDER && state.visibleCount === INITIAL_VISIBLE;
-      }
-
-      function cacheDefaultGridSnapshot() {
-        return;
-      }
-
-      function restoreDefaultGridSnapshot() {
-        return false;
-      }
-
-      function getVisibleItems() {
-        CURRENT_LIST = state.filtered;
-        visibleCount = state.visibleCount;
-        return CURRENT_LIST.slice(0, visibleCount);
-      }
-
-      function renderCards(items) {
-        if (!els.grid) return;
-        if (lazyImageObserver) {
-          els.grid.querySelectorAll('img.thumb[data-src]').forEach((img) => {
-            try { lazyImageObserver.unobserve(img); } catch (_) {}
-          });
-        }
-        els.grid.innerHTML = '';
-        els.grid.innerHTML = items.map((item, index) => createCardHTML(item, index)).join('');
-        syncDataLanguage(els.grid);
-        observeLazyImages(els.grid);
-      }
-
-      function renderGrid() {
-        if (!els.grid) return;
-
-        if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; }
-        if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
-        if (els.emptyState) els.emptyState.hidden = state.filtered.length !== 0;
-
-        if (!state.filtered.length) {
-          els.grid.innerHTML = '';
-          if (els.loadWrap) els.loadWrap.hidden = true;
-          updateStats();
-          return;
-        }
-
-        const visible = getVisibleItems();
-        renderCards(visible);
-
-        if (els.loadWrap) els.loadWrap.hidden = visible.length >= state.filtered.length;
-        updateStats();
-      }
-
-      function renderSectionOptions() {
-        populateSections();
-      }
-
-      function renderSectionButtons() {
-        updateSectionButtonState();
-      }
-
-      function updateMeta() {
-        updateStats();
-      }
-
-      function renderAll() {
-        updateStats();
-        renderSectionOptions();
-        renderSectionButtons();
-        renderGrid();
-        updateMeta();
-      }
-
-      function render() {
-        renderGrid();
-      }
-
-      function openLightbox(item) {
-        archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-        state.lightboxItem = item;
-        resetViewerTransform();
-
-        const isOrigin = Number(item.section_id) === 0;
-        const title = isOrigin ? getOriginTitle() : (getTitle(item) || t('untitled'));
-        const material = isOrigin ? '—' : (getMaterial(item) || '—');
-        const size = isOrigin ? '—' : (getSize(item) || '—');
-        const year = isOrigin ? '—' : (getYear(item) || '—');
-        const imageUrl = withCacheBust(toAbsoluteUrl(item.image || ''));
-        const zoomUrl = withCacheBust(toAbsoluteUrl(item.zoom || item.image || ''));
-        const displayUrl = zoomUrl || imageUrl || SVG_PLACEHOLDER;
-
-        els.lbId.textContent = item.id;
-        els.lbTitle.textContent = title;
-        els.lbSection.textContent = getSectionTextById(item.section_id);
-        els.lbMaterialVal.textContent = material;
-        els.lbSizeVal.textContent = size;
-        els.lbYearVal.textContent = year;
-        els.lbImagePath.textContent = imageUrl || '—';
-        els.lbZoomPath.textContent = zoomUrl || '—';
-        els.lbOpenImage.href = imageUrl || '#';
-        els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
-
-        els.lightboxImage.alt = title;
-        els.lightboxImage.removeAttribute('src');
-        els.lightboxImage.loading = 'eager';
-        els.lightboxImage.decoding = 'async';
-        els.lightboxImage.fetchPriority = 'high';
-        els.lightboxImage.onerror = () => { els.lightboxImage.src = SVG_PLACEHOLDER; };
-        els.lightboxImage.src = displayUrl;
-
-        els.lightbox.classList.add('open');
-        els.lightbox.classList.add('active');
-        els.lightbox.style.display = '';
-        els.lightbox.setAttribute('aria-hidden', 'false');
-        document.documentElement.classList.add('viewer-open');
-        document.body.classList.add('viewer-open');
-        document.body.style.overflow = 'hidden';
-      }
-
-      function armCloseNavigationShield() {
-        closeClickBlockUntil = Date.now() + 1400;
-
-        let shield = document.getElementById('viewerCloseShield');
-        if (!shield) {
-          shield = document.createElement('div');
-          shield.id = 'viewerCloseShield';
-          shield.setAttribute('aria-hidden', 'true');
-          shield.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:transparent;pointer-events:auto;touch-action:none;';
-          const kill = function(ev) {
-            if (!ev) return;
-            if (typeof ev.preventDefault === 'function') ev.preventDefault();
-            if (typeof ev.stopPropagation === 'function') ev.stopPropagation();
-            if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
-          };
-          ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach(function(type) {
-            shield.addEventListener(type, kill, { capture:true, passive:false });
-          });
-          document.body.appendChild(shield);
-        }
-
-        window.setTimeout(function() {
-          const currentShield = document.getElementById('viewerCloseShield');
-          if (currentShield && currentShield.parentNode) currentShield.parentNode.removeChild(currentShield);
-        }, 700);
-      }
-
-      function restoreArchiveScroll() {
-        window.setTimeout(function() {
-          window.scrollTo(0, archiveScrollY || 0);
-        }, 0);
-      }
-
-      function closeLightbox() {
-        armCloseNavigationShield();
-        state.lightboxItem = null;
-        resetViewerTransform();
-        if (els.lightbox) {
-          els.lightbox.classList.remove('open');
-          els.lightbox.classList.remove('active');
-          els.lightbox.setAttribute('aria-hidden', 'true');
-          els.lightbox.style.display = 'none';
-        }
-        if (els.lightboxImage) els.lightboxImage.removeAttribute('src');
-        document.documentElement.classList.remove('viewer-open');
-        document.body.classList.remove('viewer-open');
-        document.body.style.overflow = '';
-        restoreArchiveScroll();
-      }
-
-      function closeViewer() {
-        armCloseNavigationShield();
-        state.lightboxItem = null;
-        resetViewerTransform();
-
-        const viewer = document.querySelector('.viewer, .lightbox');
-        if (viewer) {
-          viewer.classList.remove('open');
-          viewer.classList.remove('active');
-          viewer.setAttribute('aria-hidden', 'true');
-          viewer.style.display = 'none';
-        }
-
-        if (els.lightboxImage) els.lightboxImage.removeAttribute('src');
-
-        document.documentElement.classList.remove('viewer-open');
-        document.body.classList.remove('viewer-open');
-        document.body.style.overflow = '';
-        restoreArchiveScroll();
-      }
-
-      window.closeViewer = closeViewer;
-
-      function applyFilterSort(sourceList = state.all) {
-        let result = Array.isArray(sourceList) ? sourceList : [];
-
-        const sectionValue = state.section || 'all';
-        if (sectionValue !== 'all') {
-          const sectionNumber = Number(sectionValue);
-          result = result.filter((item) => Number(item.section_id) === sectionNumber);
-        }
-
-        const queryValue = safeText(state.query);
-        if (queryValue && compactSearchToken(queryValue).length >= 2) {
-          if (!state._searchPrepared) {
-            state.all = state.all.map(prepareFastSearchCache);
-            result = result.map(prepareFastSearchCache);
-            state._searchPrepared = true;
-          }
-          result = result.filter((item) => matchesSearch(item, queryValue));
-        }
-
-        if (state.sort && state.sort !== FAST_ORDER) {
-          result = result.slice().sort((a, b) => compareItems(a, b, state.sort));
-        }
-
-        return result;
-      }
-
-      function applyFilters(resetVisible = true) {
-        state.query = els.searchInput ? els.searchInput.value : state.query;
-        state.section = els.sectionSelect ? els.sectionSelect.value : state.section;
-        state.sort = els.sortSelect ? els.sortSelect.value : state.sort;
-
-        if (resetVisible) state.visibleCount = getInitialVisibleCount();
-
-        state.filtered = applyFilterSort(state.all);
-        CURRENT_LIST = state.filtered;
-        visibleCount = state.visibleCount;
-
-        renderAll();
-      }
-
-      function resetSortToFastOrder() {
-        state.sort = FAST_ORDER;
-        if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
-      }
-
-      const debouncedSearch = debounce(() => {
-        state.query = els.searchInput.value;
-        /* Search must not change section or sort.
-           The user-selected sort order remains active while searching. */
-        applyFilters(true);
+    }
+
+    if(state.sort === 'id-desc'){
+      return arr.sort((a,b) => compareIdNatural(a,b,'desc'));
+    }
+
+    return arr.sort((a,b) => {
+      const sa = Number(a.section_id ?? 999);
+      const sb = Number(b.section_id ?? 999);
+      if(sa !== sb) return sa - sb;
+      return compareIdNatural(a,b,'asc');
+    });
+  }
+
+  function getFilteredWorks(){
+    let list = state.all.slice();
+
+    if(state.section !== 'all'){
+      const sid = Number(state.section);
+      list = list.filter(work => Number(work.section_id) === sid);
+    }
+
+    if(state.query){
+      const q = normalizeSearchText(state.query);
+      list = list.filter(work => work._searchText.includes(q));
+    }
+
+    return sortWorks(list);
+  }
+
+  function createCardHTML(work){
+    const id = safeText(work.id);
+    const image = withCacheBust(toAbsoluteUrl(work.image));
+    const zoom = withCacheBust(toAbsoluteUrl(work.zoom || work.image));
+    const rawTitle = getTitle(work);
+    const title = rawTitle || getOriginTitle();
+    const material = getMaterial(work);
+    const size = getSize(work);
+    const year = getYear(work);
+    const sectionText = getSectionTextByWork(work);
+    const caption = [material, size, year].filter(Boolean).join(' · ') || t('noInfo');
+
+    return `
+      <article class="card" tabindex="0" role="button" data-work-id="${escapeHTML(id)}" data-section-id="${Number(work.section_id ?? 999)}" aria-label="${escapeHTML(id + ' ' + title)}">
+        <div class="thumb-wrap">
+          <img class="thumb" data-work-id="${escapeHTML(id)}" data-src="${escapeHTML(image)}" data-zoom="${escapeHTML(zoom)}" src="${SVG_PLACEHOLDER}" alt="${escapeHTML(title || id || 'Artwork')}" loading="lazy" decoding="async">
+          <div class="detail-hover">${escapeHTML(t('detail'))}</div>
+        </div>
+        <div class="card-body">
+          <div class="card-top">
+            <div class="work-id">${escapeHTML(id)}</div>
+            <div class="section-tag">${escapeHTML(sectionText)}</div>
+          </div>
+          <h3 class="title${rawTitle ? '' : ' empty'}">${escapeHTML(title || t('untitled'))}</h3>
+          <p class="caption">${escapeHTML(caption)}</p>
+          ${renderStatusUI(work)}
+        </div>
+      </article>`;
+  }
+
+  function loadLazyImage(img){
+    const src = img && img.dataset ? img.dataset.src : '';
+    const boundId = img && img.dataset ? safeText(img.dataset.workId) : '';
+    if(!src || img.dataset.loaded === '1') return;
+
+    img.dataset.loaded = '1';
+
+    const test = new Image();
+    test.decoding = 'async';
+
+    test.onload = () => {
+      if(safeText(img.dataset.workId) !== boundId) return;
+      img.src = src;
+      img.classList.add('is-loaded');
+    };
+
+    test.onerror = () => {
+      if(safeText(img.dataset.workId) !== boundId) return;
+      img.src = SVG_PLACEHOLDER;
+      img.classList.add('is-error');
+    };
+
+    test.src = src;
+  }
+
+  function updateStatsAndMeta(source, visible){
+    els.statTotal.textContent = formatNumber(state.all.length);
+    els.statFiltered.textContent = formatNumber(source.length);
+    els.statSections.textContent = formatNumber(state.sections.length);
+    els.loadedPill.textContent = `Data: ${formatNumber(state.all.length)} items`;
+
+    els.resultText.textContent = `${formatNumber(source.length)}${t('resultUnit')}`;
+    els.renderedText.textContent = `${t('renderedPrefix')}${formatNumber(visible.length)}${t('renderedSuffix')}`;
+
+    const filters = [];
+    if(state.section !== 'all') filters.push(`${t('sectionPrefix')}: ${getSectionTextById(Number(state.section))}`);
+    if(state.query) filters.push(`${t('searchPrefix')}: ${state.query}`);
+
+    els.activeFilterText.textContent = filters.length ? `${t('filteredPrefix')}: ${filters.join(' / ')}` : t('activeFilterNone');
+    els.emptyState.hidden = source.length !== 0;
+    els.emptyState.textContent = t('emptyState');
+    els.loadWrap.hidden = visible.length >= source.length;
+    els.loadMoreBtn.textContent = t('loadMore');
+  }
+
+  function render(){
+    if(!els.grid) return;
+
+    const source = getFilteredWorks();
+    state.filtered = source;
+    CURRENT_LIST = source;
+
+    const visible = source.slice(0, state.visibleCount);
+
+    if(lazyImageObserver){
+      document.querySelectorAll('#grid img[data-src]').forEach(img => {
+        try { lazyImageObserver.unobserve(img); } catch(e){}
+      });
+    }
+
+    els.grid.innerHTML = '';
+    els.grid.innerHTML = visible.map(work => createCardHTML(work)).join('');
+
+    els.grid.querySelectorAll('img[data-src]').forEach(img => {
+      if(lazyImageObserver) lazyImageObserver.observe(img);
+      else loadLazyImage(img);
+    });
+
+    updateStatsAndMeta(source, visible);
+  }
+
+  function resetVisibleAndRender(){
+    state.visibleCount = getInitialVisibleCount();
+    render();
+  }
+
+  function syncDataLanguage(root = document){
+    root.querySelectorAll('[data-kr][data-en]').forEach(node => {
+      const kr = node.dataset.kr || '';
+      const en = node.dataset.en || '';
+      if(node.tagName === 'INPUT' || node.tagName === 'TEXTAREA'){
+        node.placeholder = state.lang === 'en' ? en : (state.lang === 'both' ? `${kr} / ${en}` : kr);
+      } else {
+        node.textContent = state.lang === 'en' ? en : (state.lang === 'both' ? `${kr}\n${en}` : kr);
+      }
+    });
+  }
+
+  function updateStaticTexts(){
+    syncDataLanguage();
+
+    els.heroModeLine.textContent = t('heroModeLine');
+    els.statDescTotal.textContent = t('statDescTotal');
+    els.statDescFiltered.textContent = t('statDescFiltered');
+    els.statDescSections.textContent = t('statDescSections');
+    els.searchInput.placeholder = t('placeholderSearch');
+    els.resetBtn.textContent = t('resetBtn');
+    els.focusSearchBtn.textContent = t('focusSearchBtn');
+    els.footerNote.textContent = t('footerNote');
+
+    els.lbKeyMaterial.textContent = t('lbMaterial');
+    els.lbKeySize.textContent = t('lbSize');
+    els.lbKeyYear.textContent = t('lbYear');
+    els.lbKeyImage.textContent = t('lbImage');
+    els.lbKeyZoom.textContent = t('lbZoom');
+    els.lbOpenImage.textContent = t('openImage');
+    els.lbOpenZoom.textContent = t('openZoom');
+
+    setStatusByState();
+    populateSectionSelect();
+    updateSectionButtonsFromJson();
+    updateSortLabels();
+  }
+
+  function updateSortLabels(){
+    const labels = t('sortOptions') || [];
+    Array.from(els.sortSelect.options).forEach((option, idx) => {
+      if(labels[idx]) option.textContent = labels[idx];
+    });
+  }
+
+  function populateSectionSelect(){
+    if(!els.sectionSelect) return;
+
+    const currentValue = state.section;
+    els.sectionSelect.innerHTML = '';
+
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = t('allSections');
+    els.sectionSelect.appendChild(allOption);
+
+    state.sections.forEach(sec => {
+      const option = document.createElement('option');
+      option.value = String(sec.id);
+      option.textContent = state.lang === 'en'
+        ? (sec.en || sec.kr || `Section ${sec.id}`)
+        : state.lang === 'both'
+          ? ((sec.kr && sec.en && sec.kr !== sec.en) ? `${sec.kr} / ${sec.en}` : (sec.kr || sec.en || `Section ${sec.id}`))
+          : (sec.kr || sec.en || `섹션 ${sec.id}`);
+      els.sectionSelect.appendChild(option);
+    });
+
+    els.sectionSelect.value = currentValue;
+    if(els.sectionSelect.value !== currentValue){
+      els.sectionSelect.value = 'all';
+      state.section = 'all';
+    }
+  }
+
+  function updateSectionButtonsFromJson(){
+    const buttonWrap = byId('sectionButtons');
+    if(!buttonWrap) return;
+
+    /*
+      버튼도 works.json에서 실제 섹션 목록을 읽어 재구성한다.
+      HTML 구조의 영역은 유지하되, 버튼 내용은 JSON section_id / section_kr / section_en 기준.
+    */
+    buttonWrap.innerHTML = state.sections.map(sec => {
+      const label = state.lang === 'en'
+        ? (sec.en || sec.kr || `Section ${sec.id}`)
+        : state.lang === 'both'
+          ? ((sec.kr && sec.en && sec.kr !== sec.en) ? `${sec.kr}\n${sec.en}` : (sec.kr || sec.en || `Section ${sec.id}`))
+          : (sec.kr || sec.en || `섹션 ${sec.id}`);
+
+      return `<button class="section-btn${String(state.section) === String(sec.id) ? ' active' : ''}" type="button" data-section="${escapeHTML(String(sec.id))}">${escapeHTML(label)}</button>`;
+    }).join('');
+
+    els.sectionButtons = Array.from(buttonWrap.querySelectorAll('.section-btn'));
+  }
+
+  function setStatusByState(){
+    if(state.loadState === 'loading') els.statusText.textContent = t('statusLoading');
+    else if(state.loadState === 'loaded') els.statusText.textContent = t('statusLoaded');
+    else if(state.loadState === 'failed') els.statusText.textContent = t('statusFailed');
+    else els.statusText.textContent = t('statusIdle');
+
+    els.statusText.classList.toggle('error', state.loadState === 'failed');
+  }
+
+  function setLanguage(lang){
+    state.lang = lang;
+    els.langTabs.forEach(tab => {
+      const active = tab.dataset.lang === lang;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+
+    updateStaticTexts();
+    render();
+
+    if(state.lightboxItem) openLightbox(state.lightboxItem, { preserveScroll: true });
+  }
+
+  function openLightbox(work, options = {}){
+    if(!work || !els.lightbox) return;
+
+    if(!options.preserveScroll) archiveScrollY = window.scrollY || window.pageYOffset || 0;
+
+    state.lightboxItem = work;
+
+    const image = withCacheBust(toAbsoluteUrl(work.zoom || work.image));
+    const standardImage = withCacheBust(toAbsoluteUrl(work.image));
+    const title = getTitle(work) || getOriginTitle();
+
+    els.lightboxImage.src = image || standardImage || SVG_PLACEHOLDER;
+    els.lightboxImage.alt = title || work.id || 'Artwork';
+    els.lbId.textContent = safeText(work.id) || '—';
+    els.lbTitle.textContent = title || t('untitled');
+    els.lbSection.textContent = getSectionTextByWork(work);
+    els.lbMaterialVal.textContent = getMaterial(work) || '—';
+    els.lbSizeVal.textContent = getSize(work) || '—';
+    els.lbYearVal.textContent = getYear(work) || '—';
+    els.lbImagePath.textContent = standardImage || '—';
+    els.lbZoomPath.textContent = image || '—';
+
+    els.lbOpenImage.href = standardImage || '#';
+    els.lbOpenZoom.href = image || standardImage || '#';
+
+    els.lightbox.classList.add('open', 'active');
+    els.lightbox.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('viewer-open');
+  }
+
+  function closeLightbox(event){
+    if(event){
+      event.preventDefault();
+      event.stopPropagation();
+      if(typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+    }
+
+    if(!els.lightbox) return;
+
+    els.lightbox.classList.remove('open', 'active');
+    els.lightbox.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('viewer-open');
+    state.lightboxItem = null;
+
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: archiveScrollY, left: 0, behavior: 'auto' });
+    });
+  }
+
+  function openViewerByOffset(offset){
+    if(!state.lightboxItem || !state.filtered.length) return;
+
+    const currentId = safeText(state.lightboxItem.id);
+    const currentIndex = state.filtered.findIndex(work => safeText(work.id) === currentId);
+    if(currentIndex < 0) return;
+
+    const nextIndex = (currentIndex + offset + state.filtered.length) % state.filtered.length;
+    openLightbox(state.filtered[nextIndex], { preserveScroll: true });
+  }
+
+  function resetArchive(){
+    state.query = '';
+    state.section = 'all';
+    state.sort = 'section-id-asc';
+    state.visibleCount = getInitialVisibleCount();
+
+    els.searchInput.value = '';
+    els.sectionSelect.value = 'all';
+    els.sortSelect.value = 'section-id-asc';
+
+    updateSectionButtonsFromJson();
+    render();
+  }
+
+  function bindEvents(){
+    els.langTabs.forEach(tab => {
+      tab.addEventListener('click', () => setLanguage(tab.dataset.lang || 'kr'));
+    });
+
+    els.entryBtn.addEventListener('click', () => {
+      els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => els.searchInput.focus({ preventScroll: true }), 260);
+    });
+
+    els.archiveHomeLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      resetArchive();
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    });
+
+    els.searchInput.addEventListener('input', () => {
+      window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(() => {
+        state.query = safeText(els.searchInput.value);
+        resetVisibleAndRender();
       }, SEARCH_DEBOUNCE_MS);
-
-      function setLanguage(lang) {
-        state.lang = lang;
-        els.langTabs.forEach((tab) => {
-          const active = tab.dataset.lang === lang;
-          tab.classList.toggle('active', active);
-          tab.setAttribute('aria-pressed', active ? 'true' : 'false');
-        });
-        rebuildStaticTexts();
-        populateSections();
-        applyFilters(true);
-        if (state.lightboxItem) openLightbox(state.lightboxItem);
-      }
-
-      function goArchiveHome() {
-        state.query = '';
-        state.section = 'all';
-        state.sort = FAST_ORDER;
-        state.visibleCount = getInitialVisibleCount();
-
-        els.searchInput.value = '';
-        els.sectionSelect.value = 'all';
-        els.sortSelect.value = FAST_ORDER;
-
-        applyFilters(true);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-
-      function parseWorksPayload(json) {
-        /*
-          Archive Pro must read the real works array, not a wrapper object.
-          This prevents the "Total 1 / Data 1 items" failure when works.json
-          is accidentally wrapped as [{ works: [...] }] or { data:{ works:[...] } }.
-        */
-        const seen = new Set();
-
-        function unwrap(value) {
-          if (!value || seen.has(value)) return [];
-          if (typeof value === 'object') seen.add(value);
-
-          if (Array.isArray(value)) {
-            if (value.length === 1) {
-              const nested = unwrap(value[0]);
-              if (nested.length) return nested;
-            }
-
-            if (value.length && value.every(item => item && typeof item === 'object' && ('id' in item || 'image' in item || 'zoom' in item))) {
-              return value;
-            }
-
-            for (const item of value) {
-              const nested = unwrap(item);
-              if (nested.length) return nested;
-            }
-
-            return value;
-          }
-
-          if (Array.isArray(value.works)) return value.works;
-          if (Array.isArray(value.items)) return value.items;
-          if (Array.isArray(value.data)) return unwrap(value.data);
-          if (value.data && typeof value.data === 'object') {
-            const nested = unwrap(value.data);
-            if (nested.length) return nested;
-          }
-          if (value.archive && typeof value.archive === 'object') {
-            const nested = unwrap(value.archive);
-            if (nested.length) return nested;
-          }
-          if (value.payload && typeof value.payload === 'object') {
-            const nested = unwrap(value.payload);
-            if (nested.length) return nested;
-          }
-
-          return [];
-        }
-
-        return unwrap(json).filter(item => item && typeof item === 'object');
-      }
-
-      function withCacheBust(url) {
-        const clean = safeText(url);
-        if (!clean || clean.startsWith('data:') || clean.startsWith('blob:')) return clean;
-        const joiner = clean.includes('?') ? '&' : '?';
-        return `${clean}${joiner}v=${ASSET_VERSION}`;
-      }
-
-      function buildWorksJsonUrls() {
-        /*
-          Archive Pro latest JSON rule:
-          - Try the local Archive Pro data file first, because 등작 can update it directly.
-          - Reject any accidental one-item / test JSON.
-          - Then try raw GitHub and public mirrors with cache-busting.
-          - The first valid dataset with enough works is accepted.
-        */
-        const urls = [];
-        const add = (url) => {
-          const clean = safeText(url);
-          if (clean && !urls.includes(clean)) urls.push(clean);
-        };
-
-        if (window.ARCHIVE_PRO_WORKS_URL) add(window.ARCHIVE_PRO_WORKS_URL);
-
-        try {
-          add(new URL('./data/works.json', window.location.href).href);
-          add(new URL('data/works.json', window.location.href).href);
-        } catch (_) {
-          add('./data/works.json');
-          add('data/works.json');
-        }
-
-        add('https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json');
-        add('https://dungzakcestlavie.github.io/data/works.json');
-        add('https://dungzak.art/data/works.json');
-
-        return urls;
-      }
-
-      async function fetchJsonNoStore(url) {
-        const separator = url.includes('?') ? '&' : '?';
-        const finalUrl = `${url}${separator}ts=${Date.now()}`;
-        const res = await fetch(finalUrl, {
-          cache: 'no-store',
-          mode: 'cors',
-          credentials: 'omit'
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      }
-
-      async function fetchWorksDirect() {
-        if (worksLoadPromise) return worksLoadPromise;
-
-        worksLoadPromise = (async () => {
-          const urls = buildWorksJsonUrls();
-          const failures = [];
-
-          for (const url of urls) {
-            try {
-              const json = await fetchJsonNoStore(url);
-              const works = parseWorksPayload(json);
-              const count = Array.isArray(works) ? works.length : 0;
-
-              if (count >= MIN_EXPECTED_WORKS) {
-                if (els.sourcePill) els.sourcePill.textContent = `Source: ${url}`;
-                return works;
-              }
-
-              failures.push(`${url} → ${count} item(s), skipped`);
-              console.warn('[Archive Pro] skipped small/invalid works.json:', url, count);
-            } catch (error) {
-              failures.push(`${url} → ${error && error.message ? error.message : error}`);
-              console.warn('[Archive Pro] load failed:', url, error);
-            }
-          }
-
-          throw new Error('No valid works.json found. ' + failures.join(' | '));
-        })().catch((error) => {
-          worksLoadPromise = null;
-          throw error;
-        });
-
-        return worksLoadPromise;
-      }
-
-      function showArchiveShellImmediately() {
-        if (els.loadingScreen) {
-          els.loadingScreen.hidden = true;
-          els.loadingScreen.style.display = 'none';
-          els.loadingScreen.textContent = '';
-        }
-        if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
-      }
-
-      async function loadArchiveData() {
-        showArchiveShellImmediately();
-        state.loadState = 'loading';
-        setStatusByState();
-
-        try {
-          const works = await fetchWorksDirect();
-          const normalized = works
-            .map(normalizeItem)
-            .filter(item => item && item.id)
-            .map(prepareFastSearchCache);
-
-          state.all = normalized;
-          state.query = '';
-          state.section = 'all';
-          state.sort = FAST_ORDER;
-          state.visibleCount = getInitialVisibleCount();
-          state._searchPrepared = false;
-          state.filtered = applyFilterSort(state.all);
-          state.loadState = 'loaded';
-          state.isLoaded = true;
-
-          WORKS_READY = true;
-          WORKS_DATA = state.all;
-          CURRENT_LIST = state.filtered;
-          visibleCount = state.visibleCount;
-
-          if (els.searchInput) els.searchInput.value = '';
-          if (els.sectionSelect) els.sectionSelect.value = 'all';
-          if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
-          if (els.sourcePill && !els.sourcePill.textContent.startsWith('Source: http')) els.sourcePill.textContent = `Source: ${DATA_URL}`;
-
-          rebuildStaticTexts();
-          renderAll();
-          scheduleFullSearchIndex();
-
-          window.__ARCHIVE_PRO_SIMULATION__ = {
-            loaded: WORKS_DATA.length,
-            filtered: CURRENT_LIST.length,
-            sections: new Set(WORKS_DATA.map(item => Number(item.section_id))).size,
-            first: WORKS_DATA[0] || null,
-            last: WORKS_DATA[WORKS_DATA.length - 1] || null
-          };
-          console.info('[Archive Pro] simulation:', window.__ARCHIVE_PRO_SIMULATION__);
-        } catch (error) {
-          console.error('Load error:', error);
-          state.loadState = 'failed';
-          state.isLoaded = false;
-          WORKS_READY = false;
-          WORKS_DATA = [];
-          CURRENT_LIST = [];
-          state.all = [];
-          state.filtered = [];
-
-          if (els.statusText) {
-            els.statusText.textContent = t('statusFailed');
-            els.statusText.classList.add('error');
-          }
-          if (els.emptyState) {
-            els.emptyState.hidden = false;
-            els.emptyState.textContent = t('loadingScreenError');
-          }
-          updateStats();
-        }
-      }
-
-      function resetFilters() {
-        state.query = '';
-        state.section = 'all';
-        state.sort = FAST_ORDER;
-        state.visibleCount = getInitialVisibleCount();
-        state.filtered = applyFilterSort(state.all);
-
-        WORKS_DATA = state.all;
-        CURRENT_LIST = state.filtered;
-        visibleCount = state.visibleCount;
-
-        if (els.searchInput) els.searchInput.value = '';
-        if (els.sectionSelect) els.sectionSelect.value = 'all';
-        if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
-
-        renderAll();
-        window.scrollTo({ top: 0, behavior: 'auto' });
-      }
-
-      function scrollToSearch() {
-        if (!els.searchArea) return;
-        els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-
-      function bindEvents() {
-        els.searchInput.addEventListener('input', debouncedSearch);
-
-        els.sectionSelect.addEventListener('change', () => {
-          state.section = els.sectionSelect.value;
-          /* Section change starts a clean section view.
-             This prevents the previous search word from making every section look the same. */
-          state.query = '';
-          state.sort = FAST_ORDER;
-          els.searchInput.value = '';
-          els.sortSelect.value = FAST_ORDER;
-          applyFilters(true);
-        });
-
-        els.sortSelect.addEventListener('change', () => {
-          state.sort = els.sortSelect.value;
-          applyFilters(true);
-        });
-
-        els.resetBtn.addEventListener('click', resetFilters);
-
-        els.focusSearchBtn.addEventListener('click', () => {
-          els.searchInput.focus();
-          els.searchInput.select();
-        });
-
-        els.loadMoreBtn.addEventListener('click', () => {
-          state.visibleCount += LOAD_MORE_COUNT;
-          visibleCount = state.visibleCount;
-          renderGrid();
-        });
-
-        if (els.grid) {
-          els.grid.addEventListener('click', (e) => {
-            if (e.target && e.target.closest && e.target.closest('.status-inquiry')) return;
-            const card = e.target && e.target.closest ? e.target.closest('.card[data-id]') : null;
-            if (!card) return;
-            const item = state.all.find((work) => String(work.id) === String(card.dataset.id));
-            if (item) openLightbox(item);
-          });
-
-          els.grid.addEventListener('keydown', (e) => {
-            if (e.key !== 'Enter' && e.key !== ' ') return;
-            const card = e.target && e.target.closest ? e.target.closest('.card[data-id]') : null;
-            if (!card) return;
-            e.preventDefault();
-            const item = state.all.find((work) => String(work.id) === String(card.dataset.id));
-            if (item) openLightbox(item);
-          });
-        }
-
-        /* MOBILE X CLOSE FINAL FIX — close only the viewer, never navigate.
-           Capture the X event first, block bubbling/default, arm a temporary shield
-           against Safari ghost taps, then restore the exact archive scroll position. */
-        const getCloseButton = (e) => {
-          return e.target && e.target.closest
-            ? e.target.closest('#viewerCloseBtn, #lightboxClose, .viewer-close, .lightbox-close, .close-viewer')
-            : null;
-        };
-
-        const blockEvent = (e) => {
-          if (!e) return;
-          if (typeof e.preventDefault === 'function') e.preventDefault();
-          if (typeof e.stopPropagation === 'function') e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-        };
-
-        const blockGhostNavigation = (e) => {
-          if (Date.now() <= closeClickBlockUntil) blockEvent(e);
-        };
-
-        const closeFromX = (e) => {
-          const closeBtn = getCloseButton(e);
-          if (!closeBtn) return;
-          blockEvent(e);
-          closeViewer();
-        };
-
-        const consumeCloseTouch = (e) => {
-          const closeBtn = getCloseButton(e);
-          if (!closeBtn) return;
-          blockEvent(e);
-        };
-
-        document.addEventListener('pointerdown', consumeCloseTouch, true);
-        document.addEventListener('touchstart', consumeCloseTouch, { capture:true, passive:false });
-        document.addEventListener('pointerup', consumeCloseTouch, true);
-        document.addEventListener('touchend', closeFromX, { capture:true, passive:false });
-        document.addEventListener('click', closeFromX, true);
-
-        ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach((type) => {
-          document.addEventListener(type, blockGhostNavigation, { capture:true, passive:false });
-        });
-
-        if (els.lightboxClose) {
-          els.lightboxClose.addEventListener('pointerdown', consumeCloseTouch, { passive:false });
-          els.lightboxClose.addEventListener('touchstart', consumeCloseTouch, { passive:false });
-          els.lightboxClose.addEventListener('pointerup', consumeCloseTouch, { passive:false });
-          els.lightboxClose.addEventListener('touchend', closeFromX, { passive:false });
-          els.lightboxClose.addEventListener('click', closeFromX, { passive:false });
-        }
-
-        els.lightbox.addEventListener('click', (e) => {
-          if (e.target === els.lightbox) closeLightbox();
-        });
-
-        els.lightbox.addEventListener('dblclick', (e) => {
-          if (!isViewerOpen()) return;
-          e.preventDefault();
-          viewerScale = viewerScale > 1 ? 1 : 2;
-          viewerX = 0;
-          viewerY = 0;
-          applyViewerTransform();
-        });
-
-        els.lightbox.addEventListener('touchstart', (e) => {
-          if (!isViewerOpen()) return;
-          e.preventDefault();
-
-          if (e.touches.length === 2) {
-            viewerIsZooming = true;
-            viewerIsDragging = false;
-            viewerInitialDistance = getViewerDistance(e.touches[0], e.touches[1]);
-            return;
-          }
-
-          if (e.touches.length !== 1) return;
-          const touch = e.touches[0];
-          viewerStartX = touch.clientX;
-          viewerStartY = touch.clientY;
-          viewerLastX = touch.clientX;
-          viewerLastY = touch.clientY;
-          viewerStartTime = Date.now();
-          viewerIsDragging = true;
-          if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
-        }, { passive:false });
-
-        els.lightbox.addEventListener('touchmove', (e) => {
-          if (!isViewerOpen()) return;
-          e.preventDefault();
-
-          if (viewerIsZooming && e.touches.length === 2) {
-            const newDistance = getViewerDistance(e.touches[0], e.touches[1]);
-            if (!viewerInitialDistance) viewerInitialDistance = newDistance;
-            const delta = newDistance / viewerInitialDistance;
-            viewerScale = Math.min(Math.max(1, viewerScale * delta), 4);
-            viewerInitialDistance = newDistance;
-            if (viewerScale === 1) { viewerX = 0; viewerY = 0; }
-            applyViewerTransform();
-            return;
-          }
-
-          if (!viewerIsDragging || e.touches.length !== 1) return;
-
-          const touch = e.touches[0];
-          const dx = touch.clientX - viewerLastX;
-          const dy = touch.clientY - viewerLastY;
-
-          if (viewerScale > 1) {
-            viewerX += dx;
-            viewerY += dy;
-            applyViewerTransform();
-          }
-
-          viewerLastX = touch.clientX;
-          viewerLastY = touch.clientY;
-        }, { passive:false });
-
-        els.lightbox.addEventListener('touchend', (e) => {
-          if (!isViewerOpen()) return;
-
-          if (viewerIsZooming) {
-            if (e.touches.length < 2) viewerIsZooming = false;
-            return;
-          }
-
-          const changed = e.changedTouches && e.changedTouches[0];
-          const endX = changed ? changed.clientX : viewerLastX;
-          const endY = changed ? changed.clientY : viewerLastY;
-          const totalDx = endX - viewerStartX;
-          const totalDy = endY - viewerStartY;
-          const elapsed = Date.now() - viewerStartTime;
-
-          if (viewerScale === 1 && Math.abs(totalDx) > 60 && Math.abs(totalDx) > Math.abs(totalDy) * 1.25) {
-            if (totalDx > 0) prevViewer();
-            else nextViewer();
-          }
-
-          const now = Date.now();
-          if (Math.abs(totalDx) < 12 && Math.abs(totalDy) < 12 && elapsed < 320 && now - viewerLastTap < 300) {
-            viewerScale = viewerScale > 1 ? 1 : 2;
-            viewerX = 0;
-            viewerY = 0;
-            applyViewerTransform();
-            viewerLastTap = 0;
-          } else {
-            viewerLastTap = now;
-          }
-
-          viewerIsDragging = false;
-          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
-        }, { passive:false });
-
-        els.lightbox.addEventListener('mousedown', (e) => {
-          if (!isViewerOpen() || viewerScale <= 1 || e.button !== 0) return;
-          e.preventDefault();
-          viewerMouseDragging = true;
-          viewerLastX = e.clientX;
-          viewerLastY = e.clientY;
-          if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
-        });
-
-        document.addEventListener('mousemove', (e) => {
-          if (!isViewerOpen() || !viewerMouseDragging || viewerScale <= 1) return;
-          const dx = e.clientX - viewerLastX;
-          const dy = e.clientY - viewerLastY;
-          viewerX += dx;
-          viewerY += dy;
-          viewerLastX = e.clientX;
-          viewerLastY = e.clientY;
-          applyViewerTransform();
-        });
-
-        document.addEventListener('mouseup', () => {
-          viewerMouseDragging = false;
-          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
-        });
-
-        document.addEventListener('keydown', (e) => {
-          if (!isViewerOpen()) return;
-          if (e.key === 'Escape') closeLightbox();
-          if (e.key === 'ArrowRight') nextViewer();
-          if (e.key === 'ArrowLeft') prevViewer();
-        });
-
-        els.langTabs.forEach((tab) => {
-          tab.addEventListener('click', () => setLanguage(tab.dataset.lang));
-        });
-
-        if (els.archiveHomeLink) {
-          els.archiveHomeLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (Date.now() <= closeClickBlockUntil) {
-              blockEvent(e);
-              return;
-            }
-            goArchiveHome();
-          });
-        }
-
-        if (els.entryBtn) {
-          els.entryBtn.addEventListener('click', () => {
-            showArchiveShellImmediately();
-            resetFilters();
-            if (els.searchArea) els.searchArea.scrollIntoView({ behavior: 'auto', block: 'start' });
-          });
-        }
-
-        els.sectionButtons.forEach((btn) => {
-          btn.addEventListener('click', () => {
-            /* Section buttons now open a clean section view.
-               Search text is cleared and sort returns to the simple default order. */
-            state.section = btn.dataset.section || 'all';
-            state.query = '';
-            state.sort = FAST_ORDER;
-            state.visibleCount = getInitialVisibleCount();
-
-            els.searchInput.value = '';
-            els.sectionSelect.value = state.section;
-            els.sortSelect.value = FAST_ORDER;
-
-            applyFilters(true);
-            scrollToSearch();
-          });
-        });
-      }
-
-      document.addEventListener('DOMContentLoaded', () => {
-        bindEvents();
-        loadArchiveData();
-      });
-    })();
-  
+    });
+
+    els.sectionSelect.addEventListener('change', () => {
+      state.section = els.sectionSelect.value || 'all';
+      updateSectionButtonsFromJson();
+      resetVisibleAndRender();
+    });
+
+    const buttonWrap = byId('sectionButtons');
+    buttonWrap.addEventListener('click', (event) => {
+      const button = event.target.closest('.section-btn');
+      if(!button) return;
+
+      state.section = button.dataset.section || 'all';
+      els.sectionSelect.value = state.section;
+      updateSectionButtonsFromJson();
+      resetVisibleAndRender();
+      els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    els.sortSelect.addEventListener('change', () => {
+      state.sort = els.sortSelect.value || 'section-id-asc';
+      resetVisibleAndRender();
+    });
+
+    els.resetBtn.addEventListener('click', resetArchive);
+
+    els.focusSearchBtn.addEventListener('click', () => {
+      els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => els.searchInput.focus({ preventScroll: true }), 220);
+    });
+
+    els.loadMoreBtn.addEventListener('click', () => {
+      state.visibleCount += LOAD_MORE_COUNT;
+      render();
+    });
+
+    els.grid.addEventListener('click', (event) => {
+      if(event.target.closest('.status-inquiry')) return;
+
+      const card = event.target.closest('.card');
+      if(!card) return;
+
+      const id = safeText(card.dataset.workId);
+      const work = state.all.find(item => safeText(item.id) === id);
+      if(!work) return;
+
+      openLightbox(work);
+    });
+
+    els.grid.addEventListener('keydown', (event) => {
+      if(event.key !== 'Enter' && event.key !== ' ') return;
+
+      const card = event.target.closest('.card');
+      if(!card) return;
+
+      event.preventDefault();
+
+      const id = safeText(card.dataset.workId);
+      const work = state.all.find(item => safeText(item.id) === id);
+      if(!work) return;
+
+      openLightbox(work);
+    });
+
+    if(els.lightboxClose){
+      els.lightboxClose.addEventListener('click', closeLightbox, { capture: true });
+      els.lightboxClose.addEventListener('touchend', closeLightbox, { capture: true, passive: false });
+    }
+
+    els.lightbox.addEventListener('click', (event) => {
+      if(event.target === els.lightbox) closeLightbox(event);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if(!els.lightbox.classList.contains('open')) return;
+
+      if(event.key === 'Escape') closeLightbox(event);
+      if(event.key === 'ArrowRight') openViewerByOffset(1);
+      if(event.key === 'ArrowLeft') openViewerByOffset(-1);
+    });
+  }
+
+  async function loadArchiveData(){
+    state.loadState = 'loading';
+    setStatusByState();
+
+    try{
+      const response = await fetch(`${DATA_URL}?v=${Date.now()}`, { cache: 'no-store' });
+      if(!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const raw = await response.json();
+      const works = Array.isArray(raw) ? raw : Array.isArray(raw.works) ? raw.works : [];
+
+      state.all = works.map(normalizeWork);
+      WORKS_DATA = state.all;
+      WORKS_READY = true;
+      state.sections = buildSectionsFromWorks(state.all);
+      state.filtered = state.all.slice();
+      CURRENT_LIST = state.filtered;
+
+      state.loadState = 'loaded';
+
+      els.sourcePill.textContent = `Source: ${DATA_URL}`;
+      updateStaticTexts();
+      render();
+      setStatusByState();
+    }catch(error){
+      console.error(error);
+      state.loadState = 'failed';
+      WORKS_READY = false;
+      setStatusByState();
+      els.grid.innerHTML = '';
+      els.emptyState.hidden = false;
+      els.emptyState.textContent = t('statusFailed');
+    }
+  }
+
+  function preventBrowserZoom(event){
+    if(event && typeof event.preventDefault === 'function') event.preventDefault();
+  }
+
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(type => {
+    document.addEventListener(type, preventBrowserZoom, { passive: false });
+    window.addEventListener(type, preventBrowserZoom, { passive: false });
+  });
+
+  document.addEventListener('touchmove', (event) => {
+    if(event.touches && event.touches.length > 1 && !document.body.classList.contains('viewer-open')){
+      event.preventDefault();
+    }
+  }, { passive: false });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateStaticTexts();
+    bindEvents();
+    loadArchiveData();
+  });
+})();
 </script>
+</body>
+</html>
+
 </body>
 </html>

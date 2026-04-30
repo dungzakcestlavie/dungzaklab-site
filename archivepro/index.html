@@ -1326,17 +1326,17 @@
       <aside class="panel stats" aria-label="아카이브 통계">
         <div class="stat">
           <div class="k" id="statLabelTotal">Total</div>
-          <div class="v" id="statTotal">—</div>
+          <div class="v" id="statTotal">24</div>
           <div class="d" id="statDescTotal">전체 작품 수</div>
         </div>
         <div class="stat">
           <div class="k" id="statLabelFiltered">Filtered</div>
-          <div class="v" id="statFiltered">—</div>
+          <div class="v" id="statFiltered">24</div>
           <div class="d" id="statDescFiltered">현재 검색 결과</div>
         </div>
         <div class="stat">
           <div class="k" id="statLabelSections">Sections</div>
-          <div class="v" id="statSections">—</div>
+          <div class="v" id="statSections">1</div>
           <div class="d" id="statDescSections">섹션 수</div>
         </div>
       </aside>
@@ -1400,7 +1400,7 @@
     <div class="meta-row">
       <div class="meta-left">
         <span class="meta-pill" id="sourcePill">Source: data/works.json</span>
-        <span class="meta-pill" id="loadedPill">Data: —</span>
+        <span class="meta-pill" id="loadedPill">Data: 24 items</span>
       </div>
       <div class="meta-right">
         <span id="statusText" class="status">준비됨</span>
@@ -1410,10 +1410,10 @@
     <main id="archiveMain" aria-live="polite">
       <div id="loadingScreen" class="panel loading-screen" hidden></div>
 
-      <div id="resultsMeta" class="meta-row" style="display:none;">
+      <div id="resultsMeta" class="meta-row" style="display:flex;">
         <div class="meta-left">
-          <strong id="resultText">—</strong>
-          <span class="meta-pill" id="renderedText">표시 —</span>
+          <strong id="resultText">24점</strong>
+          <span class="meta-pill" id="renderedText">표시 24점</span>
         </div>
         <div class="meta-right">
           <span
@@ -1524,6 +1524,369 @@
       const SEARCH_DEBOUNCE_MS = 220;
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
+
+      const INITIAL_WORKS_DATA = [
+        {
+                "id": "OR-1",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-1.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-1.jpg"
+        },
+        {
+                "id": "OR-2",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-2.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-2.jpg"
+        },
+        {
+                "id": "OR-3",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-3.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-3.jpg"
+        },
+        {
+                "id": "OR-4",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-4.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-4.jpg"
+        },
+        {
+                "id": "OR-5",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-5.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-5.jpg"
+        },
+        {
+                "id": "OR-6",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-6.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-6.jpg"
+        },
+        {
+                "id": "OR-7",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-7.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-7.jpg"
+        },
+        {
+                "id": "OR-8",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-8.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-8.jpg"
+        },
+        {
+                "id": "OR-9",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-9.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-9.jpg"
+        },
+        {
+                "id": "OR-10",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-10.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-10.jpg"
+        },
+        {
+                "id": "OR-11",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-11.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-11.jpg"
+        },
+        {
+                "id": "OR-12",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-12.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-12.jpg"
+        },
+        {
+                "id": "OR-13",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-13.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-13.jpg"
+        },
+        {
+                "id": "OR-14",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-14.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-14.jpg"
+        },
+        {
+                "id": "OR-15",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-15.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-15.jpg"
+        },
+        {
+                "id": "OR-16",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-16.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-16.jpg"
+        },
+        {
+                "id": "OR-17",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-17.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-17.jpg"
+        },
+        {
+                "id": "OR-18",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-18.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-18.jpg"
+        },
+        {
+                "id": "OR-19",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-19.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-19.jpg"
+        },
+        {
+                "id": "OR-20",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-20.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-20.jpg"
+        },
+        {
+                "id": "OR-21",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-21.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-21.jpg"
+        },
+        {
+                "id": "OR-22",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-22.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-22.jpg"
+        },
+        {
+                "id": "OR-23",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-23.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-23.jpg"
+        },
+        {
+                "id": "OR-24",
+                "section_id": 0,
+                "section_kr": "A 기원",
+                "section_en": "Origins",
+                "title_kr": "",
+                "title_en": "",
+                "material_kr": "",
+                "material_en": "",
+                "size_kr": "",
+                "size_en": "",
+                "year": "",
+                "image": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/OR-24.jpg",
+                "zoom": "https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/OR-24.jpg"
+        }
+];
 
       function normalizeStatus(status) {
         const value = safeText(status).toLowerCase();
@@ -1762,8 +2125,8 @@
       };
 
       let visibleCount = FIRST_RENDER_COUNT;
-      let WORKS_DATA = [];
-      let CURRENT_LIST = [];
+      let WORKS_DATA = INITIAL_WORKS_DATA.slice();
+      let CURRENT_LIST = INITIAL_WORKS_DATA.slice();
 
       const els = {
         statTotal: document.getElementById('statTotal'),
@@ -2962,13 +3325,54 @@
           els.loadingScreen.textContent = '';
         }
         if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
-        if (els.grid && !state.isLoaded) els.grid.innerHTML = '';
-        if (els.statTotal && els.statTotal.textContent === '—') els.statTotal.textContent = '—';
-        if (els.statFiltered && els.statFiltered.textContent === '—') els.statFiltered.textContent = '—';
-        if (els.statSections && els.statSections.textContent === '—') els.statSections.textContent = '—';
-        if (els.loadedPill) els.loadedPill.textContent = 'Data: —';
-        if (els.resultText) els.resultText.textContent = '—';
-        if (els.renderedText) els.renderedText.textContent = '표시 —';
+      }
+
+      function bootInitialArchive() {
+        const initial = INITIAL_WORKS_DATA.map(normalizeItem).map(prepareFastSearchCache);
+        state.all = initial;
+        state.filtered = initial;
+        state.query = '';
+        state.section = 'all';
+        state.sort = FAST_ORDER;
+        state.visibleCount = FIRST_RENDER_COUNT;
+        state.loadState = 'idle';
+        state.isLoaded = true;
+
+        WORKS_DATA = state.all;
+        CURRENT_LIST = state.filtered;
+        visibleCount = state.visibleCount;
+
+        if (els.searchInput) els.searchInput.value = '';
+        if (els.sectionSelect) els.sectionSelect.value = 'all';
+        if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
+        if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; els.loadingScreen.textContent = ''; }
+        if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
+
+        rebuildStaticTexts();
+        populateSections();
+        updateSectionButtonState();
+        render();
+      }
+
+      async function loadFullWorksInBackground() {
+        try {
+          const result = await fetchWorksFromCandidates();
+          const arr = Array.isArray(result.arr) ? result.arr : [];
+          if (!arr.length || arr.length < INITIAL_WORKS_DATA.length) return;
+
+          state.all = arr.map(normalizeItem).map(prepareFastSearchCache);
+          state.loadState = 'loaded';
+          state.isLoaded = true;
+          WORKS_DATA = state.all;
+
+          if (els.sourcePill) els.sourcePill.textContent = `Source: ${result.url}`;
+          populateSections();
+          applyFilters(false);
+        } catch (error) {
+          console.error(error);
+          state.loadState = 'idle';
+          if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; els.loadingScreen.textContent = ''; }
+        }
       }
 
       async function loadWorksOnce() {
@@ -3004,23 +3408,9 @@
 
       async function loadData() {
         showArchiveShellImmediately();
-        if (state.isLoaded && state.all.length) {
-          applyFilters(true);
-          return;
-        }
-
-        try {
-          await loadWorksOnce();
-          applyFilters(true);
-        } catch (error) {
-          console.error(error);
-          worksLoadPromise = null;
-          state.all = [];
-          state.filtered = [];
-          state.loadState = 'failed';
-          rebuildStaticTexts();
-          if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; }
-        }
+        if (!state.all.length) bootInitialArchive();
+        applyFilters(false);
+        loadFullWorksInBackground();
       }
 
       function resetFilters() {
@@ -3298,37 +3688,9 @@
         }
 
         if (els.entryBtn) {
-          els.entryBtn.addEventListener('click', async () => {
+          els.entryBtn.addEventListener('click', () => {
             showArchiveShellImmediately();
-
-            try {
-              await loadWorksOnce();
-              state.section = 'all';
-              state.query = '';
-              state.sort = FAST_ORDER;
-              state.visibleCount = FIRST_RENDER_COUNT;
-              WORKS_DATA = state.all;
-              CURRENT_LIST = WORKS_DATA;
-              visibleCount = state.visibleCount;
-
-              if (els.searchInput) els.searchInput.value = '';
-              if (els.sectionSelect) els.sectionSelect.value = 'all';
-              if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
-
-              updateSectionButtonState();
-              render();
-            } catch (error) {
-              console.error(error);
-              worksLoadPromise = null;
-              state.all = [];
-              state.filtered = [];
-              WORKS_DATA = [];
-              CURRENT_LIST = [];
-              state.loadState = 'failed';
-              rebuildStaticTexts();
-              if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; }
-            }
-
+            resetFilters();
             if (els.searchArea) els.searchArea.scrollIntoView({ behavior: 'auto', block: 'start' });
           });
         }
@@ -3352,39 +3714,11 @@
         });
       }
 
-      document.addEventListener('DOMContentLoaded', async () => {
+      document.addEventListener('DOMContentLoaded', () => {
         bindEvents();
         showArchiveShellImmediately();
-        rebuildStaticTexts();
-
-        try {
-          await loadWorksOnce();
-
-          state.section = 'all';
-          state.query = '';
-          state.sort = FAST_ORDER;
-          state.visibleCount = FIRST_RENDER_COUNT;
-          WORKS_DATA = state.all;
-          CURRENT_LIST = WORKS_DATA;
-          visibleCount = state.visibleCount;
-
-          if (els.searchInput) els.searchInput.value = '';
-          if (els.sectionSelect) els.sectionSelect.value = 'all';
-          if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
-
-          updateSectionButtonState();
-          render();
-        } catch (error) {
-          console.error(error);
-          worksLoadPromise = null;
-          state.all = [];
-          state.filtered = [];
-          WORKS_DATA = [];
-          CURRENT_LIST = [];
-          state.loadState = 'failed';
-          rebuildStaticTexts();
-          if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; }
-        }
+        bootInitialArchive();
+        loadFullWorksInBackground();
       });
     })();
   

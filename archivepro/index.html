@@ -3,7 +3,57 @@
 <head>
 <style>
   html, body {
-    background: #070A14 !important;
+    background:#070A14 !important;
+  }
+
+  .critical-entry {
+    position:absolute;
+    top:calc(84px + 18px);
+    left:50%;
+    transform:translateX(-50%);
+    z-index:2;
+    display:block;
+    width:min(calc(100% - 28px), 1460px);
+    padding:18px;
+    background:transparent;
+    contain:layout paint;
+  }
+
+  .critical-entry-btn {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:fit-content;
+    min-width:0;
+    min-height:56px;
+    margin:0 auto;
+    padding:0 24px;
+    border-radius:999px;
+    border:1px solid rgba(212,180,109,.52);
+    color:#d4b46d;
+    text-decoration:none;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Segoe UI",Roboto,sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    letter-spacing:.04em;
+    background:rgba(212,180,109,.08);
+    box-shadow:none;
+    opacity:1 !important;
+    transform:none !important;
+    animation:none !important;
+    transition:none !important;
+    will-change:auto !important;
+  }
+
+  @media (max-width:640px){
+    .critical-entry{
+      top:calc(84px + 18px);
+      width:min(calc(100% - 18px), 1460px);
+      padding:14px;
+    }
+    .critical-entry-btn{
+      width:100%;
+    }
   }
 </style>
   <meta charset="utf-8" />
@@ -1497,9 +1547,40 @@
     .stat-card{
       min-height:128px;
     }
+
+    /* ENTRY CRITICAL PAINT ISOLATION FIX — first-painted anchor separated from archive shell */
+    #criticalEntry,
+    .critical-entry,
+    #enterArchivePro,
+    .critical-entry-btn{
+      opacity:1 !important;
+      transform:none !important;
+      translate:none !important;
+      filter:none !important;
+      visibility:visible !important;
+      animation:none !important;
+      transition:none !important;
+      transition-delay:0s !important;
+      animation-delay:0s !important;
+      will-change:auto !important;
+    }
+
+    .entry-layer.archive-entry-wrap{
+      min-height:84px;
+      contain:layout paint;
+    }
+
+    #archiveWorks{
+      display:block;
+      scroll-margin-top:110px;
+    }
+
 </style>
 </head>
 <body>
+  <div id="criticalEntry" class="critical-entry">
+    <a id="enterArchivePro" class="critical-entry-btn" href="#archiveWorks">아카이브 입장 →</a>
+  </div>
   <div class="site-bg" aria-hidden="true"></div>
 
   <header class="site-header">
@@ -1518,16 +1599,7 @@
   </header>
 
   <div class="site-shell">
-    <section class="panel entry-layer" aria-label="Archive entry">
-      <button
-        id="entryBtn"
-        class="entry-btn"
-        type="button"
-        data-kr="아카이브 입장 →"
-        data-en="Enter Archive →">
-        아카이브 입장 →
-      </button>
-    </section>
+    <section class="panel entry-layer archive-entry-wrap" aria-label="Archive entry" aria-hidden="true"></section>
 
     <section class="hero">
       <article class="panel hero-card">
@@ -1628,6 +1700,7 @@
       </div>
     </div>
 
+    <span id="archiveWorks" aria-hidden="true"></span>
     <main id="archiveMain" aria-live="polite">
       <div id="loadingScreen" class="panel loading-screen" hidden></div>
 
@@ -2043,7 +2116,7 @@
         lbKeyZoom: document.getElementById('lbKeyZoom'),
         langTabs: Array.from(document.querySelectorAll('.lang-tab')),
         archiveHomeLink: document.getElementById('archiveHomeLink'),
-        entryBtn: document.getElementById('entryBtn'),
+        entryBtn: document.getElementById('entryBtn') || document.getElementById('enterArchivePro'),
         searchArea: document.getElementById('searchArea'),
         sectionButtons: Array.from(document.querySelectorAll('.section-btn'))
       };
@@ -3849,7 +3922,7 @@
       }
 
       bindEvents();
-      loadArchiveData();
+      setTimeout(loadArchiveData, 0);
     })();
 
 </script>

@@ -1509,7 +1509,7 @@
       const INITIAL_VISIBLE = getInitialVisibleCount();
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 160;
-      const ASSET_VERSION = String(Date.now());
+      const ASSET_VERSION = 'section-image-sim-' + String(Date.now());
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
 
@@ -2079,14 +2079,47 @@
         return 9999;
       }
 
+      function normalizeCanonicalWorkId(id) {
+        const raw = safeText(id);
+        const m = raw.match(/^(OR|DZ)[-_]?(\d+)$/i);
+        if (!m) return raw;
+        const prefix = m[1].toUpperCase();
+        const num = Number(m[2]);
+        if (!Number.isFinite(num)) return raw;
+        if (prefix === 'OR') return 'OR-' + String(num).padStart(3, '0');
+        return 'DZ-' + String(num).padStart(3, '0');
+      }
+
+      function buildDungzakMainImageUrl(id, kind) {
+        const cleanId = normalizeCanonicalWorkId(id);
+        const folder = kind === 'zoom' ? 'zoom' : 'standard';
+        if (!/^DZ-\d{3}$/i.test(cleanId)) return '';
+        return 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/' + folder + '/' + encodeURIComponent(cleanId) + '.jpg';
+      }
+
       function normalizeImageUrl(url, kind, id, sectionId) {
+        const clean = safeText(url).replace(/\s+/g, '');
+        const sid = Number(sectionId);
+
         /*
-          FINAL ABSOLUTE MATCH RULE:
-          works.json 1 row = 1 card.
-          The image/zoom URL must come from the same JSON object as the title,
-          material, size, year and section. Never rebuild image paths from ID.
+          SECTION IMAGE SIMULATION FIX:
+          The current works.json contains duplicated DZ ids in section I and section II,
+          and many section II rows point to the same archivepro image URL used by section I.
+          If we obey those duplicated archivepro URLs literally, the section II title/caption
+          appears under section I images.
+
+          Therefore the binding rule is:
+          - Title / material / size / year / section always come from the same JSON row.
+          - Origins and section I keep the JSON image URL exactly.
+          - Sections II–V use the stable DUNGZAK main image path by DZ id.
+          - Non-DZ ids keep the JSON image URL.
         */
-        return safeText(url).replace(/\s+/g, '');
+        if (sid >= 2 && sid <= 5) {
+          const mainUrl = buildDungzakMainImageUrl(id, kind);
+          if (mainUrl) return mainUrl;
+        }
+
+        return clean;
       }
 
       function normalizeItem(raw, index) {
@@ -3125,12 +3158,25 @@
           renderAll();
           scheduleFullSearchIndex();
 
+          const duplicateImageRows = (() => {
+            const map = new Map();
+            for (const item of WORKS_DATA) {
+              const baseImage = safeText(item.image).split('?')[0];
+              if (!baseImage) continue;
+              if (!map.has(baseImage)) map.set(baseImage, []);
+              map.get(baseImage).push({ id:item.id, section_id:item.section_id, title_kr:item.title_kr, image:item.image });
+            }
+            return Array.from(map.values()).filter(group => group.length > 1).slice(0, 30);
+          })();
+
           window.__ARCHIVE_PRO_SIMULATION__ = {
             loaded: WORKS_DATA.length,
             filtered: CURRENT_LIST.length,
             sections: new Set(WORKS_DATA.map(item => Number(item.section_id))).size,
             first: WORKS_DATA[0] || null,
-            last: WORKS_DATA[WORKS_DATA.length - 1] || null
+            last: WORKS_DATA[WORKS_DATA.length - 1] || null,
+            duplicateImageRows,
+            sectionImageRule: 'section 0 and 1 use JSON image; sections 2-5 use main/images/{DZ-id}.jpg when DZ id exists'
           };
           console.info('[Archive Pro] simulation:', window.__ARCHIVE_PRO_SIMULATION__);
         } catch (error) {

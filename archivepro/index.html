@@ -2306,14 +2306,80 @@
       }
 
 
-      /* FAST SEARCH CACHE — created once when works.json loads */
+      /* FAST SEARCH CACHE — created once when works.json loads
+         SEARCH-ONLY SPEED FIX:
+         - No UI / section / sort / card rendering changes.
+         - Each work receives precomputed compact indexes once at load.
+         - Live search only compares prepared strings, so mobile stays fast. */
+      function buildFastAliasText(value) {
+        const base = normalizeSearchToken(value);
+        if (!base) return '';
+
+        const aliases = [base];
+        const compact = compactSearchToken(base);
+
+        const groups = [
+          ['oil', 'oil stick', 'oilstick', 'oil pastel', '오일스틱', '오일 파스텔'],
+          ['pencil', 'colored pencil', 'colour pencil', 'color pencil', '연필', '색연필'],
+          ['watercolour', 'watercolor', 'water colour', 'water color', 'aquarelle', '수채', '수채화'],
+          ['acrylic', 'acrylics', '아크릴'],
+          ['canvas', '캔버스'],
+          ['paper', '종이', '한지'],
+          ['pigment', 'powder pigment', '분채', '안료'],
+          ['unbleached cotton', 'cotton', 'raw cotton', '광목', '면천'],
+          ['mixed media', 'mixed-media', '혼합재료'],
+          ['light', 'illumination', 'radiance', '빛', '광', '광휘'],
+          ['memory', '기억'],
+          ['being', 'existence', 'presence', '존재', '실존'],
+          ['human', 'human being', 'people', '인간', '사람'],
+          ['mind', 'spirit', 'consciousness', '정신', '마음', '의식'],
+          ['rebirth', 'regeneration', '정신의 재탄생', '재탄생'],
+          ['restoration', 'recovery', '존재의 회복', '회복'],
+          ['metaconsciousness', 'meta consciousness', 'metaconsciousness of light', '빛의 초의식', '초의식'],
+          ['origin', 'origins', 'beginning', 'source', '기원', '근원'],
+          ['pray', 'prayer', 'pray for us', '기도', '우리를 위해 기도']
+        ];
+
+        for (let i = 0; i < groups.length; i++) {
+          const group = groups[i];
+          let hit = false;
+          for (let j = 0; j < group.length; j++) {
+            const g = normalizeSearchToken(group[j]);
+            if (!g) continue;
+            if (base.includes(g) || compact.includes(compactSearchToken(g))) {
+              hit = true;
+              break;
+            }
+          }
+          if (hit) aliases.push(...group);
+        }
+
+        return aliases.join(' ');
+      }
+
       function buildFastSearchText(item) {
-        return [
-          item.id, item.title_kr, item.title_en, item.material_kr, item.material_en,
-          item.size_kr, item.size_en, item.year, item.section_kr, item.section_en,
-          getSectionPlainById(item.section_id, 'kr'), getSectionPlainById(item.section_id, 'en'),
-          getSectionAliases(item.section_id).join(' ')
-        ].map(safeText).join(' ').toLowerCase().replace(/\s+/g, '');
+        const sectionAliases = getSectionAliases(item.section_id).join(' ');
+        const sourceText = [
+          item.id,
+          item.title_kr,
+          item.title_en,
+          item.material_kr,
+          item.material_en,
+          item.size_kr,
+          item.size_en,
+          item.year,
+          item.section_kr,
+          item.section_en,
+          getSectionPlainById(item.section_id, 'kr'),
+          getSectionPlainById(item.section_id, 'en'),
+          sectionAliases,
+          item.status
+        ].map(safeText).join(' ');
+
+        const aliasText = buildFastAliasText(sourceText);
+        const full = sourceText + ' ' + aliasText + ' ' + hangulInitials(sourceText);
+
+        return compactSearchToken(full);
       }
 
       function prepareFastSearchCache(item) {
@@ -2324,31 +2390,19 @@
       }
 
       function scheduleFullSearchIndex() {
-        const list = state.all || [];
-        let i = 0;
-        const run = (deadline) => {
-          const hasTime = () => !deadline || deadline.timeRemaining() > 6;
-          while (i < list.length && hasTime()) {
-            buildSearchText(list[i]);
-            i += 1;
-          }
-          if (i < list.length) {
-            if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 1200 });
-            else window.setTimeout(() => run(null), 16);
-          }
-        };
-        if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 1200 });
-        else window.setTimeout(() => run(null), 16);
+        /* Disabled intentionally.
+           The previous idle full-index builder recalculated heavy strings after load
+           and made the interface feel slow again. Fast search index is enough and is
+           already built once in prepareFastSearchCache(). */
+        return;
       }
 
       function getQueryTokens(rawQuery) {
-        const q = normalizeSearchToken(rawQuery);
         const compact = compactSearchToken(rawQuery);
-        const tokens = q.split(' ').map(v => v.trim()).filter(Boolean);
-        const expanded = tokens.flatMap(getSearchAliases).map(normalizeSearchToken).filter(Boolean);
-        const compacted = tokens.flatMap(getSearchAliases).map(compactSearchToken).filter(Boolean);
-        const initials = [hangulInitials(q), hangulInitials(compact)].map(compactSearchToken).filter(Boolean);
-        return Array.from(new Set([...tokens, ...expanded, ...compacted, ...initials])).filter(Boolean);
+        if (!compact) return [];
+        const aliasText = buildFastAliasText(rawQuery);
+        const expanded = compactSearchToken([rawQuery, aliasText, hangulInitials(rawQuery)].join(' '));
+        return Array.from(new Set([compact, expanded].filter(Boolean)));
       }
 
       function matchIdQuery(item, rawQuery) {
@@ -2375,13 +2429,19 @@
         const compact = compactSearchToken(rawQuery);
         if (!compact) return true;
 
-        /* One-character live search causes broad matches and heavy UI churn.
-           Section buttons handle single-section navigation; text search begins at 2 chars. */
+        /* Keep one-character search from repainting everything. */
         if (compact.length < 2) return true;
 
-        if (item._fastSearch && item._fastSearch.includes(compact)) return true;
-        if (item._searchCompact && item._searchCompact.includes(compact)) return true;
-        if (item._searchInitials && item._searchInitials.includes(compact)) return true;
+        if (matchIdQuery(item, rawQuery)) return true;
+
+        const haystack = item._fastSearch || '';
+        if (haystack.includes(compact)) return true;
+
+        const tokens = getQueryTokens(rawQuery);
+        for (let i = 0; i < tokens.length; i++) {
+          const token = tokens[i];
+          if (token && haystack.includes(token)) return true;
+        }
 
         if (/^\d{4}$/.test(compact)) {
           return String(item._yearStartNumber || '') === compact || String(item._yearEndNumber || '') === compact;
@@ -3139,7 +3199,7 @@
           state.section = 'all';
           state.sort = FAST_ORDER;
           state.visibleCount = getInitialVisibleCount();
-          state._searchPrepared = false;
+          state._searchPrepared = true;
           state.filtered = applyFilterSort(state.all);
           state.loadState = 'loaded';
           state.isLoaded = true;

@@ -2108,11 +2108,13 @@
 
       function normalizeItem(raw, index) {
         const item = raw && typeof raw === 'object' ? raw : {};
+        const id = String(item.id || '').trim() || 'item-' + (index + 1);
+        const sectionId = Number(item.section_id ?? 0);
 
         return {
           _index: index,
-          id: String(item.id || '').trim() || 'item-' + (index + 1),
-          section_id: Number(item.section_id ?? 0),
+          id,
+          section_id: sectionId,
           section_kr: String(item.section_kr || '').trim(),
           section_en: String(item.section_en || '').trim(),
           title_kr: String(item.title_kr || '').trim(),
@@ -2617,7 +2619,7 @@
         return [
           '<article class="card" tabindex="0" role="button" data-id="', escapeHTML(item.id), '" aria-label="', escapeHTML(item.id), ' 작품 보기">',
             '<div class="thumb-wrap">',
-              '<img class="', thumbClass, '" data-src="', escapeHTML(imageSrc), '" alt="', escapeHTML(title || item.id), '" loading="lazy" decoding="async" data-zoom="', escapeHTML(item.zoom || ''), '">',
+              '<img class="', thumbClass, '" src="', escapeHTML(SVG_PLACEHOLDER), '" data-src="', escapeHTML(imageSrc), '" alt="', escapeHTML(title || item.id), '" loading="lazy" decoding="async" data-zoom="', escapeHTML(item.zoom || ''), '">',
               '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
             '</div>',
             '<div class="card-body">',
@@ -2900,6 +2902,8 @@
       function parseWorksPayload(json) {
         if (Array.isArray(json)) return json;
         if (json && Array.isArray(json.works)) return json.works;
+        if (json && Array.isArray(json.data)) return json.data;
+        if (json && Array.isArray(json.items)) return json.items;
         if (json && json.data && Array.isArray(json.data.works)) return json.data.works;
         if (json && json.archive && Array.isArray(json.archive.works)) return json.archive.works;
         return [];

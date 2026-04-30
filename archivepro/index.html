@@ -49,6 +49,202 @@
       padding:14px;
     }
   }
+
+    /* ARCHIVE PRO DESKTOP UI COMPRESSION — no design/data/function change */
+    .visually-hidden{
+      position:absolute !important;
+      width:1px !important;
+      height:1px !important;
+      padding:0 !important;
+      margin:-1px !important;
+      overflow:hidden !important;
+      clip:rect(0 0 0 0) !important;
+      white-space:nowrap !important;
+      border:0 !important;
+    }
+
+    .section-nav,
+    .section-nav-panel,
+    .section-buttons,
+    .section-nav-title{
+      display:none !important;
+    }
+
+    .hero.hero-compressed{
+      display:grid !important;
+      grid-template-columns:minmax(0,1fr) auto !important;
+      gap:10px !important;
+      align-items:center !important;
+      padding-top:10px !important;
+      margin-top:0 !important;
+    }
+
+    .lang-inline{
+      display:flex !important;
+      align-items:center !important;
+      gap:10px !important;
+      padding:8px 12px !important;
+      min-height:auto !important;
+      background:transparent !important;
+      border:1px solid rgba(212,180,109,.14) !important;
+      border-radius:14px !important;
+      box-shadow:none !important;
+      contain:layout paint;
+    }
+
+    .lang-inline .lang-tabs{
+      display:inline-flex !important;
+      align-items:center !important;
+      gap:8px !important;
+      min-height:auto !important;
+    }
+
+    .lang-inline .lang-tab,
+    .lang-inline .hero-home-link{
+      min-height:34px !important;
+      height:34px !important;
+      padding:0 12px !important;
+      font-size:12px !important;
+      line-height:34px !important;
+      border-radius:999px !important;
+      white-space:nowrap !important;
+    }
+
+    .lang-inline .hero-mode-line{
+      margin:0 !important;
+      color:var(--muted) !important;
+      font-size:12px !important;
+      letter-spacing:.08em !important;
+      text-transform:uppercase !important;
+      white-space:nowrap !important;
+    }
+
+    .stats-inline{
+      display:flex !important;
+      align-items:center !important;
+      justify-content:flex-end !important;
+      gap:6px !important;
+      padding:6px 12px !important;
+      min-height:36px !important;
+      color:rgba(244,239,230,.72) !important;
+      font-size:14px !important;
+      line-height:1.25 !important;
+      border:1px solid rgba(212,180,109,.12) !important;
+      border-radius:14px !important;
+      background:transparent !important;
+      box-shadow:none !important;
+      white-space:nowrap !important;
+      contain:layout paint;
+    }
+
+    .stats-inline #statTotal,
+    .stats-inline #statFiltered,
+    .stats-inline #statSections{
+      color:var(--gold) !important;
+      font-size:14px !important;
+      font-weight:700 !important;
+      line-height:1.25 !important;
+      letter-spacing:.02em !important;
+    }
+
+    .controls{
+      margin-top:10px !important;
+      padding:10px !important;
+      margin-bottom:10px !important;
+      display:grid !important;
+      grid-template-columns:minmax(280px,2fr) minmax(150px,1fr) minmax(150px,1fr) auto !important;
+      gap:10px !important;
+      align-items:end !important;
+    }
+
+    .controls .field{gap:4px !important;}
+    .controls .field label{
+      font-size:10px !important;
+      line-height:1 !important;
+      opacity:.74 !important;
+    }
+
+    .controls .input,
+    .controls .select,
+    .controls .control-actions .btn{
+      height:40px !important;
+      min-height:40px !important;
+      line-height:40px !important;
+      border-radius:12px !important;
+      font-size:13px !important;
+    }
+
+    .controls .input{padding:0 42px 0 12px !important;}
+    .controls .select{padding:0 40px 0 12px !important;}
+
+    .control-actions{
+      display:flex !important;
+      gap:8px !important;
+      align-items:end !important;
+      justify-content:flex-end !important;
+    }
+
+    .control-actions .btn{
+      padding:0 12px !important;
+      white-space:nowrap !important;
+    }
+
+    .meta-row{
+      margin:10px 2px 8px !important;
+    }
+
+    #resultsMeta{
+      margin-top:8px !important;
+      margin-bottom:8px !important;
+    }
+
+    @media (max-width:1040px){
+      .hero.hero-compressed{
+        grid-template-columns:1fr !important;
+      }
+      .stats-inline{
+        justify-content:flex-start !important;
+        flex-wrap:wrap !important;
+        white-space:normal !important;
+      }
+      .controls{
+        grid-template-columns:1fr 1fr !important;
+      }
+      .controls .field:first-child,
+      .control-actions{
+        grid-column:1/-1 !important;
+      }
+      .control-actions{
+        display:grid !important;
+        grid-template-columns:1fr 1fr !important;
+      }
+    }
+
+    @media (max-width:640px){
+      .hero.hero-compressed{
+        gap:8px !important;
+      }
+      .lang-inline{
+        flex-wrap:wrap !important;
+        padding:8px 10px !important;
+      }
+      .lang-inline .hero-mode-line{
+        width:100% !important;
+      }
+      .stats-inline{
+        font-size:13px !important;
+        padding:7px 10px !important;
+      }
+      .controls{
+        grid-template-columns:1fr !important;
+        padding:12px !important;
+      }
+      .control-actions{
+        grid-column:auto !important;
+        grid-template-columns:1fr 1fr !important;
+      }
+    }
+
 </style>
 
   <meta charset="utf-8" />
@@ -1766,56 +1962,25 @@
       </div>
     </section>
 
-    <section class="hero">
-      <article class="panel hero-card">
-        <div class="hero-topbar">
-          <div class="lang-tabs" role="tablist" aria-label="Language mode">
-            <button class="lang-tab active" type="button" data-lang="kr" aria-pressed="true">KR</button>
-            <button class="lang-tab" type="button" data-lang="en" aria-pressed="false">EN</button>
-            <button class="lang-tab" type="button" data-lang="both" aria-pressed="false">KR+EN</button>
-          </div>
-
-          <a class="hero-home-link" href="https://dungzak.art/" target="_blank" rel="noopener noreferrer">dungzak.art</a>
+    <section class="hero hero-compressed" aria-label="Archive controls summary">
+      <article class="lang-inline" aria-label="Language mode and site link">
+        <div class="lang-tabs" role="tablist" aria-label="Language mode">
+          <button class="lang-tab active" type="button" data-lang="kr" aria-pressed="true">KR</button>
+          <button class="lang-tab" type="button" data-lang="en" aria-pressed="false">EN</button>
+          <button class="lang-tab" type="button" data-lang="both" aria-pressed="false">KR+EN</button>
         </div>
-
+        <a class="hero-home-link" href="https://dungzak.art/" target="_blank" rel="noopener noreferrer">dungzak.art</a>
         <p class="hero-mode-line" id="heroModeLine">한국어 기준</p>
       </article>
 
-      <aside class="panel stats" aria-label="아카이브 통계">
-        <div class="stat">
-          <div class="k" id="statLabelTotal">Total</div>
-          <div class="v" id="statTotal">1,368</div>
-          <div class="d" id="statDescTotal">전체 작품 수</div>
-        </div>
-        <div class="stat">
-          <div class="k" id="statLabelFiltered">Filtered</div>
-          <div class="v" id="statFiltered">1,368</div>
-          <div class="d" id="statDescFiltered">현재 검색 결과</div>
-        </div>
-        <div class="stat">
-          <div class="k" id="statLabelSections">Sections</div>
-          <div class="v" id="statSections">6</div>
-          <div class="d" id="statDescSections">섹션 수</div>
-        </div>
+      <aside class="stats-inline" aria-label="아카이브 통계">
+        <span id="statTotal">1,368</span> works ·
+        <span id="statFiltered">1,368</span> results ·
+        <span id="statSections">6</span> sections
+        <span id="statDescTotal" class="visually-hidden">전체 작품 수</span>
+        <span id="statDescFiltered" class="visually-hidden">현재 검색 결과</span>
+        <span id="statDescSections" class="visually-hidden">섹션 수</span>
       </aside>
-    </section>
-
-    <section class="panel section-nav" aria-label="Section navigation">
-      <p
-        class="section-nav-title"
-        data-kr="섹션 탐색"
-        data-en="Section Navigation">
-        섹션 탐색
-      </p>
-
-      <div class="section-buttons" id="sectionButtons">
-        <button class="section-btn" type="button" data-section="0" data-kr="기원" data-en="Origins">기원</button>
-        <button class="section-btn" type="button" data-section="1" data-kr="우리를 위해 기도해 주세요" data-en="Pray for Us">우리를 위해 기도해 주세요</button>
-        <button class="section-btn" type="button" data-section="2" data-kr="인간" data-en="Human Being">인간</button>
-        <button class="section-btn" type="button" data-section="3" data-kr="정신의 재탄생" data-en="Rebirth of Mind">정신의 재탄생</button>
-        <button class="section-btn" type="button" data-section="4" data-kr="존재의 회복" data-en="Restoration of Being">존재의 회복</button>
-        <button class="section-btn" type="button" data-section="5" data-kr="빛의 초의식" data-en="Metaconsciousness of Light">빛의 초의식</button>
-      </div>
     </section>
 
     <section id="searchArea" class="panel controls" aria-label="아카이브 검색 및 필터">

@@ -1266,6 +1266,32 @@
       display:none !important;
     }
 
+
+    /* ENTRY DELAY FIX — mobile-only expensive visual effects reduction */
+    .bio-panel {
+      content-visibility:auto;
+      contain-intrinsic-size:360px 520px;
+    }
+
+    @media (max-width:768px){
+      header,
+      .site-header,
+      .glass,
+      .panel,
+      .modal,
+      .bio-modal,
+      .lightbox,
+      .detail-hover{
+        backdrop-filter:none !important;
+        -webkit-backdrop-filter:none !important;
+      }
+
+      *:hover{
+        transform:none !important;
+        box-shadow:none !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -1501,8 +1527,8 @@
       const DATA_URL = 'https://dungzak.art/data/works.json';
       const MIN_EXPECTED_WORKS = 100;
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
-      const MOBILE_FIRST_RENDER_COUNT = 24;
-      const DESKTOP_FIRST_RENDER_COUNT = 24;
+      const MOBILE_FIRST_RENDER_COUNT = 12;
+      const DESKTOP_FIRST_RENDER_COUNT = 18;
       const FIRST_RENDER_COUNT = DESKTOP_FIRST_RENDER_COUNT;
       const FAST_ORDER = 'section-id-asc';
       const LOAD_MORE_COUNT = 24;
@@ -2390,11 +2416,19 @@
       }
 
       function scheduleFullSearchIndex() {
-        /* Disabled intentionally.
-           The previous idle full-index builder recalculated heavy strings after load
-           and made the interface feel slow again. Fast search index is enough and is
-           already built once in prepareFastSearchCache(). */
-        return;
+        if (state._searchPrepared || !state.all.length) return;
+
+        const run = () => {
+          if (state._searchPrepared || !state.all.length) return;
+          state.all.forEach(prepareFastSearchCache);
+          state._searchPrepared = true;
+        };
+
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(run, { timeout: 1200 });
+        } else {
+          setTimeout(run, 500);
+        }
       }
 
       function getQueryTokens(rawQuery) {
@@ -2740,11 +2774,11 @@
         const imageSrc = withCacheBust(item.image || SVG_PLACEHOLDER);
         const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(item);
-        const priority = index < 8;
+        const priority = index < 2;
         const imgSrc = priority ? imageSrc : SVG_PLACEHOLDER;
         const dataSrc = priority ? '' : ' data-src="' + escapeHTML(imageSrc) + '"';
         const loading = priority ? 'eager' : 'lazy';
-        const fetchPriority = index < 4 ? 'high' : 'low';
+        const fetchPriority = priority ? 'high' : 'low';
         const loadedClass = priority ? ' is-priority' : '';
 
         return [
@@ -2840,6 +2874,15 @@
 
       function render() {
         renderGrid();
+      }
+
+      function scheduleFirstGridRender() {
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            render();
+            scheduleFullSearchIndex();
+          }, 80);
+        });
       }
 
       function openLightbox(item) {
@@ -3191,15 +3234,14 @@
           const works = await fetchWorksDirect();
           const normalized = works
             .map(normalizeItem)
-            .filter(item => item && item.id)
-            .map(prepareFastSearchCache);
+            .filter(item => item && item.id);
 
           state.all = normalized;
           state.query = '';
           state.section = 'all';
           state.sort = FAST_ORDER;
           state.visibleCount = getInitialVisibleCount();
-          state._searchPrepared = true;
+          state._searchPrepared = false;
           state.filtered = applyFilterSort(state.all);
           state.loadState = 'loaded';
           state.isLoaded = true;
@@ -3215,30 +3257,41 @@
           if (els.sourcePill && !els.sourcePill.textContent.startsWith('Source: http')) els.sourcePill.textContent = `Source: ${DATA_URL}`;
 
           rebuildStaticTexts();
-          renderAll();
-          scheduleFullSearchIndex();
+          renderSectionOptions();
+          renderSectionButtons();
+          updateStats();
+          updateMeta();
+          scheduleFirstGridRender();
 
-          const duplicateImageRows = (() => {
-            const map = new Map();
-            for (const item of WORKS_DATA) {
-              const baseImage = safeText(item.image).split('?')[0];
-              if (!baseImage) continue;
-              if (!map.has(baseImage)) map.set(baseImage, []);
-              map.get(baseImage).push({ id:item.id, section_id:item.section_id, title_kr:item.title_kr, image:item.image });
-            }
-            return Array.from(map.values()).filter(group => group.length > 1).slice(0, 30);
-          })();
+          const buildSimulationSnapshot = () => {
+            const duplicateImageRows = (() => {
+              const map = new Map();
+              for (const item of WORKS_DATA) {
+                const baseImage = safeText(item.image).split('?')[0];
+                if (!baseImage) continue;
+                if (!map.has(baseImage)) map.set(baseImage, []);
+                map.get(baseImage).push({ id:item.id, section_id:item.section_id, title_kr:item.title_kr, image:item.image });
+              }
+              return Array.from(map.values()).filter(group => group.length > 1).slice(0, 30);
+            })();
 
-          window.__ARCHIVE_PRO_SIMULATION__ = {
-            loaded: WORKS_DATA.length,
-            filtered: CURRENT_LIST.length,
-            sections: new Set(WORKS_DATA.map(item => Number(item.section_id))).size,
-            first: WORKS_DATA[0] || null,
-            last: WORKS_DATA[WORKS_DATA.length - 1] || null,
-            duplicateImageRows,
-            sectionImageRule: 'section 0 and 1 use JSON image; sections 2-5 use main/images/{DZ-id}.jpg when DZ id exists'
+            window.__ARCHIVE_PRO_SIMULATION__ = {
+              loaded: WORKS_DATA.length,
+              filtered: CURRENT_LIST.length,
+              sections: new Set(WORKS_DATA.map(item => Number(item.section_id))).size,
+              first: WORKS_DATA[0] || null,
+              last: WORKS_DATA[WORKS_DATA.length - 1] || null,
+              duplicateImageRows,
+              sectionImageRule: 'section 0 and 1 use JSON image; sections 2-5 use main/images/{DZ-id}.jpg when DZ id exists'
+            };
+            console.info('[Archive Pro] simulation:', window.__ARCHIVE_PRO_SIMULATION__);
           };
-          console.info('[Archive Pro] simulation:', window.__ARCHIVE_PRO_SIMULATION__);
+
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(buildSimulationSnapshot, { timeout: 1600 });
+          } else {
+            setTimeout(buildSimulationSnapshot, 900);
+          }
         } catch (error) {
           console.error('Load error:', error);
           state.loadState = 'failed';

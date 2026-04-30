@@ -12,9 +12,10 @@
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://dungzaklab.art/">
 
-<link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
-<link rel="dns-prefetch" href="//raw.githubusercontent.com">
+<link rel="preload" href="/archivepro/index.html" as="document">
 <link rel="prefetch" href="/archivepro/index.html">
+<link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
+<link rel="dns-prefetch" href="https://raw.githubusercontent.com">
 
 <link rel="alternate" href="https://dungzaklab.art/" hreflang="ko">
 <link rel="alternate" href="https://dungzaklab.art/?lang=en" hreflang="en">
@@ -778,7 +779,7 @@ button,
 a[href="/archivepro/index.html"]{
   animation:none !important;
 }
-#enterArchive,
+#enterArchivePro,
 .selector-link[href="/archivepro/index.html"]{
   transition:none !important;
   animation:none !important;
@@ -998,7 +999,7 @@ a[href="/archivepro/index.html"]{
     </div>
 
     <div class="home-selector">
-      <a id="enterArchive" class="selector-link" role="link" tabindex="0">ENTER ARCHIVE PRO →</a>
+      <a id="enterArchivePro" href="/archivepro/index.html" class="selector-link">ENTER ARCHIVE PRO →</a>
       <a href="#" class="selector-link" onclick="openOcean(); return false;">OCEAN ENERGY</a>
       <a href="#" class="selector-link" onclick="openArchive(); return false;">ARCHIVE</a>
       <a href="#" class="selector-link" onclick="openBooks(); return false;">BOOKS</a>
@@ -1487,19 +1488,35 @@ document.addEventListener('keydown', (e) => {
 const savedLang = localStorage.getItem('dzlab_lang');
 setLanguage(savedLang === 'en' ? 'en' : 'ko');
 
-const archiveBtn = document.getElementById('enterArchive');
+let archiveNavigating = false;
+let archiveProWarmed = false;
 
-if(archiveBtn){
-  archiveBtn.addEventListener('pointerdown', function(){
-    window.location.href = '/archivepro/index.html';
-  });
+const enterArchivePro = document.getElementById('enterArchivePro');
 
-  archiveBtn.addEventListener('keydown', function(e){
-    if(e.key === 'Enter' || e.key === ' '){
-      e.preventDefault();
-      window.location.href = '/archivepro/index.html';
-    }
-  });
+function warmArchivePro(){
+  if(archiveProWarmed) return;
+  archiveProWarmed = true;
+
+  const l = document.createElement('link');
+  l.rel = 'prefetch';
+  l.href = '/archivepro/index.html';
+  document.head.appendChild(l);
+}
+
+if(enterArchivePro){
+  enterArchivePro.addEventListener('pointerdown', function(e){
+    if(archiveNavigating) return;
+    archiveNavigating = true;
+
+    const url = enterArchivePro.getAttribute('href') || '/archivepro/index.html';
+
+    requestAnimationFrame(function(){
+      window.location.assign(url);
+    });
+  }, { passive: true });
+
+  enterArchivePro.addEventListener('mouseenter', warmArchivePro, { once: true });
+  enterArchivePro.addEventListener('touchstart', warmArchivePro, { once: true, passive: true });
 }
 
 window.__DZLAB_BOOT_READY__ = true;

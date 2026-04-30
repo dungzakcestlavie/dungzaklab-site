@@ -12,9 +12,6 @@
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://dungzaklab.art/">
 
-<link rel="preload" href="/archivepro/index.html" as="document">
-<link rel="prefetch" href="/archivepro/index.html">
-<link rel="prefetch" href="/archivepro/data/works.json">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="//raw.githubusercontent.com">
 
@@ -990,6 +987,23 @@ button,
     window.closeMenu();
   };
 
+  function goArchiveProNow(e){
+    if(e && typeof e.preventDefault === 'function') e.preventDefault();
+    if(e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    window.__DZLAB_ARCHIVE_NAVIGATING__ = true;
+    window.location.href = '/archivepro/index.html';
+  }
+
+  window.goArchiveProNow = goArchiveProNow;
+
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    if(!t || !t.closest) return;
+    var a = t.closest('[data-fast-archive]');
+    if(a) goArchiveProNow(e);
+  }, {capture:true, passive:false});
+
+
   document.addEventListener('pointerdown', function(e){
     var t = e.target;
     if(!t || !t.closest) return;
@@ -999,6 +1013,13 @@ button,
       e.preventDefault();
       window.toggleMenu();
       btn.classList.add('is-pressing');
+      return;
+    }
+
+    var archiveLink = t.closest('[data-fast-archive]');
+    if(archiveLink){
+      archiveLink.classList.add('is-pressing');
+      goArchiveProNow(e);
       return;
     }
 
@@ -1040,7 +1061,7 @@ button,
 <div class="menu" id="menu" aria-hidden="true">
   <a href="#" onclick="openOcean(); return false;">OCEAN ENERGY</a>
   <a href="#" onclick="openArchive(); return false;">ARCHIVE</a>
-  <a href="/archivepro/index.html" onclick="closeMenu()">ARCHIVE PRO</a>
+  <a href="/archivepro/index.html" data-fast-archive>ARCHIVE PRO</a>
   <a href="#" onclick="openBooks(); return false;">BOOKS</a>
   <a href="#" onclick="openAbout(); return false;">ABOUT</a>
   <a href="https://dungzak.art" target="_blank" rel="noopener" onclick="closeMenu()">DUNGZAK.ART</a>
@@ -1059,7 +1080,7 @@ button,
     </div>
 
     <div class="home-selector">
-      <a href="/archivepro/index.html" class="selector-link">ENTER ARCHIVE PRO →</a>
+      <a href="/archivepro/index.html" class="selector-link" data-fast-archive>ENTER ARCHIVE PRO →</a>
       <a href="#" class="selector-link" onclick="openOcean(); return false;">OCEAN ENERGY</a>
       <a href="#" class="selector-link" onclick="openArchive(); return false;">ARCHIVE</a>
       <a href="#" class="selector-link" onclick="openBooks(); return false;">BOOKS</a>

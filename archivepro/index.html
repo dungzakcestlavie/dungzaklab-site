@@ -2260,35 +2260,58 @@
         }).join('');
       }
 
+      /* SEARCH LANGUAGE ALIAS MAP — search-only enhancement
+         KR queries match Korean title/material words.
+         EN queries match English title/material words.
+         No UI, design, data, render, section, or sort behavior is changed. */
+      const SEARCH_ALIAS_GROUPS = [
+        ['watercolour', 'watercolor', 'water colour', 'water color', 'aquarelle', '수채', '수채화', '수채물감', '수채 물감', '종이에 수채', 'watercolour on paper', 'watercolor on paper'],
+        ['oil', 'oil paint', 'oil painting', 'oil on canvas', 'oil on paper', '유화', '오일', '오일 물감', '캔버스에 유채', '종이에 유채'],
+        ['oilstick', 'oil stick', 'oil pastel', '오일스틱', '오일 스틱', '오일 파스텔'],
+        ['acrylic', 'acrylics', 'acrylic paint', 'acrylic on canvas', 'acrylic on paper', '아크릴', '아크릴 물감', '캔버스에 아크릴', '종이에 아크릴'],
+        ['canvas', 'on canvas', 'linen', '천', '캔버스', '캔버스에', '캔버스 작품'],
+        ['paper', 'on paper', 'drawing paper', 'hanji', '종이', '종이에', '한지', '종이 작품'],
+        ['pencil', 'graphite', 'graphite pencil', 'colored pencil', 'colour pencil', 'color pencil', 'pencil on paper', '연필', '흑연', '색연필', '종이에 연필'],
+        ['charcoal', 'charcoal on paper', '목탄', '숯', '종이에 목탄'],
+        ['ink', 'ink on paper', 'indian ink', '먹', '잉크', '종이에 먹', '종이에 잉크'],
+        ['gouache', 'gouache on paper', '과슈', '구아슈'],
+        ['pigment', 'powder pigment', 'pigment on cotton', '분채', '안료', '분채화'],
+        ['unbleached cotton', 'cotton', 'raw cotton', 'cotton cloth', '광목', '면천', '천에 분채'],
+        ['mixed media', 'mixed-media', 'mixed materials', '혼합재료', '혼합 재료', '복합매체'],
+        ['light', 'illumination', 'radiance', '빛', '광', '광휘'],
+        ['awakens', 'awake', 'awakening', 'wake', 'light awakens us', '빛은 우리를 깨어나게 한다', '깨어나게', '깨어나다', '깨우다', '각성'],
+        ['memory', 'remember', 'remembrance', '기억', '기억하다'],
+        ['being', 'existence', 'presence', '존재', '실존'],
+        ['human', 'human being', 'people', 'person', '인간', '사람'],
+        ['mind', 'spirit', 'consciousness', 'psyche', '정신', '마음', '의식'],
+        ['rebirth', 'regeneration', 'rebirth of mind', '정신의 재탄생', '재탄생', '다시 태어남'],
+        ['restoration', 'recovery', 'restoration of being', '존재의 회복', '회복', '복원'],
+        ['metaconsciousness', 'meta consciousness', 'metaconsciousness of light', '빛의 초의식', '초의식'],
+        ['origin', 'origins', 'beginning', 'source', 'root', '기원', '근원', '시작'],
+        ['pray', 'prayer', 'pray for us', 'please pray for us', '기도', '우리를 위해 기도', '우리를 위해 기도해 주세요'],
+        ['art', 'artist', 'artwork', 'painting', '예술', '미술', '작품', '회화'],
+        ['life', 'living', '인생', '삶', '생명'],
+        ['here', 'there', 'where', 'wherefrom', '여기', '거기', '어디', '어디에서'],
+        ['thought', 'thinking', 'contemplation', 'meditation', '사유', '생각'],
+        ['shape', 'form', 'structure', 'forms', '형태', '구조'],
+        ['sky', 'heaven', '하늘'],
+        ['wave', 'waving', 'waving sky', '파도', '파도치는', '물결'],
+        ['seine', 'seine river', 'paris', '센느강', '센강', '파리'],
+        ['tears', 'tear', 'crying', '눈물'],
+        ['love', '사랑'],
+        ['time', 'temporality', '시간'],
+        ['blue', 'green', 'red', 'yellow', 'gold', 'white', 'black', '푸른', '파랑', '초록', '빨강', '노랑', '금빛', '흰색', '검정'],
+        ['available', 'available for collection', 'for sale', 'inquiry', '소장 가능', '소장가능', '문의'],
+        ['reserved', 'on hold', '예약', '예약중'],
+        ['collected', 'sold', 'sold out', '소장 완료', '소장완료', '소장됨', '판매완료']
+      ];
+
       function getSearchAliases(value) {
         const base = normalizeSearchToken(value);
         const compact = compactSearchToken(value);
         const aliases = [base, compact, hangulInitials(base), hangulInitials(compact)];
 
-        const groups = [
-          ['watercolour', 'watercolor', 'water colour', 'water color', 'aquarelle', '수채', '수채화'],
-          ['oilstick', 'oil stick', 'oil pastel', '오일스틱', '오일 파스텔'],
-          ['acrylic', 'acrylics', '아크릴'],
-          ['canvas', '캔버스'],
-          ['paper', '종이', '한지'],
-          ['pencil', 'colored pencil', 'colour pencil', 'color pencil', '연필', '색연필'],
-          ['pigment', 'powder pigment', '분채', '안료'],
-          ['unbleached cotton', 'cotton', 'raw cotton', '광목', '면천'],
-          ['mixed media', 'mixed-media', '혼합재료'],
-          ['light', 'illumination', 'radiance', '빛', '광', '광휘'],
-          ['memory', '기억'],
-          ['being', 'existence', 'presence', '존재', '실존'],
-          ['human', 'human being', 'people', '인간', '사람'],
-          ['mind', 'spirit', 'consciousness', '정신', '마음', '의식'],
-          ['rebirth', 'regeneration', '정신의 재탄생', '재탄생'],
-          ['restoration', 'recovery', '존재의 회복', '회복'],
-          ['metaconsciousness', 'meta consciousness', '빛의 초의식', '초의식'],
-          ['origin', 'origins', 'beginning', 'source', '기원', '근원'],
-          ['pray', 'prayer', 'pray for us', '기도', '우리를 위해 기도'],
-          ['available', 'available for collection', 'for sale', 'inquiry', '소장 가능', '소장가능', '문의'],
-          ['reserved', 'on hold', '예약', '예약중'],
-          ['collected', 'sold', 'sold out', '소장 완료', '소장완료', '소장됨', '판매완료']
-        ];
+        const groups = SEARCH_ALIAS_GROUPS;
 
         groups.forEach((group) => {
           const normalizedGroup = group.map(normalizeSearchToken);
@@ -2390,27 +2413,7 @@
         const aliases = [base];
         const compact = compactSearchToken(base);
 
-        const groups = [
-          ['oil', 'oil stick', 'oilstick', 'oil pastel', '오일스틱', '오일 파스텔'],
-          ['pencil', 'colored pencil', 'colour pencil', 'color pencil', '연필', '색연필'],
-          ['watercolour', 'watercolor', 'water colour', 'water color', 'aquarelle', '수채', '수채화'],
-          ['acrylic', 'acrylics', '아크릴'],
-          ['canvas', '캔버스'],
-          ['paper', '종이', '한지'],
-          ['pigment', 'powder pigment', '분채', '안료'],
-          ['unbleached cotton', 'cotton', 'raw cotton', '광목', '면천'],
-          ['mixed media', 'mixed-media', '혼합재료'],
-          ['light', 'illumination', 'radiance', '빛', '광', '광휘'],
-          ['memory', '기억'],
-          ['being', 'existence', 'presence', '존재', '실존'],
-          ['human', 'human being', 'people', '인간', '사람'],
-          ['mind', 'spirit', 'consciousness', '정신', '마음', '의식'],
-          ['rebirth', 'regeneration', '정신의 재탄생', '재탄생'],
-          ['restoration', 'recovery', '존재의 회복', '회복'],
-          ['metaconsciousness', 'meta consciousness', 'metaconsciousness of light', '빛의 초의식', '초의식'],
-          ['origin', 'origins', 'beginning', 'source', '기원', '근원'],
-          ['pray', 'prayer', 'pray for us', '기도', '우리를 위해 기도']
-        ];
+        const groups = SEARCH_ALIAS_GROUPS;
 
         for (let i = 0; i < groups.length; i++) {
           const group = groups[i];

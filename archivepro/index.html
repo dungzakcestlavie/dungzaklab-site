@@ -1502,8 +1502,14 @@
       }, { passive: false });
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'data/works.json';
-      const DATA_URLS = [DATA_URL];
+      const DATA_URL = 'https://dungzak.art/data/works.json';
+      const DATA_URLS = [
+        'https://dungzak.art/data/works.json',
+        'https://dungzakcestlavie.github.io/data/works.json',
+        'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json',
+        '../data/works.json',
+        'data/works.json'
+      ];
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const FIRST_RENDER_COUNT = 24;
       const LOAD_MORE_COUNT = 24;
@@ -2900,13 +2906,20 @@
         return [];
       }
 
-      async function fetchWithTimeout(url, timeoutMs = 3500) {
+      function withCacheBust(url) {
+        const value = safeText(url);
+        if (!value) return value;
+        const sep = value.includes('?') ? '&' : '?';
+        return `${value}${sep}v=${Date.now()}`;
+      }
+
+      async function fetchWithTimeout(url, timeoutMs = 4500) {
         const controller = new AbortController();
         const timer = window.setTimeout(() => controller.abort(), timeoutMs);
 
         try {
-          const response = await fetch(url, {
-            cache: 'force-cache',
+          const response = await fetch(withCacheBust(url), {
+            cache: 'no-store',
             signal: controller.signal
           });
           return response;
@@ -2916,14 +2929,27 @@
       }
 
       async function fetchWorksFromCandidates() {
-        const url = DATA_URLS[0];
-        const response = await fetchWithTimeout(url, 3500);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        let best = { arr: [], url: DATA_URLS[0] };
+        const errors = [];
 
-        const text = await response.text();
-        const arr = parseWorksPayload(text);
-        if (!Array.isArray(arr)) throw new Error('works payload is not an array');
-        return { arr, url };
+        for (const url of DATA_URLS) {
+          try {
+            const response = await fetchWithTimeout(url, 4500);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const text = await response.text();
+            const arr = parseWorksPayload(text);
+            if (!Array.isArray(arr)) throw new Error('works payload is not an array');
+
+            if (arr.length > best.arr.length) best = { arr, url };
+            if (arr.length > 1) return { arr, url };
+          } catch (error) {
+            errors.push(`${url}: ${error && error.message ? error.message : String(error)}`);
+          }
+        }
+
+        if (best.arr.length) return best;
+        throw new Error(errors.join(' | ') || 'Unable to load works.json');
       }
 
       function showArchiveShellImmediately() {

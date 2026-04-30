@@ -1470,6 +1470,7 @@
   const DESKTOP_FIRST_RENDER_COUNT = 24;
   const LOAD_MORE_COUNT = 24;
   const SEARCH_DEBOUNCE_MS = 160;
+  const ASSET_VERSION = String(Date.now());
 
   const SECTION_MAP = {
     0: { kr: 'A 기원', en: 'Origins' },
@@ -1569,6 +1570,12 @@
   function safeText(v){ return v === null || v === undefined ? '' : String(v).trim(); }
   function escapeHTML(value){ return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
   function toAbsoluteUrl(path){ const clean = safeText(path); if(!clean) return ''; if(/^https?:\/\//i.test(clean)) return clean; return new URL(clean.replace(/^\/+/, ''), SITE_ROOT).href; }
+  function withCacheBust(url){
+    const clean = safeText(url);
+    if(!clean || clean.startsWith('data:') || clean.startsWith('blob:')) return clean;
+    const joiner = clean.includes('?') ? '&' : '?';
+    return `${clean}${joiner}v=${ASSET_VERSION}`;
+  }
   function formatNumber(n){ return new Intl.NumberFormat('ko-KR').format(Number(n || 0)); }
 
   function normalizeSearchText(value){
@@ -1727,8 +1734,8 @@
 
   function createCardHTML(work){
     const id = safeText(work.id);
-    const image = toAbsoluteUrl(work.image);
-    const zoom = toAbsoluteUrl(work.zoom || work.image);
+    const image = withCacheBust(toAbsoluteUrl(work.image));
+    const zoom = withCacheBust(toAbsoluteUrl(work.zoom || work.image));
     const rawTitle = getTitle(work);
     const title = rawTitle || getOriginTitle();
     const material = getMaterial(work);
@@ -1757,11 +1764,25 @@
   function loadLazyImage(img){
     const src = img && img.dataset ? img.dataset.src : '';
     if(!src || img.dataset.loaded === '1') return;
+    const card = img.closest('.card');
+    const boundId = card ? safeText(card.dataset.workId) : '';
     img.dataset.loaded = '1';
     const test = new Image();
     test.decoding = 'async';
-    test.onload = () => { img.src = src; img.classList.add('is-loaded'); };
-    test.onerror = () => { img.src = SVG_PLACEHOLDER; img.classList.add('is-error'); };
+    test.onload = () => {
+      const currentCard = img.closest('.card');
+      const currentId = currentCard ? safeText(currentCard.dataset.workId) : '';
+      if(currentId !== boundId) return;
+      img.src = src;
+      img.classList.add('is-loaded');
+    };
+    test.onerror = () => {
+      const currentCard = img.closest('.card');
+      const currentId = currentCard ? safeText(currentCard.dataset.workId) : '';
+      if(currentId !== boundId) return;
+      img.src = SVG_PLACEHOLDER;
+      img.classList.add('is-error');
+    };
     test.src = src;
   }
 
@@ -1913,8 +1934,8 @@
     state.lightboxItem = work;
     lightboxIndex = state.filtered.findIndex(item => String(item.id) === String(work.id));
     if(!options.keepOpen) archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-    const image = toAbsoluteUrl(work.zoom || work.image);
-    const fallbackImage = toAbsoluteUrl(work.image);
+    const image = withCacheBust(toAbsoluteUrl(work.zoom || work.image));
+    const fallbackImage = withCacheBust(toAbsoluteUrl(work.image));
     const title = getTitle(work) || getOriginTitle();
     els.lightboxImage.src = image || fallbackImage || SVG_PLACEHOLDER;
     els.lightboxImage.alt = title || work.id || 'Artwork';

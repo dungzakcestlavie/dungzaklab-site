@@ -1472,6 +1472,15 @@
   const SEARCH_DEBOUNCE_MS = 160;
   const ASSET_VERSION = String(Date.now());
 
+  const SECTION_MAP = {
+    0: { kr: 'A 기원', en: 'Origins' },
+    1: { kr: 'I 우리를 위해 기도해 주세요', en: 'Pray for Us' },
+    2: { kr: 'II 인간', en: 'Human Being' },
+    3: { kr: 'III 정신의 재탄생', en: 'Rebirth of Mind' },
+    4: { kr: 'IV 존재의 회복', en: 'Restoration of Being' },
+    5: { kr: 'V 빛의 초의식', en: 'Metaconsciousness of Light' }
+  };
+
   const SVG_PLACEHOLDER = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
       <rect width="800" height="800" fill="#091018"/>
@@ -1484,116 +1493,37 @@
 
   const uiText = {
     kr: {
-      heroModeLine: '한국어 기준',
-      statDescTotal: '전체 작품 수',
-      statDescFiltered: '현재 검색 결과',
-      statDescSections: '섹션 수',
-      placeholderSearch: 'ID, 제목, 재료, 연도, 섹션 검색',
-      resetBtn: '초기화',
-      focusSearchBtn: '검색 집중',
-      statusIdle: '대기 중',
-      statusLoading: '준비됨',
-      statusLoaded: '로드 완료',
-      statusFailed: '로드 실패',
-      resultUnit: '점',
-      renderedPrefix: '표시 ',
-      renderedSuffix: '점',
-      activeFilterNone: '필터 없음',
-      filteredPrefix: '필터 적용됨',
-      searchPrefix: '검색',
-      sectionPrefix: '섹션',
-      emptyState: '조건에 맞는 작품이 없습니다.',
-      loadMore: '더 보기',
-      footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-      untitled: '무제 / 캡션 없음',
-      noInfo: '정보 없음',
-      allSections: '전체 섹션',
-      lbMaterial: '재료',
-      lbSize: '크기',
-      lbYear: '연도',
-      lbImage: '이미지',
-      lbZoom: '줌',
-      openImage: '이미지 열기',
-      openZoom: '줌 열기',
-      detail: '상세 보기',
-      sortOptions: ['기본순','번호 늦은순','최신순']
+      heroModeLine: '한국어 기준', statDescTotal: '전체 작품 수', statDescFiltered: '현재 검색 결과', statDescSections: '섹션 수',
+      placeholderSearch: 'ID, 제목, 재료, 연도, 섹션 검색', resetBtn: '초기화', focusSearchBtn: '검색 집중', statusIdle: '대기 중',
+      statusLoading: '준비됨', statusLoaded: '로드 완료', statusFailed: '로드 실패', resultUnit: '점', renderedPrefix: '표시 ', renderedSuffix: '점',
+      activeFilterNone: '필터 없음', filteredPrefix: '필터 적용됨', searchPrefix: '검색', sectionPrefix: '섹션', emptyState: '조건에 맞는 작품이 없습니다.',
+      loadMore: '더 보기', footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json', untitled: '무제 / 캡션 없음',
+      noInfo: '정보 없음', allSections: '전체 섹션', lbMaterial: '재료', lbSize: '크기', lbYear: '연도', lbImage: '이미지', lbZoom: '줌',
+      openImage: '이미지 열기', openZoom: '줌 열기', detail: '상세 보기', sortOptions: ['기본순','번호 늦은순','최신순']
     },
     en: {
-      heroModeLine: 'English mode',
-      statDescTotal: 'Total works',
-      statDescFiltered: 'Current results',
-      statDescSections: 'Section count',
-      placeholderSearch: 'Search ID, title, material, year, section',
-      resetBtn: 'Reset',
-      focusSearchBtn: 'Focus',
-      statusIdle: 'Idle',
-      statusLoading: 'Ready',
-      statusLoaded: 'Loaded',
-      statusFailed: 'Failed',
-      resultUnit: ' works',
-      renderedPrefix: 'Visible ',
-      renderedSuffix: '',
-      activeFilterNone: 'No filters',
-      filteredPrefix: 'Filtered',
-      searchPrefix: 'Search',
-      sectionPrefix: 'Section',
-      emptyState: 'No artworks match the current filters.',
-      loadMore: 'Load more',
-      footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-      untitled: 'Untitled / No Caption',
-      noInfo: 'No information',
-      allSections: 'All sections',
-      lbMaterial: 'Material',
-      lbSize: 'Size',
-      lbYear: 'Year',
-      lbImage: 'Image',
-      lbZoom: 'Zoom',
-      openImage: 'Open image',
-      openZoom: 'Open zoom',
-      detail: 'View detail',
-      sortOptions: ['Default','Late ID','Newest']
+      heroModeLine: 'English mode', statDescTotal: 'Total works', statDescFiltered: 'Current results', statDescSections: 'Section count',
+      placeholderSearch: 'Search ID, title, material, year, section', resetBtn: 'Reset', focusSearchBtn: 'Focus', statusIdle: 'Idle',
+      statusLoading: 'Ready', statusLoaded: 'Loaded', statusFailed: 'Failed', resultUnit: ' works', renderedPrefix: 'Visible ', renderedSuffix: '',
+      activeFilterNone: 'No filters', filteredPrefix: 'Filtered', searchPrefix: 'Search', sectionPrefix: 'Section', emptyState: 'No artworks match the current filters.',
+      loadMore: 'Load more', footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json', untitled: 'Untitled / No Caption',
+      noInfo: 'No information', allSections: 'All sections', lbMaterial: 'Material', lbSize: 'Size', lbYear: 'Year', lbImage: 'Image', lbZoom: 'Zoom',
+      openImage: 'Open image', openZoom: 'Open zoom', detail: 'View detail', sortOptions: ['Default','Late ID','Newest']
     },
     both: {
-      heroModeLine: 'KR / EN',
-      statDescTotal: '전체 작품 수 / Total works',
-      statDescFiltered: '현재 검색 결과 / Current results',
-      statDescSections: '섹션 수 / Section count',
-      placeholderSearch: 'ID, 제목, title, 재료, material, year, section',
-      resetBtn: '초기화 / Reset',
-      focusSearchBtn: '검색 / Focus',
-      statusIdle: '대기 / Idle',
-      statusLoading: '준비됨 / Ready',
-      statusLoaded: '로드 완료 / Loaded',
-      statusFailed: '로드 실패 / Failed',
-      resultUnit: '점 / works',
-      renderedPrefix: '표시 / Visible ',
-      renderedSuffix: '',
-      activeFilterNone: '필터 없음 / No filters',
-      filteredPrefix: '필터 적용됨 / Filtered',
-      searchPrefix: '검색 / Search',
-      sectionPrefix: '섹션 / Section',
-      emptyState: '조건에 맞는 작품이 없습니다 / No artworks match the current filters.',
-      loadMore: '더 보기 / Load more',
-      footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-      untitled: '무제 / Untitled',
-      noInfo: '정보 없음 / No information',
-      allSections: '전체 섹션 / All sections',
-      lbMaterial: '재료 / Material',
-      lbSize: '크기 / Size',
-      lbYear: '연도 / Year',
-      lbImage: '이미지 / Image',
-      lbZoom: '줌 / Zoom',
-      openImage: '이미지 열기 / Open image',
-      openZoom: '줌 열기 / Open zoom',
-      detail: '상세 보기 / View detail',
-      sortOptions: ['기본순 / Default','번호 늦은순 / Late ID','최신순 / Newest']
+      heroModeLine: 'KR / EN', statDescTotal: '전체 작품 수 / Total works', statDescFiltered: '현재 검색 결과 / Current results', statDescSections: '섹션 수 / Section count',
+      placeholderSearch: 'ID, 제목, title, 재료, material, year, section', resetBtn: '초기화 / Reset', focusSearchBtn: '검색 / Focus', statusIdle: '대기 / Idle',
+      statusLoading: '준비됨 / Ready', statusLoaded: '로드 완료 / Loaded', statusFailed: '로드 실패 / Failed', resultUnit: '점 / works', renderedPrefix: '표시 / Visible ', renderedSuffix: '',
+      activeFilterNone: '필터 없음 / No filters', filteredPrefix: '필터 적용됨 / Filtered', searchPrefix: '검색 / Search', sectionPrefix: '섹션 / Section', emptyState: '조건에 맞는 작품이 없습니다 / No artworks match the current filters.',
+      loadMore: '더 보기 / Load more', footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json', untitled: '무제 / Untitled',
+      noInfo: '정보 없음 / No information', allSections: '전체 섹션 / All sections', lbMaterial: '재료 / Material', lbSize: '크기 / Size', lbYear: '연도 / Year', lbImage: '이미지 / Image', lbZoom: '줌 / Zoom',
+      openImage: '이미지 열기 / Open image', openZoom: '줌 열기 / Open zoom', detail: '상세 보기 / View detail', sortOptions: ['기본순 / Default','번호 늦은순 / Late ID','최신순 / Newest']
     }
   };
 
   const state = {
     all: [],
     filtered: [],
-    sections: [],
     visibleCount: getInitialVisibleCount(),
     query: '',
     section: 'all',
@@ -1608,54 +1538,20 @@
   let CURRENT_LIST = [];
   let searchTimer = null;
   let archiveScrollY = 0;
+  let lightboxIndex = -1;
 
   const els = {
-    statTotal: byId('statTotal'),
-    statFiltered: byId('statFiltered'),
-    statSections: byId('statSections'),
-    statDescTotal: byId('statDescTotal'),
-    statDescFiltered: byId('statDescFiltered'),
-    statDescSections: byId('statDescSections'),
-    heroModeLine: byId('heroModeLine'),
-    searchInput: byId('searchInput'),
-    sectionSelect: byId('sectionSelect'),
-    sortSelect: byId('sortSelect'),
-    resetBtn: byId('resetBtn'),
-    focusSearchBtn: byId('focusSearchBtn'),
-    sourcePill: byId('sourcePill'),
-    loadedPill: byId('loadedPill'),
-    statusText: byId('statusText'),
-    resultText: byId('resultText'),
-    renderedText: byId('renderedText'),
-    activeFilterText: byId('activeFilterText'),
-    grid: byId('grid'),
-    emptyState: byId('emptyState'),
-    loadWrap: byId('loadWrap'),
-    loadMoreBtn: byId('loadMoreBtn'),
-    footerNote: byId('footerNote'),
-    lightbox: byId('lightbox'),
-    lightboxClose: byId('viewerCloseBtn') || byId('lightboxClose'),
-    lightboxImage: byId('lightboxImage'),
-    lbId: byId('lbId'),
-    lbTitle: byId('lbTitle'),
-    lbSection: byId('lbSection'),
-    lbMaterialVal: byId('lbMaterial'),
-    lbSizeVal: byId('lbSize'),
-    lbYearVal: byId('lbYear'),
-    lbImagePath: byId('lbImagePath'),
-    lbZoomPath: byId('lbZoomPath'),
-    lbOpenImage: byId('lbOpenImage'),
-    lbOpenZoom: byId('lbOpenZoom'),
-    lbKeyMaterial: byId('lbKeyMaterial'),
-    lbKeySize: byId('lbKeySize'),
-    lbKeyYear: byId('lbKeyYear'),
-    lbKeyImage: byId('lbKeyImage'),
-    lbKeyZoom: byId('lbKeyZoom'),
-    entryBtn: byId('entryBtn'),
-    archiveHomeLink: byId('archiveHomeLink'),
-    searchArea: byId('searchArea'),
-    langTabs: Array.from(document.querySelectorAll('.lang-tab')),
-    sectionButtons: Array.from(document.querySelectorAll('.section-btn'))
+    statTotal: byId('statTotal'), statFiltered: byId('statFiltered'), statSections: byId('statSections'),
+    statDescTotal: byId('statDescTotal'), statDescFiltered: byId('statDescFiltered'), statDescSections: byId('statDescSections'),
+    heroModeLine: byId('heroModeLine'), searchInput: byId('searchInput'), sectionSelect: byId('sectionSelect'), sortSelect: byId('sortSelect'),
+    resetBtn: byId('resetBtn'), focusSearchBtn: byId('focusSearchBtn'), sourcePill: byId('sourcePill'), loadedPill: byId('loadedPill'), statusText: byId('statusText'),
+    resultText: byId('resultText'), renderedText: byId('renderedText'), activeFilterText: byId('activeFilterText'), grid: byId('grid'), emptyState: byId('emptyState'),
+    loadWrap: byId('loadWrap'), loadMoreBtn: byId('loadMoreBtn'), footerNote: byId('footerNote'), lightbox: byId('lightbox'),
+    lightboxClose: byId('viewerCloseBtn') || byId('lightboxClose'), lightboxImage: byId('lightboxImage'), lbId: byId('lbId'), lbTitle: byId('lbTitle'), lbSection: byId('lbSection'),
+    lbMaterialVal: byId('lbMaterial'), lbSizeVal: byId('lbSize'), lbYearVal: byId('lbYear'), lbImagePath: byId('lbImagePath'), lbZoomPath: byId('lbZoomPath'),
+    lbOpenImage: byId('lbOpenImage'), lbOpenZoom: byId('lbOpenZoom'), lbKeyMaterial: byId('lbKeyMaterial'), lbKeySize: byId('lbKeySize'), lbKeyYear: byId('lbKeyYear'),
+    lbKeyImage: byId('lbKeyImage'), lbKeyZoom: byId('lbKeyZoom'), entryBtn: byId('entryBtn'), archiveHomeLink: byId('archiveHomeLink'), searchArea: byId('searchArea'),
+    langTabs: Array.from(document.querySelectorAll('.lang-tab')), sectionButtons: Array.from(document.querySelectorAll('.section-btn'))
   };
 
   const lazyImageObserver = 'IntersectionObserver' in window
@@ -1669,225 +1565,109 @@
     : null;
 
   function byId(id){ return document.getElementById(id); }
-
-  function getInitialVisibleCount(){
-    return window.matchMedia('(max-width: 768px)').matches ? MOBILE_FIRST_RENDER_COUNT : DESKTOP_FIRST_RENDER_COUNT;
-  }
-
-  function t(key){
-    return (uiText[state.lang] && uiText[state.lang][key]) || uiText.kr[key] || '';
-  }
-
-  function safeText(v){
-    return v === null || v === undefined ? '' : String(v).trim();
-  }
-
-  function escapeHTML(value){
-    return String(value ?? '')
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;')
-      .replace(/'/g,'&#039;');
-  }
-
-  function toAbsoluteUrl(path){
-    const clean = safeText(path);
-    if(!clean) return '';
-    if(/^https?:\/\//i.test(clean)) return clean;
-    return new URL(clean.replace(/^\/+/, ''), SITE_ROOT).href;
-  }
-
+  function getInitialVisibleCount(){ return window.matchMedia('(max-width: 768px)').matches ? MOBILE_FIRST_RENDER_COUNT : DESKTOP_FIRST_RENDER_COUNT; }
+  function t(key){ return (uiText[state.lang] && uiText[state.lang][key]) || uiText.kr[key] || ''; }
+  function safeText(v){ return v === null || v === undefined ? '' : String(v).trim(); }
+  function escapeHTML(value){ return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+  function toAbsoluteUrl(path){ const clean = safeText(path); if(!clean) return ''; if(/^https?:\/\//i.test(clean)) return clean; return new URL(clean.replace(/^\/+/, ''), SITE_ROOT).href; }
   function withCacheBust(url){
     const clean = safeText(url);
     if(!clean || clean.startsWith('data:') || clean.startsWith('blob:')) return clean;
-    return `${clean}${clean.includes('?') ? '&' : '?'}v=${ASSET_VERSION}`;
+    const joiner = clean.includes('?') ? '&' : '?';
+    return `${clean}${joiner}v=${ASSET_VERSION}`;
   }
-
-  function formatNumber(n){
-    return new Intl.NumberFormat('ko-KR').format(Number(n || 0));
-  }
+  function formatNumber(n){ return new Intl.NumberFormat('ko-KR').format(Number(n || 0)); }
 
   function normalizeSearchText(value){
-    return safeText(value)
-      .toLowerCase()
-      .normalize('NFKD')
-      .replace(/[\u0300-\u036f]/g,'')
-      .replace(/\s+/g,' ')
-      .trim();
+    return safeText(value).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
   }
 
-  function compactSearchToken(value){
-    return normalizeSearchText(value).replace(/[-_\s\.]/g,'');
-  }
+  function compactSearchToken(value){ return normalizeSearchText(value).replace(/[-_\s\.]/g,''); }
 
-  function parseYearNumbers(year){
-    return (String(year || '').match(/\d{4}/g) || [])
-      .map(v => parseInt(v,10))
-      .filter(Number.isFinite);
-  }
-
-  function parseYearEndNumber(year){
-    const nums = parseYearNumbers(year);
-    return nums.length ? nums[nums.length - 1] : 0;
-  }
-
-  function parseIdNumber(id){
-    const match = safeText(id).match(/(\d+)(?!.*\d)/);
-    return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
-  }
-
-  function parseIdPrefix(id){
-    return safeText(id).toUpperCase().replace(/[-_\s]*\d+.*$/,'');
-  }
+  function parseYearNumbers(year){ return (String(year || '').match(/\d{4}/g) || []).map(v => parseInt(v,10)).filter(Number.isFinite); }
+  function parseYearEndNumber(year){ const nums = parseYearNumbers(year); return nums.length ? nums[nums.length - 1] : 0; }
+  function parseIdNumber(id){ const match = safeText(id).match(/(\d+)(?!.*\d)/); return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER; }
+  function parseIdPrefix(id){ return safeText(id).toUpperCase().replace(/[-_\s]*\d+.*$/,''); }
 
   function compareIdNatural(a,b,direction='asc'){
-    const ap = parseIdPrefix(a.id);
-    const bp = parseIdPrefix(b.id);
+    const ap = parseIdPrefix(a.id), bp = parseIdPrefix(b.id);
     const pc = ap.localeCompare(bp, 'ko', { numeric:true, sensitivity:'base' });
     if(pc !== 0) return direction === 'desc' ? -pc : pc;
-
-    const an = parseIdNumber(a.id);
-    const bn = parseIdNumber(b.id);
+    const an = parseIdNumber(a.id), bn = parseIdNumber(b.id);
     if(an !== bn) return direction === 'desc' ? bn - an : an - bn;
-
     const rc = safeText(a.id).localeCompare(safeText(b.id), 'ko', { numeric:true, sensitivity:'base' });
     return direction === 'desc' ? -rc : rc;
   }
 
   function normalizeWork(raw, index){
     const work = { ...raw };
-
     work.id = safeText(work.id) || `WORK-${String(index + 1).padStart(4,'0')}`;
-
-    /*
-      IMPORTANT:
-      섹션은 추론하지 않는다.
-      section_kr / section_en 문자열로 덮어쓰지 않는다.
-      works.json 안의 section_id, section_kr, section_en을 그대로 신뢰한다.
-    */
-    work.section_id = Number.isFinite(Number(raw.section_id)) ? Number(raw.section_id) : 999;
-    work.section_kr = safeText(raw.section_kr);
-    work.section_en = safeText(raw.section_en);
-
-    work.title_kr = safeText(raw.title_kr);
-    work.title_en = safeText(raw.title_en);
-    work.material_kr = safeText(raw.material_kr);
-    work.material_en = safeText(raw.material_en);
-    work.size_kr = safeText(raw.size_kr);
-    work.size_en = safeText(raw.size_en);
-    work.year = safeText(raw.year);
-    work.image = safeText(raw.image);
-    work.zoom = safeText(raw.zoom || raw.image);
-    work.status = safeText(raw.status);
+    work.section_id = Number.isFinite(Number(work.section_id)) ? Number(work.section_id) : inferSectionId(work);
+    work._index = index;
+    work._key = String(work.section_id) + "::" + work.id + "::" + String(index);
+    const mapped = SECTION_MAP[work.section_id] || {};
+    work.section_kr = safeText(work.section_kr) || mapped.kr || '';
+    work.section_en = safeText(work.section_en) || mapped.en || '';
+    work.title_kr = safeText(work.title_kr);
+    work.title_en = safeText(work.title_en);
+    work.material_kr = safeText(work.material_kr);
+    work.material_en = safeText(work.material_en);
+    work.size_kr = safeText(work.size_kr);
+    work.size_en = safeText(work.size_en);
+    work.year = safeText(work.year);
+    work.image = safeText(work.image);
+    work.zoom = safeText(work.zoom || work.image);
+    work.status = safeText(work.status);
     work._yearEnd = parseYearEndNumber(work.year);
-    work._sourceIndex = index;
-
     work._searchText = normalizeSearchText([
-      work.id,
-      compactSearchToken(work.id),
-      work.title_kr,
-      work.title_en,
-      work.material_kr,
-      work.material_en,
-      work.size_kr,
-      work.size_en,
-      work.year,
-      work.section_kr,
-      work.section_en,
-      String(work.section_id)
+      work.id, compactSearchToken(work.id), work.title_kr, work.title_en, work.material_kr, work.material_en,
+      work.size_kr, work.size_en, work.year, work.section_kr, work.section_en, mapped.kr, mapped.en
     ].join(' '));
-
     return work;
   }
 
-  function buildSectionsFromWorks(works){
-    const map = new Map();
-
-    works.forEach((work) => {
-      const sid = Number(work.section_id);
-      if(!Number.isFinite(sid)) return;
-
-      if(!map.has(sid)){
-        map.set(sid, {
-          id: sid,
-          kr: safeText(work.section_kr) || `Section ${sid}`,
-          en: safeText(work.section_en) || safeText(work.section_kr) || `Section ${sid}`,
-          count: 0
-        });
-      }
-
-      const entry = map.get(sid);
-      entry.count += 1;
-
-      if(!entry.kr && safeText(work.section_kr)) entry.kr = safeText(work.section_kr);
-      if(!entry.en && safeText(work.section_en)) entry.en = safeText(work.section_en);
-    });
-
-    return Array.from(map.values()).sort((a,b) => a.id - b.id);
-  }
-
-  function getSectionRecord(sectionId){
-    const sid = Number(sectionId);
-    return state.sections.find(sec => Number(sec.id) === sid) || null;
-  }
-
-  function getSectionTextByWork(work){
-    const kr = safeText(work.section_kr);
-    const en = safeText(work.section_en);
-
-    if(state.lang === 'en') return en || kr || `Section ${work.section_id}`;
-    if(state.lang === 'both'){
-      if(kr && en && kr !== en) return `${kr} / ${en}`;
-      return kr || en || `Section ${work.section_id}`;
-    }
-    return kr || en || `섹션 ${work.section_id}`;
+  function inferSectionId(work){
+    const text = `${work.section_kr || ''} ${work.section_en || ''} ${work.id || ''}`.toLowerCase();
+    if(text.includes('origin') || text.includes('기원') || safeText(work.id).toUpperCase().startsWith('OR-')) return 0;
+    if(text.includes('pray') || text.includes('기도')) return 1;
+    if(text.includes('human') || text.includes('인간')) return 2;
+    if(text.includes('rebirth') || text.includes('재탄생') || text.includes('정신')) return 3;
+    if(text.includes('restoration') || text.includes('회복') || text.includes('존재')) return 4;
+    if(text.includes('metaconsciousness') || text.includes('초의식') || text.includes('빛')) return 5;
+    return 999;
   }
 
   function getSectionTextById(sectionId){
-    const sec = getSectionRecord(sectionId);
+    const sec = SECTION_MAP[sectionId];
     if(!sec) return state.lang === 'en' ? 'Unsorted' : (state.lang === 'both' ? '미분류 / Unsorted' : '미분류');
-    if(state.lang === 'en') return sec.en || sec.kr || `Section ${sec.id}`;
-    if(state.lang === 'both'){
-      if(sec.kr && sec.en && sec.kr !== sec.en) return `${sec.kr} / ${sec.en}`;
-      return sec.kr || sec.en || `Section ${sec.id}`;
-    }
-    return sec.kr || sec.en || `섹션 ${sec.id}`;
+    if(state.lang === 'en') return sec.en;
+    if(state.lang === 'both') return `${sec.kr} / ${sec.en}`;
+    return sec.kr;
   }
 
   function getTitle(work){
-    const kr = safeText(work.title_kr);
-    const en = safeText(work.title_en);
+    const kr = safeText(work.title_kr), en = safeText(work.title_en);
     if(state.lang === 'en') return en || kr || '';
     if(state.lang === 'both') return kr && en && kr !== en ? `${kr} / ${en}` : (kr || en || '');
     return kr || en || '';
   }
 
   function getMaterial(work){
-    const kr = safeText(work.material_kr);
-    const en = safeText(work.material_en);
+    const kr = safeText(work.material_kr), en = safeText(work.material_en);
     if(state.lang === 'en') return en || kr;
     if(state.lang === 'both') return kr && en && kr !== en ? `${kr} / ${en}` : (kr || en);
     return kr || en;
   }
 
   function getSize(work){
-    const kr = safeText(work.size_kr);
-    const en = safeText(work.size_en);
+    const kr = safeText(work.size_kr), en = safeText(work.size_en);
     if(state.lang === 'en') return en || kr;
     if(state.lang === 'both') return kr && en && kr !== en ? `${kr} / ${en}` : (kr || en);
     return kr || en;
   }
 
-  function getYear(work){
-    return safeText(work.year);
-  }
-
-  function getOriginTitle(){
-    if(state.lang === 'en') return 'Untitled';
-    if(state.lang === 'both') return '무제 / Untitled';
-    return '무제';
-  }
+  function getYear(work){ return safeText(work.year); }
+  function getOriginTitle(){ if(state.lang === 'en') return 'Untitled'; if(state.lang === 'both') return '무제 / Untitled'; return '무제'; }
 
   function normalizeStatus(status){
     const value = safeText(status).toLowerCase();
@@ -1906,10 +1686,7 @@
     return '';
   }
 
-  function getInquiryText(){
-    return state.lang === 'en' ? 'inquiry via email →' : (state.lang === 'both' ? '이메일 문의 → / inquiry via email →' : '이메일 문의 →');
-  }
-
+  function getInquiryText(){ return state.lang === 'en' ? 'inquiry via email →' : (state.lang === 'both' ? '이메일 문의 → / inquiry via email →' : '이메일 문의 →'); }
   function getInquiryLink(workId){
     const subject = encodeURIComponent(`Artwork Inquiry — ${workId}`);
     const body = encodeURIComponent(`Hello,\n\nI would like to inquire about this artwork.\n\nArtwork ID: ${workId}`);
@@ -1921,33 +1698,24 @@
     const status = normalizeStatus(work.status || 'available');
     const label = getStatusLabel(status);
     if(!label) return '';
-
     if(status === 'available'){
       return `<div class="work-status"><div class="status-label">${escapeHTML(label)}</div><a href="${escapeHTML(getInquiryLink(work.id))}" class="status-inquiry">${escapeHTML(getInquiryText())}</a></div>`;
     }
-
     return `<div class="work-status"><div class="status-label">${escapeHTML(label)}</div></div>`;
   }
 
   function sortWorks(list){
     const arr = list.slice();
-
     if(state.sort === 'year-desc'){
       return arr.sort((a,b) => {
-        const ya = Number(a._yearEnd || 0);
-        const yb = Number(b._yearEnd || 0);
+        const ya = Number(a._yearEnd || 0), yb = Number(b._yearEnd || 0);
         if(ya !== yb) return yb - ya;
         return compareIdNatural(a,b,'asc');
       });
     }
-
-    if(state.sort === 'id-desc'){
-      return arr.sort((a,b) => compareIdNatural(a,b,'desc'));
-    }
-
+    if(state.sort === 'id-desc') return arr.sort((a,b) => compareIdNatural(a,b,'desc'));
     return arr.sort((a,b) => {
-      const sa = Number(a.section_id ?? 999);
-      const sb = Number(b.section_id ?? 999);
+      const sa = Number(a.section_id ?? 999), sb = Number(b.section_id ?? 999);
       if(sa !== sb) return sa - sb;
       return compareIdNatural(a,b,'asc');
     });
@@ -1955,22 +1723,20 @@
 
   function getFilteredWorks(){
     let list = state.all.slice();
-
     if(state.section !== 'all'){
       const sid = Number(state.section);
       list = list.filter(work => Number(work.section_id) === sid);
     }
-
     if(state.query){
       const q = normalizeSearchText(state.query);
       list = list.filter(work => work._searchText.includes(q));
     }
-
     return sortWorks(list);
   }
 
   function createCardHTML(work){
     const id = safeText(work.id);
+    const key = safeText(work._key || (String(work.section_id) + "::" + work.id + "::" + String(work._index || 0)));
     const image = withCacheBust(toAbsoluteUrl(work.image));
     const zoom = withCacheBust(toAbsoluteUrl(work.zoom || work.image));
     const rawTitle = getTitle(work);
@@ -1978,13 +1744,12 @@
     const material = getMaterial(work);
     const size = getSize(work);
     const year = getYear(work);
-    const sectionText = getSectionTextByWork(work);
+    const sectionText = getSectionTextById(Number(work.section_id));
     const caption = [material, size, year].filter(Boolean).join(' · ') || t('noInfo');
-
     return `
-      <article class="card" tabindex="0" role="button" data-work-id="${escapeHTML(id)}" data-section-id="${Number(work.section_id ?? 999)}" aria-label="${escapeHTML(id + ' ' + title)}">
+      <article class="card" tabindex="0" role="button" data-work-key="${escapeHTML(key)}" data-work-id="${escapeHTML(id)}" data-section-id="${Number(work.section_id ?? -1)}" aria-label="${escapeHTML(id + ' ' + title)}">
         <div class="thumb-wrap">
-          <img class="thumb" data-work-id="${escapeHTML(id)}" data-src="${escapeHTML(image)}" data-zoom="${escapeHTML(zoom)}" src="${SVG_PLACEHOLDER}" alt="${escapeHTML(title || id || 'Artwork')}" loading="lazy" decoding="async">
+          <img class="thumb" data-src="${escapeHTML(image)}" data-zoom="${escapeHTML(zoom)}" src="${SVG_PLACEHOLDER}" alt="${escapeHTML(title || id || 'Artwork')}" loading="lazy" decoding="async">
           <div class="detail-hover">${escapeHTML(t('detail'))}</div>
         </div>
         <div class="card-body">
@@ -2001,42 +1766,40 @@
 
   function loadLazyImage(img){
     const src = img && img.dataset ? img.dataset.src : '';
-    const boundId = img && img.dataset ? safeText(img.dataset.workId) : '';
     if(!src || img.dataset.loaded === '1') return;
-
+    const card = img.closest('.card');
+    const boundId = card ? safeText(card.dataset.workKey) : '';
     img.dataset.loaded = '1';
-
     const test = new Image();
     test.decoding = 'async';
-
     test.onload = () => {
-      if(safeText(img.dataset.workId) !== boundId) return;
+      const currentCard = img.closest('.card');
+      const currentId = currentCard ? safeText(currentCard.dataset.workKey) : '';
+      if(currentId !== boundId) return;
       img.src = src;
       img.classList.add('is-loaded');
     };
-
     test.onerror = () => {
-      if(safeText(img.dataset.workId) !== boundId) return;
+      const currentCard = img.closest('.card');
+      const currentId = currentCard ? safeText(currentCard.dataset.workKey) : '';
+      if(currentId !== boundId) return;
       img.src = SVG_PLACEHOLDER;
       img.classList.add('is-error');
     };
-
     test.src = src;
   }
 
   function updateStatsAndMeta(source, visible){
+    const sections = new Set(state.all.map(w => Number(w.section_id)).filter(n => Number.isFinite(n) && n !== 999));
     els.statTotal.textContent = formatNumber(state.all.length);
     els.statFiltered.textContent = formatNumber(source.length);
-    els.statSections.textContent = formatNumber(state.sections.length);
+    els.statSections.textContent = formatNumber(sections.size);
     els.loadedPill.textContent = `Data: ${formatNumber(state.all.length)} items`;
-
-    els.resultText.textContent = `${formatNumber(source.length)}${t('resultUnit')}`;
+    els.resultText.textContent = state.lang === 'en' ? `${formatNumber(source.length)}${t('resultUnit')}` : `${formatNumber(source.length)}${t('resultUnit')}`;
     els.renderedText.textContent = `${t('renderedPrefix')}${formatNumber(visible.length)}${t('renderedSuffix')}`;
-
     const filters = [];
     if(state.section !== 'all') filters.push(`${t('sectionPrefix')}: ${getSectionTextById(Number(state.section))}`);
     if(state.query) filters.push(`${t('searchPrefix')}: ${state.query}`);
-
     els.activeFilterText.textContent = filters.length ? `${t('filteredPrefix')}: ${filters.join(' / ')}` : t('activeFilterNone');
     els.emptyState.hidden = source.length !== 0;
     els.emptyState.textContent = t('emptyState');
@@ -2046,39 +1809,27 @@
 
   function render(){
     if(!els.grid) return;
-
     const source = getFilteredWorks();
     state.filtered = source;
     CURRENT_LIST = source;
-
     const visible = source.slice(0, state.visibleCount);
-
     if(lazyImageObserver){
-      document.querySelectorAll('#grid img[data-src]').forEach(img => {
-        try { lazyImageObserver.unobserve(img); } catch(e){}
-      });
+      document.querySelectorAll('#grid img[data-src]').forEach(img => { try { lazyImageObserver.unobserve(img); } catch(e){} });
     }
-
     els.grid.innerHTML = '';
     els.grid.innerHTML = visible.map(work => createCardHTML(work)).join('');
-
     els.grid.querySelectorAll('img[data-src]').forEach(img => {
       if(lazyImageObserver) lazyImageObserver.observe(img);
       else loadLazyImage(img);
     });
-
     updateStatsAndMeta(source, visible);
   }
 
-  function resetVisibleAndRender(){
-    state.visibleCount = getInitialVisibleCount();
-    render();
-  }
+  function resetVisibleAndRender(){ state.visibleCount = getInitialVisibleCount(); render(); }
 
   function syncDataLanguage(root = document){
     root.querySelectorAll('[data-kr][data-en]').forEach(node => {
-      const kr = node.dataset.kr || '';
-      const en = node.dataset.en || '';
+      const kr = node.dataset.kr || '', en = node.dataset.en || '';
       if(node.tagName === 'INPUT' || node.tagName === 'TEXTAREA'){
         node.placeholder = state.lang === 'en' ? en : (state.lang === 'both' ? `${kr} / ${en}` : kr);
       } else {
@@ -2089,7 +1840,6 @@
 
   function updateStaticTexts(){
     syncDataLanguage();
-
     els.heroModeLine.textContent = t('heroModeLine');
     els.statDescTotal.textContent = t('statDescTotal');
     els.statDescFiltered.textContent = t('statDescFiltered');
@@ -2098,7 +1848,6 @@
     els.resetBtn.textContent = t('resetBtn');
     els.focusSearchBtn.textContent = t('focusSearchBtn');
     els.footerNote.textContent = t('footerNote');
-
     els.lbKeyMaterial.textContent = t('lbMaterial');
     els.lbKeySize.textContent = t('lbSize');
     els.lbKeyYear.textContent = t('lbYear');
@@ -2106,331 +1855,213 @@
     els.lbKeyZoom.textContent = t('lbZoom');
     els.lbOpenImage.textContent = t('openImage');
     els.lbOpenZoom.textContent = t('openZoom');
-
     setStatusByState();
-    populateSectionSelect();
-    updateSectionButtonsFromJson();
     updateSortLabels();
+    populateSectionSelect();
   }
 
   function updateSortLabels(){
-    const labels = t('sortOptions') || [];
-    Array.from(els.sortSelect.options).forEach((option, idx) => {
-      if(labels[idx]) option.textContent = labels[idx];
-    });
+    const labels = t('sortOptions');
+    Array.from(els.sortSelect.options).forEach((opt, i) => { if(labels[i]) opt.textContent = labels[i]; });
   }
 
   function populateSectionSelect(){
-    if(!els.sectionSelect) return;
-
-    const currentValue = state.section;
-    els.sectionSelect.innerHTML = '';
-
-    const allOption = document.createElement('option');
-    allOption.value = 'all';
-    allOption.textContent = t('allSections');
-    els.sectionSelect.appendChild(allOption);
-
-    state.sections.forEach(sec => {
-      const option = document.createElement('option');
-      option.value = String(sec.id);
-      option.textContent = state.lang === 'en'
-        ? (sec.en || sec.kr || `Section ${sec.id}`)
-        : state.lang === 'both'
-          ? ((sec.kr && sec.en && sec.kr !== sec.en) ? `${sec.kr} / ${sec.en}` : (sec.kr || sec.en || `Section ${sec.id}`))
-          : (sec.kr || sec.en || `섹션 ${sec.id}`);
-      els.sectionSelect.appendChild(option);
-    });
-
-    els.sectionSelect.value = currentValue;
-    if(els.sectionSelect.value !== currentValue){
-      els.sectionSelect.value = 'all';
-      state.section = 'all';
-    }
+    const current = state.section;
+    els.sectionSelect.innerHTML = `<option value="all">${escapeHTML(t('allSections'))}</option>` + Object.entries(SECTION_MAP).map(([id, sec]) => {
+      const label = state.lang === 'en' ? sec.en : (state.lang === 'both' ? `${sec.kr} / ${sec.en}` : sec.kr);
+      return `<option value="${escapeHTML(id)}">${escapeHTML(label)}</option>`;
+    }).join('');
+    els.sectionSelect.value = current;
   }
 
-  function updateSectionButtonsFromJson(){
-    const buttonWrap = byId('sectionButtons');
-    if(!buttonWrap) return;
-
-    /*
-      버튼도 works.json에서 실제 섹션 목록을 읽어 재구성한다.
-      HTML 구조의 영역은 유지하되, 버튼 내용은 JSON section_id / section_kr / section_en 기준.
-    */
-    buttonWrap.innerHTML = state.sections.map(sec => {
-      const label = state.lang === 'en'
-        ? (sec.en || sec.kr || `Section ${sec.id}`)
-        : state.lang === 'both'
-          ? ((sec.kr && sec.en && sec.kr !== sec.en) ? `${sec.kr}\n${sec.en}` : (sec.kr || sec.en || `Section ${sec.id}`))
-          : (sec.kr || sec.en || `섹션 ${sec.id}`);
-
-      return `<button class="section-btn${String(state.section) === String(sec.id) ? ' active' : ''}" type="button" data-section="${escapeHTML(String(sec.id))}">${escapeHTML(label)}</button>`;
-    }).join('');
-
-    els.sectionButtons = Array.from(buttonWrap.querySelectorAll('.section-btn'));
+  function updateSectionButtons(){
+    els.sectionButtons.forEach(btn => {
+      const active = String(btn.dataset.section) === String(state.section);
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      const kr = btn.dataset.kr || '', en = btn.dataset.en || '';
+      btn.textContent = state.lang === 'en' ? en : (state.lang === 'both' ? `${kr}\n${en}` : kr);
+    });
   }
 
   function setStatusByState(){
+    if(!els.statusText) return;
     if(state.loadState === 'loading') els.statusText.textContent = t('statusLoading');
     else if(state.loadState === 'loaded') els.statusText.textContent = t('statusLoaded');
     else if(state.loadState === 'failed') els.statusText.textContent = t('statusFailed');
     else els.statusText.textContent = t('statusIdle');
-
     els.statusText.classList.toggle('error', state.loadState === 'failed');
   }
 
-  function setLanguage(lang){
-    state.lang = lang;
-    els.langTabs.forEach(tab => {
-      const active = tab.dataset.lang === lang;
-      tab.classList.toggle('active', active);
-      tab.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-
-    updateStaticTexts();
-    render();
-
-    if(state.lightboxItem) openLightbox(state.lightboxItem, { preserveScroll: true });
-  }
-
-  function openLightbox(work, options = {}){
-    if(!work || !els.lightbox) return;
-
-    if(!options.preserveScroll) archiveScrollY = window.scrollY || window.pageYOffset || 0;
-
-    state.lightboxItem = work;
-
-    const image = withCacheBust(toAbsoluteUrl(work.zoom || work.image));
-    const standardImage = withCacheBust(toAbsoluteUrl(work.image));
-    const title = getTitle(work) || getOriginTitle();
-
-    els.lightboxImage.src = image || standardImage || SVG_PLACEHOLDER;
-    els.lightboxImage.alt = title || work.id || 'Artwork';
-    els.lbId.textContent = safeText(work.id) || '—';
-    els.lbTitle.textContent = title || t('untitled');
-    els.lbSection.textContent = getSectionTextByWork(work);
-    els.lbMaterialVal.textContent = getMaterial(work) || '—';
-    els.lbSizeVal.textContent = getSize(work) || '—';
-    els.lbYearVal.textContent = getYear(work) || '—';
-    els.lbImagePath.textContent = standardImage || '—';
-    els.lbZoomPath.textContent = image || '—';
-
-    els.lbOpenImage.href = standardImage || '#';
-    els.lbOpenZoom.href = image || standardImage || '#';
-
-    els.lightbox.classList.add('open', 'active');
-    els.lightbox.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('viewer-open');
-  }
-
-  function closeLightbox(event){
-    if(event){
-      event.preventDefault();
-      event.stopPropagation();
-      if(typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
-    }
-
-    if(!els.lightbox) return;
-
-    els.lightbox.classList.remove('open', 'active');
-    els.lightbox.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('viewer-open');
-    state.lightboxItem = null;
-
-    window.requestAnimationFrame(() => {
-      window.scrollTo({ top: archiveScrollY, left: 0, behavior: 'auto' });
-    });
-  }
-
-  function openViewerByOffset(offset){
-    if(!state.lightboxItem || !state.filtered.length) return;
-
-    const currentId = safeText(state.lightboxItem.id);
-    const currentIndex = state.filtered.findIndex(work => safeText(work.id) === currentId);
-    if(currentIndex < 0) return;
-
-    const nextIndex = (currentIndex + offset + state.filtered.length) % state.filtered.length;
-    openLightbox(state.filtered[nextIndex], { preserveScroll: true });
-  }
-
-  function resetArchive(){
-    state.query = '';
-    state.section = 'all';
-    state.sort = 'section-id-asc';
-    state.visibleCount = getInitialVisibleCount();
-
-    els.searchInput.value = '';
-    els.sectionSelect.value = 'all';
-    els.sortSelect.value = 'section-id-asc';
-
-    updateSectionButtonsFromJson();
-    render();
-  }
-
-  function bindEvents(){
-    els.langTabs.forEach(tab => {
-      tab.addEventListener('click', () => setLanguage(tab.dataset.lang || 'kr'));
-    });
-
-    els.entryBtn.addEventListener('click', () => {
-      els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      window.setTimeout(() => els.searchInput.focus({ preventScroll: true }), 260);
-    });
-
-    els.archiveHomeLink.addEventListener('click', (event) => {
-      event.preventDefault();
-      resetArchive();
-      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-    });
-
-    els.searchInput.addEventListener('input', () => {
-      window.clearTimeout(searchTimer);
-      searchTimer = window.setTimeout(() => {
-        state.query = safeText(els.searchInput.value);
-        resetVisibleAndRender();
-      }, SEARCH_DEBOUNCE_MS);
-    });
-
-    els.sectionSelect.addEventListener('change', () => {
-      state.section = els.sectionSelect.value || 'all';
-      updateSectionButtonsFromJson();
-      resetVisibleAndRender();
-    });
-
-    const buttonWrap = byId('sectionButtons');
-    buttonWrap.addEventListener('click', (event) => {
-      const button = event.target.closest('.section-btn');
-      if(!button) return;
-
-      state.section = button.dataset.section || 'all';
-      els.sectionSelect.value = state.section;
-      updateSectionButtonsFromJson();
-      resetVisibleAndRender();
-      els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-
-    els.sortSelect.addEventListener('change', () => {
-      state.sort = els.sortSelect.value || 'section-id-asc';
-      resetVisibleAndRender();
-    });
-
-    els.resetBtn.addEventListener('click', resetArchive);
-
-    els.focusSearchBtn.addEventListener('click', () => {
-      els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      window.setTimeout(() => els.searchInput.focus({ preventScroll: true }), 220);
-    });
-
-    els.loadMoreBtn.addEventListener('click', () => {
-      state.visibleCount += LOAD_MORE_COUNT;
-      render();
-    });
-
-    els.grid.addEventListener('click', (event) => {
-      if(event.target.closest('.status-inquiry')) return;
-
-      const card = event.target.closest('.card');
-      if(!card) return;
-
-      const id = safeText(card.dataset.workId);
-      const work = state.all.find(item => safeText(item.id) === id);
-      if(!work) return;
-
-      openLightbox(work);
-    });
-
-    els.grid.addEventListener('keydown', (event) => {
-      if(event.key !== 'Enter' && event.key !== ' ') return;
-
-      const card = event.target.closest('.card');
-      if(!card) return;
-
-      event.preventDefault();
-
-      const id = safeText(card.dataset.workId);
-      const work = state.all.find(item => safeText(item.id) === id);
-      if(!work) return;
-
-      openLightbox(work);
-    });
-
-    if(els.lightboxClose){
-      els.lightboxClose.addEventListener('click', closeLightbox, { capture: true });
-      els.lightboxClose.addEventListener('touchend', closeLightbox, { capture: true, passive: false });
-    }
-
-    els.lightbox.addEventListener('click', (event) => {
-      if(event.target === els.lightbox) closeLightbox(event);
-    });
-
-    document.addEventListener('keydown', (event) => {
-      if(!els.lightbox.classList.contains('open')) return;
-
-      if(event.key === 'Escape') closeLightbox(event);
-      if(event.key === 'ArrowRight') openViewerByOffset(1);
-      if(event.key === 'ArrowLeft') openViewerByOffset(-1);
-    });
-  }
-
-  async function loadArchiveData(){
+  async function loadWorks(){
     state.loadState = 'loading';
     setStatusByState();
-
     try{
       const response = await fetch(`${DATA_URL}?v=${Date.now()}`, { cache: 'no-store' });
       if(!response.ok) throw new Error(`HTTP ${response.status}`);
-
       const raw = await response.json();
-      const works = Array.isArray(raw) ? raw : Array.isArray(raw.works) ? raw.works : [];
-
+      const works = Array.isArray(raw) ? raw : (Array.isArray(raw.works) ? raw.works : []);
       state.all = works.map(normalizeWork);
       WORKS_DATA = state.all;
       WORKS_READY = true;
-      state.sections = buildSectionsFromWorks(state.all);
-      state.filtered = state.all.slice();
-      CURRENT_LIST = state.filtered;
-
       state.loadState = 'loaded';
-
       els.sourcePill.textContent = `Source: ${DATA_URL}`;
-      updateStaticTexts();
-      render();
       setStatusByState();
-    }catch(error){
+      resetVisibleAndRender();
+    } catch(error){
       console.error(error);
       state.loadState = 'failed';
       WORKS_READY = false;
       setStatusByState();
       els.grid.innerHTML = '';
       els.emptyState.hidden = false;
-      els.emptyState.textContent = t('statusFailed');
+      els.emptyState.textContent = 'works.json을 불러오지 못했습니다.';
     }
   }
 
-  function preventBrowserZoom(event){
-    if(event && typeof event.preventDefault === 'function') event.preventDefault();
-  }
-
-  ['gesturestart', 'gesturechange', 'gestureend'].forEach(type => {
-    document.addEventListener(type, preventBrowserZoom, { passive: false });
-    window.addEventListener(type, preventBrowserZoom, { passive: false });
-  });
-
-  document.addEventListener('touchmove', (event) => {
-    if(event.touches && event.touches.length > 1 && !document.body.classList.contains('viewer-open')){
-      event.preventDefault();
-    }
-  }, { passive: false });
-
-  document.addEventListener('DOMContentLoaded', () => {
+  function setLanguage(lang){
+    state.lang = ['kr','en','both'].includes(lang) ? lang : 'kr';
+    els.langTabs.forEach(tab => {
+      const active = tab.dataset.lang === state.lang;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
     updateStaticTexts();
+    updateSectionButtons();
+    render();
+    if(state.lightboxItem) openLightbox(state.lightboxItem, { keepOpen:true });
+  }
+
+  function openLightbox(work, options = {}){
+    if(!work) return;
+    state.lightboxItem = work;
+    lightboxIndex = state.filtered.findIndex(item => String(item._key) === String(work._key));
+    if(!options.keepOpen) archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    const image = withCacheBust(toAbsoluteUrl(work.zoom || work.image));
+    const fallbackImage = withCacheBust(toAbsoluteUrl(work.image));
+    const title = getTitle(work) || getOriginTitle();
+    els.lightboxImage.src = image || fallbackImage || SVG_PLACEHOLDER;
+    els.lightboxImage.alt = title || work.id || 'Artwork';
+    els.lightboxImage.onerror = () => { els.lightboxImage.src = fallbackImage || SVG_PLACEHOLDER; };
+    els.lbId.textContent = safeText(work.id) || '—';
+    els.lbTitle.textContent = title || t('untitled');
+    els.lbSection.textContent = getSectionTextById(Number(work.section_id));
+    els.lbMaterialVal.textContent = getMaterial(work) || t('noInfo');
+    els.lbSizeVal.textContent = getSize(work) || t('noInfo');
+    els.lbYearVal.textContent = getYear(work) || t('noInfo');
+    els.lbImagePath.textContent = fallbackImage || '—';
+    els.lbZoomPath.textContent = image || '—';
+    els.lbOpenImage.href = fallbackImage || '#';
+    els.lbOpenZoom.href = image || fallbackImage || '#';
+    els.lightbox.classList.add('open','active');
+    els.lightbox.setAttribute('aria-hidden','false');
+    document.body.classList.add('viewer-open');
+  }
+
+  function closeLightbox(e){
+    if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
+    els.lightbox.classList.remove('open','active');
+    els.lightbox.setAttribute('aria-hidden','true');
+    document.body.classList.remove('viewer-open');
+    state.lightboxItem = null;
+    window.requestAnimationFrame(() => window.scrollTo({ top: archiveScrollY, left:0, behavior:'auto' }));
+  }
+
+  function moveLightbox(offset){
+    if(!state.filtered.length || lightboxIndex < 0) return;
+    const next = (lightboxIndex + offset + state.filtered.length) % state.filtered.length;
+    openLightbox(state.filtered[next], { keepOpen:true });
+  }
+
+  function resetAll(){
+    state.query = '';
+    state.section = 'all';
+    state.sort = 'section-id-asc';
+    els.searchInput.value = '';
+    els.sectionSelect.value = 'all';
+    els.sortSelect.value = 'section-id-asc';
+    updateSectionButtons();
+    resetVisibleAndRender();
+  }
+
+  function bindEvents(){
+    els.entryBtn.addEventListener('click', () => els.searchArea.scrollIntoView({ behavior:'smooth', block:'start' }));
+    els.archiveHomeLink.addEventListener('click', (e) => { e.preventDefault(); resetAll(); window.scrollTo({ top:0, behavior:'smooth' }); });
+    els.langTabs.forEach(tab => tab.addEventListener('click', () => setLanguage(tab.dataset.lang)));
+    els.sectionButtons.forEach(btn => btn.addEventListener('click', () => {
+      state.section = String(btn.dataset.section);
+      els.sectionSelect.value = state.section;
+      updateSectionButtons();
+      resetVisibleAndRender();
+    }));
+    els.sectionSelect.addEventListener('change', () => { state.section = els.sectionSelect.value; updateSectionButtons(); resetVisibleAndRender(); });
+    els.sortSelect.addEventListener('change', () => { state.sort = els.sortSelect.value; resetVisibleAndRender(); });
+    els.searchInput.addEventListener('input', () => {
+      window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(() => { state.query = els.searchInput.value.trim(); resetVisibleAndRender(); }, SEARCH_DEBOUNCE_MS);
+    });
+    els.resetBtn.addEventListener('click', resetAll);
+    els.focusSearchBtn.addEventListener('click', () => { els.searchInput.focus(); els.searchInput.select(); });
+    els.loadMoreBtn.addEventListener('click', () => { state.visibleCount += LOAD_MORE_COUNT; render(); });
+
+    els.grid.onclick = function(e){
+      const inquiry = e.target.closest('.status-inquiry');
+      if(inquiry) return;
+      const card = e.target.closest('.card');
+      if(!card) return;
+      const key = card.dataset.workKey;
+      const work = state.all.find(w => String(w._key) === String(key));
+      if(!work) return;
+      openLightbox(work);
+    };
+
+    els.grid.addEventListener('keydown', (e) => {
+      if(e.key !== 'Enter' && e.key !== ' ') return;
+      const card = e.target.closest('.card');
+      if(!card) return;
+      e.preventDefault();
+      const key = card.dataset.workKey;
+      const work = state.all.find(w => String(w._key) === String(key));
+      if(work) openLightbox(work);
+    });
+
+    ['click','pointerdown','touchstart'].forEach(type => {
+      els.lightboxClose.addEventListener(type, closeLightbox, { passive:false });
+    });
+
+    els.lightbox.addEventListener('click', (e) => { if(e.target === els.lightbox) closeLightbox(e); });
+    document.addEventListener('keydown', (e) => {
+      if(!els.lightbox.classList.contains('open')) return;
+      if(e.key === 'Escape') closeLightbox(e);
+      if(e.key === 'ArrowRight') moveLightbox(1);
+      if(e.key === 'ArrowLeft') moveLightbox(-1);
+    });
+
+    let sx = 0, sy = 0, st = 0;
+    els.lightbox.addEventListener('touchstart', (e) => {
+      if(!e.touches || e.touches.length !== 1) return;
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
+    }, { passive:true });
+    els.lightbox.addEventListener('touchend', (e) => {
+      if(!e.changedTouches || e.changedTouches.length !== 1) return;
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.25 && Date.now() - st < 700){
+        dx < 0 ? moveLightbox(1) : moveLightbox(-1);
+      }
+    }, { passive:true });
+  }
+
+  function init(){
+    updateStaticTexts();
+    populateSectionSelect();
+    updateSectionButtons();
     bindEvents();
-    loadArchiveData();
-  });
+    loadWorks();
+  }
+
+  init();
 })();
 </script>
-</body>
-</html>
-
 </body>
 </html>

@@ -2097,6 +2097,8 @@
     (() => {
       'use strict';
 
+      if (window.__ARCHIVE_PRO_BOOTED__) return;
+      window.__ARCHIVE_PRO_BOOTED__ = true;
 
       /* PAGE ZOOM LOCK — keep whole Archive Pro viewport fixed.
          Lightbox image zoom still works through the existing custom viewerScale engine. */
@@ -2132,7 +2134,7 @@
       }, { passive: false });
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://dungzak.art/data/works.json';
+      const DATA_URL = 'data/works.json';
       const MIN_EXPECTED_WORKS = 100;
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const MOBILE_FIRST_RENDER_COUNT = 12;
@@ -3378,7 +3380,7 @@
         const imageSrc = withCacheBust(item.image || SVG_PLACEHOLDER);
         const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(item);
-        const priority = index < 2;
+        const priority = index < 12;
         const imgSrc = priority ? imageSrc : SVG_PLACEHOLDER;
         const dataSrc = priority ? '' : ' data-src="' + escapeHTML(imageSrc) + '"';
         const loading = priority ? 'eager' : 'lazy';
@@ -3429,8 +3431,12 @@
             try { lazyImageObserver.unobserve(img); } catch (_) {}
           });
         }
-        els.grid.innerHTML = '';
-        els.grid.innerHTML = items.map((item, index) => createCardHTML(item, index)).join('');
+
+        const template = document.createElement('template');
+        template.innerHTML = items.map((item, index) => createCardHTML(item, index)).join('');
+        const fragment = template.content;
+
+        els.grid.replaceChildren(fragment);
         syncDataLanguage(els.grid);
         observeLazyImages(els.grid);
       }
@@ -3480,12 +3486,14 @@
         renderGrid();
       }
 
+      let firstGridRenderScheduled = false;
+
       function scheduleFirstGridRender() {
+        if (firstGridRenderScheduled) return;
+        firstGridRenderScheduled = true;
         requestAnimationFrame(() => {
-          setTimeout(() => {
-            render();
-            scheduleFullSearchIndex();
-          }, 60);
+          renderGrid();
+          scheduleFullSearchIndex();
         });
       }
 
@@ -3747,7 +3755,7 @@
           Archive Pro Image Loading Zero-Lag Strategy:
           JSON is fetched once from the single source of truth.
           Images are not preloaded here; card thumbnails load only through
-          eager priority for the first 1-2 items and IntersectionObserver for the rest.
+          eager priority for the first 12 items and IntersectionObserver for the rest.
         */
         return [DATA_URL];
       }
@@ -4223,9 +4231,14 @@
       function startLoad() {
         if (archiveLoadStarted) return;
         archiveLoadStarted = true;
+
+        showArchiveShellImmediately();
         requestAnimationFrame(() => {
-          loadArchiveData();
+          rebuildStaticTexts();
+          updateStats();
         });
+
+        loadArchiveData();
       }
 
       if (document.readyState === 'loading') {

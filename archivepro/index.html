@@ -1935,6 +1935,85 @@
 
     }
 
+
+
+    /* ARCHIVE PRO LIGHTBOX DESKTOP ARROWS ONLY — viewport UI, no artwork overlap */
+    .lightbox-nav{
+      display:none;
+      position:fixed;
+      top:50%;
+      transform:translateY(-50%);
+      z-index:10020;
+      width:52px;
+      height:72px;
+      min-width:52px;
+      min-height:72px;
+      border-radius:999px;
+      border:1px solid rgba(212,180,109,.30);
+      background:rgba(7,10,20,.58);
+      color:var(--gold);
+      font-size:34px;
+      line-height:1;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+      box-shadow:0 12px 28px rgba(0,0,0,.30);
+      opacity:.82;
+      transition:opacity .16s ease, border-color .16s ease, background .16s ease;
+      touch-action:manipulation;
+    }
+
+    .lightbox-nav:hover{
+      opacity:1;
+      border-color:rgba(212,180,109,.56);
+      background:rgba(7,10,20,.76);
+      transform:translateY(-50%) !important;
+      box-shadow:0 12px 28px rgba(0,0,0,.30) !important;
+    }
+
+    .lightbox-nav:active{
+      opacity:.88;
+      transform:translateY(-50%) !important;
+    }
+
+    .lightbox-nav:focus-visible{
+      outline:1px solid var(--gold);
+      outline-offset:3px;
+    }
+
+    @media (min-width:881px){
+      .lightbox.open .lightbox-nav,
+      .lightbox.active .lightbox-nav{
+        display:flex;
+      }
+
+      .lightbox-prev{
+        left:max(18px, env(safe-area-inset-left));
+      }
+
+      .lightbox-next{
+        right:calc(380px + max(18px, env(safe-area-inset-right)));
+      }
+    }
+
+    @media (min-width:1181px){
+      .lightbox-next{
+        right:calc(380px + 24px + env(safe-area-inset-right));
+      }
+
+      .lightbox-prev{
+        left:calc(24px + env(safe-area-inset-left));
+      }
+    }
+
+    @media (max-width:880px){
+      .lightbox-nav{
+        display:none !important;
+      }
+    }
 </style>
 </head>
 <body>
@@ -2066,6 +2145,8 @@
 
   <div id="lightbox" class="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="작품 확대 보기">
     <button id="viewerCloseBtn" class="lightbox-close viewer-close" type="button" aria-label="닫기">×</button>
+    <button id="lightboxPrev" class="lightbox-nav lightbox-prev" type="button" aria-label="Previous artwork">‹</button>
+    <button id="lightboxNext" class="lightbox-nav lightbox-next" type="button" aria-label="Next artwork">›</button>
 
     <div class="lightbox-inner">
       <div class="lightbox-stage">
@@ -2429,6 +2510,8 @@
         footerNote: document.getElementById('footerNote'),
         lightbox: document.getElementById('lightbox'),
         lightboxClose: document.getElementById('viewerCloseBtn') || document.getElementById('lightboxClose'),
+        lightboxPrev: document.getElementById('lightboxPrev'),
+        lightboxNext: document.getElementById('lightboxNext'),
         lightboxImage: document.getElementById('lightboxImage'),
         lightboxStage: document.querySelector('.lightbox-stage'),
         lbId: document.getElementById('lbId'),
@@ -4029,6 +4112,20 @@
           els.lightboxClose.addEventListener('pointerup', consumeCloseTouch, { passive:false });
           els.lightboxClose.addEventListener('touchend', closeFromX, { passive:false });
           els.lightboxClose.addEventListener('click', closeFromX, { passive:false });
+        }
+
+        if (els.lightboxPrev) {
+          els.lightboxPrev.addEventListener('click', (e) => {
+            blockEvent(e);
+            prevViewer();
+          });
+        }
+
+        if (els.lightboxNext) {
+          els.lightboxNext.addEventListener('click', (e) => {
+            blockEvent(e);
+            nextViewer();
+          });
         }
 
         els.lightbox.addEventListener('click', (e) => {

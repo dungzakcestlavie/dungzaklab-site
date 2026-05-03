@@ -1936,13 +1936,9 @@
     }
 
 
-    /* ARCHIVE PRO LIGHTBOX LAPTOP/PC FINAL SIZE LOCK
-       Scope: only desktop/laptop lightbox image scale + arrows.
-       Purpose:
-       - Prevent oversized images in the two-column lightbox.
-       - Keep arrows visible only on laptop/PC.
-       - Keep arrows in safe gutters, not on artwork and not on metadata panel.
-       - Keep mobile behavior unchanged. */
+    /* ARCHIVE PRO LIGHTBOX LAPTOP/PC FINAL STABLE IMAGE LOCK
+       Fixes the momentary oversized flash before image returns to its correct size.
+       Only desktop/laptop lightbox image sizing + arrow position are affected. */
     .lightbox-nav{
       display:none !important;
     }
@@ -1963,6 +1959,7 @@
         justify-content:center !important;
         padding:74px 110px 42px 110px !important;
         overflow:hidden !important;
+        contain:layout paint size !important;
       }
 
       .lightbox-stage img,
@@ -1975,6 +1972,15 @@
         object-fit:contain !important;
         transform:translate3d(0,0,0) scale(1) !important;
         transform-origin:center center !important;
+        transition:none !important;
+      }
+
+      #lightboxImage.is-loading{
+        opacity:0 !important;
+      }
+
+      #lightboxImage.is-ready{
+        opacity:1 !important;
       }
 
       .lightbox.open .lightbox-nav,
@@ -3659,12 +3665,41 @@
         els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
 
         els.lightboxImage.alt = title;
+        els.lightboxImage.classList.remove('is-ready');
+        els.lightboxImage.classList.add('is-loading');
         els.lightboxImage.removeAttribute('src');
         els.lightboxImage.loading = 'eager';
         els.lightboxImage.decoding = 'async';
         els.lightboxImage.fetchPriority = 'high';
-        els.lightboxImage.onerror = () => { els.lightboxImage.src = SVG_PLACEHOLDER; };
-        els.lightboxImage.src = displayUrl;
+
+        if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
+          els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
+          els.lightboxImage.style.width = 'auto';
+          els.lightboxImage.style.height = 'auto';
+          els.lightboxImage.style.maxWidth = '';
+          els.lightboxImage.style.maxHeight = '';
+        }
+
+        els.lightboxImage.onload = () => {
+          resetViewerTransform();
+          if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
+            els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
+            els.lightboxImage.style.width = 'auto';
+            els.lightboxImage.style.height = 'auto';
+          }
+          els.lightboxImage.classList.remove('is-loading');
+          els.lightboxImage.classList.add('is-ready');
+        };
+
+        els.lightboxImage.onerror = () => {
+          els.lightboxImage.src = SVG_PLACEHOLDER;
+          els.lightboxImage.classList.remove('is-loading');
+          els.lightboxImage.classList.add('is-ready');
+        };
+
+        requestAnimationFrame(() => {
+          els.lightboxImage.src = displayUrl;
+        });
 
         if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
           els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
@@ -3724,7 +3759,7 @@
           els.lightbox.setAttribute('aria-hidden', 'true');
           els.lightbox.style.display = 'none';
         }
-        if (els.lightboxImage) els.lightboxImage.removeAttribute('src');
+        if (els.lightboxImage) { els.lightboxImage.classList.remove('is-loading', 'is-ready'); els.lightboxImage.removeAttribute('src'); }
         document.documentElement.classList.remove('viewer-open');
         document.body.classList.remove('viewer-open');
         document.body.style.overflow = '';

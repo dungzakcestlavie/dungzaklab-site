@@ -2517,6 +2517,140 @@
         justify-content:flex-start !important;
       }
     }
+
+
+    /* LOAD MORE / FILTER SEARCH FINAL BALANCE — distinct hierarchy, stable gold harmony */
+    body.archive-entered #loadWrap{
+      order:4;
+      padding:24px 0 30px !important;
+      margin:0 !important;
+      position:relative;
+    }
+
+    body.archive-entered #loadWrap::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      bottom:4px;
+      width:min(420px, 42vw);
+      height:1px;
+      transform:translateX(-50%);
+      background:linear-gradient(90deg, transparent, rgba(212,180,109,.16), transparent);
+      pointer-events:none;
+    }
+
+    #loadMoreBtn{
+      min-height:42px !important;
+      height:42px !important;
+      padding:0 24px !important;
+      border-radius:999px !important;
+      border:1px solid rgba(212,180,109,.28) !important;
+      background:rgba(212,180,109,.025) !important;
+      color:rgba(244,239,230,.76) !important;
+      font-size:13px !important;
+      font-weight:600 !important;
+      line-height:42px !important;
+      letter-spacing:.055em !important;
+      box-shadow:none !important;
+      transform:none !important;
+      opacity:.92 !important;
+    }
+
+    #loadMoreBtn:hover,
+    #loadMoreBtn:focus-visible{
+      color:rgba(212,180,109,.92) !important;
+      border-color:rgba(212,180,109,.46) !important;
+      background:rgba(212,180,109,.055) !important;
+      box-shadow:0 0 0 1px rgba(212,180,109,.05) !important;
+      transform:none !important;
+      outline:none !important;
+    }
+
+    body.archive-entered #filterToggleWrap{
+      margin:18px 0 14px !important;
+      padding:0 0 10px !important;
+      display:flex !important;
+      justify-content:center !important;
+      align-items:center !important;
+    }
+
+    #filterToggleBtn{
+      min-height:60px !important;
+      height:auto !important;
+      padding:0 42px !important;
+      border-radius:999px !important;
+      border:1px solid rgba(212,180,109,.62) !important;
+      background:linear-gradient(180deg, rgba(212,180,109,.18), rgba(212,180,109,.075)) !important;
+      color:#d4b46d !important;
+      font-size:18px !important;
+      font-weight:750 !important;
+      line-height:1.2 !important;
+      letter-spacing:.07em !important;
+      box-shadow:
+        0 0 0 1px rgba(212,180,109,.07),
+        0 12px 34px rgba(0,0,0,.24),
+        0 0 26px rgba(212,180,109,.16) !important;
+      transform:none !important;
+      opacity:1 !important;
+    }
+
+    #filterToggleBtn:hover,
+    #filterToggleBtn:focus-visible{
+      color:#f4efe6 !important;
+      border-color:rgba(212,180,109,.82) !important;
+      background:linear-gradient(180deg, rgba(212,180,109,.24), rgba(212,180,109,.105)) !important;
+      box-shadow:
+        0 0 0 1px rgba(212,180,109,.12),
+        0 14px 38px rgba(0,0,0,.28),
+        0 0 34px rgba(212,180,109,.24) !important;
+      transform:none !important;
+      outline:none !important;
+    }
+
+    #filterToggleBtn:active{
+      color:#d4b46d !important;
+      background:linear-gradient(180deg, rgba(212,180,109,.14), rgba(212,180,109,.065)) !important;
+      box-shadow:
+        0 0 0 1px rgba(212,180,109,.07),
+        0 8px 22px rgba(0,0,0,.22),
+        0 0 18px rgba(212,180,109,.14) !important;
+      transform:none !important;
+    }
+
+    body.archive-entered .footer-note{
+      margin:4px 0 0 !important;
+      opacity:.54 !important;
+      font-size:12px !important;
+    }
+
+    @media (max-width:640px){
+      body.archive-entered #loadWrap{
+        padding:22px 0 28px !important;
+      }
+
+      body.archive-entered #loadWrap::after{
+        width:76vw;
+      }
+
+      #loadMoreBtn{
+        min-height:40px !important;
+        height:40px !important;
+        line-height:40px !important;
+        padding:0 22px !important;
+        font-size:13px !important;
+      }
+
+      body.archive-entered #filterToggleWrap{
+        margin:16px 0 12px !important;
+      }
+
+      #filterToggleBtn{
+        width:100% !important;
+        min-height:58px !important;
+        padding:0 26px !important;
+        font-size:17px !important;
+      }
+    }
 </style>
 </head>
 <body>

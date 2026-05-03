@@ -2241,6 +2241,282 @@
     #enterArchivePro{
       color:#d4b46d !important;
     }
+
+
+    /* ARCHIVE PRO BUTTON HIERARCHY FINAL — language visible / Load more quiet / Filter Search strong */
+    .lang-inline{
+      padding:12px 16px !important;
+      border:1px solid rgba(212,180,109,.26) !important;
+      border-radius:18px !important;
+      background:linear-gradient(180deg, rgba(17,28,44,.48), rgba(9,15,25,.36)) !important;
+      box-shadow:0 10px 28px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.02) !important;
+    }
+
+    .lang-inline .lang-tabs{
+      gap:10px !important;
+    }
+
+    .lang-inline .lang-tab{
+      min-height:44px !important;
+      height:44px !important;
+      padding:0 18px !important;
+      font-size:14px !important;
+      line-height:44px !important;
+      font-weight:700 !important;
+      letter-spacing:.08em !important;
+      color:rgba(212,180,109,.78) !important;
+      border:1px solid rgba(212,180,109,.30) !important;
+      background:rgba(212,180,109,.055) !important;
+      border-radius:999px !important;
+      box-shadow:none !important;
+      transform:none !important;
+    }
+
+    .lang-inline .lang-tab.active{
+      color:#f4efe6 !important;
+      border-color:rgba(212,180,109,.72) !important;
+      background:rgba(212,180,109,.16) !important;
+      box-shadow:0 0 0 1px rgba(212,180,109,.08), 0 0 18px rgba(212,180,109,.20) !important;
+    }
+
+    .lang-inline .lang-tab:hover,
+    .lang-inline .lang-tab:focus-visible{
+      color:#f4efe6 !important;
+      border-color:rgba(212,180,109,.62) !important;
+      background:rgba(212,180,109,.13) !important;
+      box-shadow:0 0 16px rgba(212,180,109,.16) !important;
+      outline:none !important;
+      transform:none !important;
+    }
+
+    body:not(.archive-entered) .lang-inline{
+      width:100% !important;
+      justify-content:flex-start !important;
+      padding:14px 18px !important;
+      border-color:rgba(212,180,109,.30) !important;
+      background:linear-gradient(180deg, rgba(17,28,44,.56), rgba(9,15,25,.40)) !important;
+    }
+
+    body:not(.archive-entered) .lang-inline .lang-tab{
+      min-height:48px !important;
+      height:48px !important;
+      padding:0 22px !important;
+      font-size:15px !important;
+      line-height:48px !important;
+    }
+
+    #loadMoreBtn{
+      min-height:34px !important;
+      height:34px !important;
+      padding:0 13px !important;
+      font-size:12px !important;
+      line-height:34px !important;
+      font-weight:500 !important;
+      letter-spacing:.07em !important;
+      border-radius:999px !important;
+      border:1px solid rgba(212,180,109,.22) !important;
+      background:rgba(212,180,109,.035) !important;
+      color:rgba(212,180,109,.72) !important;
+      box-shadow:none !important;
+      transform:none !important;
+    }
+
+    #loadMoreBtn:hover,
+    #loadMoreBtn:focus-visible{
+      color:rgba(212,180,109,.92) !important;
+      border-color:rgba(212,180,109,.38) !important;
+      background:rgba(212,180,109,.065) !important;
+      box-shadow:none !important;
+      transform:none !important;
+      outline:none !important;
+    }
+
+    #filterToggleWrap{
+      margin:16px 0 10px !important;
+    }
+
+    #filterToggleBtn{
+      min-height:58px !important;
+      padding:0 32px !important;
+      font-size:17px !important;
+      line-height:58px !important;
+      font-weight:800 !important;
+      letter-spacing:.075em !important;
+      border-radius:999px !important;
+      border:1px solid rgba(212,180,109,.72) !important;
+      background:linear-gradient(180deg, rgba(212,180,109,.18), rgba(212,180,109,.10)) !important;
+      color:#d4b46d !important;
+      box-shadow:0 0 0 1px rgba(212,180,109,.08), 0 0 22px rgba(212,180,109,.22), 0 14px 30px rgba(0,0,0,.24) !important;
+      transform:none !important;
+    }
+
+    #filterToggleBtn:hover,
+    #filterToggleBtn:focus-visible{
+      color:#f4efe6 !important;
+      border-color:rgba(212,180,109,.92) !important;
+      background:linear-gradient(180deg, rgba(212,180,109,.25), rgba(212,180,109,.14)) !important;
+      box-shadow:0 0 0 1px rgba(212,180,109,.12), 0 0 30px rgba(212,180,109,.34), 0 16px 34px rgba(0,0,0,.28) !important;
+      outline:none !important;
+      transform:none !important;
+    }
+
+    @media (max-width:640px){
+      .lang-inline{
+        padding:12px !important;
+      }
+
+      .lang-inline .lang-tabs{
+        width:100% !important;
+        display:grid !important;
+        grid-template-columns:1fr 1fr 1.15fr !important;
+        gap:8px !important;
+      }
+
+      .lang-inline .lang-tab,
+      body:not(.archive-entered) .lang-inline .lang-tab{
+        width:100% !important;
+        min-height:44px !important;
+        height:44px !important;
+        padding:0 8px !important;
+        font-size:13px !important;
+        line-height:44px !important;
+      }
+
+      #filterToggleBtn{
+        width:100% !important;
+        min-height:56px !important;
+        line-height:56px !important;
+        font-size:16px !important;
+      }
+
+      #loadMoreBtn{
+        min-height:34px !important;
+        height:34px !important;
+        line-height:34px !important;
+      }
+    }
+
+
+    /* ARCHIVE PRO HEADER RESET + SUBLINE UI CLARITY — title is reset, subline is direct access cue */
+    .brand-row{
+      align-items:center !important;
+      gap:12px 14px !important;
+    }
+
+    .brand-home-link{
+      position:relative !important;
+      align-items:center !important;
+      padding:6px 10px 7px 0 !important;
+      border-radius:16px !important;
+      transition:opacity .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease !important;
+      transform:none !important;
+      box-shadow:none !important;
+    }
+
+    .brand-home-link h1{
+      color:rgba(212,180,109,.96) !important;
+      text-shadow:0 0 18px rgba(212,180,109,.18), 0 0 36px rgba(78,110,164,.12) !important;
+    }
+
+    .brand-home-link::after{
+      content:"RESET";
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:24px;
+      margin-left:12px;
+      padding:0 9px;
+      border-radius:999px;
+      border:1px solid rgba(212,180,109,.32);
+      background:rgba(212,180,109,.055);
+      color:rgba(212,180,109,.74);
+      font-size:10px;
+      line-height:24px;
+      letter-spacing:.12em;
+      font-weight:700;
+      opacity:.86;
+    }
+
+    .brand-home-link:hover,
+    .brand-home-link:focus-visible{
+      background:rgba(212,180,109,.045) !important;
+      outline:none !important;
+      transform:none !important;
+      box-shadow:none !important;
+    }
+
+    .brand-home-link:hover h1,
+    .brand-home-link:focus-visible h1{
+      color:#d4b46d !important;
+      text-shadow:0 0 22px rgba(212,180,109,.26), 0 0 42px rgba(78,110,164,.16) !important;
+    }
+
+    .brand-home-link:hover::after,
+    .brand-home-link:focus-visible::after{
+      opacity:1;
+      color:#f4efe6;
+      border-color:rgba(212,180,109,.58);
+      background:rgba(212,180,109,.12);
+    }
+
+    .subline{
+      display:inline-flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      min-height:34px !important;
+      padding:0 13px !important;
+      border-radius:999px !important;
+      border:1px solid rgba(88,126,185,.24) !important;
+      background:linear-gradient(180deg, rgba(78,110,164,.16), rgba(12,18,27,.08)) !important;
+      color:rgba(244,239,230,.78) !important;
+      font-size:12px !important;
+      font-weight:700 !important;
+      letter-spacing:.075em !important;
+      text-transform:uppercase !important;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.025) !important;
+      white-space:nowrap !important;
+    }
+
+    .subline::before{
+      content:"";
+      display:inline-block;
+      width:7px;
+      height:7px;
+      margin-right:9px;
+      border-radius:50%;
+      background:#d4b46d;
+      box-shadow:0 0 12px rgba(212,180,109,.42);
+      opacity:.9;
+    }
+
+    @media (max-width:760px){
+      .brand-row{
+        align-items:flex-start !important;
+        flex-direction:column !important;
+        gap:8px !important;
+      }
+
+      .brand-home-link{
+        padding-right:0 !important;
+      }
+
+      .brand-home-link::after{
+        min-height:22px;
+        line-height:22px;
+        font-size:9px;
+        margin-left:9px;
+      }
+
+      .subline{
+        min-height:32px !important;
+        padding:0 11px !important;
+        font-size:10px !important;
+        letter-spacing:.055em !important;
+        white-space:normal !important;
+        text-align:left !important;
+        justify-content:flex-start !important;
+      }
+    }
 </style>
 </head>
 <body>
@@ -2254,7 +2530,7 @@
           <a href="#" id="archiveHomeLink" class="brand-home-link" aria-label="Archive Pro home">
             <h1>ARCHIVE PRO</h1>
           </a>
-          <p class="subline">Search, filter, access.</p>
+          <p class="subline" id="archiveSubline">Click ARCHIVE PRO to reset · Search / Filter / Access</p>
         </div>
       </div>
       <a class="back-link" href="../index.html" aria-label="LAB으로 돌아가기">LAB</a>
@@ -4104,16 +4380,26 @@
       }
 
       function goArchiveHome() {
+        archiveEntered = false;
+        filterPanelOpen = false;
         state.query = '';
         state.section = 'all';
         state.sort = FAST_ORDER;
         state.visibleCount = getInitialVisibleCount();
+        visibleCount = state.visibleCount;
 
-        els.searchInput.value = '';
-        els.sectionSelect.value = 'all';
-        els.sortSelect.value = FAST_ORDER;
+        if (els.searchInput) els.searchInput.value = '';
+        if (els.sectionSelect) els.sectionSelect.value = 'all';
+        if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
 
-        applyFilters(true);
+        updateEntryUXClasses();
+        if (state.isLoaded && state.all.length) {
+          state.filtered = applyFilterSort(state.all);
+          CURRENT_LIST = state.filtered;
+          renderAll();
+        } else {
+          updateStats();
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 

@@ -3029,6 +3029,370 @@
         letter-spacing:.22em !important;
       }
     }
+
+
+    /* ==========================================================
+       ARCHIVE PRO — FINAL BRAND SYSTEM OVERRIDE
+       DUNGZAK CESTLAVIE LAB / exhibition-grade UI
+       Principles: deep blue, exact gold, no blur, no scale, no visual noise.
+       ========================================================== */
+    :root{
+      --dz-bg-deep:#070A14;
+      --dz-bg-blue:#0B1324;
+      --dz-bg-control:#0A111D;
+      --dz-gold:#D4B46D;
+      --dz-gold-soft:#E6C98A;
+      --dz-text:#F4F1EA;
+      --dz-muted:rgba(244,241,234,.62);
+      --dz-line:rgba(212,180,109,.34);
+      --dz-line-strong:rgba(212,180,109,.58);
+    }
+
+    html, body, button, input, select, textarea{
+      -webkit-font-smoothing:antialiased !important;
+      -moz-osx-font-smoothing:grayscale !important;
+      text-rendering:geometricPrecision !important;
+    }
+
+    body{
+      background:var(--dz-bg-deep) !important;
+    }
+
+    .site-bg{
+      background:
+        linear-gradient(180deg, #070A14 0%, #090F1B 48%, #070A14 100%) !important;
+    }
+
+    .site-header{
+      background:linear-gradient(180deg, rgba(7,10,20,.96), rgba(7,10,20,.84)) !important;
+      border-bottom:1px solid rgba(212,180,109,.10) !important;
+      backdrop-filter:none !important;
+      -webkit-backdrop-filter:none !important;
+    }
+
+    .eyebrow{
+      color:rgba(212,180,109,.88) !important;
+      font-weight:500 !important;
+      letter-spacing:.22em !important;
+    }
+
+    .brand-row h1,
+    .brand-home-link h1{
+      font-family:"Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif !important;
+      font-size:clamp(22px, 3.1vw, 34px) !important;
+      font-weight:500 !important;
+      line-height:1 !important;
+      letter-spacing:.13em !important;
+      color:rgba(212,180,109,.94) !important;
+      text-shadow:none !important;
+    }
+
+    .brand-home-link:hover h1,
+    .brand-home-link:focus-visible h1{
+      color:var(--dz-gold-soft) !important;
+      text-shadow:none !important;
+    }
+
+    .brand-home-link::after{
+      border-color:rgba(212,180,109,.30) !important;
+      background:rgba(11,19,36,.72) !important;
+      color:rgba(212,180,109,.72) !important;
+      box-shadow:none !important;
+    }
+
+    .subline{
+      border:1px solid rgba(88,126,185,.28) !important;
+      background:rgba(11,19,36,.72) !important;
+      color:rgba(244,241,234,.70) !important;
+      box-shadow:none !important;
+      text-shadow:none !important;
+      font-weight:500 !important;
+      letter-spacing:.105em !important;
+    }
+
+    .subline::before{
+      background:var(--dz-gold) !important;
+      box-shadow:none !important;
+    }
+
+    .back-link,
+    .lang-inline,
+    .stats-inline,
+    .panel,
+    .controls,
+    .meta-pill,
+    .status,
+    .card{
+      box-shadow:none !important;
+    }
+
+    .lang-inline{
+      background:rgba(10,17,29,.82) !important;
+      border-color:rgba(212,180,109,.26) !important;
+      border-radius:16px !important;
+    }
+
+    .lang-inline .lang-tab{
+      font-weight:500 !important;
+      letter-spacing:.11em !important;
+      color:rgba(212,180,109,.74) !important;
+      background:rgba(11,19,36,.72) !important;
+      border-color:rgba(212,180,109,.26) !important;
+      box-shadow:none !important;
+      text-shadow:none !important;
+    }
+
+    .lang-inline .lang-tab.active{
+      color:var(--dz-text) !important;
+      background:rgba(212,180,109,.12) !important;
+      border-color:rgba(212,180,109,.56) !important;
+      box-shadow:none !important;
+    }
+
+    .lang-inline .lang-tab:hover,
+    .lang-inline .lang-tab:focus-visible{
+      color:var(--dz-gold-soft) !important;
+      border-color:rgba(212,180,109,.52) !important;
+      background:rgba(212,180,109,.09) !important;
+      box-shadow:none !important;
+      transform:none !important;
+    }
+
+    .grid .card{
+      background:linear-gradient(180deg, rgba(12,19,32,.98), rgba(7,10,20,.98)) !important;
+      border-color:rgba(244,241,234,.055) !important;
+      border-radius:16px !important;
+    }
+
+    .card:hover,
+    .card:focus-visible{
+      border-color:rgba(212,180,109,.28) !important;
+      box-shadow:none !important;
+      transform:none !important;
+    }
+
+    .card:hover .thumb{
+      transform:scale(1.001) !important;
+    }
+
+    .work-id{
+      color:rgba(212,180,109,.84) !important;
+      font-weight:500 !important;
+      letter-spacing:.12em !important;
+    }
+
+    .title{
+      font-weight:500 !important;
+      color:rgba(244,241,234,.90) !important;
+    }
+
+    .section-tag,
+    .meta-pill,
+    .status{
+      background:rgba(244,241,234,.025) !important;
+      border-color:rgba(244,241,234,.07) !important;
+      color:rgba(244,241,234,.58) !important;
+    }
+
+    #resultText,
+    .stats-inline #statTotal,
+    .stats-inline #statFiltered,
+    .stats-inline #statSections{
+      color:rgba(244,241,234,.78) !important;
+      font-weight:600 !important;
+    }
+
+    #loadMoreBtn{
+      min-height:38px !important;
+      height:38px !important;
+      padding:0 18px !important;
+      border-radius:999px !important;
+      border:1px solid rgba(212,180,109,.26) !important;
+      background:rgba(11,19,36,.52) !important;
+      color:rgba(212,180,109,.78) !important;
+      font-size:12px !important;
+      font-weight:500 !important;
+      letter-spacing:.08em !important;
+      box-shadow:none !important;
+      transform:none !important;
+    }
+
+    #loadMoreBtn:hover,
+    #loadMoreBtn:focus-visible{
+      color:var(--dz-gold-soft) !important;
+      border-color:rgba(212,180,109,.46) !important;
+      background:rgba(11,19,36,.76) !important;
+      box-shadow:none !important;
+      transform:none !important;
+      outline:none !important;
+    }
+
+    body.archive-entered #filterToggleWrap{
+      margin:20px 0 18px !important;
+      padding:0 !important;
+    }
+
+    #filterToggleBtn{
+      width:min(480px, 92%) !important;
+      min-height:76px !important;
+      padding:14px 34px !important;
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:6px !important;
+      border-radius:14px !important;
+      border:1px solid rgba(212,180,109,.58) !important;
+      background:linear-gradient(180deg, rgba(11,19,36,.96), rgba(7,10,20,.98)) !important;
+      color:var(--dz-gold) !important;
+      box-shadow:none !important;
+      transform:none !important;
+      filter:none !important;
+      backdrop-filter:none !important;
+      -webkit-backdrop-filter:none !important;
+      text-shadow:none !important;
+      cursor:pointer !important;
+      line-height:1.2 !important;
+      transition:opacity .18s ease, border-color .18s ease, background-color .18s ease, color .18s ease !important;
+    }
+
+    #filterToggleBtn .cta-main{
+      display:block !important;
+      font-family:"Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif !important;
+      font-size:18px !important;
+      font-weight:500 !important;
+      letter-spacing:.20em !important;
+      line-height:1.1 !important;
+      text-transform:uppercase !important;
+      color:rgba(244,241,234,.92) !important;
+      text-shadow:none !important;
+    }
+
+    #filterToggleBtn .cta-sub{
+      display:block !important;
+      margin-top:2px !important;
+      font-family:"Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif !important;
+      font-size:11px !important;
+      font-weight:400 !important;
+      letter-spacing:.18em !important;
+      line-height:1 !important;
+      text-transform:uppercase !important;
+      color:rgba(212,180,109,.74) !important;
+      opacity:1 !important;
+      text-shadow:none !important;
+    }
+
+    #filterToggleBtn:hover,
+    #filterToggleBtn:focus-visible{
+      border-color:rgba(212,180,109,.76) !important;
+      background:linear-gradient(180deg, rgba(13,24,43,.98), rgba(8,12,22,.98)) !important;
+      color:var(--dz-gold-soft) !important;
+      box-shadow:none !important;
+      transform:none !important;
+      outline:none !important;
+    }
+
+    #filterToggleBtn:hover .cta-main,
+    #filterToggleBtn:focus-visible .cta-main{
+      color:var(--dz-text) !important;
+    }
+
+    #filterToggleBtn:hover .cta-sub,
+    #filterToggleBtn:focus-visible .cta-sub{
+      color:var(--dz-gold-soft) !important;
+    }
+
+    #filterToggleBtn.brand-glow-once{
+      animation:filterBrandGlow .22s ease-out 1 both !important;
+    }
+
+    @keyframes filterBrandGlow{
+      0%{
+        border-color:rgba(212,180,109,.36);
+        background:linear-gradient(180deg, rgba(11,19,36,.94), rgba(7,10,20,.98));
+      }
+      100%{
+        border-color:rgba(212,180,109,.58);
+        background:linear-gradient(180deg, rgba(11,19,36,.96), rgba(7,10,20,.98));
+      }
+    }
+
+    body.archive-entered.archive-filter-open #searchArea.controls{
+      background:linear-gradient(180deg, rgba(11,19,36,.94), rgba(7,10,20,.96)) !important;
+      border-color:rgba(88,126,185,.22) !important;
+      border-radius:16px !important;
+      padding:18px !important;
+      gap:14px !important;
+    }
+
+    body.archive-entered.archive-filter-open #searchArea .field label{
+      color:rgba(244,241,234,.50) !important;
+      font-weight:500 !important;
+      letter-spacing:.14em !important;
+    }
+
+    body.archive-entered.archive-filter-open #searchArea .input,
+    body.archive-entered.archive-filter-open #searchArea .select{
+      background:#090F1A !important;
+      border-color:rgba(244,241,234,.09) !important;
+      color:rgba(244,241,234,.92) !important;
+      box-shadow:none !important;
+      font-weight:500 !important;
+    }
+
+    body.archive-entered.archive-filter-open #searchArea .input:focus,
+    body.archive-entered.archive-filter-open #searchArea .select:focus{
+      border-color:rgba(212,180,109,.62) !important;
+      box-shadow:none !important;
+    }
+
+    body.archive-entered.archive-filter-open #searchArea .control-actions .btn{
+      background:rgba(11,19,36,.72) !important;
+      border-color:rgba(212,180,109,.30) !important;
+      color:rgba(212,180,109,.82) !important;
+      box-shadow:none !important;
+      font-weight:500 !important;
+    }
+
+    body.archive-entered.archive-filter-open #searchArea .control-actions .btn:hover,
+    body.archive-entered.archive-filter-open #searchArea .control-actions .btn:focus-visible{
+      border-color:rgba(212,180,109,.56) !important;
+      color:var(--dz-gold-soft) !important;
+      background:rgba(11,19,36,.90) !important;
+      transform:none !important;
+      box-shadow:none !important;
+    }
+
+    .lightbox,
+    .lightbox-side{
+      backdrop-filter:none !important;
+      -webkit-backdrop-filter:none !important;
+    }
+
+    @media (max-width:640px){
+      .brand-row h1,
+      .brand-home-link h1{
+        font-size:clamp(21px, 8vw, 30px) !important;
+        letter-spacing:.105em !important;
+      }
+
+      #filterToggleBtn{
+        width:100% !important;
+        min-height:72px !important;
+        padding:14px 22px !important;
+      }
+
+      #filterToggleBtn .cta-main{
+        font-size:16px !important;
+        letter-spacing:.16em !important;
+      }
+
+      #filterToggleBtn .cta-sub{
+        font-size:10px !important;
+        letter-spacing:.16em !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -3158,7 +3522,7 @@
     </main>
 
     <div id="filterToggleWrap" class="filter-toggle-wrap">
-      <button id="filterToggleBtn" class="btn" type="button" aria-expanded="false" aria-controls="searchArea"><span class="cta-main">Filter / Search</span><span class="cta-sub">클릭</span></button>
+      <button id="filterToggleBtn" class="btn" type="button" aria-expanded="false" aria-controls="searchArea"><span class="cta-main">Filter / Search</span><span class="cta-sub">click</span></button>
     </div>
   </div>
 
@@ -3641,16 +4005,16 @@
       function renderFilterToggleLabel() {
         if (!els.filterToggleBtn) return;
         const main = escapeHTML(t('filterToggleBtn'));
-        const clickText = state.lang === 'en' ? 'click' : (state.lang === 'both' ? 'click / 클릭' : '클릭');
-        els.filterToggleBtn.innerHTML = '<span class="cta-main">' + main + '</span><span class="cta-sub">' + escapeHTML(clickText) + '</span>';
+        const clickText = 'click';
+        els.filterToggleBtn.innerHTML = '<span class="cta-main">' + main.toUpperCase() + '</span><span class="cta-sub">' + escapeHTML(clickText) + '</span>';
       }
 
       function playFilterGlowOnce() {
         if (!els.filterToggleBtn || window.__filterGlowPlayed) return;
         window.__filterGlowPlayed = true;
-        els.filterToggleBtn.classList.remove('glow-once');
+        els.filterToggleBtn.classList.remove('glow-once', 'brand-glow-once');
         void els.filterToggleBtn.offsetWidth;
-        els.filterToggleBtn.classList.add('glow-once');
+        els.filterToggleBtn.classList.add('brand-glow-once');
       }
 
 

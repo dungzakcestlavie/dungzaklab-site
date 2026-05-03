@@ -2961,6 +2961,74 @@
       }
     }
 
+
+
+    /* ARCHIVE PRO FINAL LUXURY CTA TYPE — click restored / high-fashion gothic-roman tension */
+    #filterToggleBtn{
+      width:min(500px, 92%) !important;
+      min-height:76px !important;
+      padding:12px 34px !important;
+      border-radius:12px !important;
+      background:linear-gradient(180deg, rgba(212,180,109,.23), rgba(212,180,109,.115)) !important;
+      border:1px solid rgba(212,180,109,.82) !important;
+      box-shadow:
+        0 0 0 1px rgba(212,180,109,.08),
+        0 18px 42px rgba(0,0,0,.28),
+        0 0 26px rgba(212,180,109,.18) !important;
+    }
+
+    #filterToggleBtn .cta-main{
+      font-family:"Cinzel","Trajan Pro","Optima","Avenir Next","Arial Narrow",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif !important;
+      display:block !important;
+      font-size:19px !important;
+      font-weight:700 !important;
+      letter-spacing:.18em !important;
+      line-height:1.04 !important;
+      text-transform:uppercase !important;
+      color:rgba(244,239,230,.94) !important;
+    }
+
+    #filterToggleBtn .cta-sub{
+      display:block !important;
+      margin-top:6px !important;
+      font-family:"Avenir Next","Arial Narrow",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif !important;
+      font-size:10px !important;
+      font-weight:700 !important;
+      letter-spacing:.24em !important;
+      line-height:1 !important;
+      text-transform:uppercase !important;
+      color:rgba(212,180,109,.76) !important;
+      opacity:1 !important;
+    }
+
+    #filterToggleBtn:hover .cta-main,
+    #filterToggleBtn:focus-visible .cta-main{
+      color:#fff8ea !important;
+    }
+
+    #filterToggleBtn:hover .cta-sub,
+    #filterToggleBtn:focus-visible .cta-sub{
+      color:rgba(212,180,109,.96) !important;
+      opacity:1 !important;
+    }
+
+    @media (max-width:640px){
+      #filterToggleBtn{
+        width:100% !important;
+        min-height:72px !important;
+        padding:12px 22px !important;
+      }
+
+      #filterToggleBtn .cta-main{
+        font-size:16px !important;
+        letter-spacing:.145em !important;
+      }
+
+      #filterToggleBtn .cta-sub{
+        font-size:9px !important;
+        letter-spacing:.22em !important;
+      }
+    }
 </style>
 </head>
 <body>
@@ -4341,7 +4409,7 @@
         document.body.classList.toggle('archive-filter-open', archiveEntered && filterPanelOpen);
         if (els.filterToggleBtn) {
           els.filterToggleBtn.setAttribute('aria-expanded', filterPanelOpen ? 'true' : 'false');
-          els.filterToggleBtn.textContent = t('filterToggleBtn');
+          renderFilterToggleLabel();
         }
       }
 

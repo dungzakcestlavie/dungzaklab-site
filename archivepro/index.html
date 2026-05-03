@@ -1936,76 +1936,91 @@
     }
 
 
-
-    /* ARCHIVE PRO LIGHTBOX DESKTOP ARROWS ONLY — viewport UI, no artwork overlap */
+    /* ARCHIVE PRO LIGHTBOX FINAL DESKTOP ARROW + IMAGE SIZE FIX
+       - desktop/laptop arrows only
+       - arrows stay in viewport gutters, not on the artwork
+       - image is constrained inside an artwork-safe stage
+       - mobile keeps existing swipe/stack behavior */
     .lightbox-nav{
-      display:none;
-      position:fixed;
-      top:50%;
-      transform:translateY(-50%);
-      z-index:10020;
-      width:52px;
-      height:72px;
-      min-width:52px;
-      min-height:72px;
-      border-radius:999px;
-      border:1px solid rgba(212,180,109,.30);
-      background:rgba(7,10,20,.58);
-      color:var(--gold);
-      font-size:34px;
-      line-height:1;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      -webkit-tap-highlight-color:transparent;
-      backdrop-filter:blur(8px);
-      -webkit-backdrop-filter:blur(8px);
-      box-shadow:0 12px 28px rgba(0,0,0,.30);
-      opacity:.82;
-      transition:opacity .16s ease, border-color .16s ease, background .16s ease;
-      touch-action:manipulation;
-    }
-
-    .lightbox-nav:hover{
-      opacity:1;
-      border-color:rgba(212,180,109,.56);
-      background:rgba(7,10,20,.76);
-      transform:translateY(-50%) !important;
-      box-shadow:0 12px 28px rgba(0,0,0,.30) !important;
-    }
-
-    .lightbox-nav:active{
-      opacity:.88;
-      transform:translateY(-50%) !important;
-    }
-
-    .lightbox-nav:focus-visible{
-      outline:1px solid var(--gold);
-      outline-offset:3px;
+      display:none !important;
     }
 
     @media (min-width:881px){
       .lightbox.open .lightbox-nav,
       .lightbox.active .lightbox-nav{
-        display:flex;
+        display:flex !important;
+        position:fixed !important;
+        top:50% !important;
+        transform:translateY(-50%) !important;
+        z-index:10020 !important;
+        width:52px !important;
+        height:72px !important;
+        min-width:52px !important;
+        min-height:72px !important;
+        border-radius:999px !important;
+        border:1px solid rgba(212,180,109,.30) !important;
+        background:rgba(7,10,20,.58) !important;
+        color:var(--gold) !important;
+        font-size:34px !important;
+        line-height:1 !important;
+        align-items:center !important;
+        justify-content:center !important;
+        cursor:pointer !important;
+        -webkit-tap-highlight-color:transparent !important;
+        backdrop-filter:blur(6px) !important;
+        -webkit-backdrop-filter:blur(6px) !important;
+        box-shadow:0 12px 28px rgba(0,0,0,.30) !important;
+        opacity:.86 !important;
+        transition:opacity .16s ease, border-color .16s ease, background .16s ease !important;
+        touch-action:manipulation !important;
+      }
+
+      .lightbox.open .lightbox-nav:hover,
+      .lightbox.active .lightbox-nav:hover{
+        opacity:1 !important;
+        border-color:rgba(212,180,109,.56) !important;
+        background:rgba(7,10,20,.76) !important;
+        transform:translateY(-50%) !important;
+        box-shadow:0 12px 28px rgba(0,0,0,.30) !important;
       }
 
       .lightbox-prev{
-        left:max(18px, env(safe-area-inset-left));
+        left:calc(24px + env(safe-area-inset-left, 0px)) !important;
       }
 
+      /* Right arrow sits just before the fixed side panel, not over metadata and not over artwork. */
       .lightbox-next{
-        right:calc(380px + max(18px, env(safe-area-inset-right)));
+        right:calc(380px + 24px + env(safe-area-inset-right, 0px)) !important;
+      }
+
+      /* Reserve visual gutters inside the artwork stage so arrows never cover the image. */
+      .lightbox-stage{
+        padding:74px 102px 40px 102px !important;
+        overflow:hidden !important;
+      }
+
+      .lightbox-stage img,
+      #lightboxImage{
+        max-width:100% !important;
+        max-height:calc(100vh - 150px) !important;
+        width:auto !important;
+        height:auto !important;
+        object-fit:contain !important;
       }
     }
 
-    @media (min-width:1181px){
+    @media (min-width:881px) and (max-width:1180px){
       .lightbox-next{
-        right:calc(380px + 24px + env(safe-area-inset-right));
+        right:calc(340px + 20px + env(safe-area-inset-right, 0px)) !important;
       }
 
-      .lightbox-prev{
-        left:calc(24px + env(safe-area-inset-left));
+      .lightbox-stage{
+        padding:74px 88px 36px 88px !important;
+      }
+
+      .lightbox-stage img,
+      #lightboxImage{
+        max-height:calc(100vh - 150px) !important;
       }
     }
 
@@ -2014,6 +2029,7 @@
         display:none !important;
       }
     }
+
 </style>
 </head>
 <body>

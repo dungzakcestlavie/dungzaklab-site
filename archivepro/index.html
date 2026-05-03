@@ -2075,11 +2075,23 @@
 
 
     /* ARCHIVE PRO ENTRY UX — exhibition-first entrance / no data or design structure change */
-    body:not(.archive-entered) .hero,
     body:not(.archive-entered) #searchArea,
     body:not(.archive-entered) .archive-source-meta,
     body:not(.archive-entered) #archiveMain,
     body:not(.archive-entered) #filterToggleWrap{
+      display:none !important;
+    }
+
+    body:not(.archive-entered) .hero{
+      display:flex !important;
+      justify-content:flex-start !important;
+      align-items:center !important;
+      padding-top:18px !important;
+      margin-bottom:0 !important;
+    }
+
+    body:not(.archive-entered) .hero .stats-inline,
+    body:not(.archive-entered) .hero .hero-home-link{
       display:none !important;
     }
 
@@ -2202,6 +2214,33 @@
         min-height:42px;
       }
     }
+
+
+    /* ARCHIVE PRO ENTRY REFINEMENT — language before entry + gold-blue title */
+    .brand-row h1{
+      color:rgba(212,180,109,.94) !important;
+      text-shadow:0 0 18px rgba(212,180,109,.16), 0 0 34px rgba(78,110,164,.10) !important;
+    }
+
+    .brand-home-link:hover h1{
+      color:#d4b46d !important;
+      text-shadow:0 0 20px rgba(212,180,109,.22), 0 0 38px rgba(78,110,164,.12) !important;
+    }
+
+    body:not(.archive-entered) .lang-inline{
+      width:100% !important;
+      justify-content:flex-start !important;
+      border-color:rgba(212,180,109,.18) !important;
+      background:rgba(12,18,27,.20) !important;
+    }
+
+    body:not(.archive-entered) .entry-layer{
+      margin-top:12px !important;
+    }
+
+    #enterArchivePro{
+      color:#d4b46d !important;
+    }
 </style>
 </head>
 <body>
@@ -2223,12 +2262,6 @@
   </header>
 
   <div class="site-shell">
-    <section class="panel entry-layer archive-entry-wrap" aria-label="Archive entry">
-      <div class="entry-panel">
-        <a id="enterArchivePro" class="critical-entry-btn" href="#archiveWorks" data-kr="아카이브 입장 →" data-en="Enter Archive →">아카이브 입장 →</a>
-      </div>
-    </section>
-
     <section class="hero hero-compressed" aria-label="Archive controls summary">
       <article class="lang-inline" aria-label="Language mode and site link">
         <div class="lang-tabs" role="tablist" aria-label="Language mode">
@@ -2248,6 +2281,12 @@
         <span id="statDescFiltered" class="visually-hidden">현재 검색 결과</span>
         <span id="statDescSections" class="visually-hidden">섹션 수</span>
       </aside>
+    </section>
+
+    <section class="panel entry-layer archive-entry-wrap" aria-label="Archive entry">
+      <div class="entry-panel">
+        <a id="enterArchivePro" class="critical-entry-btn" href="#archiveWorks" data-kr="아카이브 입장 →" data-en="Enter Archive →">아카이브 입장 →</a>
+      </div>
     </section>
 
     <section id="searchArea" class="panel controls" aria-label="아카이브 검색 및 필터">
@@ -2570,6 +2609,7 @@
           placeholderSearch: 'Search ID, title, material, year, section',
           resetBtn: 'Reset',
           focusSearchBtn: 'Focus',
+          filterToggleBtn: 'Filter / Search',
           statusIdle: 'Idle',
           statusLoading: 'Ready',
           statusLoaded: 'Loaded',
@@ -3451,7 +3491,21 @@
         }
       }
 
+      function syncEntryButtonLanguage() {
+        if (!els.entryBtn) return;
+        const kr = els.entryBtn.dataset.kr || '아카이브 입장 →';
+        const en = els.entryBtn.dataset.en || 'Enter Archive →';
+        if (state.lang === 'en') {
+          els.entryBtn.textContent = en;
+        } else if (state.lang === 'both') {
+          els.entryBtn.innerHTML = kr + '<br>' + en;
+        } else {
+          els.entryBtn.textContent = kr;
+        }
+      }
+
       function rebuildStaticTexts() {
+        syncEntryButtonLanguage();
         els.heroModeLine.textContent = t('heroModeLine');
         els.statDescTotal.textContent = t('statDescTotal');
         els.statDescFiltered.textContent = t('statDescFiltered');

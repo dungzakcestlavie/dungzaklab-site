@@ -2840,6 +2840,127 @@
         font-size:15px !important;
       }
     }
+
+
+    /* ARCHIVE PRO FINAL TYPO + CTA GLOW REFINEMENT — speed-safe, no transform/blur */
+    .brand-row h1,
+    .brand-home-link h1{
+      font-size:clamp(22px, 3.2vw, 34px) !important;
+      font-weight:500 !important;
+      letter-spacing:.085em !important;
+      line-height:1.04 !important;
+      color:rgba(212,180,109,.94) !important;
+      text-shadow:0 0 14px rgba(212,180,109,.14), 0 0 30px rgba(78,110,164,.10) !important;
+    }
+
+    .brand-home-link:hover h1,
+    .brand-home-link:focus-visible h1{
+      color:#d4b46d !important;
+      text-shadow:0 0 18px rgba(212,180,109,.20), 0 0 34px rgba(78,110,164,.12) !important;
+    }
+
+    body.archive-entered #filterToggleWrap{
+      margin:20px 0 16px !important;
+      padding:0 0 12px !important;
+    }
+
+    #filterToggleBtn{
+      width:min(460px, 92%) !important;
+      min-height:72px !important;
+      height:auto !important;
+      padding:10px 30px !important;
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:4px !important;
+      border-radius:12px !important;
+      border:1px solid rgba(212,180,109,.78) !important;
+      background:linear-gradient(180deg, rgba(212,180,109,.22), rgba(212,180,109,.12)) !important;
+      color:#d4b46d !important;
+      box-shadow:0 0 0 1px rgba(212,180,109,.08), 0 18px 42px rgba(0,0,0,.28), 0 0 26px rgba(212,180,109,.18) !important;
+      transform:none !important;
+      cursor:pointer !important;
+      white-space:normal !important;
+      line-height:1.18 !important;
+    }
+
+    #filterToggleBtn .cta-main{
+      display:block !important;
+      font-size:18px !important;
+      font-weight:800 !important;
+      letter-spacing:.14em !important;
+      line-height:1.15 !important;
+      text-transform:uppercase !important;
+    }
+
+    #filterToggleBtn .cta-sub{
+      display:block !important;
+      font-size:11px !important;
+      font-weight:700 !important;
+      letter-spacing:.18em !important;
+      line-height:1 !important;
+      opacity:.66 !important;
+      text-transform:uppercase !important;
+      color:rgba(244,239,230,.68) !important;
+    }
+
+    #filterToggleBtn:hover,
+    #filterToggleBtn:focus-visible{
+      color:#f4efe6 !important;
+      border-color:rgba(212,180,109,.94) !important;
+      background:linear-gradient(180deg, rgba(212,180,109,.27), rgba(212,180,109,.145)) !important;
+      box-shadow:0 0 0 1px rgba(212,180,109,.12), 0 20px 44px rgba(0,0,0,.30), 0 0 34px rgba(212,180,109,.26) !important;
+      outline:none !important;
+      transform:none !important;
+    }
+
+    #filterToggleBtn:hover .cta-sub,
+    #filterToggleBtn:focus-visible .cta-sub{
+      opacity:.86 !important;
+      color:rgba(244,239,230,.82) !important;
+    }
+
+    #filterToggleBtn.glow-once{
+      animation:filterGlowOnce .22s ease-out 1 !important;
+    }
+
+    @keyframes filterGlowOnce{
+      0%{
+        opacity:.94;
+        box-shadow:0 0 0 1px rgba(212,180,109,.06), 0 10px 26px rgba(0,0,0,.24), 0 0 0 rgba(212,180,109,0);
+      }
+      100%{
+        opacity:1;
+        box-shadow:0 0 0 1px rgba(212,180,109,.08), 0 18px 42px rgba(0,0,0,.28), 0 0 26px rgba(212,180,109,.18);
+      }
+    }
+
+    @media (max-width:640px){
+      .brand-row h1,
+      .brand-home-link h1{
+        font-size:clamp(22px, 8vw, 31px) !important;
+        letter-spacing:.075em !important;
+      }
+
+      #filterToggleBtn{
+        width:100% !important;
+        min-height:68px !important;
+        padding:10px 22px !important;
+        border-radius:12px !important;
+      }
+
+      #filterToggleBtn .cta-main{
+        font-size:16px !important;
+        letter-spacing:.125em !important;
+      }
+
+      #filterToggleBtn .cta-sub{
+        font-size:10px !important;
+        letter-spacing:.16em !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -2969,7 +3090,7 @@
     </main>
 
     <div id="filterToggleWrap" class="filter-toggle-wrap">
-      <button id="filterToggleBtn" class="btn" type="button" aria-expanded="false" aria-controls="searchArea">Filter / Search</button>
+      <button id="filterToggleBtn" class="btn" type="button" aria-expanded="false" aria-controls="searchArea"><span class="cta-main">Filter / Search</span><span class="cta-sub">클릭</span></button>
     </div>
   </div>
 
@@ -3448,6 +3569,22 @@
       function t(key) {
         return uiText[state.lang][key];
       }
+
+      function renderFilterToggleLabel() {
+        if (!els.filterToggleBtn) return;
+        const main = escapeHTML(t('filterToggleBtn'));
+        const clickText = state.lang === 'en' ? 'click' : (state.lang === 'both' ? 'click / 클릭' : '클릭');
+        els.filterToggleBtn.innerHTML = '<span class="cta-main">' + main + '</span><span class="cta-sub">' + escapeHTML(clickText) + '</span>';
+      }
+
+      function playFilterGlowOnce() {
+        if (!els.filterToggleBtn || window.__filterGlowPlayed) return;
+        window.__filterGlowPlayed = true;
+        els.filterToggleBtn.classList.remove('glow-once');
+        void els.filterToggleBtn.offsetWidth;
+        els.filterToggleBtn.classList.add('glow-once');
+      }
+
 
       function safeText(v) {
         if (v === null || v === undefined) return '';
@@ -4115,7 +4252,7 @@
         els.searchInput.placeholder = t('placeholderSearch');
         els.resetBtn.textContent = t('resetBtn');
         els.focusSearchBtn.textContent = t('focusSearchBtn');
-        if (els.filterToggleBtn) els.filterToggleBtn.textContent = t('filterToggleBtn');
+        renderFilterToggleLabel();
         els.emptyState.textContent = t('emptyState');
         els.loadMoreBtn.textContent = t('loadMore');
         els.footerNote.textContent = t('footerNote');
@@ -4222,6 +4359,7 @@
         if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
 
         updateEntryUXClasses();
+        requestAnimationFrame(playFilterGlowOnce);
         showArchiveShellImmediately();
 
         if (state.isLoaded && state.all.length) {

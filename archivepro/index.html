@@ -2072,6 +2072,136 @@
       }
     }
 
+
+
+    /* ARCHIVE PRO ENTRY UX — exhibition-first entrance / no data or design structure change */
+    body:not(.archive-entered) .hero,
+    body:not(.archive-entered) #searchArea,
+    body:not(.archive-entered) .archive-source-meta,
+    body:not(.archive-entered) #archiveMain,
+    body:not(.archive-entered) #filterToggleWrap{
+      display:none !important;
+    }
+
+    body.archive-entered .archive-entry-wrap{
+      display:none !important;
+    }
+
+    body.archive-entered .site-shell{
+      display:flex;
+      flex-direction:column;
+    }
+
+    body.archive-entered #archiveMain{
+      display:flex;
+      flex-direction:column;
+      order:1;
+    }
+
+    body.archive-entered #grid{order:1;}
+    body.archive-entered #resultsMeta{order:2;}
+    body.archive-entered #emptyState{order:3;}
+    body.archive-entered #loadWrap{order:4;}
+    body.archive-entered .footer-note{order:7;}
+
+    body.archive-entered #filterToggleWrap{
+      display:flex;
+      justify-content:center;
+      order:2;
+      margin:10px 0 8px;
+    }
+
+    body.archive-entered .hero{order:3;}
+    body.archive-entered #searchArea{order:4;}
+    body.archive-entered .archive-source-meta{order:5;}
+
+    body.archive-entered:not(.archive-filter-open) .hero,
+    body.archive-entered:not(.archive-filter-open) #searchArea,
+    body.archive-entered:not(.archive-filter-open) .archive-source-meta{
+      display:none !important;
+    }
+
+    body.archive-entered.archive-filter-open .hero,
+    body.archive-entered.archive-filter-open #searchArea,
+    body.archive-entered.archive-filter-open .archive-source-meta{
+      display:grid !important;
+    }
+
+    body.archive-entered.archive-filter-open .archive-source-meta{
+      display:flex !important;
+      opacity:.78;
+    }
+
+    #filterToggleBtn{
+      min-height:40px;
+      padding:0 18px;
+      border-radius:999px;
+      border:1px solid rgba(212,180,109,.34);
+      background:rgba(212,180,109,.045);
+      color:var(--gold);
+      cursor:pointer;
+      letter-spacing:.06em;
+      transition:opacity .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease !important;
+      transform:none !important;
+      box-shadow:none !important;
+      white-space:pre-line;
+    }
+
+    #filterToggleBtn:hover,
+    #filterToggleBtn:active,
+    #filterToggleBtn:focus-visible{
+      transform:none !important;
+      box-shadow:none !important;
+      opacity:.92;
+      border-color:rgba(212,180,109,.56);
+      background:rgba(212,180,109,.08);
+      outline:none;
+    }
+
+    body.archive-entered .card,
+    body.archive-entered .btn,
+    body.archive-entered .section-btn,
+    body.archive-entered .entry-btn,
+    body.archive-entered .back-link,
+    body.archive-entered .hero-home-link,
+    body.archive-entered .lb-link,
+    body.archive-entered .lang-tab,
+    body.archive-entered .brand-home-link,
+    body.archive-entered #filterToggleBtn{
+      transition:opacity .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease !important;
+      transform:none !important;
+      box-shadow:none !important;
+      will-change:auto !important;
+    }
+
+    body.archive-entered .card:hover,
+    body.archive-entered .btn:hover,
+    body.archive-entered .section-btn:hover,
+    body.archive-entered .entry-btn:hover,
+    body.archive-entered .back-link:hover,
+    body.archive-entered .hero-home-link:hover,
+    body.archive-entered .lb-link:hover,
+    body.archive-entered .lang-tab:hover,
+    body.archive-entered .brand-home-link:hover{
+      transform:none !important;
+      box-shadow:none !important;
+    }
+
+    body.archive-entered .card:hover .thumb{
+      transform:scale(1.001) !important;
+    }
+
+    body.archive-entered #activeFilterText:empty,
+    body.archive-entered #renderedText:empty{
+      display:none !important;
+    }
+
+    @media (max-width:640px){
+      #filterToggleBtn{
+        width:100%;
+        min-height:42px;
+      }
+    }
 </style>
 </head>
 <body>
@@ -2157,7 +2287,7 @@
       </div>
     </section>
 
-    <div class="meta-row">
+    <div class="meta-row archive-source-meta">
       <div class="meta-left">
         <span class="meta-pill" id="sourcePill">Source: https://dungzak.art/data/works.json</span>
         <span class="meta-pill" id="loadedPill">Data: — items</span>
@@ -2199,6 +2329,10 @@
 
       <p class="footer-note" id="footerNote">DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json</p>
     </main>
+
+    <div id="filterToggleWrap" class="filter-toggle-wrap">
+      <button id="filterToggleBtn" class="btn" type="button" aria-expanded="false" aria-controls="searchArea">Filter / Search</button>
+    </div>
   </div>
 
   <div id="lightbox" class="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="작품 확대 보기">
@@ -2391,6 +2525,7 @@
           placeholderSearch: 'ID, 제목, 재료, 연도, 섹션 검색',
           resetBtn: '초기화',
           focusSearchBtn: '검색 집중',
+          filterToggleBtn: 'Filter / Search',
           statusIdle: '대기 중',
           statusLoading: '준비됨',
           statusLoaded: '로드 완료',
@@ -2479,6 +2614,7 @@
           placeholderSearch: 'ID, 제목, title, 재료, material, year, section',
           resetBtn: '초기화 / Reset',
           focusSearchBtn: '검색 / Focus',
+          filterToggleBtn: 'Filter / Search',
           statusIdle: '대기 / Idle',
           statusLoading: '준비됨 / Ready',
           statusLoaded: '로드 완료 / Loaded',
@@ -2537,6 +2673,8 @@
       let WORKS_DATA = [];
       let WORKS_READY = false;
       let CURRENT_LIST = [];
+      let archiveEntered = false;
+      let filterPanelOpen = false;
 
       const els = {
         statTotal: document.getElementById('statTotal'),
@@ -2591,6 +2729,8 @@
         langTabs: Array.from(document.querySelectorAll('.lang-tab')),
         archiveHomeLink: document.getElementById('archiveHomeLink'),
         entryBtn: document.getElementById('entryBtn') || document.getElementById('enterArchivePro'),
+        filterToggleWrap: document.getElementById('filterToggleWrap'),
+        filterToggleBtn: document.getElementById('filterToggleBtn'),
         searchArea: document.getElementById('searchArea'),
         sectionButtons: Array.from(document.querySelectorAll('.section-btn'))
       };
@@ -3322,6 +3462,7 @@
         els.searchInput.placeholder = t('placeholderSearch');
         els.resetBtn.textContent = t('resetBtn');
         els.focusSearchBtn.textContent = t('focusSearchBtn');
+        if (els.filterToggleBtn) els.filterToggleBtn.textContent = t('filterToggleBtn');
         els.emptyState.textContent = t('emptyState');
         els.loadMoreBtn.textContent = t('loadMore');
         els.footerNote.textContent = t('footerNote');
@@ -3405,6 +3546,55 @@
         syncDataLanguage(els.activeFilterText.parentElement);
       }
 
+      function updateEntryUXClasses() {
+        document.body.classList.toggle('archive-entered', archiveEntered);
+        document.body.classList.toggle('archive-filter-open', archiveEntered && filterPanelOpen);
+        if (els.filterToggleBtn) {
+          els.filterToggleBtn.setAttribute('aria-expanded', filterPanelOpen ? 'true' : 'false');
+          els.filterToggleBtn.textContent = t('filterToggleBtn');
+        }
+      }
+
+      function enterArchiveExperience() {
+        archiveEntered = true;
+        filterPanelOpen = false;
+        state.query = '';
+        state.section = 'all';
+        state.sort = FAST_ORDER;
+        state.visibleCount = 12;
+        visibleCount = state.visibleCount;
+
+        if (els.searchInput) els.searchInput.value = '';
+        if (els.sectionSelect) els.sectionSelect.value = 'all';
+        if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
+
+        updateEntryUXClasses();
+        showArchiveShellImmediately();
+
+        if (state.isLoaded && state.all.length) {
+          state.filtered = applyFilterSort(state.all);
+          CURRENT_LIST = state.filtered;
+          renderAll();
+        } else {
+          updateStats();
+        }
+
+        requestAnimationFrame(() => {
+          if (els.grid) els.grid.scrollIntoView({ behavior: 'auto', block: 'start' });
+        });
+      }
+
+      function toggleFilterPanel() {
+        if (!archiveEntered) return;
+        filterPanelOpen = !filterPanelOpen;
+        updateEntryUXClasses();
+        if (filterPanelOpen) {
+          requestAnimationFrame(() => {
+            if (els.filterToggleBtn) els.filterToggleBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+        }
+      }
+
       function updateStats() {
         WORKS_DATA = state.all;
         CURRENT_LIST = state.filtered;
@@ -3431,12 +3621,13 @@
 
         updateActiveFilterDataset();
 
-        if (state.lang === 'en') {
-          els.resultText.textContent = `${numberFormat.format(filtered)}${t('resultUnit')}`;
-          els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}`;
-        } else {
-          els.resultText.textContent = `${numberFormat.format(filtered)}${t('resultUnit')}`;
+        const hasActiveSearchOrFilter = Boolean(state.query) || state.section !== 'all';
+        if (hasActiveSearchOrFilter) {
+          els.resultText.textContent = `${numberFormat.format(filtered)} results · ${numberFormat.format(total)} works`;
           els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}${t('renderedSuffix')}`;
+        } else {
+          els.resultText.textContent = `${numberFormat.format(total)} works · ${numberFormat.format(sections)} sections`;
+          els.renderedText.textContent = '';
         }
       }
 
@@ -3585,6 +3776,10 @@
 
       function renderGrid() {
         if (!els.grid) return;
+        if (!archiveEntered) {
+          updateStats();
+          return;
+        }
 
         if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; }
         if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
@@ -4027,7 +4222,7 @@
           renderSectionButtons();
           updateStats();
           updateMeta();
-          scheduleFirstGridRender();
+          if (archiveEntered) scheduleFirstGridRender();
 
           const buildSimulationSnapshot = () => {
             const duplicateImageRows = (() => {
@@ -4124,6 +4319,7 @@
         });
 
         els.resetBtn.addEventListener('click', resetFilters);
+        if (els.filterToggleBtn) els.filterToggleBtn.addEventListener('click', toggleFilterPanel);
 
         els.focusSearchBtn.addEventListener('click', () => {
           els.searchInput.focus();
@@ -4373,26 +4569,7 @@
         if (els.entryBtn) {
           els.entryBtn.addEventListener('click', (e) => {
             if (e && typeof e.preventDefault === 'function') e.preventDefault();
-
-            /* Entry click latency fix:
-               respond visually first, then defer the heavier grid reset/render. */
-            showArchiveShellImmediately();
-            if (els.searchArea) els.searchArea.scrollIntoView({ behavior: 'auto', block: 'start' });
-
-            if (!state.isLoaded || !state.all.length) return;
-
-            const alreadyDefault =
-              !state.query &&
-              state.section === 'all' &&
-              state.sort === FAST_ORDER &&
-              state.visibleCount === getInitialVisibleCount();
-
-            if (alreadyDefault) return;
-
-            requestAnimationFrame(() => {
-              resetFilters(false);
-              if (els.searchArea) els.searchArea.scrollIntoView({ behavior: 'auto', block: 'start' });
-            });
+            enterArchiveExperience();
           }, { passive:false });
         }
 
@@ -4423,6 +4600,7 @@
         if (archiveLoadStarted) return;
         archiveLoadStarted = true;
 
+        updateEntryUXClasses();
         showArchiveShellImmediately();
         requestAnimationFrame(() => {
           rebuildStaticTexts();

@@ -1936,16 +1936,47 @@
     }
 
 
-    /* ARCHIVE PRO LIGHTBOX FINAL DESKTOP ARROW + IMAGE SIZE FIX
-       - desktop/laptop arrows only
-       - arrows stay in viewport gutters, not on the artwork
-       - image is constrained inside an artwork-safe stage
-       - mobile keeps existing swipe/stack behavior */
+    /* ARCHIVE PRO LIGHTBOX LAPTOP/PC FINAL SIZE LOCK
+       Scope: only desktop/laptop lightbox image scale + arrows.
+       Purpose:
+       - Prevent oversized images in the two-column lightbox.
+       - Keep arrows visible only on laptop/PC.
+       - Keep arrows in safe gutters, not on artwork and not on metadata panel.
+       - Keep mobile behavior unchanged. */
     .lightbox-nav{
       display:none !important;
     }
 
     @media (min-width:881px){
+      .lightbox-inner{
+        grid-template-columns:minmax(0, 1fr) 380px !important;
+      }
+
+      .lightbox-stage{
+        position:relative !important;
+        min-width:0 !important;
+        min-height:0 !important;
+        width:100% !important;
+        height:100vh !important;
+        display:flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        padding:74px 110px 42px 110px !important;
+        overflow:hidden !important;
+      }
+
+      .lightbox-stage img,
+      #lightboxImage{
+        display:block !important;
+        width:auto !important;
+        height:auto !important;
+        max-width:min(calc(100vw - 380px - 260px), 880px) !important;
+        max-height:calc(100vh - 160px) !important;
+        object-fit:contain !important;
+        transform:translate3d(0,0,0) scale(1) !important;
+        transform-origin:center center !important;
+      }
+
       .lightbox.open .lightbox-nav,
       .lightbox.active .lightbox-nav{
         display:flex !important;
@@ -1985,42 +2016,47 @@
       }
 
       .lightbox-prev{
-        left:calc(24px + env(safe-area-inset-left, 0px)) !important;
+        left:calc(28px + env(safe-area-inset-left, 0px)) !important;
       }
 
-      /* Right arrow sits just before the fixed side panel, not over metadata and not over artwork. */
       .lightbox-next{
-        right:calc(380px + 24px + env(safe-area-inset-right, 0px)) !important;
-      }
-
-      /* Reserve visual gutters inside the artwork stage so arrows never cover the image. */
-      .lightbox-stage{
-        padding:74px 102px 40px 102px !important;
-        overflow:hidden !important;
-      }
-
-      .lightbox-stage img,
-      #lightboxImage{
-        max-width:100% !important;
-        max-height:calc(100vh - 150px) !important;
-        width:auto !important;
-        height:auto !important;
-        object-fit:contain !important;
+        right:calc(380px + 28px + env(safe-area-inset-right, 0px)) !important;
       }
     }
 
     @media (min-width:881px) and (max-width:1180px){
-      .lightbox-next{
-        right:calc(340px + 20px + env(safe-area-inset-right, 0px)) !important;
+      .lightbox-inner{
+        grid-template-columns:minmax(0, 1fr) 340px !important;
       }
 
       .lightbox-stage{
-        padding:74px 88px 36px 88px !important;
+        padding:74px 96px 38px 96px !important;
       }
 
       .lightbox-stage img,
       #lightboxImage{
-        max-height:calc(100vh - 150px) !important;
+        max-width:min(calc(100vw - 340px - 230px), 760px) !important;
+        max-height:calc(100vh - 160px) !important;
+      }
+
+      .lightbox-next{
+        right:calc(340px + 24px + env(safe-area-inset-right, 0px)) !important;
+      }
+
+      .lightbox-prev{
+        left:calc(24px + env(safe-area-inset-left, 0px)) !important;
+      }
+    }
+
+    @media (min-width:881px) and (max-width:1020px){
+      .lightbox-stage{
+        padding:74px 82px 36px 82px !important;
+      }
+
+      .lightbox-stage img,
+      #lightboxImage{
+        max-width:calc(100vw - 340px - 190px) !important;
+        max-height:calc(100vh - 165px) !important;
       }
     }
 
@@ -2193,6 +2229,7 @@
   <script>
     (() => {
       'use strict';
+      const ARCHIVE_PRO_DESKTOP_LIGHTBOX_SIZE_LOCK_JS = true;
 
       if (window.__ARCHIVE_PRO_BOOTED__) return;
       window.__ARCHIVE_PRO_BOOTED__ = true;
@@ -3628,6 +3665,12 @@
         els.lightboxImage.fetchPriority = 'high';
         els.lightboxImage.onerror = () => { els.lightboxImage.src = SVG_PLACEHOLDER; };
         els.lightboxImage.src = displayUrl;
+
+        if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
+          els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
+          els.lightboxImage.style.width = 'auto';
+          els.lightboxImage.style.height = 'auto';
+        }
 
         els.lightbox.classList.add('open');
         els.lightbox.classList.add('active');

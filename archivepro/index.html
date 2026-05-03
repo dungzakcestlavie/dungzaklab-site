@@ -3481,6 +3481,97 @@
         letter-spacing:.18em !important;
       }
     }
+
+
+    /* ARCHIVE PRO MOBILE LIGHTBOX CLOSE + CAPTION SIZE FIX — mobile only, PC unchanged */
+    @media (max-width:768px){
+      .viewer-close,
+      .lightbox-close,
+      .works-viewer-close,
+      #viewerCloseBtn,
+      #lightboxClose{
+        position:fixed !important;
+        top:calc(env(safe-area-inset-top, 0px) + 18px) !important;
+        right:18px !important;
+        z-index:10050 !important;
+        width:50px !important;
+        height:50px !important;
+        min-width:50px !important;
+        min-height:50px !important;
+        display:grid !important;
+        place-items:center !important;
+        pointer-events:auto !important;
+        touch-action:manipulation !important;
+      }
+
+      .viewer-stage,
+      .lightbox-stage,
+      .works-viewer-stage{
+        padding-top:calc(env(safe-area-inset-top, 0px) + 72px) !important;
+      }
+
+      .viewer-caption,
+      .lightbox-caption,
+      .works-viewer-caption,
+      .lightbox-side{
+        padding:24px 22px calc(env(safe-area-inset-bottom, 0px) + 32px) 22px !important;
+      }
+
+      .viewer-id,
+      .lightbox-id,
+      .works-viewer-id,
+      .lightbox-side .lb-id,
+      #lbId{
+        font-size:13px !important;
+        letter-spacing:0.16em !important;
+        line-height:1.35 !important;
+      }
+
+      .viewer-title,
+      .lightbox-title,
+      .works-viewer-title,
+      .lightbox-side .lb-title,
+      #lbTitle{
+        font-size:24px !important;
+        line-height:1.18 !important;
+      }
+
+      .viewer-section,
+      .lightbox-section,
+      .works-viewer-section,
+      .lightbox-side .lb-section,
+      #lbSection{
+        font-size:16px !important;
+        line-height:1.45 !important;
+      }
+
+      .viewer-meta,
+      .lightbox-meta,
+      .works-viewer-meta,
+      .lb-meta,
+      .lb-row{
+        font-size:15px !important;
+        line-height:1.55 !important;
+      }
+
+      .viewer-meta dt,
+      .viewer-meta-label,
+      .lightbox-meta dt,
+      .works-viewer-meta dt,
+      .lb-key{
+        font-size:14px !important;
+        line-height:1.55 !important;
+      }
+
+      .viewer-meta dd,
+      .viewer-meta-value,
+      .lightbox-meta dd,
+      .works-viewer-meta dd,
+      .lb-val{
+        font-size:15px !important;
+        line-height:1.55 !important;
+      }
+    }
 </style>
 </head>
 <body>

@@ -3393,6 +3393,94 @@
       }
     }
 
+
+
+    /* ARCHIVE PRO LOAD MORE BRAND REFINEMENT — bilingual, larger, distinct typography */
+    #loadMoreBtn{
+      width:min(214px, 72vw) !important;
+      min-height:52px !important;
+      height:52px !important;
+      padding:7px 26px 8px !important;
+      display:inline-flex !important;
+      flex-direction:column !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:2px !important;
+      border-radius:999px !important;
+      border:1px solid rgba(212,180,109,.36) !important;
+      background:linear-gradient(180deg, rgba(12,22,42,.74), rgba(6,10,20,.92)) !important;
+      color:transparent !important;
+      font-size:0 !important;
+      line-height:1 !important;
+      letter-spacing:0 !important;
+      text-transform:none !important;
+      box-shadow:none !important;
+      filter:none !important;
+      transform:none !important;
+      overflow:hidden !important;
+    }
+
+    #loadMoreBtn::before{
+      content:"더 보기";
+      display:block;
+      font-family:"Noto Serif KR","Apple SD Gothic Neo","Pretendard",serif !important;
+      font-size:15px !important;
+      line-height:1.05 !important;
+      font-weight:500 !important;
+      letter-spacing:.08em !important;
+      color:rgba(230,201,138,.92) !important;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:geometricPrecision;
+    }
+
+    #loadMoreBtn::after{
+      content:"LOAD MORE";
+      display:block;
+      margin-top:2px;
+      font-family:"Avenir Next","Helvetica Neue","Pretendard",-apple-system,BlinkMacSystemFont,sans-serif !important;
+      font-size:10px !important;
+      line-height:1 !important;
+      font-weight:500 !important;
+      letter-spacing:.19em !important;
+      color:rgba(212,180,109,.62) !important;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:geometricPrecision;
+    }
+
+    #loadMoreBtn:hover,
+    #loadMoreBtn:focus-visible{
+      border-color:rgba(212,180,109,.56) !important;
+      background:linear-gradient(180deg, rgba(15,28,54,.82), rgba(7,12,23,.96)) !important;
+      box-shadow:none !important;
+      filter:none !important;
+      transform:none !important;
+      outline:none !important;
+    }
+
+    #loadMoreBtn:hover::before,
+    #loadMoreBtn:focus-visible::before{
+      color:rgba(244,241,234,.92) !important;
+    }
+
+    #loadMoreBtn:hover::after,
+    #loadMoreBtn:focus-visible::after{
+      color:rgba(230,201,138,.78) !important;
+    }
+
+    @media (max-width:640px){
+      #loadMoreBtn{
+        width:min(210px, 76vw) !important;
+        min-height:50px !important;
+        height:50px !important;
+      }
+      #loadMoreBtn::before{
+        font-size:14px !important;
+      }
+      #loadMoreBtn::after{
+        font-size:9px !important;
+        letter-spacing:.18em !important;
+      }
+    }
 </style>
 </head>
 <body>
@@ -3515,7 +3603,7 @@
       </div>
 
       <div id="loadWrap" class="load-wrap" hidden>
-        <button id="loadMoreBtn" class="btn" type="button">더 보기</button>
+        <button id="loadMoreBtn" class="btn" type="button">더 보기 / Load more</button>
       </div>
 
       <p class="footer-note" id="footerNote">DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json</p>
@@ -3732,7 +3820,7 @@
           sectionPrefix: '섹션',
           yearPrefix: '연도',
           emptyState: '조건에 맞는 작품이 없습니다.',
-          loadMore: '더 보기',
+          loadMore: '더 보기 / Load more',
           footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
           untitled: '무제 / 캡션 없음',
           noInfo: '정보 없음',
@@ -3777,7 +3865,7 @@
           sectionPrefix: 'Section',
           yearPrefix: 'Year',
           emptyState: 'No artworks match the current filters.',
-          loadMore: 'Load more',
+          loadMore: '더 보기 / Load more',
           footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
           untitled: 'Untitled / No Caption',
           noInfo: 'No information',

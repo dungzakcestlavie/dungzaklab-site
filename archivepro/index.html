@@ -3822,15 +3822,6 @@
       </div>
     </section>
 
-    <div class="meta-row archive-source-meta">
-      <div class="meta-left">
-        <span class="meta-pill" id="sourcePill">Source: https://dungzak.art/data/works.json</span>
-        <span class="meta-pill" id="loadedPill">Data: — items</span>
-      </div>
-      <div class="meta-right">
-        <span id="statusText" class="status">준비됨</span>
-      </div>
-    </div>
 
     <span id="archiveWorks" aria-hidden="true"></span>
     <main id="archiveMain" aria-live="polite">
@@ -4059,7 +4050,6 @@
           filterToggleBtn: 'Filter / Search',
           statusIdle: '대기 중',
           statusLoading: '준비됨',
-          statusLoaded: '로드 완료',
           statusFailed: '로드 실패',
           loadingScreen: '',
           loadingScreenError: 'works.json을 불러오지 못했습니다. 경로 또는 접근 권한을 확인해 주세요.',
@@ -4104,7 +4094,6 @@
           filterToggleBtn: 'Filter / Search',
           statusIdle: 'Idle',
           statusLoading: 'Ready',
-          statusLoaded: 'Loaded',
           statusFailed: 'Failed',
           loadingScreen: '',
           loadingScreenError: 'Unable to load works.json.',
@@ -4149,7 +4138,6 @@
           filterToggleBtn: 'Filter / Search',
           statusIdle: '대기 / Idle',
           statusLoading: '준비됨 / Ready',
-          statusLoaded: '로드 완료 / Loaded',
           statusFailed: '로드 실패 / Failed',
           loadingScreen: '',
           loadingScreenError: 'works.json을 불러오지 못했습니다 / Unable to load works.json.',
@@ -4224,9 +4212,6 @@
         labelSearch: document.getElementById('labelSearch'),
         labelSection: document.getElementById('labelSection'),
         labelSort: document.getElementById('labelSort'),
-        sourcePill: document.getElementById('sourcePill'),
-        loadedPill: document.getElementById('loadedPill'),
-        statusText: document.getElementById('statusText'),
         loadingScreen: document.getElementById('loadingScreen'),
         resultsMeta: document.getElementById('resultsMeta'),
         resultText: document.getElementById('resultText'),
@@ -4403,11 +4388,7 @@
       }
 
       function setStatusByState() {
-        if (state.loadState === 'loading') els.statusText.textContent = t('statusLoading');
-        else if (state.loadState === 'loaded') els.statusText.textContent = t('statusLoaded');
-        else if (state.loadState === 'failed') els.statusText.textContent = t('statusFailed');
-        else els.statusText.textContent = t('statusIdle');
-        els.statusText.classList.toggle('error', state.loadState === 'failed');
+        return;
       }
 
       function getSectionTextById(sectionId) {
@@ -5175,7 +5156,6 @@
         els.statTotal.textContent = numberFormat.format(total);
         els.statFiltered.textContent = numberFormat.format(filtered);
         els.statSections.textContent = numberFormat.format(sections);
-        els.loadedPill.textContent = `Data: ${numberFormat.format(total)} items`;
 
         updateActiveFilterDataset();
 
@@ -5724,7 +5704,6 @@
               const count = Array.isArray(works) ? works.length : 0;
 
               if (count >= MIN_EXPECTED_WORKS) {
-                if (els.sourcePill) els.sourcePill.textContent = `Source: ${url}`;
                 return works;
               }
 
@@ -5783,7 +5762,6 @@
           if (els.searchInput) els.searchInput.value = '';
           if (els.sectionSelect) els.sectionSelect.value = 'all';
           if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
-          if (els.sourcePill && !els.sourcePill.textContent.startsWith('Source: http')) els.sourcePill.textContent = `Source: ${DATA_URL}`;
 
           rebuildStaticTexts();
           renderSectionOptions();
@@ -5831,10 +5809,6 @@
           state.all = [];
           state.filtered = [];
 
-          if (els.statusText) {
-            els.statusText.textContent = t('statusFailed');
-            els.statusText.classList.add('error');
-          }
           if (els.emptyState) {
             els.emptyState.hidden = false;
             els.emptyState.textContent = t('loadingScreenError');

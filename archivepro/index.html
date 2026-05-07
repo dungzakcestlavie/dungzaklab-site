@@ -2395,9 +2395,7 @@
         line-height:34px !important;
       }
     }
-
-
-    /* ARCHIVE PRO HEADER RESET + SUBLINE UI CLARITY — title is reset, subline is direct access cue */
+    /* ARCHIVE PRO HEADER SIMPLIFICATION — title is the reset trigger */
     .brand-row{
       align-items:center !important;
       gap:12px 14px !important;
@@ -2418,25 +2416,6 @@
       text-shadow:0 0 18px rgba(212,180,109,.18), 0 0 36px rgba(78,110,164,.12) !important;
     }
 
-    .brand-home-link::after{
-      content:"RESET";
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:24px;
-      margin-left:12px;
-      padding:0 9px;
-      border-radius:999px;
-      border:1px solid rgba(212,180,109,.32);
-      background:rgba(212,180,109,.055);
-      color:rgba(212,180,109,.74);
-      font-size:10px;
-      line-height:24px;
-      letter-spacing:.12em;
-      font-weight:700;
-      opacity:.86;
-    }
-
     .brand-home-link:hover,
     .brand-home-link:focus-visible{
       background:rgba(212,180,109,.045) !important;
@@ -2449,14 +2428,6 @@
     .brand-home-link:focus-visible h1{
       color:#d4b46d !important;
       text-shadow:0 0 22px rgba(212,180,109,.26), 0 0 42px rgba(78,110,164,.16) !important;
-    }
-
-    .brand-home-link:hover::after,
-    .brand-home-link:focus-visible::after{
-      opacity:1;
-      color:#f4efe6;
-      border-color:rgba(212,180,109,.58);
-      background:rgba(212,180,109,.12);
     }
 
     .subline{
@@ -2498,13 +2469,6 @@
 
       .brand-home-link{
         padding-right:0 !important;
-      }
-
-      .brand-home-link::after{
-        min-height:22px;
-        line-height:22px;
-        font-size:9px;
-        margin-left:9px;
       }
 
       .subline{
@@ -3093,13 +3057,6 @@
       text-shadow:none !important;
     }
 
-    .brand-home-link::after{
-      border-color:rgba(212,180,109,.30) !important;
-      background:rgba(11,19,36,.72) !important;
-      color:rgba(212,180,109,.72) !important;
-      box-shadow:none !important;
-    }
-
     .subline{
       border:1px solid rgba(88,126,185,.28) !important;
       background:rgba(11,19,36,.72) !important;
@@ -3575,29 +3532,6 @@
 
 
     /* ARCHIVE PRO INTERFACE RESTRUCTURE — always open / no filter-search toggle / structure-select-sort-search */
-    .reset-subline{
-      appearance:none;
-      -webkit-appearance:none;
-      border:1px solid rgba(212,180,109,.32);
-      border-radius:999px;
-      background:rgba(212,180,109,.055);
-      color:var(--gold);
-      min-height:32px;
-      padding:0 12px;
-      cursor:pointer;
-      font-size:12px;
-      letter-spacing:.08em;
-      text-transform:none;
-      white-space:nowrap;
-    }
-
-    .reset-subline:hover,
-    .reset-subline:focus-visible{
-      border-color:rgba(212,180,109,.58);
-      background:rgba(212,180,109,.10);
-      color:var(--text);
-      outline:none;
-    }
 
     #filterToggleWrap,
     #filterToggleBtn{
@@ -3687,6 +3621,15 @@
       body.archive-entered #searchArea .control-actions{
         grid-column:auto !important;
       }
+    }
+
+
+    #ap-reset-trigger{
+      cursor:pointer !important;
+    }
+
+    #ap-reset-trigger h1{
+      cursor:pointer !important;
     }
 
 
@@ -3803,10 +3746,9 @@
       <div class="brand-wrap">
         <p class="eyebrow">DUNGZAK CESTLAVIE LAB</p>
         <div class="brand-row">
-          <a href="#" id="archiveHomeLink" class="brand-home-link" aria-label="Archive Pro home">
+          <a href="#" id="ap-reset-trigger" class="brand-home-link" aria-label="Archive Pro reset">
             <h1>ARCHIVE PRO</h1>
           </a>
-          <button class="subline reset-subline" id="allSectionsResetBtn" type="button" aria-label="All Sections Reset">All Sections · Reset</button>
         </div>
       </div>
       <a class="back-link" href="../index.html" aria-label="LAB으로 돌아가기">LAB</a>
@@ -4317,8 +4259,7 @@
         lbKeyImage: document.getElementById('lbKeyImage'),
         lbKeyZoom: document.getElementById('lbKeyZoom'),
         langTabs: Array.from(document.querySelectorAll('.lang-tab')),
-        archiveHomeLink: document.getElementById('archiveHomeLink'),
-        allSectionsResetBtn: document.getElementById('allSectionsResetBtn'),
+        apResetTrigger: document.getElementById('ap-reset-trigger'),
         entryBtn: document.getElementById('entryBtn') || document.getElementById('enterArchivePro'),
         filterToggleWrap: document.getElementById('filterToggleWrap'),
         filterToggleBtn: document.getElementById('filterToggleBtn'),
@@ -5964,7 +5905,6 @@
         });
 
         els.resetBtn.addEventListener('click', () => resetFilters(false));
-        if (els.allSectionsResetBtn) els.allSectionsResetBtn.addEventListener('click', resetAllSections);
         if (els.filterToggleBtn) els.filterToggleBtn.addEventListener('click', toggleFilterPanel);
 
         els.focusSearchBtn.addEventListener('click', () => {
@@ -6204,8 +6144,8 @@
           tab.addEventListener('click', () => setLanguage(tab.dataset.lang));
         });
 
-        if (els.archiveHomeLink) {
-          els.archiveHomeLink.addEventListener('click', (e) => {
+        if (els.apResetTrigger) {
+          els.apResetTrigger.addEventListener('click', (e) => {
             e.preventDefault();
             if (Date.now() <= closeClickBlockUntil) {
               blockEvent(e);

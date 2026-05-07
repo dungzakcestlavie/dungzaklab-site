@@ -3688,6 +3688,111 @@
         grid-column:auto !important;
       }
     }
+
+
+    /* ARCHIVE PRO LAYOUT REFINEMENT — compact top interface + load more below works grid only */
+    body.archive-entered .site-shell{
+      padding-top:12px !important;
+    }
+
+    .header-inner{
+      min-height:76px !important;
+      padding:12px 0 !important;
+      gap:12px !important;
+    }
+
+    .site-shell > #footerNote{
+      margin:8px 0 8px !important;
+    }
+
+    body.archive-entered .hero{
+      padding-top:8px !important;
+      gap:8px !important;
+    }
+
+    .lang-inline{
+      padding:10px 14px !important;
+      gap:8px !important;
+    }
+
+    .lang-inline .lang-tabs{
+      gap:8px !important;
+    }
+
+    body.archive-entered #searchArea.controls{
+      padding:14px !important;
+      gap:10px !important;
+      margin-top:8px !important;
+      margin-bottom:8px !important;
+    }
+
+    body.archive-entered #searchArea .field{
+      gap:5px !important;
+    }
+
+    body.archive-entered .archive-source-meta{
+      margin:8px 2px 8px !important;
+    }
+
+    body.archive-entered #archiveMain{
+      order:6 !important;
+      display:flex !important;
+      flex-direction:column !important;
+    }
+
+    body.archive-entered #resultsMeta{
+      order:1 !important;
+      margin:8px 2px 8px !important;
+    }
+
+    body.archive-entered #grid{
+      order:2 !important;
+    }
+
+    body.archive-entered #loadWrap{
+      order:3 !important;
+      display:flex !important;
+      justify-content:center !important;
+      padding:18px 0 12px !important;
+      margin:0 !important;
+      position:relative !important;
+    }
+
+    body.archive-entered #loadWrap[hidden]{
+      display:none !important;
+    }
+
+    body.archive-entered #emptyState{
+      order:4 !important;
+    }
+
+    body.archive-entered #loadWrap::after{
+      bottom:0 !important;
+    }
+
+    @media (max-width:640px){
+      body.archive-entered .site-shell{
+        padding-top:10px !important;
+      }
+
+      .header-inner{
+        min-height:72px !important;
+        padding:10px 0 !important;
+      }
+
+      .lang-inline{
+        padding:10px !important;
+      }
+
+      body.archive-entered #searchArea.controls{
+        padding:12px !important;
+        gap:10px !important;
+      }
+
+      body.archive-entered #loadWrap{
+        padding:16px 0 10px !important;
+      }
+    }
 </style>
 </head>
 <body class="archive-entered archive-filter-open">
@@ -3709,10 +3814,6 @@
   </header>
 
   <div class="site-shell">
-    <div id="loadWrap" class="load-wrap" hidden>
-      <button id="loadMoreBtn" class="btn" type="button">더 보기 / Load more</button>
-    </div>
-
     <p class="footer-note" id="footerNote">DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json</p>
 
     <section class="hero hero-compressed" aria-label="Archive controls summary">
@@ -3810,6 +3911,10 @@
       </div>
 
       <section id="grid" class="grid" aria-label="작품 그리드"></section>
+
+      <div id="loadWrap" class="load-wrap" hidden>
+        <button id="loadMoreBtn" class="btn" type="button">더 보기 / Load more</button>
+      </div>
 
       <div id="emptyState" class="empty-state" hidden>
         조건에 맞는 작품이 없습니다.

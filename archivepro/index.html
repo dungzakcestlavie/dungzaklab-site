@@ -5818,20 +5818,22 @@
       }
 
       function resetFilters(shouldScrollTop = true) {
-        const keepSort = state.sort || (els.sortSelect ? els.sortSelect.value : FAST_ORDER) || FAST_ORDER;
+        /* FULL RESET BUTTON FIX
+           초기화 버튼은 section / search / sort / visibleCount / internal state를
+           모두 기본 상태로 되돌린 뒤 전체 작품을 다시 렌더링한다. */
         state.query = '';
         state.section = 'all';
-        state.sort = keepSort;
+        state.sort = FAST_ORDER;
         state.visibleCount = getInitialVisibleCount();
-        state.filtered = applyFilterSort(state.all);
-
-        WORKS_DATA = state.all;
-        CURRENT_LIST = state.filtered;
-        visibleCount = state.visibleCount;
 
         if (els.searchInput) els.searchInput.value = '';
         if (els.sectionSelect) els.sectionSelect.value = 'all';
-        if (els.sortSelect) els.sortSelect.value = keepSort;
+        if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
+
+        state.filtered = applyFilterSort(state.all);
+        WORKS_DATA = state.all;
+        CURRENT_LIST = state.filtered;
+        visibleCount = state.visibleCount;
 
         renderAll();
         if (shouldScrollTop) window.scrollTo({ top: 0, behavior: 'auto' });
@@ -5878,7 +5880,7 @@
           applyFilters(true);
         });
 
-        els.resetBtn.addEventListener('click', () => resetFilters(false));
+        if (els.resetBtn) els.resetBtn.addEventListener('click', () => resetFilters(false));
         if (els.filterToggleBtn) els.filterToggleBtn.addEventListener('click', toggleFilterPanel);
 
         els.focusSearchBtn.addEventListener('click', () => {

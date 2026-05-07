@@ -3572,9 +3572,125 @@
         line-height:1.55 !important;
       }
     }
+
+
+    /* ARCHIVE PRO INTERFACE RESTRUCTURE — always open / no filter-search toggle / structure-select-sort-search */
+    .reset-subline{
+      appearance:none;
+      -webkit-appearance:none;
+      border:1px solid rgba(212,180,109,.32);
+      border-radius:999px;
+      background:rgba(212,180,109,.055);
+      color:var(--gold);
+      min-height:32px;
+      padding:0 12px;
+      cursor:pointer;
+      font-size:12px;
+      letter-spacing:.08em;
+      text-transform:none;
+      white-space:nowrap;
+    }
+
+    .reset-subline:hover,
+    .reset-subline:focus-visible{
+      border-color:rgba(212,180,109,.58);
+      background:rgba(212,180,109,.10);
+      color:var(--text);
+      outline:none;
+    }
+
+    #filterToggleWrap,
+    #filterToggleBtn{
+      display:none !important;
+    }
+
+    body.archive-entered .archive-entry-wrap{
+      display:none !important;
+    }
+
+    body.archive-entered .site-shell{
+      display:flex !important;
+      flex-direction:column !important;
+    }
+
+    body.archive-entered #loadWrap{
+      order:1 !important;
+      display:flex;
+      justify-content:center;
+    }
+
+    body.archive-entered #loadWrap[hidden]{
+      display:none !important;
+    }
+
+    body.archive-entered #footerNote{
+      order:2 !important;
+      margin:12px 0 10px !important;
+    }
+
+    body.archive-entered .hero{
+      order:3 !important;
+      display:grid !important;
+    }
+
+    body.archive-entered #searchArea{
+      order:4 !important;
+      display:grid !important;
+    }
+
+    body.archive-entered .archive-source-meta{
+      order:5 !important;
+      display:flex !important;
+      opacity:.78;
+    }
+
+    body.archive-entered #archiveMain{
+      order:6 !important;
+      display:flex !important;
+      flex-direction:column !important;
+    }
+
+    body.archive-entered:not(.archive-filter-open) .hero,
+    body.archive-entered:not(.archive-filter-open) #searchArea,
+    body.archive-entered:not(.archive-filter-open) .archive-source-meta{
+      display:grid !important;
+    }
+
+    body.archive-entered:not(.archive-filter-open) .archive-source-meta{
+      display:flex !important;
+    }
+
+    body.archive-entered #resultsMeta{order:1 !important;}
+    body.archive-entered #grid{order:2 !important;}
+    body.archive-entered #emptyState{order:3 !important;}
+
+    body.archive-entered #searchArea.controls{
+      grid-template-columns:minmax(190px,.85fr) minmax(170px,.75fr) minmax(280px,1.35fr) auto !important;
+      align-items:end !important;
+    }
+
+    @media (max-width:1040px){
+      body.archive-entered #searchArea.controls{
+        grid-template-columns:1fr 1fr !important;
+      }
+      body.archive-entered #searchArea .field:nth-child(3),
+      body.archive-entered #searchArea .control-actions{
+        grid-column:1/-1 !important;
+      }
+    }
+
+    @media (max-width:640px){
+      body.archive-entered #searchArea.controls{
+        grid-template-columns:1fr !important;
+      }
+      body.archive-entered #searchArea .field:nth-child(3),
+      body.archive-entered #searchArea .control-actions{
+        grid-column:auto !important;
+      }
+    }
 </style>
 </head>
-<body>
+<body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>
 
   <header class="site-header">
@@ -3585,7 +3701,7 @@
           <a href="#" id="archiveHomeLink" class="brand-home-link" aria-label="Archive Pro home">
             <h1>ARCHIVE PRO</h1>
           </a>
-          <p class="subline" id="archiveSubline">Click ARCHIVE PRO to reset · Search / Filter / Access</p>
+          <button class="subline reset-subline" id="allSectionsResetBtn" type="button" aria-label="All Sections Reset">All Sections · Reset</button>
         </div>
       </div>
       <a class="back-link" href="../index.html" aria-label="LAB으로 돌아가기">LAB</a>
@@ -3593,6 +3709,12 @@
   </header>
 
   <div class="site-shell">
+    <div id="loadWrap" class="load-wrap" hidden>
+      <button id="loadMoreBtn" class="btn" type="button">더 보기 / Load more</button>
+    </div>
+
+    <p class="footer-note" id="footerNote">DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json</p>
+
     <section class="hero hero-compressed" aria-label="Archive controls summary">
       <article class="lang-inline" aria-label="Language mode and site link">
         <div class="lang-tabs" role="tablist" aria-label="Language mode">
@@ -3622,20 +3744,6 @@
 
     <section id="searchArea" class="panel controls" aria-label="아카이브 검색 및 필터">
       <div class="field">
-        <label for="searchInput" id="labelSearch">Search</label>
-        <input
-          id="searchInput"
-          class="input"
-          type="search"
-          placeholder="ID, 제목, 재료, 연도, 섹션 검색"
-          autocomplete="off"
-          spellcheck="false"
-          data-kr="ID, 제목, 재료, 연도, 섹션 검색"
-          data-en="Search ID, title, material, year, section"
-        />
-      </div>
-
-      <div class="field">
         <label for="sectionSelect" id="labelSection">Section</label>
         <select id="sectionSelect" class="select" aria-label="섹션 선택">
           <option value="all">전체 섹션</option>
@@ -3649,6 +3757,20 @@
           <option value="id-desc">번호 늦은순</option>
           <option value="year-desc">최신순</option>
         </select>
+      </div>
+
+      <div class="field">
+        <label for="searchInput" id="labelSearch">Search</label>
+        <input
+          id="searchInput"
+          class="input"
+          type="search"
+          placeholder="ID, 제목, 재료, 연도, 섹션 검색"
+          autocomplete="off"
+          spellcheck="false"
+          data-kr="ID, 제목, 재료, 연도, 섹션 검색"
+          data-en="Search ID, title, material, year, section"
+        />
       </div>
 
       <div class="control-actions">
@@ -3693,16 +3815,8 @@
         조건에 맞는 작품이 없습니다.
       </div>
 
-      <div id="loadWrap" class="load-wrap" hidden>
-        <button id="loadMoreBtn" class="btn" type="button">더 보기 / Load more</button>
-      </div>
-
-      <p class="footer-note" id="footerNote">DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json</p>
     </main>
 
-    <div id="filterToggleWrap" class="filter-toggle-wrap">
-      <button id="filterToggleBtn" class="btn" type="button" aria-expanded="false" aria-controls="searchArea"><span class="cta-main">Filter / Search</span><span class="cta-sub">click</span></button>
-    </div>
   </div>
 
   <div id="lightbox" class="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="작품 확대 보기">
@@ -4044,8 +4158,8 @@
       let WORKS_DATA = [];
       let WORKS_READY = false;
       let CURRENT_LIST = [];
-      let archiveEntered = false;
-      let filterPanelOpen = false;
+      let archiveEntered = true;
+      let filterPanelOpen = true;
 
       const els = {
         statTotal: document.getElementById('statTotal'),
@@ -4099,6 +4213,7 @@
         lbKeyZoom: document.getElementById('lbKeyZoom'),
         langTabs: Array.from(document.querySelectorAll('.lang-tab')),
         archiveHomeLink: document.getElementById('archiveHomeLink'),
+        allSectionsResetBtn: document.getElementById('allSectionsResetBtn'),
         entryBtn: document.getElementById('entryBtn') || document.getElementById('enterArchivePro'),
         filterToggleWrap: document.getElementById('filterToggleWrap'),
         filterToggleBtn: document.getElementById('filterToggleBtn'),
@@ -4949,7 +5064,7 @@
 
       function updateEntryUXClasses() {
         document.body.classList.toggle('archive-entered', archiveEntered);
-        document.body.classList.toggle('archive-filter-open', archiveEntered && filterPanelOpen);
+        document.body.classList.toggle('archive-filter-open', archiveEntered);
         if (els.filterToggleBtn) {
           els.filterToggleBtn.setAttribute('aria-expanded', filterPanelOpen ? 'true' : 'false');
           renderFilterToggleLabel();
@@ -4958,11 +5073,11 @@
 
       function enterArchiveExperience() {
         archiveEntered = true;
-        filterPanelOpen = false;
+        filterPanelOpen = true;
         state.query = '';
         state.section = 'all';
         state.sort = FAST_ORDER;
-        state.visibleCount = 12;
+        state.visibleCount = getInitialVisibleCount();
         visibleCount = state.visibleCount;
 
         if (els.searchInput) els.searchInput.value = '';
@@ -4987,14 +5102,9 @@
       }
 
       function toggleFilterPanel() {
-        if (!archiveEntered) return;
-        filterPanelOpen = !filterPanelOpen;
+        archiveEntered = true;
+        filterPanelOpen = true;
         updateEntryUXClasses();
-        if (filterPanelOpen) {
-          requestAnimationFrame(() => {
-            if (els.filterToggleBtn) els.filterToggleBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          });
-        }
       }
 
       function updateStats() {
@@ -5688,6 +5798,28 @@
       }
 
       function resetFilters(shouldScrollTop = true) {
+        const keepSort = state.sort || (els.sortSelect ? els.sortSelect.value : FAST_ORDER) || FAST_ORDER;
+        state.query = '';
+        state.section = 'all';
+        state.sort = keepSort;
+        state.visibleCount = getInitialVisibleCount();
+        state.filtered = applyFilterSort(state.all);
+
+        WORKS_DATA = state.all;
+        CURRENT_LIST = state.filtered;
+        visibleCount = state.visibleCount;
+
+        if (els.searchInput) els.searchInput.value = '';
+        if (els.sectionSelect) els.sectionSelect.value = 'all';
+        if (els.sortSelect) els.sortSelect.value = keepSort;
+
+        renderAll();
+        if (shouldScrollTop) window.scrollTo({ top: 0, behavior: 'auto' });
+      }
+
+      function resetAllSections() {
+        archiveEntered = true;
+        filterPanelOpen = true;
         state.query = '';
         state.section = 'all';
         state.sort = FAST_ORDER;
@@ -5702,13 +5834,14 @@
         if (els.sectionSelect) els.sectionSelect.value = 'all';
         if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
 
+        updateEntryUXClasses();
         renderAll();
-        if (shouldScrollTop) window.scrollTo({ top: 0, behavior: 'auto' });
+        window.scrollTo({ top: 0, behavior: 'auto' });
       }
 
       function scrollToSearch() {
         if (!els.searchArea) return;
-        els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 
       function bindEvents() {
@@ -5716,12 +5849,7 @@
 
         els.sectionSelect.addEventListener('change', () => {
           state.section = els.sectionSelect.value;
-          /* Section change starts a clean section view.
-             This prevents the previous search word from making every section look the same. */
-          state.query = '';
-          state.sort = FAST_ORDER;
-          els.searchInput.value = '';
-          els.sortSelect.value = FAST_ORDER;
+          state.visibleCount = getInitialVisibleCount();
           applyFilters(true);
         });
 
@@ -5730,12 +5858,16 @@
           applyFilters(true);
         });
 
-        els.resetBtn.addEventListener('click', resetFilters);
+        els.resetBtn.addEventListener('click', () => resetFilters(false));
+        if (els.allSectionsResetBtn) els.allSectionsResetBtn.addEventListener('click', resetAllSections);
         if (els.filterToggleBtn) els.filterToggleBtn.addEventListener('click', toggleFilterPanel);
 
         els.focusSearchBtn.addEventListener('click', () => {
-          els.searchInput.focus();
-          els.searchInput.select();
+          scrollToSearch();
+          requestAnimationFrame(() => {
+            els.searchInput.focus({ preventScroll: true });
+            els.searchInput.select();
+          });
         });
 
         els.loadMoreBtn.addEventListener('click', () => {
@@ -5974,7 +6106,7 @@
               blockEvent(e);
               return;
             }
-            goArchiveHome();
+            resetAllSections();
           });
         }
 
@@ -6011,6 +6143,8 @@
       function startLoad() {
         if (archiveLoadStarted) return;
         archiveLoadStarted = true;
+        archiveEntered = true;
+        filterPanelOpen = true;
 
         updateEntryUXClasses();
         showArchiveShellImmediately();

@@ -5349,19 +5349,29 @@
       function scrollToNewLoadStart(anchorCard) {
         if (!anchorCard) return;
 
+        /*
+          Precise Load More Start Fix:
+          After LOAD MORE, the viewport must begin from the first newly appended card,
+          not from the previous row. Do not subtract sticky header height here; on the
+          compressed Archive Pro view that subtraction exposes the old row above the
+          new batch. Use the card's exact document Y, then confirm once more after
+          lazy image/layout settling.
+        */
+        const getExactTop = () => {
+          const rect = anchorCard.getBoundingClientRect();
+          return Math.max(0, Math.round(window.scrollY + rect.top));
+        };
+
+        const scrollExact = (behavior = 'auto') => {
+          window.scrollTo({ top: getExactTop(), behavior });
+        };
+
         requestAnimationFrame(() => {
-          anchorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-          const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-          const header = document.querySelector('.site-header');
-          const headerOffset = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
-          const safeGap = isMobile ? 8 : 10;
-
-          window.setTimeout(() => {
-            const rect = anchorCard.getBoundingClientRect();
-            const targetTop = Math.max(0, window.scrollY + rect.top - headerOffset - safeGap);
-            window.scrollTo({ top: targetTop, behavior: isMobile ? 'auto' : 'smooth' });
-          }, isMobile ? 90 : 140);
+          requestAnimationFrame(() => {
+            scrollExact('auto');
+            window.setTimeout(() => scrollExact('auto'), 80);
+            window.setTimeout(() => scrollExact('auto'), 180);
+          });
         });
       }
 

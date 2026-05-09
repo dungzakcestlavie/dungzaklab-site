@@ -3737,6 +3737,18 @@
       }
     }
 </style>
+  <style>
+    /* ARCHIVE PRO MOBILE LOAD MORE ANCHOR FIX — restore browser anchoring while JS positions first newly appended card */
+    html,
+    body{
+      overflow-anchor:auto !important;
+    }
+
+    #grid{
+      overflow-anchor:none;
+    }
+  </style>
+
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>
@@ -5313,6 +5325,44 @@
         observeLazyImages(els.grid);
       }
 
+      function appendCards(items, startIndex = 0) {
+        if (!els.grid || !items || !items.length) return null;
+
+        const template = document.createElement('template');
+        template.innerHTML = items.map((item, index) => createCardHTML(item, startIndex + index)).join('');
+        const fragment = template.content;
+        const firstNewCard = fragment.firstElementChild;
+
+        els.grid.appendChild(fragment);
+        syncDataLanguage(els.grid);
+        observeLazyImages(els.grid);
+
+        return firstNewCard || (els.grid.children ? els.grid.children[startIndex] : null);
+      }
+
+      function scrollToNewLoadStart(anchorCard) {
+        if (!anchorCard) return;
+
+        const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+        const header = document.querySelector('.site-header');
+        const headerOffset = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
+        const safeGap = isMobile ? 8 : 10;
+
+        const move = () => {
+          const rect = anchorCard.getBoundingClientRect();
+          const targetTop = Math.max(0, window.scrollY + rect.top - headerOffset - safeGap);
+          window.scrollTo({ top: targetTop, behavior: isMobile ? 'auto' : 'smooth' });
+        };
+
+        requestAnimationFrame(() => {
+          move();
+          if (isMobile) {
+            window.setTimeout(move, 80);
+            window.setTimeout(move, 220);
+          }
+        });
+      }
+
       function renderGrid() {
         if (!els.grid) return;
         if (!archiveEntered) {
@@ -5880,30 +5930,15 @@
           return;
         }
 
+        const nextItems = state.filtered.slice(previousCount, nextCount);
         state.visibleCount = nextCount;
         visibleCount = state.visibleCount;
 
-        renderGrid();
+        const firstNewCard = appendCards(nextItems, previousCount);
 
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            const newFirstCard = els.grid && els.grid.children ? els.grid.children[previousCount] : null;
-            if (!newFirstCard) return;
-
-            const header = document.querySelector('.site-header');
-            const headerOffset = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
-            const safeGap = 10;
-            const targetTop = Math.max(
-              0,
-              window.scrollY + newFirstCard.getBoundingClientRect().top - headerOffset - safeGap
-            );
-
-            window.scrollTo({
-              top: targetTop,
-              behavior: 'smooth'
-            });
-          });
-        });
+        if (els.loadWrap) els.loadWrap.hidden = state.visibleCount >= state.filtered.length;
+        updateStats();
+        scrollToNewLoadStart(firstNewCard);
       }
 
       function bindEvents() {

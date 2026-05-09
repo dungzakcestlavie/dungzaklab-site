@@ -4206,6 +4206,7 @@
       let WORKS_DATA = [];
       let WORKS_READY = false;
       let CURRENT_LIST = [];
+      let finalFilteredWorks = [];
       let archiveEntered = true;
       let filterPanelOpen = true;
 
@@ -5150,6 +5151,7 @@
       function updateStats() {
         WORKS_DATA = state.all;
         CURRENT_LIST = state.filtered;
+        finalFilteredWorks = state.filtered;
         visibleCount = state.visibleCount;
 
         if (!state.isLoaded && !state.all.length) {
@@ -5272,7 +5274,7 @@
         const loadedClass = priority ? ' is-priority' : '';
 
         return [
-          '<article class="card" tabindex="0" role="button" data-key="', escapeHTML(item._key || (item._index + '::' + item.section_id + '::' + item.id)), '" data-id="', escapeHTML(item.id), '" data-section-id="', escapeHTML(item.section_id), '" aria-label="', escapeHTML(item.id), ' 작품 보기">',
+          '<article class="card" tabindex="0" role="button" data-render-index="', escapeHTML(index), '" data-key="', escapeHTML(item._key || (item._index + '::' + item.section_id + '::' + item.id)), '" data-id="', escapeHTML(item.id), '" data-section-id="', escapeHTML(item.section_id), '" aria-label="', escapeHTML(item.id), ' 작품 보기">',
             '<div class="thumb-wrap">',
               '<img class="thumb', loadedClass, '" src="', escapeHTML(imgSrc), '"', dataSrc, ' alt="', escapeHTML(title || item.id), '" loading="', loading, '" decoding="async" fetchpriority="', fetchPriority, '" data-zoom="', escapeHTML(item.zoom || ''), '">',
               '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
@@ -5303,9 +5305,13 @@
       }
 
       function getVisibleItems() {
-        CURRENT_LIST = state.filtered;
+        /* Load More Continuation Fix:
+           The render source is the already filtered + searched + sorted array.
+           Do not re-sort here. This keeps id-desc order stable across accumulated loads. */
+        finalFilteredWorks = Array.isArray(state.filtered) ? state.filtered : [];
+        CURRENT_LIST = finalFilteredWorks;
         visibleCount = state.visibleCount;
-        return CURRENT_LIST.slice(0, visibleCount);
+        return finalFilteredWorks.slice(0, visibleCount);
       }
 
       function renderCards(items) {
@@ -5337,29 +5343,25 @@
         syncDataLanguage(els.grid);
         observeLazyImages(els.grid);
 
-        return firstNewCard || (els.grid.children ? els.grid.children[startIndex] : null);
+        return els.grid.querySelector('[data-render-index="' + startIndex + '"]') || firstNewCard || (els.grid.children ? els.grid.children[startIndex] : null);
       }
 
       function scrollToNewLoadStart(anchorCard) {
         if (!anchorCard) return;
 
-        const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-        const header = document.querySelector('.site-header');
-        const headerOffset = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
-        const safeGap = isMobile ? 8 : 10;
-
-        const move = () => {
-          const rect = anchorCard.getBoundingClientRect();
-          const targetTop = Math.max(0, window.scrollY + rect.top - headerOffset - safeGap);
-          window.scrollTo({ top: targetTop, behavior: isMobile ? 'auto' : 'smooth' });
-        };
-
         requestAnimationFrame(() => {
-          move();
-          if (isMobile) {
-            window.setTimeout(move, 80);
-            window.setTimeout(move, 220);
-          }
+          anchorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+          const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+          const header = document.querySelector('.site-header');
+          const headerOffset = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
+          const safeGap = isMobile ? 8 : 10;
+
+          window.setTimeout(() => {
+            const rect = anchorCard.getBoundingClientRect();
+            const targetTop = Math.max(0, window.scrollY + rect.top - headerOffset - safeGap);
+            window.scrollTo({ top: targetTop, behavior: isMobile ? 'auto' : 'smooth' });
+          }, isMobile ? 90 : 140);
         });
       }
 
@@ -5608,6 +5610,7 @@
 
         state.filtered = applyFilterSort(state.all);
         CURRENT_LIST = state.filtered;
+        finalFilteredWorks = state.filtered;
         visibleCount = state.visibleCount;
 
         renderAll();
@@ -5809,6 +5812,7 @@
           WORKS_READY = true;
           WORKS_DATA = state.all;
           CURRENT_LIST = state.filtered;
+          finalFilteredWorks = state.filtered;
           visibleCount = state.visibleCount;
 
           if (els.searchInput) els.searchInput.value = '';
@@ -5885,6 +5889,7 @@
         state.filtered = applyFilterSort(state.all);
         WORKS_DATA = state.all;
         CURRENT_LIST = state.filtered;
+        finalFilteredWorks = state.filtered;
         visibleCount = state.visibleCount;
 
         renderAll();
@@ -5902,6 +5907,7 @@
 
         WORKS_DATA = state.all;
         CURRENT_LIST = state.filtered;
+        finalFilteredWorks = state.filtered;
         visibleCount = state.visibleCount;
 
         if (els.searchInput) els.searchInput.value = '';
@@ -5919,26 +5925,37 @@
       }
 
       function loadMoreWorks() {
-        const previousCount = state.visibleCount;
-        const nextCount = Math.min(
-          state.visibleCount + LOAD_MORE_COUNT,
-          state.filtered.length
+        /* Load More id-desc Continuation Fix
+           Use only the current finalFilteredWorks/state.filtered array, which already has
+           section + search + sort applied. Never re-filter or re-sort during Load More. */
+        finalFilteredWorks = Array.isArray(state.filtered) ? state.filtered : [];
+        CURRENT_LIST = finalFilteredWorks;
+
+        const previousVisibleCount = state.visibleCount;
+        const loadMoreStartIndex = previousVisibleCount;
+        const nextVisibleCount = Math.min(
+          previousVisibleCount + LOAD_MORE_COUNT,
+          finalFilteredWorks.length
         );
 
-        if (nextCount <= previousCount) {
+        if (nextVisibleCount <= previousVisibleCount) {
           if (els.loadWrap) els.loadWrap.hidden = true;
           return;
         }
 
-        const nextItems = state.filtered.slice(previousCount, nextCount);
-        state.visibleCount = nextCount;
+        const nextItems = finalFilteredWorks.slice(loadMoreStartIndex, nextVisibleCount);
+        state.visibleCount = nextVisibleCount;
         visibleCount = state.visibleCount;
 
-        const firstNewCard = appendCards(nextItems, previousCount);
+        appendCards(nextItems, loadMoreStartIndex);
 
-        if (els.loadWrap) els.loadWrap.hidden = state.visibleCount >= state.filtered.length;
+        const newFirstCard = els.grid
+          ? els.grid.querySelector('[data-render-index="' + loadMoreStartIndex + '"]')
+          : null;
+
+        if (els.loadWrap) els.loadWrap.hidden = state.visibleCount >= finalFilteredWorks.length;
         updateStats();
-        scrollToNewLoadStart(firstNewCard);
+        scrollToNewLoadStart(newFirstCard);
       }
 
       function bindEvents() {

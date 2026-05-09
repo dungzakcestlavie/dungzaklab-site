@@ -3933,14 +3933,15 @@
       const DATA_URL = 'https://dungzak.art/data/works.json';
       const MIN_EXPECTED_WORKS = 100;
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
-      const MOBILE_FIRST_RENDER_COUNT = 12;
-      const DESKTOP_FIRST_RENDER_COUNT = 12;
+      const MOBILE_FIRST_RENDER_COUNT = 24;
+      const DESKTOP_FIRST_RENDER_COUNT = 24;
       const FIRST_RENDER_COUNT = DESKTOP_FIRST_RENDER_COUNT;
       const FAST_ORDER = 'section-id-asc';
-      const LOAD_MORE_COUNT = 24;
+      const LOAD_MORE_COUNT = 40;
       const INITIAL_VISIBLE = getInitialVisibleCount();
+      const INITIAL_RENDER_COUNT = 24;
       const LOAD_STEP = LOAD_MORE_COUNT;
-      const SEARCH_DEBOUNCE_MS = 120;
+      const SEARCH_DEBOUNCE_MS = 220;
       const ASSET_VERSION = 'ap-img';
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
@@ -5251,7 +5252,7 @@
         const imageSrc = withCacheBust(item.image || SVG_PLACEHOLDER);
         const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(item);
-        const priority = index < 12;
+        const priority = index < INITIAL_RENDER_COUNT;
         const imgSrc = priority ? imageSrc : SVG_PLACEHOLDER;
         const dataSrc = priority ? '' : ' data-src="' + escapeHTML(imageSrc) + '"';
         const loading = priority ? 'eager' : 'lazy';
@@ -5675,7 +5676,7 @@
           Archive Pro Image Loading Zero-Lag Strategy:
           JSON is fetched once from the single source of truth.
           Images are not preloaded here; card thumbnails load only through
-          eager priority for the first 12 items and IntersectionObserver for the rest.
+          eager priority for the first 24 items and IntersectionObserver for the rest.
         */
         return [DATA_URL];
       }
@@ -5708,10 +5709,10 @@
               }
 
               failures.push(`${url} → ${count} item(s), skipped`);
-              console.warn('[Archive Pro] skipped small/invalid works.json:', url, count);
+
             } catch (error) {
               failures.push(`${url} → ${error && error.message ? error.message : error}`);
-              console.warn('[Archive Pro] load failed:', url, error);
+
             }
           }
 
@@ -5742,14 +5743,15 @@
           const works = await fetchWorksDirect();
           const normalized = works
             .map(normalizeItem)
-            .filter(item => item && item.id);
+            .filter(item => item && item.id)
+            .map(prepareFastSearchCache);
 
           state.all = normalized;
           state.query = '';
           state.section = 'all';
           state.sort = FAST_ORDER;
           state.visibleCount = getInitialVisibleCount();
-          state._searchPrepared = false;
+          state._searchPrepared = true;
           state.filtered = state.all;
           state.loadState = 'loaded';
           state.isLoaded = true;
@@ -5791,7 +5793,7 @@
               duplicateImageRows,
               sectionImageRule: 'section 0 and 1 use JSON image; sections 2-5 use main/images/{DZ-id}.jpg when DZ id exists'
             };
-            console.info('[Archive Pro] simulation:', window.__ARCHIVE_PRO_SIMULATION__);
+
           };
 
           if ('requestIdleCallback' in window) {
@@ -5866,6 +5868,27 @@
         els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 
+      function loadMoreWorks() {
+        const previousCount = state.visibleCount;
+        state.visibleCount = Math.min(
+          state.visibleCount + LOAD_MORE_COUNT,
+          state.filtered.length
+        );
+        visibleCount = state.visibleCount;
+
+        renderGrid();
+
+        requestAnimationFrame(() => {
+          const newFirstCard = els.grid && els.grid.children ? els.grid.children[previousCount] : null;
+          if (newFirstCard && typeof newFirstCard.scrollIntoView === 'function') {
+            newFirstCard.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }
+        });
+      }
+
       function bindEvents() {
         els.searchInput.addEventListener('input', debouncedSearch);
 
@@ -5892,9 +5915,7 @@
         });
 
         els.loadMoreBtn.addEventListener('click', () => {
-          state.visibleCount += LOAD_MORE_COUNT;
-          visibleCount = state.visibleCount;
-          renderGrid();
+          loadMoreWorks();
         });
 
         if (els.grid) {

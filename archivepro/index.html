@@ -5870,22 +5870,39 @@
 
       function loadMoreWorks() {
         const previousCount = state.visibleCount;
-        state.visibleCount = Math.min(
+        const nextCount = Math.min(
           state.visibleCount + LOAD_MORE_COUNT,
           state.filtered.length
         );
+
+        if (nextCount <= previousCount) {
+          if (els.loadWrap) els.loadWrap.hidden = true;
+          return;
+        }
+
+        state.visibleCount = nextCount;
         visibleCount = state.visibleCount;
 
         renderGrid();
 
         requestAnimationFrame(() => {
-          const newFirstCard = els.grid && els.grid.children ? els.grid.children[previousCount] : null;
-          if (newFirstCard && typeof newFirstCard.scrollIntoView === 'function') {
-            newFirstCard.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start'
+          requestAnimationFrame(() => {
+            const newFirstCard = els.grid && els.grid.children ? els.grid.children[previousCount] : null;
+            if (!newFirstCard) return;
+
+            const header = document.querySelector('.site-header');
+            const headerOffset = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
+            const safeGap = 10;
+            const targetTop = Math.max(
+              0,
+              window.scrollY + newFirstCard.getBoundingClientRect().top - headerOffset - safeGap
+            );
+
+            window.scrollTo({
+              top: targetTop,
+              behavior: 'smooth'
             });
-          }
+          });
         });
       }
 

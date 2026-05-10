@@ -255,14 +255,14 @@
 
   <title>Archive Pro — DUNGZAK CESTLAVIE LAB</title>
   <meta name="description" content="Archive Pro — artwork archive engine for search, filter, and zoom view." />
-  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="manifest" href="/manifest.webmanifest?v=2" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Archive Pro" />
-  <link rel="apple-touch-icon" href="/archivepro-icon-512-v1.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="/archivepro-icon-192-v1.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="/archivepro-icon-512-v1.png" />
+  <link rel="apple-touch-icon" href="/archivepro-icon-512-v2.png?v=2" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/archivepro-icon-192-v2.png?v=2" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/archivepro-icon-512-v2.png?v=2" />
 
   <style>
     :root{
@@ -3757,19 +3757,21 @@
     }
   
 
-    /* ARCHIVE PRO PWA INSTALL UX — app-like install surface */
+    /* ARCHIVE PRO PWA INSTALL UX — App Store style / always-visible install surface */
     .install-panel{
-      margin-top:10px;
-      padding:12px 14px;
+      margin:12px 0 10px;
+      padding:13px 14px;
       display:none;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
-      border:1px solid rgba(212,180,109,.24);
-      border-radius:18px;
-      background:linear-gradient(180deg, rgba(17,28,44,.48), rgba(9,15,25,.36));
+      gap:13px;
+      border:1px solid rgba(212,180,109,.30);
+      border-radius:24px;
+      background:
+        linear-gradient(180deg, rgba(18,29,45,.72), rgba(8,14,24,.58)),
+        radial-gradient(circle at 18% 20%, rgba(212,180,109,.10), transparent 34%);
       color:var(--muted);
-      box-shadow:0 10px 28px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.02);
+      box-shadow:0 18px 44px rgba(0,0,0,.26), inset 0 0 0 1px rgba(255,255,255,.035);
       contain:layout paint;
     }
 
@@ -3777,27 +3779,52 @@
       display:flex;
     }
 
+    .install-icon-wrap{
+      flex:0 0 auto;
+      width:58px;
+      height:58px;
+      border-radius:17px;
+      overflow:hidden;
+      border:1px solid rgba(212,180,109,.34);
+      background:#031421;
+      box-shadow:0 10px 26px rgba(0,0,0,.32), 0 0 18px rgba(212,180,109,.12);
+    }
+
+    .install-icon{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
     .install-text{
       min-width:0;
+      flex:1 1 auto;
       display:flex;
       flex-direction:column;
-      gap:2px;
+      gap:3px;
     }
 
     .install-title{
-      color:var(--gold);
-      font-size:13px;
-      font-weight:800;
-      letter-spacing:.09em;
-      text-transform:uppercase;
-      line-height:1.35;
+      color:#f4efe6;
+      font-size:16px;
+      font-weight:900;
+      letter-spacing:.045em;
+      line-height:1.25;
     }
 
     .install-desc{
-      color:rgba(244,239,230,.64);
-      font-size:12px;
+      color:rgba(244,239,230,.70);
+      font-size:12.5px;
       line-height:1.45;
-      letter-spacing:.02em;
+      letter-spacing:.01em;
+    }
+
+    .install-guide{
+      margin-top:2px;
+      color:rgba(212,180,109,.82);
+      font-size:11.5px;
+      line-height:1.45;
     }
 
     .install-actions{
@@ -3807,49 +3834,33 @@
       gap:8px;
     }
 
-    .install-btn,
-    .install-close{
-      min-height:40px;
+    .install-btn{
+      min-height:38px;
+      padding:0 18px;
       border-radius:999px;
-      border:1px solid rgba(212,180,109,.44);
-      background:rgba(212,180,109,.08);
-      color:var(--gold);
+      border:1px solid rgba(212,180,109,.64);
+      background:linear-gradient(180deg, rgba(212,180,109,.22), rgba(212,180,109,.10));
+      color:#d4b46d;
       cursor:pointer;
       white-space:nowrap;
-      transform:none !important;
-      box-shadow:none !important;
-    }
-
-    .install-btn{
-      padding:0 16px;
       font-size:13px;
-      font-weight:800;
-      letter-spacing:.07em;
-    }
-
-    .install-close{
-      width:40px;
-      padding:0;
-      font-size:18px;
-      line-height:1;
-      color:rgba(244,239,230,.70);
-      border-color:rgba(255,255,255,.12);
-      background:rgba(255,255,255,.03);
+      font-weight:900;
+      letter-spacing:.08em;
+      transform:none !important;
+      box-shadow:0 0 0 1px rgba(212,180,109,.08), 0 0 18px rgba(212,180,109,.18) !important;
+      -webkit-tap-highlight-color:rgba(212,180,109,.22);
     }
 
     .install-btn:hover,
     .install-btn:focus-visible{
       color:#f4efe6;
-      border-color:rgba(212,180,109,.72);
-      background:rgba(212,180,109,.14);
+      border-color:rgba(212,180,109,.88);
+      background:linear-gradient(180deg, rgba(212,180,109,.30), rgba(212,180,109,.16));
       outline:none;
     }
 
-    .install-close:hover,
-    .install-close:focus-visible{
-      color:#f4efe6;
-      border-color:rgba(212,180,109,.34);
-      outline:none;
+    .install-btn:active{
+      opacity:.86;
     }
 
     body.app-standalone .install-panel{
@@ -3864,19 +3875,50 @@
     @media (max-width:640px){
       .install-panel.is-visible{
         display:grid;
-        grid-template-columns:1fr;
+        grid-template-columns:54px minmax(0,1fr) auto;
+        gap:11px;
+        padding:12px;
+        border-radius:22px;
       }
-      .install-actions{
-        width:100%;
-        display:grid;
-        grid-template-columns:1fr 44px;
+
+      .install-icon-wrap{
+        width:54px;
+        height:54px;
+        border-radius:16px;
       }
-      .install-btn,
-      .install-close{
-        min-height:44px;
+
+      .install-title{
+        font-size:15px;
+      }
+
+      .install-desc{
+        font-size:12px;
+      }
+
+      .install-btn{
+        min-height:36px;
+        padding:0 14px;
+        font-size:12px;
       }
     }
-</style>
+
+    @media (max-width:420px){
+      .install-panel.is-visible{
+        grid-template-columns:50px minmax(0,1fr);
+      }
+
+      .install-actions{
+        grid-column:1/-1;
+        width:100%;
+      }
+
+      .install-btn{
+        width:100%;
+        min-height:42px;
+      }
+    }
+
+    </style>
 
 </head>
 <body class="archive-entered archive-filter-open">
@@ -3928,14 +3970,17 @@
 
 
 
-    <section id="installPanel" class="install-panel" aria-label="Archive Pro app installation" hidden>
+    <section id="installPanel" class="install-panel install-appstore" aria-label="Archive Pro app installation" hidden>
+      <div class="install-icon-wrap" aria-hidden="true">
+        <img class="install-icon" src="/archivepro-icon-192-v2.png?v=2" alt="" loading="eager" decoding="async">
+      </div>
       <div class="install-text">
-        <span id="installTitle" class="install-title">Archive Pro App</span>
+        <span id="installTitle" class="install-title">Archive Pro</span>
         <span id="installDesc" class="install-desc">홈 화면에 설치하면 Archive Pro가 앱처럼 전체 화면으로 열립니다.</span>
+        <span id="installGuide" class="install-guide" hidden>설치 버튼이 반응하지 않으면 Chrome 메뉴(⋮)에서 “앱 설치”를 선택하세요.</span>
       </div>
       <div class="install-actions">
-        <button id="installAppBtn" class="install-btn" type="button">앱 설치</button>
-        <button id="installDismissBtn" class="install-close" type="button" aria-label="설치 안내 닫기">×</button>
+        <button id="installAppBtn" class="install-btn" type="button">받기</button>
       </div>
     </section>
 
@@ -6504,16 +6549,15 @@
 </script>
 
 
-<!-- Archive Pro PWA Install UX: install button + standalone app mode -->
+<!-- Archive Pro PWA Install UX: App Store style always-visible install surface -->
 <script>
   (function(){
     var deferredInstallPrompt = null;
     var installPanel = document.getElementById('installPanel');
     var installBtn = document.getElementById('installAppBtn');
-    var dismissBtn = document.getElementById('installDismissBtn');
     var installTitle = document.getElementById('installTitle');
     var installDesc = document.getElementById('installDesc');
-    var DISMISS_KEY = 'archive-pro-install-dismissed-v1';
+    var installGuide = document.getElementById('installGuide');
 
     function isStandaloneMode(){
       return window.matchMedia('(display-mode: fullscreen)').matches ||
@@ -6529,96 +6573,102 @@
     function syncInstallText(){
       if (!installTitle || !installDesc || !installBtn) return;
       var lang = currentLang();
+
       if (lang === 'en') {
-        installTitle.textContent = 'Archive Pro App';
-        installDesc.textContent = 'Install to the home screen and open Archive Pro as a fullscreen app.';
-        installBtn.textContent = 'Install App';
-        if (dismissBtn) dismissBtn.setAttribute('aria-label', 'Close install notice');
+        installTitle.textContent = 'Archive Pro';
+        installDesc.textContent = 'Install Archive Pro and open it as a fullscreen app.';
+        installBtn.textContent = 'GET';
+        if (installGuide) installGuide.textContent = 'If the button does not open installation, use Chrome menu (⋮) → Install app.';
       } else if (lang === 'both') {
-        installTitle.textContent = 'Archive Pro App';
-        installDesc.textContent = '홈 화면에 설치하면 앱처럼 전체 화면으로 열립니다. / Install to open Archive Pro as a fullscreen app.';
-        installBtn.textContent = '앱 설치 / Install';
-        if (dismissBtn) dismissBtn.setAttribute('aria-label', '설치 안내 닫기');
+        installTitle.textContent = 'Archive Pro';
+        installDesc.textContent = '홈 화면에 설치하면 앱처럼 전체 화면으로 열립니다. / Install as a fullscreen app.';
+        installBtn.textContent = '받기 / GET';
+        if (installGuide) installGuide.textContent = '설치 창이 뜨지 않으면 Chrome 메뉴(⋮) → 앱 설치를 선택하세요. / If needed, use Chrome menu (⋮) → Install app.';
       } else {
-        installTitle.textContent = 'Archive Pro App';
+        installTitle.textContent = 'Archive Pro';
         installDesc.textContent = '홈 화면에 설치하면 Archive Pro가 앱처럼 전체 화면으로 열립니다.';
-        installBtn.textContent = '앱 설치';
-        if (dismissBtn) dismissBtn.setAttribute('aria-label', '설치 안내 닫기');
+        installBtn.textContent = '받기';
+        if (installGuide) installGuide.textContent = '설치 창이 뜨지 않으면 Chrome 메뉴(⋮)에서 “앱 설치”를 선택하세요.';
       }
     }
 
-    function showInstallPanel(){
+    function showInstallPanel(forceGuide){
       if (!installPanel) return;
       if (isStandaloneMode()) return;
-      if (localStorage.getItem(DISMISS_KEY) === '1') return;
       syncInstallText();
       installPanel.hidden = false;
       installPanel.classList.add('is-visible');
+      if (installGuide) installGuide.hidden = !forceGuide;
     }
 
-    function hideInstallPanel(remember){
+    function hideInstallPanel(){
       if (!installPanel) return;
       installPanel.classList.remove('is-visible');
       installPanel.hidden = true;
-      if (remember) localStorage.setItem(DISMISS_KEY, '1');
     }
 
     if (isStandaloneMode()) {
       document.body.classList.add('app-standalone');
+      hideInstallPanel();
+    } else {
+      /* Always show the App Store-style install surface.
+         The native prompt appears only when Chrome grants beforeinstallprompt;
+         otherwise the same button exposes manual install guidance. */
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function(){ showInstallPanel(false); }, { once:true });
+      } else {
+        showInstallPanel(false);
+      }
+      window.setTimeout(function(){ showInstallPanel(false); }, 900);
     }
 
     window.addEventListener('beforeinstallprompt', function(event){
       event.preventDefault();
       deferredInstallPrompt = event;
-      localStorage.removeItem(DISMISS_KEY);
-      showInstallPanel();
+      showInstallPanel(false);
     });
 
     if (installBtn) {
       installBtn.addEventListener('click', async function(){
         syncInstallText();
-        if (!deferredInstallPrompt) {
-          showInstallPanel();
+
+        if (deferredInstallPrompt) {
+          deferredInstallPrompt.prompt();
+          try {
+            await deferredInstallPrompt.userChoice;
+          } catch (e) {}
+          deferredInstallPrompt = null;
+          showInstallPanel(false);
           return;
         }
-        deferredInstallPrompt.prompt();
-        try {
-          await deferredInstallPrompt.userChoice;
-        } catch (e) {}
-        deferredInstallPrompt = null;
-        hideInstallPanel(false);
-      });
-    }
 
-    if (dismissBtn) {
-      dismissBtn.addEventListener('click', function(){
-        hideInstallPanel(true);
+        showInstallPanel(true);
       });
     }
 
     window.addEventListener('appinstalled', function(){
       deferredInstallPrompt = null;
       document.body.classList.add('app-standalone');
-      hideInstallPanel(false);
+      hideInstallPanel();
     });
 
     document.querySelectorAll('.lang-tab').forEach(function(tab){
       tab.addEventListener('click', function(){
-        window.setTimeout(syncInstallText, 0);
+        window.setTimeout(function(){ showInstallPanel(Boolean(installGuide && !installGuide.hidden)); }, 0);
       });
     });
 
     window.matchMedia('(display-mode: standalone)').addEventListener?.('change', function(){
       if (isStandaloneMode()) {
         document.body.classList.add('app-standalone');
-        hideInstallPanel(false);
+        hideInstallPanel();
       }
     });
 
     window.matchMedia('(display-mode: fullscreen)').addEventListener?.('change', function(){
       if (isStandaloneMode()) {
         document.body.classList.add('app-standalone');
-        hideInstallPanel(false);
+        hideInstallPanel();
       }
     });
   })();

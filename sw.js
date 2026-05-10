@@ -1,28 +1,59 @@
-const CACHE_NAME = 'archive-pro-offline-v2';
+const CACHE_NAME = 'archive-pro-exhibition-v3';
 
 const CORE_ASSETS = [
   './',
   './index.html',
+  './archivepro/',
   './archivepro/index.html',
   './data/works.json',
+  './data/dcao.json',
+  './data/dcap.json',
   'https://dungzak.art/data/works.json'
 ];
 
-// 설치
+const PRECACHE_IMAGE_IDS = [
+  'OR-1428',
+  'OR-1429',
+  'OR-1430'
+];
+
+const IMAGE_BASES = [
+  'https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/'
+];
+
+function exhibitionImageUrls() {
+  return PRECACHE_IMAGE_IDS.flatMap(id =>
+    IMAGE_BASES.map(base => `${base}${id}.jpg`)
+  );
+}
+
+function isCacheableRequest(request) {
+  if (request.method !== 'GET') return false;
+
+  const url = new URL(request.url);
+
+  // zoom 이미지는 캐시하지 않음
+  if (url.href.includes('/zoom/')) return false;
+
+  return true;
+}
+
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
-      for (const asset of CORE_ASSETS) {
+      const assets = CORE_ASSETS.concat(exhibitionImageUrls());
+
+      for (const asset of assets) {
         try {
           await cache.add(asset);
         } catch (e) {}
       }
     })
   );
+
   self.skipWaiting();
 });
 
-// 활성화
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -33,54 +64,81 @@ self.addEventListener('activate', event => {
       )
     )
   );
+
   self.clients.claim();
 });
 
-// 요청 처리
 self.addEventListener('fetch', event => {
   const request = event.request;
 
-  if (request.method !== 'GET') return;
-
-  // zoom 제외
-  if (request.url.includes('/zoom/')) return;
+  if (!isCacheableRequest(request)) return;
 
   const url = new URL(request.url);
 
-  // 1️⃣ HTML (페이지)
-  if (request.mode === 'navigate') {
+  // HTML 페이지
+  if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(
       fetch(request)
-        .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(request, copy));
-          return res;
+        .then(response => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          }
+          return response;
         })
         .catch(async () => {
-          return (
-            (await caches.match(request)) ||
-            (await caches.match('./archivepro/index.html')) ||
-            (await caches.match('./index.html'))
-          );
+          const cached = await caches.match(request);
+          if (cached) return cached;
+
+          if (url.pathname.startsWith('/archivepro')) {
+            return caches.match('./archivepro/index.html');
+          }
+
+          return caches.match('./index.html');
         })
     );
     return;
   }
 
-  // 2️⃣ JSON + 이미지 (핵심)
+  // JSON + standard 이미지
+  if (
+    request.destination === 'image' ||
+    url.pathname.endsWith('.json') ||
+    url.href.includes('works.json') ||
+    url.href.includes('/standard/')
+  ) {
+    event.respondWith(
+      caches.match(request).then(cached => {
+        const networkFetch = fetch(request)
+          .then(response => {
+            if (response && response.ok) {
+              const copy = response.clone();
+              caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+            }
+            return response;
+          })
+          .catch(() => cached);
+
+        return cached || networkFetch;
+      })
+    );
+    return;
+  }
+
+  // 기타 파일
   event.respondWith(
     caches.match(request).then(cached => {
-      const fetchPromise = fetch(request)
-        .then(res => {
-          if (res && res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then(c => c.put(request, copy));
+      const networkFetch = fetch(request)
+        .then(response => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           }
-          return res;
+          return response;
         })
         .catch(() => cached);
 
-      return cached || fetchPromise;
+      return cached || networkFetch;
     })
   );
 });

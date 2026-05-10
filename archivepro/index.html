@@ -3955,6 +3955,58 @@
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 220;
       const ASSET_VERSION = 'ap-img';
+      const PAGE_OFFLINE_CACHE_NAME = 'archive-pro-page-non-origins-v1';
+
+      function isArchiveOfflineMode() {
+        return typeof navigator !== 'undefined' && navigator.onLine === false;
+      }
+
+      function nonOriginsOnly(list) {
+        return (Array.isArray(list) ? list : []).filter(function(item){
+          return Number(item && item.section_id) !== 0;
+        });
+      }
+
+      function standardImageUrlOnly(url) {
+        const clean = safeText(url);
+        if (!clean) return '';
+        if (clean.indexOf('/zoom/') !== -1) return '';
+        if (clean.indexOf('/standard/') === -1) return '';
+        return clean.split('?')[0];
+      }
+
+      function requestServiceWorkerNonOriginsCache() {
+        try {
+          if (!('serviceWorker' in navigator)) return;
+          if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'CACHE_NON_ORIGINS' });
+            navigator.serviceWorker.controller.postMessage({ type: 'CACHE_EXHIBITION_SET' });
+          }
+        } catch (_) {}
+      }
+
+      async function cacheNonOriginStandardImagesFromPage(items) {
+        if (!('caches' in window)) return;
+        if (isArchiveOfflineMode()) return;
+
+        const urls = Array.from(new Set(nonOriginsOnly(items)
+          .map(function(item){ return standardImageUrlOnly(item.image); })
+          .filter(Boolean)));
+
+        if (!urls.length) return;
+
+        try {
+          const cache = await caches.open(PAGE_OFFLINE_CACHE_NAME);
+          for (const url of urls) {
+            try {
+              const cached = await cache.match(url);
+              if (cached) continue;
+              const response = await fetch(url, { mode: 'cors', credentials: 'omit', cache: 'default' });
+              if (response && response.ok) await cache.put(url, response.clone());
+            } catch (_) {}
+          }
+        } catch (_) {}
+      }
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
 
@@ -5730,23 +5782,34 @@
       function withCacheBust(url) {
         const clean = safeText(url);
         if (!clean || clean.startsWith('data:') || clean.startsWith('blob:')) return clean;
+
+        /*
+          Offline Image Cache Fix:
+          Standard artwork images must keep their original URL so the Service Worker
+          and Cache API can match them exactly when Wi‑Fi is off.
+        */
+        if (clean.indexOf('/standard/') !== -1 || clean.indexOf('raw.githubusercontent.com') !== -1) {
+          return clean.split('?')[0];
+        }
+
+        if (isArchiveOfflineMode()) return clean.split('?')[0];
+
         const joiner = clean.includes('?') ? '&' : '?';
         return `${clean}${joiner}v=${ASSET_VERSION}`;
       }
 
       function buildWorksJsonUrls() {
         /*
-          Archive Pro Image Loading Zero-Lag Strategy:
-          JSON is fetched once from the single source of truth.
-          Images are not preloaded here; card thumbnails load only through
-          eager priority for the first 24 items and IntersectionObserver for the rest.
+          Offline App Strategy:
+          Use dungzak.art as the single source when online, but allow cached/root
+          works.json fallbacks when the installed app is opened without Wi‑Fi.
         */
-        return [DATA_URL];
+        return [DATA_URL, '/data/works.json', '../data/works.json'];
       }
 
       async function fetchJsonNoStore(url) {
         const res = await fetch(url, {
-          cache: 'no-store',
+          cache: 'default',
           mode: 'cors',
           credentials: 'omit'
         });
@@ -5804,10 +5867,17 @@
 
         try {
           const works = await fetchWorksDirect();
-          const normalized = works
+          const normalizedAll = works
             .map(normalizeItem)
             .filter(item => item && item.id)
             .map(prepareFastSearchCache);
+
+          /*
+            Offline Display Rule:
+            When Archive Pro is opened without Wi‑Fi, hide A Origins (section_id: 0)
+            and show all remaining sections I–V only. Online mode keeps the full archive.
+          */
+          const normalized = isArchiveOfflineMode() ? nonOriginsOnly(normalizedAll) : normalizedAll;
 
           state.all = normalized;
           state.query = '';
@@ -5824,6 +5894,11 @@
           CURRENT_LIST = state.filtered;
           finalFilteredWorks = state.filtered;
           visibleCount = state.visibleCount;
+
+          if (!isArchiveOfflineMode()) {
+            requestServiceWorkerNonOriginsCache();
+            cacheNonOriginStandardImagesFromPage(normalizedAll);
+          }
 
           if (els.searchInput) els.searchInput.value = '';
           if (els.sectionSelect) els.sectionSelect.value = 'all';

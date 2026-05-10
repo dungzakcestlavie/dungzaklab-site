@@ -3757,7 +3757,7 @@
     }
   
 
-    /* ARCHIVE PRO PWA INSTALL UX — App Store style / always-visible install surface */
+    /* ARCHIVE PRO PWA INSTALL UX — Android native install + iPhone Safari guide */
     .install-panel{
       margin:12px 0 10px;
       padding:13px 14px;
@@ -3825,6 +3825,34 @@
       color:rgba(212,180,109,.82);
       font-size:11.5px;
       line-height:1.45;
+    }
+
+    .ios-install-guide{
+      margin-top:9px;
+      padding:10px 12px;
+      display:grid;
+      gap:5px;
+      border:1px solid rgba(212,180,109,.24);
+      border-radius:16px;
+      background:rgba(212,180,109,.055);
+    }
+
+    .ios-install-guide[hidden]{
+      display:none !important;
+    }
+
+    .ios-guide-title{
+      color:#d4b46d;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.07em;
+      text-transform:uppercase;
+    }
+
+    .ios-guide-step{
+      color:rgba(244,239,230,.74);
+      font-size:12px;
+      line-height:1.42;
     }
 
     .install-actions{
@@ -3974,11 +4002,20 @@
       <div class="install-icon-wrap" aria-hidden="true">
         <img class="install-icon" src="/archivepro-icon-192-v2.png?v=2" alt="" loading="eager" decoding="async">
       </div>
+
       <div class="install-text">
         <span id="installTitle" class="install-title">Archive Pro</span>
         <span id="installDesc" class="install-desc">홈 화면에 설치하면 Archive Pro가 앱처럼 전체 화면으로 열립니다.</span>
-        <span id="installGuide" class="install-guide" hidden>설치 버튼이 반응하지 않으면 Chrome 메뉴(⋮)에서 “앱 설치”를 선택하세요.</span>
+        <span id="installGuide" class="install-guide" hidden>설치 창이 뜨지 않으면 Chrome 메뉴(⋮)에서 “앱 설치”를 선택하세요.</span>
+
+        <div id="iosInstallGuide" class="ios-install-guide" hidden>
+          <span class="ios-guide-title">iPhone 설치 방법</span>
+          <span class="ios-guide-step">1. Safari에서 이 페이지를 여세요.</span>
+          <span class="ios-guide-step">2. 하단 공유 버튼(□↑)을 누르세요.</span>
+          <span class="ios-guide-step">3. “홈 화면에 추가”를 선택하세요.</span>
+        </div>
       </div>
+
       <div class="install-actions">
         <button id="installAppBtn" class="install-btn" type="button">받기</button>
       </div>
@@ -6549,7 +6586,7 @@
 </script>
 
 
-<!-- Archive Pro PWA Install UX: App Store style always-visible install surface -->
+<!-- Archive Pro PWA Install UX: Android native install + iPhone Safari guide -->
 <script>
   (function(){
     var deferredInstallPrompt = null;
@@ -6558,6 +6595,7 @@
     var installTitle = document.getElementById('installTitle');
     var installDesc = document.getElementById('installDesc');
     var installGuide = document.getElementById('installGuide');
+    var iosInstallGuide = document.getElementById('iosInstallGuide');
 
     function isStandaloneMode(){
       return window.matchMedia('(display-mode: fullscreen)').matches ||
@@ -6565,40 +6603,101 @@
              window.navigator.standalone === true;
     }
 
+    function isIOSDevice(){
+      var ua = window.navigator.userAgent || '';
+      var platform = window.navigator.platform || '';
+      var iOSUA = /iPhone|iPad|iPod/i.test(ua);
+      var iPadOS = platform === 'MacIntel' && window.navigator.maxTouchPoints > 1;
+      return iOSUA || iPadOS;
+    }
+
+    function isSafari(){
+      var ua = window.navigator.userAgent || '';
+      return /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(ua);
+    }
+
     function currentLang(){
       var active = document.querySelector('.lang-tab.active');
       return active && active.dataset ? (active.dataset.lang || 'kr') : 'kr';
     }
 
-    function syncInstallText(){
+    function syncInstallText(forceGuide){
       if (!installTitle || !installDesc || !installBtn) return;
       var lang = currentLang();
+      var ios = isIOSDevice();
+
+      if (ios) {
+        if (lang === 'en') {
+          installTitle.textContent = 'Archive Pro for iPhone';
+          installDesc.textContent = 'Install manually from Safari: Share → Add to Home Screen.';
+          installBtn.textContent = 'Guide';
+          if (installGuide) installGuide.textContent = isSafari() ? 'Use the Safari Share button at the bottom.' : 'Open this page in Safari first.';
+          setIOSGuideText('en');
+        } else if (lang === 'both') {
+          installTitle.textContent = 'Archive Pro for iPhone';
+          installDesc.textContent = 'Safari 공유 버튼 → 홈 화면에 추가 / Share → Add to Home Screen.';
+          installBtn.textContent = '안내 / Guide';
+          if (installGuide) installGuide.textContent = isSafari() ? '하단 공유 버튼을 사용하세요. / Use the Safari Share button.' : '먼저 Safari에서 여세요. / Open in Safari first.';
+          setIOSGuideText('both');
+        } else {
+          installTitle.textContent = 'Archive Pro for iPhone';
+          installDesc.textContent = 'Safari에서 공유 버튼을 눌러 홈 화면에 추가하세요.';
+          installBtn.textContent = '설치 안내';
+          if (installGuide) installGuide.textContent = isSafari() ? '하단 공유 버튼(□↑) → 홈 화면에 추가' : '먼저 Safari에서 이 페이지를 여세요.';
+          setIOSGuideText('kr');
+        }
+      } else {
+        if (lang === 'en') {
+          installTitle.textContent = 'Archive Pro';
+          installDesc.textContent = 'Install Archive Pro and open it as a fullscreen app.';
+          installBtn.textContent = 'GET';
+          if (installGuide) installGuide.textContent = 'If the button does not open installation, use Chrome menu (⋮) → Install app.';
+        } else if (lang === 'both') {
+          installTitle.textContent = 'Archive Pro';
+          installDesc.textContent = '홈 화면에 설치하면 앱처럼 전체 화면으로 열립니다. / Install as a fullscreen app.';
+          installBtn.textContent = '받기 / GET';
+          if (installGuide) installGuide.textContent = '설치 창이 뜨지 않으면 Chrome 메뉴(⋮) → 앱 설치를 선택하세요. / If needed, use Chrome menu (⋮) → Install app.';
+        } else {
+          installTitle.textContent = 'Archive Pro';
+          installDesc.textContent = '홈 화면에 설치하면 Archive Pro가 앱처럼 전체 화면으로 열립니다.';
+          installBtn.textContent = '받기';
+          if (installGuide) installGuide.textContent = '설치 창이 뜨지 않으면 Chrome 메뉴(⋮)에서 “앱 설치”를 선택하세요.';
+        }
+      }
+
+      if (installGuide) installGuide.hidden = !forceGuide;
+      if (iosInstallGuide) iosInstallGuide.hidden = !(ios && forceGuide);
+    }
+
+    function setIOSGuideText(lang){
+      if (!iosInstallGuide) return;
+      var title = iosInstallGuide.querySelector('.ios-guide-title');
+      var steps = iosInstallGuide.querySelectorAll('.ios-guide-step');
 
       if (lang === 'en') {
-        installTitle.textContent = 'Archive Pro';
-        installDesc.textContent = 'Install Archive Pro and open it as a fullscreen app.';
-        installBtn.textContent = 'GET';
-        if (installGuide) installGuide.textContent = 'If the button does not open installation, use Chrome menu (⋮) → Install app.';
+        if (title) title.textContent = 'iPhone installation';
+        if (steps[0]) steps[0].textContent = '1. Open this page in Safari.';
+        if (steps[1]) steps[1].textContent = '2. Tap the Share button (□↑).';
+        if (steps[2]) steps[2].textContent = '3. Choose “Add to Home Screen”.';
       } else if (lang === 'both') {
-        installTitle.textContent = 'Archive Pro';
-        installDesc.textContent = '홈 화면에 설치하면 앱처럼 전체 화면으로 열립니다. / Install as a fullscreen app.';
-        installBtn.textContent = '받기 / GET';
-        if (installGuide) installGuide.textContent = '설치 창이 뜨지 않으면 Chrome 메뉴(⋮) → 앱 설치를 선택하세요. / If needed, use Chrome menu (⋮) → Install app.';
+        if (title) title.textContent = 'iPhone 설치 / Installation';
+        if (steps[0]) steps[0].textContent = '1. Safari에서 이 페이지를 여세요. / Open this page in Safari.';
+        if (steps[1]) steps[1].textContent = '2. 공유 버튼(□↑)을 누르세요. / Tap Share.';
+        if (steps[2]) steps[2].textContent = '3. 홈 화면에 추가를 선택하세요. / Add to Home Screen.';
       } else {
-        installTitle.textContent = 'Archive Pro';
-        installDesc.textContent = '홈 화면에 설치하면 Archive Pro가 앱처럼 전체 화면으로 열립니다.';
-        installBtn.textContent = '받기';
-        if (installGuide) installGuide.textContent = '설치 창이 뜨지 않으면 Chrome 메뉴(⋮)에서 “앱 설치”를 선택하세요.';
+        if (title) title.textContent = 'iPhone 설치 방법';
+        if (steps[0]) steps[0].textContent = '1. Safari에서 이 페이지를 여세요.';
+        if (steps[1]) steps[1].textContent = '2. 하단 공유 버튼(□↑)을 누르세요.';
+        if (steps[2]) steps[2].textContent = '3. “홈 화면에 추가”를 선택하세요.';
       }
     }
 
     function showInstallPanel(forceGuide){
       if (!installPanel) return;
       if (isStandaloneMode()) return;
-      syncInstallText();
+      syncInstallText(Boolean(forceGuide));
       installPanel.hidden = false;
       installPanel.classList.add('is-visible');
-      if (installGuide) installGuide.hidden = !forceGuide;
     }
 
     function hideInstallPanel(){
@@ -6611,15 +6710,14 @@
       document.body.classList.add('app-standalone');
       hideInstallPanel();
     } else {
-      /* Always show the App Store-style install surface.
-         The native prompt appears only when Chrome grants beforeinstallprompt;
-         otherwise the same button exposes manual install guidance. */
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function(){ showInstallPanel(false); }, { once:true });
+        document.addEventListener('DOMContentLoaded', function(){
+          showInstallPanel(isIOSDevice());
+        }, { once:true });
       } else {
-        showInstallPanel(false);
+        showInstallPanel(isIOSDevice());
       }
-      window.setTimeout(function(){ showInstallPanel(false); }, 900);
+      window.setTimeout(function(){ showInstallPanel(isIOSDevice()); }, 900);
     }
 
     window.addEventListener('beforeinstallprompt', function(event){
@@ -6630,7 +6728,12 @@
 
     if (installBtn) {
       installBtn.addEventListener('click', async function(){
-        syncInstallText();
+        if (isIOSDevice()) {
+          showInstallPanel(true);
+          return;
+        }
+
+        syncInstallText(false);
 
         if (deferredInstallPrompt) {
           deferredInstallPrompt.prompt();
@@ -6654,7 +6757,10 @@
 
     document.querySelectorAll('.lang-tab').forEach(function(tab){
       tab.addEventListener('click', function(){
-        window.setTimeout(function(){ showInstallPanel(Boolean(installGuide && !installGuide.hidden)); }, 0);
+        window.setTimeout(function(){
+          var shouldShowGuide = Boolean((installGuide && !installGuide.hidden) || isIOSDevice());
+          showInstallPanel(shouldShowGuide);
+        }, 0);
       });
     });
 

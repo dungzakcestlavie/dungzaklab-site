@@ -1,16 +1,19 @@
-const CACHE_NAME = 'archive-pro-offline-sections-v5';
+const CACHE_NAME = 'archive-pro-offline-sections-v6';
 
 const CORE_ASSETS = [
   '/',
   '/index.html',
   '/archivepro/',
   '/archivepro/index.html',
-  '/data/works.json',
-  '/data/dcao.json',
-  '/data/dcap.json',
   '/manifest.webmanifest?v=2',
   '/archivepro-icon-192-v2.png?v=2',
   '/archivepro-icon-512-v2.png?v=2'
+];
+
+const LIVE_DATA_PATHS = [
+  '/data/works.json',
+  '/data/dcao.json',
+  '/data/dcap.json'
 ];
 
 function normalizeWorks(json) {
@@ -23,7 +26,10 @@ function normalizeWorks(json) {
 
 async function cacheNonOriginsWorks(cache) {
   try {
-    const response = await fetch('/data/works.json', { cache: 'no-store' });
+    const response = await fetch('/data/works.json?sw=' + Date.now(), {
+      cache: 'no-store'
+    });
+
     if (!response.ok) throw new Error('works.json failed');
 
     const json = await response.json();
@@ -52,9 +58,11 @@ self.addEventListener('install', event => {
           await cache.add(asset);
         } catch (e) {}
       }
+
       await cacheNonOriginsWorks(cache);
     })
   );
+
   self.skipWaiting();
 });
 
@@ -68,19 +76,46 @@ self.addEventListener('activate', event => {
       )
     )
   );
+
   self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
   const request = event.request;
+
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
+
   if (url.href.includes('/zoom/')) return;
+
+  const isLiveData = LIVE_DATA_PATHS.some(path => url.pathname === path);
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match('/archivepro/index.html'))
+      fetch(request, { cache: 'no-store' })
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          return response;
+        })
+        .catch(() =>
+          caches.match('/archivepro/index.html')
+            .then(cached => cached || caches.match('/index.html'))
+        )
+    );
+    return;
+  }
+
+  if (isLiveData) {
+    event.respondWith(
+      fetch(url.pathname + '?v=' + Date.now(), { cache: 'no-store' })
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(url.pathname, copy));
+          return response;
+        })
+        .catch(() => caches.match(url.pathname))
     );
     return;
   }
@@ -88,10 +123,17 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
-      return fetch(request).then(res => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-        return res;
+
+      return fetch(request).then(response => {
+        const copy = response.clone();
+
+        caches.open(CACHE_NAME).then(cache => {
+          try {
+            cache.put(request, copy);
+          } catch (e) {}
+        });
+
+        return response;
       });
     })
   );

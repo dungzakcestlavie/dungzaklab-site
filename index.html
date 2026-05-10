@@ -109,6 +109,24 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet"></noscript>
 
+
+<script>
+/* ARCHIVE PRO APP START — open installed app directly in Archive Pro */
+(function(){
+  var isStandalone = false;
+  try{
+    isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }catch(e){}
+
+  var path = window.location.pathname || '/';
+  var isRootEntry = path === '/' || path === '/index.html';
+
+  if(isStandalone && isRootEntry){
+    window.location.replace('/archivepro/index.html');
+  }
+})();
+</script>
+
 <style>
 :root{
   --safe-top: env(safe-area-inset-top, 0px);
@@ -1648,12 +1666,10 @@ window.addEventListener('beforeinstallprompt', function(event){
   event.preventDefault();
   archiveProDeferredInstallPrompt = event;
 
-  if(!isArchiveProStandalone()){
-    const btn = createArchiveProInstallButton();
-    btn.disabled = false;
-    btn.textContent = '앱 설치 / Install App';
-    btn.style.display = 'block';
-  }
+  const btn = createArchiveProInstallButton();
+  btn.disabled = false;
+  btn.textContent = '앱 설치 / Install App';
+  btn.style.display = 'block';
 });
 
 window.addEventListener('appinstalled', function(){

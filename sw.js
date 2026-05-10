@@ -1,15 +1,29 @@
-const CACHE_NAME = 'archive-pro-app-v4';
+const CACHE_NAME = 'archive-pro-app-v5';
 
 const CORE_ASSETS = [
   './',
   './index.html',
   './archivepro/',
   './archivepro/index.html',
-  './data/works.json',
-  './data/dcao.json',
-  './data/dcap.json',
-  'https://dungzak.art/data/works.json'
+  './manifest.webmanifest?v=2',
+  './archivepro-icon-192-v2.png?v=2',
+  './archivepro-icon-512-v2.png?v=2'
 ];
+
+const LIVE_JSON_URLS = {
+  works: [
+    'https://dungzak.art/data/works.json',
+    './data/works.json'
+  ],
+  dcao: [
+    'https://dungzak.art/data/dcao.json',
+    './data/dcao.json'
+  ],
+  dcap: [
+    'https://dungzak.art/data/dcap.json',
+    './data/dcap.json'
+  ]
+};
 
 function isCacheableRequest(request) {
   if (request.method !== 'GET') return false;
@@ -21,27 +35,53 @@ function isCacheableRequest(request) {
   return true;
 }
 
-async function getWorksJson() {
-  try {
-    const response = await fetch('https://dungzak.art/data/works.json', {
-      cache: 'no-store'
-    });
+function isLiveJson(url) {
+  return (
+    url.href.includes('/data/works.json') ||
+    url.href.includes('/data/dcao.json') ||
+    url.href.includes('/data/dcap.json') ||
+    url.href.includes('works.json') ||
+    url.href.includes('dcao.json') ||
+    url.href.includes('dcap.json')
+  );
+}
 
-    if (!response.ok) throw new Error('works.json fetch failed');
+function getLiveJsonFallbacks(url) {
+  if (url.href.includes('works.json')) return LIVE_JSON_URLS.works;
+  if (url.href.includes('dcao.json')) return LIVE_JSON_URLS.dcao;
+  if (url.href.includes('dcap.json')) return LIVE_JSON_URLS.dcap;
+  return [url.href];
+}
 
-    return await response.json();
-  } catch (e) {
+async function fetchFresh(urls) {
+  let lastError = null;
+
+  for (const baseUrl of urls) {
     try {
-      const response = await fetch('./data/works.json', {
+      const joiner = String(baseUrl).includes('?') ? '&' : '?';
+      const freshUrl = baseUrl + joiner + 'v=' + Date.now();
+
+      const response = await fetch(freshUrl, {
         cache: 'no-store'
       });
 
-      if (!response.ok) throw new Error('local works.json fetch failed');
+      if (!response.ok) throw new Error('fetch failed: ' + response.status);
 
-      return await response.json();
-    } catch (err) {
-      return null;
+      return response;
+    } catch (error) {
+      lastError = error;
     }
+  }
+
+  throw lastError || new Error('all fresh fetch attempts failed');
+}
+
+async function getWorksJson() {
+  try {
+    const response = await fetchFresh(LIVE_JSON_URLS.works);
+    return await response.clone().json();
+  } catch (e) {
+    return null;
   }
 }
 
@@ -120,7 +160,7 @@ self.addEventListener('fetch', event => {
 
   if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-store' })
         .then(response => {
           if (response && response.ok) {
             const copy = response.clone();
@@ -142,25 +182,58 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  if (isLiveJson(url)) {
+    event.respondWith(
+      fetchFresh(getLiveJsonFallbacks(url))
+        .then(response => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              try {
+                cache.put(request, copy.clone());
+              } catch (e) {}
+            });
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          if (cached) return cached;
+
+          const fallbackUrls = getLiveJsonFallbacks(url);
+          for (const fallbackUrl of fallbackUrls) {
+            const cachedFallback = await caches.match(fallbackUrl);
+            if (cachedFallback) return cachedFallback;
+          }
+
+          return new Response('{}', {
+            headers: { 'Content-Type': 'application/json' }
+          });
+        })
+    );
+    return;
+  }
+
   if (
     request.destination === 'image' ||
-    url.pathname.endsWith('.json') ||
-    url.href.includes('works.json') ||
     url.href.includes('/standard/')
   ) {
     event.respondWith(
       caches.match(request).then(cached => {
-        const networkFetch = fetch(request)
-          .then(response => {
-            if (response && response.ok) {
-              const copy = response.clone();
-              caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-            }
-            return response;
-          })
-          .catch(() => cached);
+        if (cached) return cached;
 
-        return cached || networkFetch;
+        return fetch(request).then(response => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              try {
+                cache.put(request, copy);
+              } catch (e) {}
+            });
+          }
+
+          return response;
+        });
       })
     );
     return;
@@ -168,17 +241,20 @@ self.addEventListener('fetch', event => {
 
   event.respondWith(
     caches.match(request).then(cached => {
-      const networkFetch = fetch(request)
-        .then(response => {
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached);
+      if (cached) return cached;
 
-      return cached || networkFetch;
+      return fetch(request).then(response => {
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            try {
+              cache.put(request, copy);
+            } catch (e) {}
+          });
+        }
+
+        return response;
+      });
     })
   );
 });

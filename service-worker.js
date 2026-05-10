@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archive-pro-offline-sections-v6';
+const CACHE_NAME = 'archive-pro-offline-sections-v7';
 
 const CORE_ASSETS = [
   '/',
@@ -10,11 +10,25 @@ const CORE_ASSETS = [
   '/archivepro-icon-512-v2.png?v=2'
 ];
 
-const LIVE_DATA_PATHS = [
-  '/data/works.json',
-  '/data/dcao.json',
-  '/data/dcap.json'
+const WORKS_JSON_URLS = [
+  'https://dungzak.art/data/works.json',
+  '/data/works.json'
 ];
+
+const LIVE_DATA_URLS = {
+  '/data/works.json': [
+    'https://dungzak.art/data/works.json',
+    '/data/works.json'
+  ],
+  '/data/dcao.json': [
+    'https://dungzak.art/data/dcao.json',
+    '/data/dcao.json'
+  ],
+  '/data/dcap.json': [
+    'https://dungzak.art/data/dcap.json',
+    '/data/dcap.json'
+  ]
+};
 
 function normalizeWorks(json) {
   if (Array.isArray(json)) return json;
@@ -24,15 +38,34 @@ function normalizeWorks(json) {
   return [];
 }
 
+async function fetchFresh(urls) {
+  let lastError = null;
+
+  for (const baseUrl of urls) {
+    try {
+      const joiner = String(baseUrl).includes('?') ? '&' : '?';
+      const freshUrl = baseUrl + joiner + 'v=' + Date.now();
+
+      const response = await fetch(freshUrl, {
+        cache: 'no-store',
+        mode: 'cors'
+      });
+
+      if (!response.ok) throw new Error('fetch failed: ' + response.status);
+
+      return response;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('all fetch attempts failed');
+}
+
 async function cacheNonOriginsWorks(cache) {
   try {
-    const response = await fetch('/data/works.json?sw=' + Date.now(), {
-      cache: 'no-store'
-    });
-
-    if (!response.ok) throw new Error('works.json failed');
-
-    const json = await response.json();
+    const response = await fetchFresh(WORKS_JSON_URLS);
+    const json = await response.clone().json();
     const works = normalizeWorks(json);
 
     const urls = works
@@ -89,14 +122,20 @@ self.addEventListener('fetch', event => {
 
   if (url.href.includes('/zoom/')) return;
 
-  const isLiveData = LIVE_DATA_PATHS.some(path => url.pathname === path);
+  const liveUrls = LIVE_DATA_URLS[url.pathname];
 
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request, { cache: 'no-store' })
         .then(response => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+
+          caches.open(CACHE_NAME).then(cache => {
+            try {
+              cache.put(request, copy);
+            } catch (e) {}
+          });
+
           return response;
         })
         .catch(() =>
@@ -107,12 +146,18 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (isLiveData) {
+  if (liveUrls) {
     event.respondWith(
-      fetch(url.pathname + '?v=' + Date.now(), { cache: 'no-store' })
+      fetchFresh(liveUrls)
         .then(response => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(url.pathname, copy));
+
+          caches.open(CACHE_NAME).then(cache => {
+            try {
+              cache.put(url.pathname, copy);
+            } catch (e) {}
+          });
+
           return response;
         })
         .catch(() => caches.match(url.pathname))

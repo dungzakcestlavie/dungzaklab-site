@@ -1,13 +1,16 @@
-const CACHE_NAME = 'archive-pro-offline-sections-v1';
+const CACHE_NAME = 'archive-pro-offline-sections-v3';
 
 const CORE_ASSETS = [
-  './',
-  './index.html',
-  './archivepro/',
-  './archivepro/index.html',
-  './data/works.json',
-  './data/dcao.json',
-  './data/dcap.json'
+  '/',
+  '/index.html',
+  '/archivepro/',
+  '/archivepro/index.html',
+  '/data/works.json',
+  '/data/dcao.json',
+  '/data/dcap.json',
+  '/manifest.webmanifest',
+  '/icon-192-v2.png',
+  '/icon-512-v2.png'
 ];
 
 function normalizeWorks(json) {
@@ -20,7 +23,7 @@ function normalizeWorks(json) {
 
 async function cacheNonOriginsWorks(cache) {
   try {
-    const response = await fetch('./data/works.json', { cache: 'no-store' });
+    const response = await fetch('/data/works.json', { cache: 'no-store' });
     if (!response.ok) throw new Error('works.json failed');
 
     const json = await response.json();
@@ -94,15 +97,18 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request)
         .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          }
           return response;
         })
         .catch(async () => {
           if (url.pathname.startsWith('/archivepro')) {
-            return caches.match('./archivepro/index.html');
+            return caches.match('/archivepro/index.html');
           }
-          return caches.match('./index.html');
+
+          return caches.match('/index.html');
         })
     );
     return;

@@ -909,9 +909,21 @@
       inset:0;
       z-index:120;
       display:none;
-      background:rgba(6,10,14,.92);
-      backdrop-filter:blur(10px);
-      -webkit-backdrop-filter:blur(10px);
+      background:rgba(6,10,14,.99);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
+      overflow:hidden;
+      isolation:isolate;
+    }
+
+    .lightbox::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      z-index:0;
+      background:#060a0e;
+      opacity:.98;
+      pointer-events:none;
     }
 
     .lightbox.open,
@@ -935,6 +947,7 @@
     .lightbox-inner{
       position:absolute;
       inset:0;
+      z-index:1;
       display:grid;
       grid-template-columns:minmax(0,1fr) 380px;
       gap:0;
@@ -961,7 +974,7 @@
 
     .lightbox-side{
       border-left:1px solid rgba(255,255,255,.06);
-      background:linear-gradient(180deg, rgba(18,26,38,.96), rgba(12,18,27,.96));
+      background:linear-gradient(180deg, rgba(18,26,38,1), rgba(12,18,27,1));
       padding:78px 22px 22px;
       overflow:auto;
     }

@@ -260,9 +260,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Archive Pro" />
-  <link rel="apple-touch-icon" href="/icon-512-v2.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192-v2.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512-v2.png" />
+  <link rel="apple-touch-icon" href="/archivepro-icon-512-v1.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/archivepro-icon-192-v1.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/archivepro-icon-512-v1.png" />
 
   <style>
     :root{
@@ -3755,7 +3755,128 @@
     #grid{
       overflow-anchor:none;
     }
-  </style>
+  
+
+    /* ARCHIVE PRO PWA INSTALL UX — app-like install surface */
+    .install-panel{
+      margin-top:10px;
+      padding:12px 14px;
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      border:1px solid rgba(212,180,109,.24);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(17,28,44,.48), rgba(9,15,25,.36));
+      color:var(--muted);
+      box-shadow:0 10px 28px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.02);
+      contain:layout paint;
+    }
+
+    .install-panel.is-visible{
+      display:flex;
+    }
+
+    .install-text{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .install-title{
+      color:var(--gold);
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.09em;
+      text-transform:uppercase;
+      line-height:1.35;
+    }
+
+    .install-desc{
+      color:rgba(244,239,230,.64);
+      font-size:12px;
+      line-height:1.45;
+      letter-spacing:.02em;
+    }
+
+    .install-actions{
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .install-btn,
+    .install-close{
+      min-height:40px;
+      border-radius:999px;
+      border:1px solid rgba(212,180,109,.44);
+      background:rgba(212,180,109,.08);
+      color:var(--gold);
+      cursor:pointer;
+      white-space:nowrap;
+      transform:none !important;
+      box-shadow:none !important;
+    }
+
+    .install-btn{
+      padding:0 16px;
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.07em;
+    }
+
+    .install-close{
+      width:40px;
+      padding:0;
+      font-size:18px;
+      line-height:1;
+      color:rgba(244,239,230,.70);
+      border-color:rgba(255,255,255,.12);
+      background:rgba(255,255,255,.03);
+    }
+
+    .install-btn:hover,
+    .install-btn:focus-visible{
+      color:#f4efe6;
+      border-color:rgba(212,180,109,.72);
+      background:rgba(212,180,109,.14);
+      outline:none;
+    }
+
+    .install-close:hover,
+    .install-close:focus-visible{
+      color:#f4efe6;
+      border-color:rgba(212,180,109,.34);
+      outline:none;
+    }
+
+    body.app-standalone .install-panel{
+      display:none !important;
+    }
+
+    @media (display-mode: fullscreen), (display-mode: standalone){
+      .install-panel{display:none !important;}
+      body{background:#031421 !important;}
+    }
+
+    @media (max-width:640px){
+      .install-panel.is-visible{
+        display:grid;
+        grid-template-columns:1fr;
+      }
+      .install-actions{
+        width:100%;
+        display:grid;
+        grid-template-columns:1fr 44px;
+      }
+      .install-btn,
+      .install-close{
+        min-height:44px;
+      }
+    }
+</style>
 
 </head>
 <body class="archive-entered archive-filter-open">
@@ -3802,6 +3923,19 @@
     <section class="panel entry-layer archive-entry-wrap" aria-label="Archive entry">
       <div class="entry-panel">
         <a id="enterArchivePro" class="critical-entry-btn" href="#archiveWorks" data-kr="아카이브 입장 →" data-en="Enter Archive →">아카이브 입장 →</a>
+      </div>
+    </section>
+
+
+
+    <section id="installPanel" class="install-panel" aria-label="Archive Pro app installation" hidden>
+      <div class="install-text">
+        <span id="installTitle" class="install-title">Archive Pro App</span>
+        <span id="installDesc" class="install-desc">홈 화면에 설치하면 Archive Pro가 앱처럼 전체 화면으로 열립니다.</span>
+      </div>
+      <div class="install-actions">
+        <button id="installAppBtn" class="install-btn" type="button">앱 설치</button>
+        <button id="installDismissBtn" class="install-close" type="button" aria-label="설치 안내 닫기">×</button>
       </div>
     </section>
 
@@ -6367,6 +6501,127 @@
       }
     })();
 
+</script>
+
+
+<!-- Archive Pro PWA Install UX: install button + standalone app mode -->
+<script>
+  (function(){
+    var deferredInstallPrompt = null;
+    var installPanel = document.getElementById('installPanel');
+    var installBtn = document.getElementById('installAppBtn');
+    var dismissBtn = document.getElementById('installDismissBtn');
+    var installTitle = document.getElementById('installTitle');
+    var installDesc = document.getElementById('installDesc');
+    var DISMISS_KEY = 'archive-pro-install-dismissed-v1';
+
+    function isStandaloneMode(){
+      return window.matchMedia('(display-mode: fullscreen)').matches ||
+             window.matchMedia('(display-mode: standalone)').matches ||
+             window.navigator.standalone === true;
+    }
+
+    function currentLang(){
+      var active = document.querySelector('.lang-tab.active');
+      return active && active.dataset ? (active.dataset.lang || 'kr') : 'kr';
+    }
+
+    function syncInstallText(){
+      if (!installTitle || !installDesc || !installBtn) return;
+      var lang = currentLang();
+      if (lang === 'en') {
+        installTitle.textContent = 'Archive Pro App';
+        installDesc.textContent = 'Install to the home screen and open Archive Pro as a fullscreen app.';
+        installBtn.textContent = 'Install App';
+        if (dismissBtn) dismissBtn.setAttribute('aria-label', 'Close install notice');
+      } else if (lang === 'both') {
+        installTitle.textContent = 'Archive Pro App';
+        installDesc.textContent = '홈 화면에 설치하면 앱처럼 전체 화면으로 열립니다. / Install to open Archive Pro as a fullscreen app.';
+        installBtn.textContent = '앱 설치 / Install';
+        if (dismissBtn) dismissBtn.setAttribute('aria-label', '설치 안내 닫기');
+      } else {
+        installTitle.textContent = 'Archive Pro App';
+        installDesc.textContent = '홈 화면에 설치하면 Archive Pro가 앱처럼 전체 화면으로 열립니다.';
+        installBtn.textContent = '앱 설치';
+        if (dismissBtn) dismissBtn.setAttribute('aria-label', '설치 안내 닫기');
+      }
+    }
+
+    function showInstallPanel(){
+      if (!installPanel) return;
+      if (isStandaloneMode()) return;
+      if (localStorage.getItem(DISMISS_KEY) === '1') return;
+      syncInstallText();
+      installPanel.hidden = false;
+      installPanel.classList.add('is-visible');
+    }
+
+    function hideInstallPanel(remember){
+      if (!installPanel) return;
+      installPanel.classList.remove('is-visible');
+      installPanel.hidden = true;
+      if (remember) localStorage.setItem(DISMISS_KEY, '1');
+    }
+
+    if (isStandaloneMode()) {
+      document.body.classList.add('app-standalone');
+    }
+
+    window.addEventListener('beforeinstallprompt', function(event){
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      localStorage.removeItem(DISMISS_KEY);
+      showInstallPanel();
+    });
+
+    if (installBtn) {
+      installBtn.addEventListener('click', async function(){
+        syncInstallText();
+        if (!deferredInstallPrompt) {
+          showInstallPanel();
+          return;
+        }
+        deferredInstallPrompt.prompt();
+        try {
+          await deferredInstallPrompt.userChoice;
+        } catch (e) {}
+        deferredInstallPrompt = null;
+        hideInstallPanel(false);
+      });
+    }
+
+    if (dismissBtn) {
+      dismissBtn.addEventListener('click', function(){
+        hideInstallPanel(true);
+      });
+    }
+
+    window.addEventListener('appinstalled', function(){
+      deferredInstallPrompt = null;
+      document.body.classList.add('app-standalone');
+      hideInstallPanel(false);
+    });
+
+    document.querySelectorAll('.lang-tab').forEach(function(tab){
+      tab.addEventListener('click', function(){
+        window.setTimeout(syncInstallText, 0);
+      });
+    });
+
+    window.matchMedia('(display-mode: standalone)').addEventListener?.('change', function(){
+      if (isStandaloneMode()) {
+        document.body.classList.add('app-standalone');
+        hideInstallPanel(false);
+      }
+    });
+
+    window.matchMedia('(display-mode: fullscreen)').addEventListener?.('change', function(){
+      if (isStandaloneMode()) {
+        document.body.classList.add('app-standalone');
+        hideInstallPanel(false);
+      }
+    });
+  })();
 </script>
 
 <!-- Archive Pro Exhibition Offline Mode: root Service Worker registration -->

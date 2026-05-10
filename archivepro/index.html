@@ -4166,6 +4166,13 @@
       }, { passive: false });
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
+      /*
+        Live Works Data Sources
+        - GITHUB_RAW_DATA_URL is used first because it allows browser/PWA fetch access.
+        - DATA_URL remains as the official public archive URL.
+        - Same-origin / relative paths remain for the deployed site and offline fallback.
+      */
+      const GITHUB_RAW_DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json';
       const DATA_URL = 'https://dungzak.art/data/works.json';
       const MIN_EXPECTED_WORKS = 100;
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
@@ -6028,7 +6035,14 @@
           Use dungzak.art as the single source when online, but allow cached/root
           works.json fallbacks when the installed app is opened without Wi‑Fi.
         */
-        return [DATA_URL, '/data/works.json', '../data/works.json'];
+        return [
+          GITHUB_RAW_DATA_URL,
+          DATA_URL,
+          '/data/works.json',
+          '../data/works.json',
+          './data/works.json',
+          'data/works.json'
+        ];
       }
 
       function buildLiveJsonUrl(url) {
@@ -6048,10 +6062,11 @@
 
       async function fetchJsonNoStore(url) {
         const liveUrl = buildLiveJsonUrl(url);
+        const isHttpUrl = /^https?:\/\//i.test(liveUrl);
         const res = await fetch(liveUrl, {
           cache: 'no-store',
-          mode: 'cors',
-          credentials: 'omit',
+          mode: isHttpUrl ? 'cors' : 'same-origin',
+          credentials: isHttpUrl ? 'omit' : 'same-origin',
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'

@@ -8,9 +8,9 @@ const CORE_ASSETS = [
   '/data/works.json',
   '/data/dcao.json',
   '/data/dcap.json',
-  '/manifest.webmanifest',
-  '/archivepro-icon-192-v2.png',
-  '/archivepro-icon-512-v2.png'
+  '/manifest.webmanifest?v=2',
+  '/archivepro-icon-192-v2.png?v=2',
+  '/archivepro-icon-512-v2.png?v=2'
 ];
 
 function normalizeWorks(json) {
@@ -52,11 +52,9 @@ self.addEventListener('install', event => {
           await cache.add(asset);
         } catch (e) {}
       }
-
       await cacheNonOriginsWorks(cache);
     })
   );
-
   self.skipWaiting();
 });
 
@@ -70,46 +68,19 @@ self.addEventListener('activate', event => {
       )
     )
   );
-
   self.clients.claim();
-});
-
-self.addEventListener('message', event => {
-  if (!event.data || event.data.type !== 'CACHE_NON_ORIGINS') return;
-
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(async cache => {
-      await cacheNonOriginsWorks(cache);
-    })
-  );
 });
 
 self.addEventListener('fetch', event => {
   const request = event.request;
-
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
-
   if (url.href.includes('/zoom/')) return;
 
-  if (request.mode === 'navigate' || request.destination === 'document') {
+  if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then(response => {
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(async () => {
-          if (url.pathname.startsWith('/archivepro')) {
-            return caches.match('/archivepro/index.html');
-          }
-
-          return caches.match('/index.html');
-        })
+      fetch(request).catch(() => caches.match('/archivepro/index.html'))
     );
     return;
   }
@@ -117,16 +88,11 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
-
-      return fetch(request)
-        .then(response => {
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached);
+      return fetch(request).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+        return res;
+      });
     })
   );
 });

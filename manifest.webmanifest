@@ -3,9 +3,10 @@
   "short_name": "Archive Pro",
   "start_url": "/archivepro/index.html",
   "scope": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#031421",
   "theme_color": "#031421",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/icon-192.png",

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archive-pro-app-v2';
+const CACHE_NAME = 'archive-pro-offline-sections-v1';
 
 const CORE_ASSETS = [
   './',
@@ -18,11 +18,10 @@ function normalizeWorks(json) {
   return [];
 }
 
-// Origins 제외 + standard 이미지만 캐시
 async function cacheNonOriginsWorks(cache) {
   try {
     const response = await fetch('./data/works.json', { cache: 'no-store' });
-    if (!response.ok) throw new Error('works.json fetch failed');
+    if (!response.ok) throw new Error('works.json failed');
 
     const json = await response.json();
     const works = normalizeWorks(json);
@@ -31,8 +30,8 @@ async function cacheNonOriginsWorks(cache) {
       .filter(work => Number(work.section_id) !== 0)
       .map(work => work.image)
       .filter(Boolean)
-      .filter(url => !String(url).includes('/zoom/'))
-      .filter(url => String(url).includes('/standard/'));
+      .filter(url => String(url).includes('/standard/'))
+      .filter(url => !String(url).includes('/zoom/'));
 
     for (const url of urls) {
       try {
@@ -40,17 +39,6 @@ async function cacheNonOriginsWorks(cache) {
       } catch (e) {}
     }
   } catch (e) {}
-}
-
-function isCacheableRequest(request) {
-  if (request.method !== 'GET') return false;
-
-  const url = new URL(request.url);
-
-  // zoom 이미지는 캐시하지 않음
-  if (url.href.includes('/zoom/')) return false;
-
-  return true;
 }
 
 self.addEventListener('install', event => {
@@ -84,7 +72,7 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('message', event => {
-  if (!event.data || event.data.type !== 'CACHE_EXHIBITION_SET') return;
+  if (!event.data || event.data.type !== 'CACHE_NON_ORIGINS') return;
 
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
@@ -96,63 +84,35 @@ self.addEventListener('message', event => {
 self.addEventListener('fetch', event => {
   const request = event.request;
 
-  if (!isCacheableRequest(request)) return;
+  if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
 
-  // HTML 페이지 오프라인 fallback
+  if (url.href.includes('/zoom/')) return;
+
   if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(
       fetch(request)
         .then(response => {
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-          }
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
         .catch(async () => {
-          const cached = await caches.match(request);
-          if (cached) return cached;
-
           if (url.pathname.startsWith('/archivepro')) {
             return caches.match('./archivepro/index.html');
           }
-
           return caches.match('./index.html');
         })
     );
     return;
   }
 
-  // JSON + standard 이미지
-  if (
-    request.destination === 'image' ||
-    url.pathname.endsWith('.json') ||
-    url.href.includes('works.json') ||
-    url.href.includes('/standard/')
-  ) {
-    event.respondWith(
-      caches.match(request).then(cached => {
-        const networkFetch = fetch(request)
-          .then(response => {
-            if (response && response.ok) {
-              const copy = response.clone();
-              caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-            }
-            return response;
-          })
-          .catch(() => cached);
-
-        return cached || networkFetch;
-      })
-    );
-    return;
-  }
-
   event.respondWith(
     caches.match(request).then(cached => {
-      const networkFetch = fetch(request)
+      if (cached) return cached;
+
+      return fetch(request)
         .then(response => {
           if (response && response.ok) {
             const copy = response.clone();
@@ -161,8 +121,6 @@ self.addEventListener('fetch', event => {
           return response;
         })
         .catch(() => cached);
-
-      return cached || networkFetch;
     })
   );
 });

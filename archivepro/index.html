@@ -6031,11 +6031,31 @@
         return [DATA_URL, '/data/works.json', '../data/works.json'];
       }
 
+      function buildLiveJsonUrl(url) {
+        /*
+          Live Data Fix:
+          When online, works.json / dcao.json / dcap.json must bypass browser
+          and Service Worker cache so newly uploaded works and counts appear
+          immediately in Chrome, Safari, and installed PWA mode.
+          When offline, keep the original URL so cached fallbacks can still match.
+        */
+        const clean = String(url || '');
+        if (!clean) return clean;
+        if (isArchiveOfflineMode()) return clean;
+        const joiner = clean.indexOf('?') === -1 ? '?' : '&';
+        return clean + joiner + 'v=' + Date.now();
+      }
+
       async function fetchJsonNoStore(url) {
-        const res = await fetch(url, {
-          cache: 'default',
+        const liveUrl = buildLiveJsonUrl(url);
+        const res = await fetch(liveUrl, {
+          cache: 'no-store',
           mode: 'cors',
-          credentials: 'omit'
+          credentials: 'omit',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -6784,8 +6804,9 @@
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/service-worker.js').then(function(registration){
+      navigator.serviceWorker.register('/service-worker.js?v=6', { updateViaCache: 'none' }).then(function(registration){
         try {
+          registration.update();
           if (navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({ type: 'CACHE_NON_ORIGINS' });
           }

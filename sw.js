@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archive-pro-exhibition-v3';
+const CACHE_NAME = 'archive-pro-app-v4';
 
 const CORE_ASSETS = [
   './',
@@ -11,43 +11,76 @@ const CORE_ASSETS = [
   'https://dungzak.art/data/works.json'
 ];
 
-const PRECACHE_IMAGE_IDS = [
-  'OR-1428',
-  'OR-1429',
-  'OR-1430'
-];
-
-const IMAGE_BASES = [
-  'https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/'
-];
-
-function exhibitionImageUrls() {
-  return PRECACHE_IMAGE_IDS.flatMap(id =>
-    IMAGE_BASES.map(base => `${base}${id}.jpg`)
-  );
-}
-
 function isCacheableRequest(request) {
   if (request.method !== 'GET') return false;
 
   const url = new URL(request.url);
 
-  // zoom 이미지는 캐시하지 않음
   if (url.href.includes('/zoom/')) return false;
 
   return true;
 }
 
+async function getWorksJson() {
+  try {
+    const response = await fetch('https://dungzak.art/data/works.json', {
+      cache: 'no-store'
+    });
+
+    if (!response.ok) throw new Error('works.json fetch failed');
+
+    return await response.json();
+  } catch (e) {
+    try {
+      const response = await fetch('./data/works.json', {
+        cache: 'no-store'
+      });
+
+      if (!response.ok) throw new Error('local works.json fetch failed');
+
+      return await response.json();
+    } catch (err) {
+      return null;
+    }
+  }
+}
+
+function normalizeWorks(json) {
+  if (Array.isArray(json)) return json;
+  if (json && Array.isArray(json.works)) return json.works;
+  if (json && json.data && Array.isArray(json.data.works)) return json.data.works;
+  if (json && json.archive && Array.isArray(json.archive.works)) return json.archive.works;
+  return [];
+}
+
+async function cacheNonOriginsWorks(cache) {
+  const json = await getWorksJson();
+  const works = normalizeWorks(json);
+
+  const urls = works
+    .filter(work => Number(work.section_id) !== 0)
+    .map(work => work.image)
+    .filter(Boolean)
+    .filter(url => !String(url).includes('/zoom/'))
+    .filter(url => String(url).includes('/standard/'));
+
+  for (const url of urls) {
+    try {
+      await cache.add(url);
+    } catch (e) {}
+  }
+}
+
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
-      const assets = CORE_ASSETS.concat(exhibitionImageUrls());
-
-      for (const asset of assets) {
+      for (const asset of CORE_ASSETS) {
         try {
           await cache.add(asset);
         } catch (e) {}
       }
+
+      await cacheNonOriginsWorks(cache);
     })
   );
 
@@ -68,6 +101,16 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
+self.addEventListener('message', event => {
+  if (!event.data || event.data.type !== 'CACHE_EXHIBITION_SET') return;
+
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(async cache => {
+      await cacheNonOriginsWorks(cache);
+    })
+  );
+});
+
 self.addEventListener('fetch', event => {
   const request = event.request;
 
@@ -75,7 +118,6 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(request.url);
 
-  // HTML 페이지
   if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(
       fetch(request)
@@ -100,7 +142,6 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // JSON + standard 이미지
   if (
     request.destination === 'image' ||
     url.pathname.endsWith('.json') ||
@@ -125,7 +166,6 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 기타 파일
   event.respondWith(
     caches.match(request).then(cached => {
       const networkFetch = fetch(request)

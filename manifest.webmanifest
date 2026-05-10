@@ -2,6 +2,7 @@
   "name": "Archive Pro — DUNGZAK CESTLAVIE",
   "short_name": "Archive Pro",
   "start_url": "/archivepro/index.html",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#031421",
   "theme_color": "#031421",

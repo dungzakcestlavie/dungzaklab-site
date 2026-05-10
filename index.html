@@ -1591,9 +1591,13 @@ if ('serviceWorker' in navigator) {
 }
 
 
-/* ARCHIVE PRO PWA INSTALL BUTTON — safe user-triggered prompt */
+/* ARCHIVE PRO PWA INSTALL BUTTON — FINAL FIX */
 let archiveProDeferredInstallPrompt = null;
 let archiveProInstallButton = null;
+
+function isArchiveProStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
 
 function createArchiveProInstallButton(){
   if(archiveProInstallButton) return archiveProInstallButton;
@@ -1609,7 +1613,7 @@ function createArchiveProInstallButton(){
   archiveProInstallButton.style.padding = '12px 16px';
   archiveProInstallButton.style.borderRadius = '999px';
   archiveProInstallButton.style.border = '1px solid rgba(214,184,106,0.58)';
-  archiveProInstallButton.style.background = 'rgba(3,20,33,0.92)';
+  archiveProInstallButton.style.background = 'rgba(3,20,33,0.94)';
   archiveProInstallButton.style.color = '#f0d79c';
   archiveProInstallButton.style.fontFamily = '"Noto Serif KR", serif';
   archiveProInstallButton.style.fontSize = '13px';
@@ -1617,6 +1621,7 @@ function createArchiveProInstallButton(){
   archiveProInstallButton.style.cursor = 'pointer';
   archiveProInstallButton.style.boxShadow = '0 12px 32px rgba(0,0,0,0.25)';
   archiveProInstallButton.style.display = 'none';
+  archiveProInstallButton.style.webkitTapHighlightColor = 'rgba(184,150,62,0.20)';
 
   archiveProInstallButton.addEventListener('click', async function(){
     if(!archiveProDeferredInstallPrompt) return;
@@ -1624,14 +1629,15 @@ function createArchiveProInstallButton(){
     archiveProInstallButton.disabled = true;
     archiveProInstallButton.textContent = '설치 확인 중...';
 
-    archiveProDeferredInstallPrompt.prompt();
-
     try{
+      archiveProDeferredInstallPrompt.prompt();
       await archiveProDeferredInstallPrompt.userChoice;
     }catch(e){}
 
     archiveProDeferredInstallPrompt = null;
     archiveProInstallButton.style.display = 'none';
+    archiveProInstallButton.disabled = false;
+    archiveProInstallButton.textContent = '앱 설치 / Install App';
   });
 
   document.body.appendChild(archiveProInstallButton);
@@ -1642,16 +1648,26 @@ window.addEventListener('beforeinstallprompt', function(event){
   event.preventDefault();
   archiveProDeferredInstallPrompt = event;
 
-  const btn = createArchiveProInstallButton();
-  btn.disabled = false;
-  btn.textContent = '앱 설치 / Install App';
-  btn.style.display = 'block';
+  if(!isArchiveProStandalone()){
+    const btn = createArchiveProInstallButton();
+    btn.disabled = false;
+    btn.textContent = '앱 설치 / Install App';
+    btn.style.display = 'block';
+  }
 });
 
 window.addEventListener('appinstalled', function(){
   archiveProDeferredInstallPrompt = null;
   if(archiveProInstallButton){
     archiveProInstallButton.style.display = 'none';
+  }
+});
+
+window.addEventListener('load', function(){
+  if(isArchiveProStandalone()){
+    if(archiveProInstallButton){
+      archiveProInstallButton.style.display = 'none';
+    }
   }
 });
 

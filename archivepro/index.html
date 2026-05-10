@@ -255,6 +255,14 @@
 
   <title>Archive Pro — DUNGZAK CESTLAVIE LAB</title>
   <meta name="description" content="Archive Pro — artwork archive engine for search, filter, and zoom view." />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Archive Pro" />
+  <link rel="apple-touch-icon" href="/icon-512-v2.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192-v2.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512-v2.png" />
 
   <style>
     :root{
@@ -3955,7 +3963,7 @@
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 220;
       const ASSET_VERSION = 'ap-img';
-      const PAGE_OFFLINE_CACHE_NAME = 'archive-pro-page-non-origins-v1';
+      const PAGE_OFFLINE_CACHE_NAME = 'archive-pro-page-non-origins-v3';
 
       function isArchiveOfflineMode() {
         return typeof navigator !== 'undefined' && navigator.onLine === false;
@@ -6361,11 +6369,18 @@
 
 </script>
 
-<!-- Archive Pro Strong Web Cache: Service Worker registration only -->
+<!-- Archive Pro Exhibition Offline Mode: root Service Worker registration -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('./sw.js').catch(function () {});
+      navigator.serviceWorker.register('/service-worker.js').then(function(registration){
+        try {
+          if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'CACHE_NON_ORIGINS' });
+          }
+        } catch (e) {}
+        return registration;
+      }).catch(function () {});
     });
   }
 </script>

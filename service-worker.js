@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archive-pro-offline-sections-v3';
+const CACHE_NAME = 'archive-pro-offline-sections-v4';
 
 const CORE_ASSETS = [
   '/',
@@ -9,8 +9,8 @@ const CORE_ASSETS = [
   '/data/dcao.json',
   '/data/dcap.json',
   '/manifest.webmanifest',
-  '/icon-192-v2.png',
-  '/icon-512-v2.png'
+  '/archivepro-icon-192-v1.png',
+  '/archivepro-icon-512-v1.png'
 ];
 
 function normalizeWorks(json) {

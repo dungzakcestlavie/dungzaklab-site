@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archive-pro-offline-sections-v7';
+const CACHE_NAME = 'archive-pro-offline-sections-v8-20260513';
 
 const CORE_ASSETS = [
   '/',
@@ -12,14 +12,14 @@ const CORE_ASSETS = [
 
 const WORKS_JSON_URLS = [
   'https://dungzak.art/data/works.json',
-  '/data/works.json'
+  'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json',
+  '/data/works.json',
+  '/archivepro/data/works.json'
 ];
 
 const LIVE_DATA_URLS = {
-  '/data/works.json': [
-    'https://dungzak.art/data/works.json',
-    '/data/works.json'
-  ],
+  '/data/works.json': WORKS_JSON_URLS,
+  '/archivepro/data/works.json': WORKS_JSON_URLS,
   '/data/dcao.json': [
     'https://dungzak.art/data/dcao.json',
     '/data/dcao.json'
@@ -30,12 +30,73 @@ const LIVE_DATA_URLS = {
   ]
 };
 
+const MAX_IMAGE_CACHE_BATCH = 320;
+
 function normalizeWorks(json) {
-  if (Array.isArray(json)) return json;
-  if (json && Array.isArray(json.works)) return json.works;
-  if (json && json.data && Array.isArray(json.data.works)) return json.data.works;
-  if (json && json.archive && Array.isArray(json.archive.works)) return json.archive.works;
-  return [];
+  const seen = new Set();
+
+  function unwrap(value) {
+    if (!value || seen.has(value)) return [];
+    if (typeof value === 'object') seen.add(value);
+
+    if (Array.isArray(value)) {
+      if (value.length === 1) {
+        const nested = unwrap(value[0]);
+        if (nested.length) return nested;
+      }
+
+      if (value.length && value.every(item => item && typeof item === 'object' && ('id' in item || 'image' in item || 'zoom' in item))) {
+        return value;
+      }
+
+      for (const item of value) {
+        const nested = unwrap(item);
+        if (nested.length) return nested;
+      }
+
+      return value;
+    }
+
+    if (Array.isArray(value.works)) return value.works;
+    if (Array.isArray(value.items)) return value.items;
+    if (Array.isArray(value.data)) return unwrap(value.data);
+    if (value.data && typeof value.data === 'object') {
+      const nested = unwrap(value.data);
+      if (nested.length) return nested;
+    }
+    if (value.archive && typeof value.archive === 'object') {
+      const nested = unwrap(value.archive);
+      if (nested.length) return nested;
+    }
+    if (value.payload && typeof value.payload === 'object') {
+      const nested = unwrap(value.payload);
+      if (nested.length) return nested;
+    }
+
+    return [];
+  }
+
+  return unwrap(json).filter(item => item && typeof item === 'object');
+}
+
+function stripVersion(url) {
+  return String(url || '').split('?')[0];
+}
+
+function isZoomUrl(url) {
+  return String(url || '').includes('/zoom/');
+}
+
+function isStandardImageUrl(url) {
+  const value = String(url || '');
+  return value.includes('/standard/') && !isZoomUrl(value);
+}
+
+function freshUrl(baseUrl) {
+  const clean = String(baseUrl || '');
+  if (!clean) return clean;
+  const joiner = clean.includes('?') ? '&' : '?';
+  return clean + joiner + 'v=' + Date.now();
 }
 
 async function fetchFresh(urls) {
@@ -43,16 +104,13 @@ async function fetchFresh(urls) {
 
   for (const baseUrl of urls) {
     try {
-      const joiner = String(baseUrl).includes('?') ? '&' : '?';
-      const freshUrl = baseUrl + joiner + 'v=' + Date.now();
-
-      const response = await fetch(freshUrl, {
+      const response = await fetch(freshUrl(baseUrl), {
         cache: 'no-store',
-        mode: 'cors'
+        mode: 'cors',
+        credentials: 'omit'
       });
 
       if (!response.ok) throw new Error('fetch failed: ' + response.status);
-
       return response;
     } catch (error) {
       lastError = error;
@@ -62,25 +120,53 @@ async function fetchFresh(urls) {
   throw lastError || new Error('all fetch attempts failed');
 }
 
+async function putCacheSafe(cache, request, response) {
+  try {
+    if (!response || !response.ok) return;
+    await cache.put(request, response.clone());
+  } catch (e) {}
+}
+
 async function cacheNonOriginsWorks(cache) {
   try {
     const response = await fetchFresh(WORKS_JSON_URLS);
     const json = await response.clone().json();
     const works = normalizeWorks(json);
 
-    const urls = works
-      .filter(work => Number(work.section_id) !== 0)
-      .map(work => work.image)
-      .filter(Boolean)
-      .filter(url => String(url).includes('/standard/'))
-      .filter(url => !String(url).includes('/zoom/'));
+    await putCacheSafe(cache, '/data/works.json', response.clone());
+
+    const urls = Array.from(new Set(
+      works
+        .filter(work => Number(work && work.section_id) !== 0)
+        .map(work => stripVersion(work && work.image))
+        .filter(Boolean)
+        .filter(isStandardImageUrl)
+    )).slice(0, MAX_IMAGE_CACHE_BATCH);
 
     for (const url of urls) {
       try {
-        await cache.add(url);
+        const cached = await cache.match(url);
+        if (cached) continue;
+        const imageResponse = await fetch(url, {
+          cache: 'default',
+          mode: 'cors',
+          credentials: 'omit'
+        });
+        await putCacheSafe(cache, url, imageResponse);
       } catch (e) {}
     }
   } catch (e) {}
+}
+
+async function cleanOldCaches() {
+  const keys = await caches.keys();
+  await Promise.all(
+    keys.map(key => {
+      if (key !== CACHE_NAME && key.indexOf('archive-pro') !== -1) return caches.delete(key);
+      if (key !== CACHE_NAME && key.indexOf('offline-sections') !== -1) return caches.delete(key);
+      return Promise.resolve(false);
+    })
+  );
 }
 
 self.addEventListener('install', event => {
@@ -88,7 +174,8 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME).then(async cache => {
       for (const asset of CORE_ASSETS) {
         try {
-          await cache.add(asset);
+          const response = await fetch(freshUrl(asset), { cache: 'no-store' });
+          await putCacheSafe(cache, asset, response);
         } catch (e) {}
       }
 
@@ -101,26 +188,32 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) return caches.delete(key);
-        })
-      )
-    )
+    cleanOldCaches().then(() => self.clients.claim())
   );
+});
 
-  self.clients.claim();
+self.addEventListener('message', event => {
+  const type = event && event.data && event.data.type;
+
+  if (type === 'CACHE_NON_ORIGINS' || type === 'CACHE_EXHIBITION_SET') {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then(cache => cacheNonOriginsWorks(cache))
+    );
+  }
+
+  if (type === 'CLEAR_ARCHIVE_PRO_CACHES') {
+    event.waitUntil(cleanOldCaches());
+  }
 });
 
 self.addEventListener('fetch', event => {
   const request = event.request;
 
-  if (request.method !== 'GET') return;
+  if (!request || request.method !== 'GET') return;
 
   const url = new URL(request.url);
 
-  if (url.href.includes('/zoom/')) return;
+  if (isZoomUrl(url.href)) return;
 
   const liveUrls = LIVE_DATA_URLS[url.pathname];
 
@@ -128,18 +221,12 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request, { cache: 'no-store' })
         .then(response => {
-          const copy = response.clone();
-
-          caches.open(CACHE_NAME).then(cache => {
-            try {
-              cache.put(request, copy);
-            } catch (e) {}
-          });
-
+          caches.open(CACHE_NAME).then(cache => putCacheSafe(cache, request, response));
           return response;
         })
         .catch(() =>
-          caches.match('/archivepro/index.html')
+          caches.match(request)
+            .then(cached => cached || caches.match('/archivepro/index.html'))
             .then(cached => cached || caches.match('/index.html'))
         )
     );
@@ -150,14 +237,7 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetchFresh(liveUrls)
         .then(response => {
-          const copy = response.clone();
-
-          caches.open(CACHE_NAME).then(cache => {
-            try {
-              cache.put(url.pathname, copy);
-            } catch (e) {}
-          });
-
+          caches.open(CACHE_NAME).then(cache => putCacheSafe(cache, url.pathname, response));
           return response;
         })
         .catch(() => caches.match(url.pathname))
@@ -165,21 +245,32 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  if (isStandardImageUrl(url.href)) {
+    event.respondWith(
+      caches.match(stripVersion(url.href)).then(cached => {
+        if (cached) return cached;
+
+        return fetch(stripVersion(url.href), {
+          cache: 'default',
+          mode: 'cors',
+          credentials: 'omit'
+        }).then(response => {
+          caches.open(CACHE_NAME).then(cache => putCacheSafe(cache, stripVersion(url.href), response));
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then(cached => {
-      if (cached) return cached;
-
-      return fetch(request).then(response => {
-        const copy = response.clone();
-
-        caches.open(CACHE_NAME).then(cache => {
-          try {
-            cache.put(request, copy);
-          } catch (e) {}
-        });
-
+      const network = fetch(request).then(response => {
+        caches.open(CACHE_NAME).then(cache => putCacheSafe(cache, request, response));
         return response;
       });
+
+      return cached || network;
     })
   );
 });

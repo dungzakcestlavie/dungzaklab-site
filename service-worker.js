@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archive-pro-offline-sections-v9-20260516';
+const CACHE_NAME = 'archive-pro-offline-sections-v10-20260516';
 
 const CORE_ASSETS = [
   '/',
@@ -40,11 +40,6 @@ function normalizeWorks(json) {
     if (typeof value === 'object') seen.add(value);
 
     if (Array.isArray(value)) {
-      if (value.length === 1) {
-        const nested = unwrap(value[0]);
-        if (nested.length) return nested;
-      }
-
       if (
         value.length &&
         value.every(item =>
@@ -61,36 +56,21 @@ function normalizeWorks(json) {
         if (nested.length) return nested;
       }
 
-      return value;
+      return [];
     }
 
     if (Array.isArray(value.works)) return value.works;
     if (Array.isArray(value.items)) return value.items;
     if (Array.isArray(value.data)) return unwrap(value.data);
 
-    if (value.data && typeof value.data === 'object') {
-      const nested = unwrap(value.data);
-      if (nested.length) return nested;
-    }
-
-    if (value.archive && typeof value.archive === 'object') {
-      const nested = unwrap(value.archive);
-      if (nested.length) return nested;
-    }
-
-    if (value.payload && typeof value.payload === 'object') {
-      const nested = unwrap(value.payload);
-      if (nested.length) return nested;
-    }
+    if (value.data && typeof value.data === 'object') return unwrap(value.data);
+    if (value.archive && typeof value.archive === 'object') return unwrap(value.archive);
+    if (value.payload && typeof value.payload === 'object') return unwrap(value.payload);
 
     return [];
   }
 
   return unwrap(json).filter(item => item && typeof item === 'object');
-}
-
-function stripVersion(url) {
-  return String(url || '').split('?')[0];
 }
 
 function isZoomUrl(url) {
@@ -105,8 +85,7 @@ function isStandardImageUrl(url) {
 function freshUrl(baseUrl) {
   const clean = String(baseUrl || '');
   if (!clean) return clean;
-  const joiner = clean.includes('?') ? '&' : '?';
-  return clean + joiner + 'v=' + Date.now();
+  return clean + (clean.includes('?') ? '&' : '?') + 'v=' + Date.now();
 }
 
 async function fetchFresh(urls) {
@@ -149,7 +128,7 @@ async function cacheNonOriginsWorks(cache) {
       new Set(
         works
           .filter(work => Number(work && work.section_id) !== 0)
-          .map(work => stripVersion(work && work.image))
+          .map(work => work && work.image)
           .filter(Boolean)
           .filter(isStandardImageUrl)
       )
@@ -174,14 +153,8 @@ async function cleanOldCaches() {
 
   await Promise.all(
     keys.map(key => {
-      if (key !== CACHE_NAME && key.indexOf('archive-pro') !== -1) {
-        return caches.delete(key);
-      }
-
-      if (key !== CACHE_NAME && key.indexOf('offline-sections') !== -1) {
-        return caches.delete(key);
-      }
-
+      if (key !== CACHE_NAME && key.includes('archive-pro')) return caches.delete(key);
+      if (key !== CACHE_NAME && key.includes('offline-sections')) return caches.delete(key);
       return Promise.resolve(false);
     })
   );
@@ -271,16 +244,10 @@ self.addEventListener('fetch', event => {
         credentials: 'omit'
       })
         .then(response => {
-          caches.open(CACHE_NAME).then(cache => {
-            putCacheSafe(cache, url.href, response.clone());
-            putCacheSafe(cache, stripVersion(url.href), response.clone());
-          });
+          caches.open(CACHE_NAME).then(cache => putCacheSafe(cache, url.href, response.clone()));
           return response;
         })
-        .catch(() =>
-          caches.match(url.href)
-            .then(cached => cached || caches.match(stripVersion(url.href)))
-        )
+        .catch(() => caches.match(url.href))
     );
     return;
   }

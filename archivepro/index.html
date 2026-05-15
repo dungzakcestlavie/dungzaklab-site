@@ -4847,31 +4847,19 @@
         if (!/^DZ-\d{3}$/i.test(cleanId)) return '';
         return 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/' + folder + '/' + encodeURIComponent(cleanId) + '.jpg';
       }
+function normalizeImageUrl(url, kind, id, sectionId) {
+  const clean = safeText(url).replace(/\s+/g, '');
 
-      function normalizeImageUrl(url, kind, id, sectionId) {
-        const clean = safeText(url).replace(/\s+/g, '');
-        const sid = Number(sectionId);
+  if (clean) return clean;
 
-        /*
-          SECTION IMAGE SIMULATION FIX:
-          The current works.json contains duplicated DZ ids in section I and section II,
-          and many section II rows point to the same archivepro image URL used by section I.
-          If we obey those duplicated archivepro URLs literally, the section II title/caption
-          appears under section I images.
+  const cleanId = normalizeCanonicalWorkId(id);
+  const folder = kind === 'zoom' ? 'zoom' : 'standard';
 
-          Therefore the binding rule is:
-          - Title / material / size / year / section always come from the same JSON row.
-          - Origins and section I keep the JSON image URL exactly.
-          - Sections II–V use the stable DUNGZAK main image path by DZ id.
-          - Non-DZ ids keep the JSON image URL.
-        */
-        if (sid >= 2 && sid <= 5) {
-          const mainUrl = buildDungzakMainImageUrl(id, kind);
-          if (mainUrl) return mainUrl;
-        }
+  if (!/^(DZ|OR)-\d+/i.test(cleanId)) return '';
 
-        return clean;
-      }
+  return 'https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/' +
+    folder + '/' + encodeURIComponent(cleanId) + '.jpg';
+}
 
       function normalizeItem(raw, index) {
         const item = raw && typeof raw === 'object' ? raw : {};

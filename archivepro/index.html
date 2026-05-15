@@ -5548,8 +5548,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         const rawImage = safeText(work.image);
         if (!rawImage) console.warn('MISSING IMAGE', work.id);
         const imageSrc = rawImage ? withCacheBust(rawImage) : '';
-        const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →
-View Detail →' : '상세 보기 →');
+        const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(work);
         const priority = index < INITIAL_RENDER_COUNT;
         const imgSrc = imageSrc || SVG_PLACEHOLDER;

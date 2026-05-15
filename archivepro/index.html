@@ -6005,25 +6005,21 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         return unwrap(json).filter(item => item && typeof item === 'object');
       }
 
-      function withCacheBust(url) {
-        const clean = safeText(url);
-        if (!clean || clean.startsWith('data:') || clean.startsWith('blob:')) return clean;
+     function withCacheBust(url) {
+  const clean = safeText(url);
 
-        /*
-          Offline Image Cache Fix:
-          Standard artwork images must keep their original URL so the Service Worker
-          and Cache API can match them exactly when Wi‑Fi is off.
-        */
-        if (clean.indexOf('/standard/') !== -1 || clean.indexOf('raw.githubusercontent.com') !== -1) {
-          return clean.split('?')[0];
-        }
+  if (!clean || clean.startsWith('data:') || clean.startsWith('blob:')) {
+    return clean;
+  }
 
-        if (isArchiveOfflineMode()) return clean.split('?')[0];
+  if (isArchiveOfflineMode()) {
+    return clean.split('?')[0];
+  }
 
-        const joiner = clean.includes('?') ? '&' : '?';
-        return `${clean}${joiner}v=${ASSET_VERSION}`;
-      }
+  const base = clean.split('?')[0];
 
+  return base + '?v=' + Date.now();
+}
       function buildWorksJsonUrls() {
         /*
           Offline App Strategy:

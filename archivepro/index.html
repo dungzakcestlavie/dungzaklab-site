@@ -4859,8 +4859,19 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         const id = String(item.id || '').trim() || 'item-' + (index + 1);
         const sectionId = inferSectionId({ id, section_id: item.section_id });
 
-        const image = normalizeImageUrl(item.image, 'image', id, sectionId);
-        const zoom = normalizeImageUrl(item.zoom || item.image, 'zoom', id, sectionId) || image;
+        let image = normalizeImageUrl(item.image, 'image', id, sectionId);
+        let zoom = normalizeImageUrl(item.zoom || item.image, 'zoom', id, sectionId) || image;
+
+        /* HUMAN SECTION IMAGE LOCK FIX:
+           II 인간(section_id 2)은 제목/메타데이터와 이미지가 섞여 보이지 않도록
+           카드와 라이트박스 이미지를 반드시 작품 id(DZ-###) 기준의 dungzak.art 이미지 경로로 고정한다.
+           works.json의 구조와 작품 데이터는 변경하지 않고, 화면 출력 경로만 안전하게 잠근다. */
+        if (Number(sectionId) === 2 && /^DZ-\d{3}$/i.test(normalizeCanonicalWorkId(id))) {
+          const lockedImage = buildDungzakMainImageUrl(id, 'image');
+          const lockedZoom = buildDungzakMainImageUrl(id, 'zoom');
+          if (lockedImage) image = lockedImage;
+          if (lockedZoom) zoom = lockedZoom;
+        }
 
         return {
           _index: index,
@@ -6317,8 +6328,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
             if (e.target && e.target.closest && e.target.closest('.status-inquiry')) return;
             const card = e.target && e.target.closest ? e.target.closest('.card[data-key]') : null;
             if (!card) return;
+            const targetKey = safeText(card.dataset.key);
             const targetId = safeText(card.dataset.id);
-            const item = state.all.find((work) => String(work.id) === String(targetId));
+            const sourceList = Array.isArray(state.filtered) && state.filtered.length ? state.filtered : state.all;
+            const item = sourceList.find((work) => String(work._key) === String(targetKey)) || state.all.find((work) => String(work._key) === String(targetKey)) || state.all.find((work) => String(work.id) === String(targetId));
             if (item) openLightbox(item);
           });
 
@@ -6327,8 +6340,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
             const card = e.target && e.target.closest ? e.target.closest('.card[data-key]') : null;
             if (!card) return;
             e.preventDefault();
+            const targetKey = safeText(card.dataset.key);
             const targetId = safeText(card.dataset.id);
-            const item = state.all.find((work) => String(work.id) === String(targetId));
+            const sourceList = Array.isArray(state.filtered) && state.filtered.length ? state.filtered : state.all;
+            const item = sourceList.find((work) => String(work._key) === String(targetKey)) || state.all.find((work) => String(work._key) === String(targetKey)) || state.all.find((work) => String(work.id) === String(targetId));
             if (item) openLightbox(item);
           });
         }

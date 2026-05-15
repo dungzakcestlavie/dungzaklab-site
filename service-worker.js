@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archive-pro-offline-sections-v8-20260513';
+const CACHE_NAME = 'archive-pro-offline-sections-v9-20260516';
 
 const CORE_ASSETS = [
   '/',
@@ -45,7 +45,14 @@ function normalizeWorks(json) {
         if (nested.length) return nested;
       }
 
-      if (value.length && value.every(item => item && typeof item === 'object' && ('id' in item || 'image' in item || 'zoom' in item))) {
+      if (
+        value.length &&
+        value.every(item =>
+          item &&
+          typeof item === 'object' &&
+          ('id' in item || 'image' in item || 'zoom' in item)
+        )
+      ) {
         return value;
       }
 
@@ -60,14 +67,17 @@ function normalizeWorks(json) {
     if (Array.isArray(value.works)) return value.works;
     if (Array.isArray(value.items)) return value.items;
     if (Array.isArray(value.data)) return unwrap(value.data);
+
     if (value.data && typeof value.data === 'object') {
       const nested = unwrap(value.data);
       if (nested.length) return nested;
     }
+
     if (value.archive && typeof value.archive === 'object') {
       const nested = unwrap(value.archive);
       if (nested.length) return nested;
     }
+
     if (value.payload && typeof value.payload === 'object') {
       const nested = unwrap(value.payload);
       if (nested.length) return nested;
@@ -135,23 +145,24 @@ async function cacheNonOriginsWorks(cache) {
 
     await putCacheSafe(cache, '/data/works.json', response.clone());
 
-    const urls = Array.from(new Set(
-      works
-        .filter(work => Number(work && work.section_id) !== 0)
-        .map(work => stripVersion(work && work.image))
-        .filter(Boolean)
-        .filter(isStandardImageUrl)
-    )).slice(0, MAX_IMAGE_CACHE_BATCH);
+    const urls = Array.from(
+      new Set(
+        works
+          .filter(work => Number(work && work.section_id) !== 0)
+          .map(work => stripVersion(work && work.image))
+          .filter(Boolean)
+          .filter(isStandardImageUrl)
+      )
+    ).slice(0, MAX_IMAGE_CACHE_BATCH);
 
     for (const url of urls) {
       try {
-        const cached = await cache.match(url);
-        if (cached) continue;
         const imageResponse = await fetch(url, {
-          cache: 'default',
+          cache: 'reload',
           mode: 'cors',
           credentials: 'omit'
         });
+
         await putCacheSafe(cache, url, imageResponse);
       } catch (e) {}
     }
@@ -160,10 +171,17 @@ async function cacheNonOriginsWorks(cache) {
 
 async function cleanOldCaches() {
   const keys = await caches.keys();
+
   await Promise.all(
     keys.map(key => {
-      if (key !== CACHE_NAME && key.indexOf('archive-pro') !== -1) return caches.delete(key);
-      if (key !== CACHE_NAME && key.indexOf('offline-sections') !== -1) return caches.delete(key);
+      if (key !== CACHE_NAME && key.indexOf('archive-pro') !== -1) {
+        return caches.delete(key);
+      }
+
+      if (key !== CACHE_NAME && key.indexOf('offline-sections') !== -1) {
+        return caches.delete(key);
+      }
+
       return Promise.resolve(false);
     })
   );
@@ -247,30 +265,32 @@ self.addEventListener('fetch', event => {
 
   if (isStandardImageUrl(url.href)) {
     event.respondWith(
-      caches.match(stripVersion(url.href)).then(cached => {
-        if (cached) return cached;
-
-        return fetch(stripVersion(url.href), {
-          cache: 'default',
-          mode: 'cors',
-          credentials: 'omit'
-        }).then(response => {
-          caches.open(CACHE_NAME).then(cache => putCacheSafe(cache, stripVersion(url.href), response));
-          return response;
-        });
+      fetch(url.href, {
+        cache: 'reload',
+        mode: 'cors',
+        credentials: 'omit'
       })
+        .then(response => {
+          caches.open(CACHE_NAME).then(cache => {
+            putCacheSafe(cache, url.href, response.clone());
+            putCacheSafe(cache, stripVersion(url.href), response.clone());
+          });
+          return response;
+        })
+        .catch(() =>
+          caches.match(url.href)
+            .then(cached => cached || caches.match(stripVersion(url.href)))
+        )
     );
     return;
   }
 
   event.respondWith(
-    caches.match(request).then(cached => {
-      const network = fetch(request).then(response => {
+    fetch(request)
+      .then(response => {
         caches.open(CACHE_NAME).then(cache => putCacheSafe(cache, request, response));
         return response;
-      });
-
-      return cached || network;
-    })
+      })
+      .catch(() => caches.match(request))
   );
 });

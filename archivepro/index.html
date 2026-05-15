@@ -4193,6 +4193,7 @@
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 220;
       const ASSET_VERSION = 'ap-img';
+      const IMAGE_VERSION = '20260516';
       const PAGE_OFFLINE_CACHE_NAME = 'archive-pro-page-non-origins-v3';
 
       function isArchiveOfflineMode() {
@@ -4848,18 +4849,14 @@
         return 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/' + folder + '/' + encodeURIComponent(cleanId) + '.jpg';
       }
 function normalizeImageUrl(url, kind, id, sectionId) {
-  const clean = safeText(url).replace(/\s+/g, '');
-
-  if (clean) return clean;
-
-  const cleanId = normalizeCanonicalWorkId(id);
-  const folder = kind === 'zoom' ? 'zoom' : 'standard';
-
-  if (!/^(DZ|OR)-\d+/i.test(cleanId)) return '';
-
-  return 'https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/' +
-    folder + '/' + encodeURIComponent(cleanId) + '.jpg';
-}
+        /*
+          EMERGENCY DATA MIXING FIX:
+          Never invent or remap image / zoom paths in index.html.
+          The card representative image must come from the same work.image value.
+          Missing image stays empty and is handled by the renderer.
+        */
+        return safeText(url).replace(/\s+/g, '');
+      }
 
       function normalizeItem(raw, index) {
         const item = raw && typeof raw === 'object' ? raw : {};
@@ -5482,10 +5479,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         };
 
         img.onerror = () => {
-          img.classList.add('is-error', 'is-loaded');
+          img.classList.add('is-broken', 'is-error', 'is-loaded');
           img.dataset.loaded = 'true';
           img.removeAttribute('data-src');
-          img.src = SVG_PLACEHOLDER;
+          img.removeAttribute('src');
         };
 
         img.src = src;
@@ -5534,33 +5531,56 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         return img;
       }
 
-      function createCardHTML(item, index = 0) {
-        const isOrigin = Number(item.section_id) === 0;
-        const title = isOrigin ? getOriginTitle() : getTitle(item);
-        const material = isOrigin ? '' : getMaterial(item);
-        const size = isOrigin ? '' : getSize(item);
-        const year = isOrigin ? '' : getYear(item);
+      function isSectionAllowedForRender(work) {
+        if (!work || typeof work !== 'object') return false;
+        if (state.section === 'all') return true;
+        const ok = Number(work.section_id) === Number(state.section);
+        if (!ok) {
+          console.warn('SECTION MISMATCH BLOCKED', work.id, work.section_id, state.section);
+        }
+        return ok;
+      }
+
+      function getCardImageUrl(work) {
+        const imageUrl = safeText(work && work.image).replace(/\s+/g, '');
+        if (!imageUrl) {
+          console.warn('MISSING IMAGE', work && work.id);
+          return '';
+        }
+        return withCacheBust(imageUrl);
+      }
+
+      function createCardHTML(work, index = 0) {
+        if (!work || typeof work !== 'object') return '';
+        if (!isSectionAllowedForRender(work)) return '';
+
+        const isOrigin = Number(work.section_id) === 0;
+        const title = isOrigin ? getOriginTitle() : getTitle(work);
+        const material = isOrigin ? '' : getMaterial(work);
+        const size = isOrigin ? '' : getSize(work);
+        const year = isOrigin ? '' : getYear(work);
         const infoLine = isOrigin ? '' : [material, size, year].filter(Boolean).join(' / ');
-        const imageSrc = withCacheBust(item.image || SVG_PLACEHOLDER);
+        const imageSrc = getCardImageUrl(work);
         const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
-        const statusHTML = renderStatusUI(item);
+        const statusHTML = renderStatusUI(work);
         const priority = index < INITIAL_RENDER_COUNT;
-        const imgSrc = priority ? imageSrc : SVG_PLACEHOLDER;
-        const dataSrc = priority ? '' : ' data-src="' + escapeHTML(imageSrc) + '"';
+        const imgSrc = priority && imageSrc ? imageSrc : (imageSrc ? SVG_PLACEHOLDER : '');
+        const dataSrc = priority || !imageSrc ? '' : ' data-src="' + escapeHTML(imageSrc) + '"';
         const loading = priority ? 'eager' : 'lazy';
         const fetchPriority = priority ? 'high' : 'low';
-        const loadedClass = priority ? ' is-priority' : '';
+        const loadedClass = priority && imageSrc ? ' is-priority' : '';
+        const key = String(work._key || (work._index + '::' + work.section_id + '::' + work.id));
 
         return [
-          '<article class="card" tabindex="0" role="button" data-render-index="', escapeHTML(index), '" data-key="', escapeHTML(item._key || (item._index + '::' + item.section_id + '::' + item.id)), '" data-id="', escapeHTML(item.id), '" data-section-id="', escapeHTML(item.section_id), '" aria-label="', escapeHTML(item.id), ' 작품 보기">',
+          '<article class="card" tabindex="0" role="button" data-render-index="', escapeHTML(index), '" data-key="', escapeHTML(key), '" data-id="', escapeHTML(work.id), '" data-section-id="', escapeHTML(work.section_id), '" aria-label="', escapeHTML(work.id), ' 작품 보기">',
             '<div class="thumb-wrap">',
-              '<img class="thumb', loadedClass, '" src="', escapeHTML(imgSrc), '"', dataSrc, ' alt="', escapeHTML(title || item.id), '" loading="', loading, '" decoding="async" fetchpriority="', fetchPriority, '" data-zoom="', escapeHTML(item.zoom || ''), '">',
+              '<img class="thumb', loadedClass, '" src="', escapeHTML(imgSrc), '"', dataSrc, ' alt="', escapeHTML(title || work.title_kr || work.title_en || work.id || ''), '" loading="', loading, '" decoding="async" fetchpriority="', fetchPriority, '" data-work-id="', escapeHTML(work.id), '" data-section-id="', escapeHTML(work.section_id), '" data-zoom="', escapeHTML(work.zoom || ''), '" onerror="this.removeAttribute(\\'src\\');this.classList.add(\\'is-broken\\',\\'is-error\\');">',
               '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
             '</div>',
             '<div class="card-body">',
               '<div class="card-top">',
-                '<div class="work-id">', escapeHTML(item.id), '</div>',
-                '<div class="section-tag">', escapeHTML(getSectionTextById(item.section_id)), '</div>',
+                '<div class="work-id">', escapeHTML(work.id), '</div>',
+                '<div class="section-tag">', escapeHTML(getSectionTextById(work.section_id)), '</div>',
               '</div>',
               '<p class="title', title ? '' : ' empty', '">', escapeHTML(title || t('untitled')), '</p>',
               isOrigin ? '' : '<p class="caption">' + escapeHTML(infoLine || t('noInfo')) + '</p>',
@@ -5600,8 +5620,9 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           });
         }
 
+        const safeItems = (Array.isArray(items) ? items : []).filter(isSectionAllowedForRender);
         const template = document.createElement('template');
-        template.innerHTML = items.map((item, index) => createCardHTML(item, index)).join('');
+        template.innerHTML = safeItems.map((work, index) => createCardHTML(work, index)).join('');
         const fragment = template.content;
 
         els.grid.replaceChildren(fragment);
@@ -5612,8 +5633,9 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       function appendCards(items, startIndex = 0) {
         if (!els.grid || !items || !items.length) return null;
 
+        const safeItems = (Array.isArray(items) ? items : []).filter(isSectionAllowedForRender);
         const template = document.createElement('template');
-        template.innerHTML = items.map((item, index) => createCardHTML(item, startIndex + index)).join('');
+        template.innerHTML = safeItems.map((work, index) => createCardHTML(work, startIndex + index)).join('');
         const fragment = template.content;
         const firstNewCard = fragment.firstElementChild;
 
@@ -6006,20 +6028,19 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       }
 
      function withCacheBust(url) {
-  const clean = safeText(url);
+        const clean = safeText(url);
 
-  if (!clean || clean.startsWith('data:') || clean.startsWith('blob:')) {
-    return clean;
-  }
+        if (!clean || clean.startsWith('data:') || clean.startsWith('blob:')) {
+          return clean;
+        }
 
-  if (isArchiveOfflineMode()) {
-    return clean.split('?')[0];
-  }
+        if (isArchiveOfflineMode()) {
+          return clean.split('?')[0];
+        }
 
-  const base = clean.split('?')[0];
-
-  return base + '?v=' + Date.now();
-}
+        const base = clean.split('?')[0];
+        return base + '?v=' + IMAGE_VERSION;
+      }
       function buildWorksJsonUrls() {
         /*
           Offline App Strategy:
@@ -6123,7 +6144,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           state.sort = FAST_ORDER;
           state.visibleCount = getInitialVisibleCount();
           state._searchPrepared = true;
-          state.filtered = state.all;
+          state.filtered = applyFilterSort(state.all);
           state.loadState = 'loaded';
           state.isLoaded = true;
 
@@ -6168,7 +6189,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
               first: WORKS_DATA[0] || null,
               last: WORKS_DATA[WORKS_DATA.length - 1] || null,
               duplicateImageRows,
-              sectionImageRule: 'section 0 and 1 use JSON image; sections 2-5 use main/images/{DZ-id}.jpg when DZ id exists'
+              sectionImageRule: 'all sections render card images only from the same work.image value'
             };
 
           };
@@ -6313,10 +6334,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         if (els.grid) {
           els.grid.addEventListener('click', (e) => {
             if (e.target && e.target.closest && e.target.closest('.status-inquiry')) return;
-            const card = e.target && e.target.closest ? e.target.closest('.card[data-key]') : null;
+            const card = e.target && e.target.closest ? e.target.closest('.card[data-id]') : null;
             if (!card) return;
-            const key = safeText(card.dataset.key);
-            const item = state.all.find((work) => String(work._key) === key);
+            const targetId = safeText(card.dataset.id);
+            const item = state.all.find((work) => String(work.id) === String(targetId));
             if (item) openLightbox(item);
           });
 

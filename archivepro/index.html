@@ -4193,7 +4193,6 @@
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 220;
       const ASSET_VERSION = 'ap-img';
-      const IMAGE_VERSION = '20260516';
       const PAGE_OFFLINE_CACHE_NAME = 'archive-pro-page-non-origins-v3';
 
       function isArchiveOfflineMode() {
@@ -4849,12 +4848,9 @@
         return 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/images/' + folder + '/' + encodeURIComponent(cleanId) + '.jpg';
       }
 function normalizeImageUrl(url, kind, id, sectionId) {
-        /*
-          EMERGENCY DATA MIXING FIX:
-          Never invent or remap image / zoom paths in index.html.
-          The card representative image must come from the same work.image value.
-          Missing image stays empty and is handled by the renderer.
-        */
+        /* DATA MIXING EMERGENCY FIX:
+           대표 이미지와 줌 이미지는 works.json의 같은 work 객체 값만 사용한다.
+           id / section / index로 이미지 경로를 새로 조합하지 않는다. */
         return safeText(url).replace(/\s+/g, '');
       }
 
@@ -5479,10 +5475,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         };
 
         img.onerror = () => {
-          img.classList.add('is-broken', 'is-error', 'is-loaded');
+          img.classList.add('is-error', 'is-loaded');
           img.dataset.loaded = 'true';
           img.removeAttribute('data-src');
-          img.removeAttribute('src');
+          img.src = SVG_PLACEHOLDER;
         };
 
         img.src = src;
@@ -5531,50 +5527,42 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         return img;
       }
 
-      function isSectionAllowedForRender(work) {
-        if (!work || typeof work !== 'object') return false;
+      function isSectionAllowedForRender(item) {
+        if (!item) return false;
         if (state.section === 'all') return true;
-        const ok = Number(work.section_id) === Number(state.section);
-        if (!ok) {
-          console.warn('SECTION MISMATCH BLOCKED', work.id, work.section_id, state.section);
-        }
+        const ok = Number(item.section_id) === Number(state.section);
+        if (!ok) console.warn('SECTION MISMATCH BLOCKED', item.id, item.section_id, state.section);
         return ok;
       }
 
-      function getCardImageUrl(work) {
-        const imageUrl = safeText(work && work.image).replace(/\s+/g, '');
-        if (!imageUrl) {
-          console.warn('MISSING IMAGE', work && work.id);
-          return '';
-        }
-        return withCacheBust(imageUrl);
-      }
+      function createCardHTML(item, index = 0) {
+        if (!isSectionAllowedForRender(item)) return '';
 
-      function createCardHTML(work, index = 0) {
-        if (!work || typeof work !== 'object') return '';
-        if (!isSectionAllowedForRender(work)) return '';
-
+        const work = item;
         const isOrigin = Number(work.section_id) === 0;
         const title = isOrigin ? getOriginTitle() : getTitle(work);
         const material = isOrigin ? '' : getMaterial(work);
         const size = isOrigin ? '' : getSize(work);
         const year = isOrigin ? '' : getYear(work);
         const infoLine = isOrigin ? '' : [material, size, year].filter(Boolean).join(' / ');
-        const imageSrc = getCardImageUrl(work);
-        const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
+        const rawImage = safeText(work.image);
+        if (!rawImage) console.warn('MISSING IMAGE', work.id);
+        const imageSrc = rawImage ? withCacheBust(rawImage) : '';
+        const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →
+View Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(work);
         const priority = index < INITIAL_RENDER_COUNT;
-        const imgSrc = priority && imageSrc ? imageSrc : (imageSrc ? SVG_PLACEHOLDER : '');
-        const dataSrc = priority || !imageSrc ? '' : ' data-src="' + escapeHTML(imageSrc) + '"';
+        const imgSrc = imageSrc || SVG_PLACEHOLDER;
+        const dataSrc = (!priority && imageSrc) ? ' data-src="' + escapeHTML(imageSrc) + '"' : '';
         const loading = priority ? 'eager' : 'lazy';
         const fetchPriority = priority ? 'high' : 'low';
-        const loadedClass = priority && imageSrc ? ' is-priority' : '';
+        const loadedClass = priority ? ' is-priority' : '';
         const key = String(work._key || (work._index + '::' + work.section_id + '::' + work.id));
 
         return [
           '<article class="card" tabindex="0" role="button" data-render-index="', escapeHTML(index), '" data-key="', escapeHTML(key), '" data-id="', escapeHTML(work.id), '" data-section-id="', escapeHTML(work.section_id), '" aria-label="', escapeHTML(work.id), ' 작품 보기">',
             '<div class="thumb-wrap">',
-              '<img class="thumb', loadedClass, '" src="', escapeHTML(imgSrc), '"', dataSrc, ' alt="', escapeHTML(title || work.title_kr || work.title_en || work.id || ''), '" loading="', loading, '" decoding="async" fetchpriority="', fetchPriority, '" data-work-id="', escapeHTML(work.id), '" data-section-id="', escapeHTML(work.section_id), '" data-zoom="', escapeHTML(work.zoom || ''), '" onerror="this.removeAttribute(\\'src\\');this.classList.add(\\'is-broken\\',\\'is-error\\');">',
+              '<img class="thumb', loadedClass, '" src="', escapeHTML(priority ? imgSrc : SVG_PLACEHOLDER), '"', dataSrc, ' alt="', escapeHTML(title || work.id || ''), '" loading="', loading, '" decoding="async" fetchpriority="', fetchPriority, '" data-zoom="', escapeHTML(work.zoom || ''), '">',
               '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
             '</div>',
             '<div class="card-body">',
@@ -5634,6 +5622,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         if (!els.grid || !items || !items.length) return null;
 
         const safeItems = (Array.isArray(items) ? items : []).filter(isSectionAllowedForRender);
+        if (!safeItems.length) return null;
         const template = document.createElement('template');
         template.innerHTML = safeItems.map((work, index) => createCardHTML(work, startIndex + index)).join('');
         const fragment = template.content;
@@ -5745,8 +5734,8 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         const material = isOrigin ? '—' : (getMaterial(item) || '—');
         const size = isOrigin ? '—' : (getSize(item) || '—');
         const year = isOrigin ? '—' : (getYear(item) || '—');
-        const imageUrl = withCacheBust(toAbsoluteUrl(item.image || ''));
-        const zoomUrl = withCacheBust(toAbsoluteUrl(item.zoom || item.image || ''));
+        const imageUrl = item.image ? withCacheBust(toAbsoluteUrl(item.image)) : '';
+        const zoomUrl = item.zoom ? withCacheBust(toAbsoluteUrl(item.zoom)) : imageUrl;
         const displayUrl = zoomUrl || imageUrl || SVG_PLACEHOLDER;
 
         els.lbId.textContent = item.id;
@@ -6029,17 +6018,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 
      function withCacheBust(url) {
         const clean = safeText(url);
-
-        if (!clean || clean.startsWith('data:') || clean.startsWith('blob:')) {
-          return clean;
-        }
-
-        if (isArchiveOfflineMode()) {
-          return clean.split('?')[0];
-        }
-
+        if (!clean || clean.startsWith('data:') || clean.startsWith('blob:')) return clean;
+        if (isArchiveOfflineMode()) return clean.split('?')[0];
         const base = clean.split('?')[0];
-        return base + '?v=' + IMAGE_VERSION;
+        return base + '?v=' + ASSET_VERSION;
       }
       function buildWorksJsonUrls() {
         /*
@@ -6144,7 +6126,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           state.sort = FAST_ORDER;
           state.visibleCount = getInitialVisibleCount();
           state._searchPrepared = true;
-          state.filtered = applyFilterSort(state.all);
+          state.filtered = state.all;
           state.loadState = 'loaded';
           state.isLoaded = true;
 
@@ -6189,7 +6171,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
               first: WORKS_DATA[0] || null,
               last: WORKS_DATA[WORKS_DATA.length - 1] || null,
               duplicateImageRows,
-              sectionImageRule: 'all sections render card images only from the same work.image value'
+              sectionImageRule: 'all card images use work.image from the same work object only'
             };
 
           };
@@ -6334,7 +6316,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         if (els.grid) {
           els.grid.addEventListener('click', (e) => {
             if (e.target && e.target.closest && e.target.closest('.status-inquiry')) return;
-            const card = e.target && e.target.closest ? e.target.closest('.card[data-id]') : null;
+            const card = e.target && e.target.closest ? e.target.closest('.card[data-key]') : null;
             if (!card) return;
             const targetId = safeText(card.dataset.id);
             const item = state.all.find((work) => String(work.id) === String(targetId));
@@ -6346,8 +6328,8 @@ function normalizeImageUrl(url, kind, id, sectionId) {
             const card = e.target && e.target.closest ? e.target.closest('.card[data-key]') : null;
             if (!card) return;
             e.preventDefault();
-            const key = safeText(card.dataset.key);
-            const item = state.all.find((work) => String(work._key) === key);
+            const targetId = safeText(card.dataset.id);
+            const item = state.all.find((work) => String(work.id) === String(targetId));
             if (item) openLightbox(item);
           });
         }

@@ -4328,6 +4328,20 @@
         5: { kr: 'V 빛의 초의식', en: 'Metaconsciousness of Light' }
       };
 
+      /* SECTION IV HARD LOCK — DZ-034 / DZ-038 are not Restoration of Being.
+         They must never render inside section_id 4 views, even when old cached
+         JSON or stale metadata labels them as IV. */
+      const SECTION_EXCLUDE_IDS = {
+        4: new Set(['DZ-034', 'DZ-038'])
+      };
+
+      function isExcludedFromSectionView(item, sectionValue) {
+        if (!item || sectionValue === 'all') return false;
+        const sectionNumber = Number(sectionValue);
+        const id = normalizeCanonicalWorkId(item.id);
+        return !!(SECTION_EXCLUDE_IDS[sectionNumber] && SECTION_EXCLUDE_IDS[sectionNumber].has(id));
+      }
+
       const SVG_PLACEHOLDER = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
           <rect width="800" height="800" fill="#091018"/>
@@ -5541,6 +5555,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       function isSectionAllowedForRender(item) {
         if (!item) return false;
         if (state.section === 'all') return true;
+        if (isExcludedFromSectionView(item, state.section)) {
+          console.warn('SECTION IV HARD LOCK BLOCKED', item.id, item.section_id, state.section);
+          return false;
+        }
         const ok = Number(item.section_id) === Number(state.section);
         if (!ok) console.warn('SECTION MISMATCH BLOCKED', item.id, item.section_id, state.section);
         return ok;
@@ -5890,7 +5908,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         const sectionValue = state.section || 'all';
         if (sectionValue !== 'all') {
           const sectionNumber = Number(sectionValue);
-          result = result.filter((item) => Number(item.section_id) === sectionNumber);
+          result = result.filter((item) => Number(item.section_id) === sectionNumber && !isExcludedFromSectionView(item, sectionValue));
         }
 
         const queryValue = safeText(state.query);

@@ -3959,7 +3959,99 @@
       }
     }
 
-    </style>
+    
+
+    /* ARCHIVE PRO LIGHTBOX IMAGE SIZE ONLY FIX — image larger / caption lower, no data or function change */
+    @media (min-width:881px){
+      .lightbox-stage{
+        padding:64px 86px 28px 86px !important;
+      }
+
+      .lightbox-stage img,
+      #lightboxImage{
+        max-width:min(calc(100vw - 380px - 205px), 1010px) !important;
+        max-height:calc(100vh - 125px) !important;
+        object-fit:contain !important;
+      }
+
+      .lightbox-side{
+        padding-top:94px !important;
+      }
+    }
+
+    @media (min-width:881px) and (max-width:1180px){
+      .lightbox-stage{
+        padding:64px 72px 28px 72px !important;
+      }
+
+      .lightbox-stage img,
+      #lightboxImage{
+        max-width:min(calc(100vw - 340px - 165px), 875px) !important;
+        max-height:calc(100vh - 125px) !important;
+      }
+
+      .lightbox-side{
+        padding-top:94px !important;
+      }
+    }
+
+    @media (min-width:881px) and (max-width:1020px){
+      .lightbox-stage{
+        padding:64px 62px 28px 62px !important;
+      }
+
+      .lightbox-stage img,
+      #lightboxImage{
+        max-width:calc(100vw - 340px - 125px) !important;
+        max-height:calc(100vh - 132px) !important;
+      }
+    }
+
+    @media (max-width:768px){
+      .viewer-inner,
+      .lightbox-inner{
+        grid-template-rows:minmax(0,60dvh) minmax(0,40dvh) !important;
+      }
+
+      .viewer-media,
+      .lightbox-media,
+      .lightbox-stage{
+        padding:calc(env(safe-area-inset-top, 0px) + 62px) 12px 8px 12px !important;
+      }
+
+      .viewer-media img,
+      .lightbox-media img,
+      .lightbox-stage img,
+      #lightboxImage{
+        width:100% !important;
+        height:100% !important;
+        max-width:100% !important;
+        max-height:100% !important;
+        object-fit:contain !important;
+      }
+
+      .viewer-caption,
+      .lightbox-caption,
+      .detail-panel,
+      .works-viewer-caption,
+      .lightbox-side{
+        padding:34px 22px calc(env(safe-area-inset-bottom, 0px) + 34px) 22px !important;
+      }
+    }
+
+    @media (max-width:420px){
+      .viewer-inner,
+      .lightbox-inner{
+        grid-template-rows:minmax(0,58dvh) minmax(0,42dvh) !important;
+      }
+
+      .viewer-media,
+      .lightbox-media,
+      .lightbox-stage{
+        padding:calc(env(safe-area-inset-top, 0px) + 60px) 10px 8px 10px !important;
+      }
+    }
+</style>
 
 </head>
 <body class="archive-entered archive-filter-open">

@@ -4099,6 +4099,154 @@
     }
 </style>
 
+
+<style>
+/* ARCHIVE PRO LIGHTBOX MOBILE HEIGHT FIX — iPhone Safari / safe-area only */
+@media (max-width:768px){
+  html.viewer-open,
+  body.viewer-open{
+    width:100% !important;
+    height:100dvh !important;
+    min-height:100dvh !important;
+    overflow:hidden !important;
+    overscroll-behavior:none !important;
+  }
+
+  .viewer,
+  .lightbox,
+  #viewer,
+  #lightbox{
+    position:fixed !important;
+    inset:0 !important;
+    width:100vw !important;
+    height:100dvh !important;
+    min-height:100dvh !important;
+    max-height:100dvh !important;
+    overflow:hidden !important;
+    background:#070A14 !important;
+  }
+
+  .viewer-inner,
+  .lightbox-inner{
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100dvh !important;
+    min-height:100dvh !important;
+    max-height:100dvh !important;
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    grid-template-rows:minmax(0,48dvh) minmax(0,52dvh) !important;
+    overflow:hidden !important;
+  }
+
+  .viewer-media,
+  .lightbox-media,
+  .lightbox-stage{
+    position:relative !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    width:100% !important;
+    height:100% !important;
+    max-height:48dvh !important;
+    padding:calc(env(safe-area-inset-top, 0px) + 58px) 16px 10px 16px !important;
+    box-sizing:border-box !important;
+    overflow:hidden !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    touch-action:none !important;
+  }
+
+  .viewer-media img,
+  .lightbox-media img,
+  .lightbox-stage img,
+  #lightboxImage{
+    display:block !important;
+    width:auto !important;
+    height:auto !important;
+    max-width:100% !important;
+    max-height:calc(48dvh - env(safe-area-inset-top, 0px) - 76px) !important;
+    object-fit:contain !important;
+    border-radius:10px !important;
+  }
+
+  .viewer-caption,
+  .lightbox-caption,
+  .detail-panel,
+  .lightbox-side{
+    position:relative !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    width:100% !important;
+    height:100% !important;
+    max-height:52dvh !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    -webkit-overflow-scrolling:touch !important;
+    box-sizing:border-box !important;
+    border-left:0 !important;
+    border-top:1px solid rgba(255,255,255,.06) !important;
+    padding:18px 20px calc(env(safe-area-inset-bottom, 0px) + 44px) 20px !important;
+    overflow-wrap:anywhere !important;
+    word-break:break-word !important;
+  }
+
+  .lightbox-side .lb-id{
+    margin:0 0 6px !important;
+    font-size:11px !important;
+    line-height:1.35 !important;
+  }
+
+  .lightbox-side .lb-title{
+    margin:0 0 8px !important;
+    font-size:18px !important;
+    line-height:1.22 !important;
+  }
+
+  .lightbox-side .lb-section{
+    margin:0 0 12px !important;
+    font-size:12px !important;
+    line-height:1.35 !important;
+  }
+
+  .lb-meta{
+    gap:7px !important;
+    margin:0 0 14px !important;
+  }
+
+  .lb-row{
+    grid-template-columns:64px minmax(0,1fr) !important;
+    gap:8px !important;
+    font-size:12px !important;
+    line-height:1.35 !important;
+  }
+
+  .lb-key,
+  .lb-val{
+    font-size:12px !important;
+    line-height:1.35 !important;
+  }
+
+  .viewer-close,
+  .lightbox-close,
+  .close-viewer,
+  #viewerCloseBtn,
+  #lightboxClose{
+    position:fixed !important;
+    top:calc(env(safe-area-inset-top, 0px) + 14px) !important;
+    right:14px !important;
+    z-index:99999 !important;
+    width:50px !important;
+    height:50px !important;
+    min-width:50px !important;
+    min-height:50px !important;
+    pointer-events:auto !important;
+    touch-action:manipulation !important;
+  }
+}
+</style>
+
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>

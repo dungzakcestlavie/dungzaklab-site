@@ -1303,8 +1303,8 @@
 
     body.viewer-open{
       overflow:hidden !important;
-      touch-action:none;
-      overscroll-behavior:none;
+      touch-action:pan-y;
+      overscroll-behavior:contain;
     }
 
     .archive-root,
@@ -4816,6 +4816,397 @@
     }
   }, { passive:true });
 
+})();
+</script>
+
+
+<style>
+/* ARCHIVE PRO MOBILE VIEWER FINAL CLEAN FIX — mobile viewer/caption/swipe/zoom only */
+@media (max-width:768px){
+  .viewer,
+  .lightbox,
+  #viewer,
+  #lightbox{
+    height:100dvh !important;
+    min-height:100dvh !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    -webkit-overflow-scrolling:touch !important;
+    touch-action:pan-y !important;
+    overscroll-behavior:contain !important;
+  }
+
+  .viewer-inner,
+  .lightbox-inner{
+    min-height:100dvh !important;
+    height:auto !important;
+    display:flex !important;
+    flex-direction:column !important;
+    grid-template-columns:none !important;
+    grid-template-rows:none !important;
+    box-sizing:border-box !important;
+    padding-top:calc(env(safe-area-inset-top, 0px) + 86px) !important;
+    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 72px) !important;
+    overflow:visible !important;
+  }
+
+  .viewer-close,
+  .lightbox-close,
+  .close-viewer,
+  #viewerCloseBtn,
+  #lightboxClose{
+    position:fixed !important;
+    top:calc(env(safe-area-inset-top, 0px) + 18px) !important;
+    right:18px !important;
+    z-index:99999 !important;
+    width:54px !important;
+    height:54px !important;
+    min-width:54px !important;
+    min-height:54px !important;
+    display:grid !important;
+    place-items:center !important;
+    pointer-events:auto !important;
+    touch-action:manipulation !important;
+  }
+
+  .viewer-media,
+  .lightbox-media,
+  .lightbox-stage{
+    width:100% !important;
+    min-height:52dvh !important;
+    height:auto !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    box-sizing:border-box !important;
+    padding:0 14px 12px 14px !important;
+    overflow:hidden !important;
+    touch-action:pan-y pinch-zoom !important;
+  }
+
+  .viewer img,
+  .lightbox img,
+  .viewer-image,
+  .lightbox-image,
+  .lightbox-stage img,
+  #lightboxImage{
+    width:auto !important;
+    height:auto !important;
+    max-width:92vw !important;
+    max-height:56dvh !important;
+    object-fit:contain !important;
+    display:block !important;
+    margin:0 auto !important;
+    border-radius:10px !important;
+    pointer-events:auto !important;
+    touch-action:pinch-zoom !important;
+    user-select:none !important;
+    -webkit-user-drag:none !important;
+  }
+
+  .viewer-caption,
+  .lightbox-caption,
+  .lightbox-side,
+  .detail-panel{
+    width:100% !important;
+    height:auto !important;
+    min-height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+    box-sizing:border-box !important;
+    padding:20px 22px calc(env(safe-area-inset-bottom, 0px) + 52px) 22px !important;
+    font-size:0.84rem !important;
+    line-height:1.4 !important;
+    border-left:0 !important;
+    border-top:1px solid rgba(255,255,255,.06) !important;
+    overflow-wrap:anywhere !important;
+    word-break:keep-all !important;
+  }
+
+  .viewer-caption h1,
+  .lightbox-caption h1,
+  .lightbox-side .lb-title{
+    font-size:clamp(1.4rem, 5.8vw, 2rem) !important;
+    line-height:1.15 !important;
+    margin:0 0 12px 0 !important;
+  }
+
+  .lightbox-side .lb-id{
+    margin:0 0 8px 0 !important;
+    font-size:12px !important;
+    line-height:1.35 !important;
+    letter-spacing:.14em !important;
+  }
+
+  .lightbox-side .lb-section{
+    display:none !important;
+  }
+
+  .lb-meta{
+    display:grid !important;
+    gap:10px !important;
+    margin:16px 0 0 0 !important;
+  }
+
+  .lb-row{
+    display:grid !important;
+    grid-template-columns:64px minmax(0,1fr) !important;
+    gap:10px !important;
+    align-items:start !important;
+    font-size:0.84rem !important;
+    line-height:1.4 !important;
+  }
+
+  .lb-key{
+    color:rgba(244,239,230,.48) !important;
+    font-size:0.82rem !important;
+    line-height:1.4 !important;
+  }
+
+  .lb-val{
+    color:#f4efe6 !important;
+    font-size:0.84rem !important;
+    line-height:1.4 !important;
+    word-break:break-word !important;
+  }
+
+  .lb-row[data-key="section"],
+  .lb-row[data-key="image"],
+  .lb-row[data-key="zoom"],
+  .lb-row[data-key="status"],
+  .detail-row.section,
+  .detail-row.image,
+  .detail-row.zoom,
+  .detail-row.status,
+  .detail-row.image-url,
+  .detail-row.zoom-url,
+  .meta-row.image-url,
+  .meta-row.zoom-url,
+  .lb-actions{
+    display:none !important;
+  }
+}
+</style>
+
+<script>
+/* ARCHIVE PRO MOBILE VIEWER FINAL CLEAN FIX — caption whitelist + scoped prev/next/swipe */
+(function(){
+  const isBadValue = value => {
+    const text = String(value == null ? '' : value).trim();
+    return (
+      !text ||
+      text === '-' ||
+      text.toLowerCase() === 'undefined' ||
+      text.toLowerCase() === 'null' ||
+      text.includes('raw.githubusercontent.com') ||
+      /^https?:\/\//i.test(text)
+    );
+  };
+
+  const escapeHtml = value => String(value == null ? '' : value)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+
+  const getLang = () => {
+    const value = (window.currentLang || window.lang || document.documentElement.lang || 'KR').toString().toUpperCase();
+    return value.includes('EN') ? 'EN' : 'KR';
+  };
+
+  const pickTitle = work => {
+    const lang = getLang();
+    return lang === 'EN'
+      ? (work.title_en || work.title_kr || '')
+      : (work.title_kr || work.title_en || '');
+  };
+
+  const pickMaterial = work => {
+    const lang = getLang();
+    return lang === 'EN'
+      ? (work.material_en || work.medium_en || work.material_kr || work.medium_kr || '')
+      : (work.material_kr || work.medium_kr || work.material_en || work.medium_en || '');
+  };
+
+  const pickSize = work => {
+    const lang = getLang();
+    return lang === 'EN'
+      ? (work.size_en || work.size_kr || '')
+      : (work.size_kr || work.size_en || '');
+  };
+
+  function cleanMobileCaption(work){
+    if(!work || typeof work !== 'object') return;
+
+    const side =
+      document.querySelector('.lightbox-side') ||
+      document.querySelector('.lightbox-caption') ||
+      document.querySelector('.viewer-caption') ||
+      document.querySelector('.detail-panel');
+
+    if(!side) return;
+
+    const lang = getLang();
+    const title = pickTitle(work);
+
+    const captionData = [
+      {
+        label: lang === 'EN' ? 'Material' : '재료',
+        value: pickMaterial(work)
+      },
+      {
+        label: lang === 'EN' ? 'Size' : '크기',
+        value: pickSize(work)
+      },
+      {
+        label: lang === 'EN' ? 'Year' : '연도',
+        value: work.year
+      }
+    ].filter(item => !isBadValue(item.value));
+
+    side.innerHTML = [
+      !isBadValue(work.id) ? '<p class="lb-id">' + escapeHtml(work.id) + '</p>' : '',
+      !isBadValue(title) ? '<h2 class="lb-title">' + escapeHtml(title) + '</h2>' : '',
+      captionData.length ? '<div class="lb-meta">' + captionData.map(item =>
+        '<div class="lb-row"><span class="lb-key">' + escapeHtml(item.label) + '</span><span class="lb-val">' + escapeHtml(item.value) + '</span></div>'
+      ).join('') + '</div>' : ''
+    ].join('');
+  }
+
+  function getScopedList(){
+    if(Array.isArray(window.currentViewerList) && window.currentViewerList.length) return window.currentViewerList.slice();
+    if(Array.isArray(window.filteredWorks) && window.filteredWorks.length) return window.filteredWorks.slice();
+    if(Array.isArray(window.visibleWorks) && window.visibleWorks.length) return window.visibleWorks.slice();
+    if(Array.isArray(window.currentViewWorks) && window.currentViewWorks.length) return window.currentViewWorks.slice();
+    if(Array.isArray(window.renderedWorks) && window.renderedWorks.length) return window.renderedWorks.slice();
+    return Array.isArray(window.works) ? window.works.slice() : [];
+  }
+
+  function setScope(work){
+    const list = getScopedList();
+    const found = list.findIndex(item => item && work && item.id === work.id);
+    window.currentViewerList = list;
+    window.currentViewerIndex = found >= 0 ? found : 0;
+    setTimeout(() => cleanMobileCaption(work), 0);
+  }
+
+  const originalRenderViewer = window.renderViewer;
+  if(typeof originalRenderViewer === 'function' && !originalRenderViewer.__archiveFinalWrapped){
+    const wrapped = function(work){
+      const result = originalRenderViewer.apply(this, arguments);
+      setTimeout(() => cleanMobileCaption(work), 0);
+      return result;
+    };
+    wrapped.__archiveFinalWrapped = true;
+    window.renderViewer = wrapped;
+  }
+
+  const originalOpenViewer = window.openViewer;
+  if(typeof originalOpenViewer === 'function' && !originalOpenViewer.__archiveFinalWrapped){
+    const wrapped = function(work, index){
+      setScope(work);
+      return originalOpenViewer.call(this, work, window.currentViewerIndex);
+    };
+    wrapped.__archiveFinalWrapped = true;
+    window.openViewer = wrapped;
+  }
+
+  const originalOpenLightbox = window.openLightbox;
+  if(typeof originalOpenLightbox === 'function' && !originalOpenLightbox.__archiveFinalWrapped){
+    const wrapped = function(work, index){
+      setScope(work);
+      return originalOpenLightbox.call(this, work, window.currentViewerIndex);
+    };
+    wrapped.__archiveFinalWrapped = true;
+    window.openLightbox = wrapped;
+  }
+
+  function showScoped(delta){
+    const list = Array.isArray(window.currentViewerList) && window.currentViewerList.length
+      ? window.currentViewerList
+      : getScopedList();
+
+    if(!list.length) return;
+
+    let index = Number.isFinite(window.currentViewerIndex) ? window.currentViewerIndex : 0;
+    index = (index + delta + list.length) % list.length;
+
+    window.currentViewerList = list;
+    window.currentViewerIndex = index;
+
+    const work = list[index];
+
+    if(typeof originalRenderViewer === 'function'){
+      originalRenderViewer.call(window, work);
+      setTimeout(() => cleanMobileCaption(work), 0);
+      return;
+    }
+
+    if(typeof originalOpenViewer === 'function'){
+      originalOpenViewer.call(window, work, index);
+      setTimeout(() => cleanMobileCaption(work), 0);
+      return;
+    }
+
+    if(typeof originalOpenLightbox === 'function'){
+      originalOpenLightbox.call(window, work, index);
+      setTimeout(() => cleanMobileCaption(work), 0);
+    }
+  }
+
+  window.prevViewer = function(){ showScoped(-1); };
+  window.nextViewer = function(){ showScoped(1); };
+  window.prevLightbox = function(){ showScoped(-1); };
+  window.nextLightbox = function(){ showScoped(1); };
+
+  document.addEventListener('click', function(event){
+    const prev = event.target.closest && event.target.closest('.lightbox-prev,.viewer-prev,[data-viewer-prev],[data-lightbox-prev]');
+    const next = event.target.closest && event.target.closest('.lightbox-next,.viewer-next,[data-viewer-next],[data-lightbox-next]');
+    if(prev){
+      event.preventDefault();
+      event.stopPropagation();
+      showScoped(-1);
+    }
+    if(next){
+      event.preventDefault();
+      event.stopPropagation();
+      showScoped(1);
+    }
+  }, true);
+
+  let startX = 0;
+  let startY = 0;
+  let startT = 0;
+
+  document.addEventListener('touchstart', function(event){
+    const box = event.target.closest && event.target.closest('.lightbox,.viewer,#lightbox,#viewer');
+    if(!box || event.touches.length !== 1) return;
+
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+    startT = Date.now();
+  }, { passive:true });
+
+  document.addEventListener('touchend', function(event){
+    const box = event.target.closest && event.target.closest('.lightbox,.viewer,#lightbox,#viewer');
+    if(!box || !startX) return;
+
+    const touch = event.changedTouches && event.changedTouches[0];
+    if(!touch) return;
+
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    const dt = Date.now() - startT;
+
+    startX = 0;
+    startY = 0;
+
+    if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.35 && dt < 800){
+      if(dx < 0) showScoped(1);
+      else showScoped(-1);
+    }
+  }, { passive:true });
 })();
 </script>
 

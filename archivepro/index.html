@@ -3997,8 +3997,9 @@
 
 
 
-<style id="archive-pro-mobile-fit-swipe-zoom-final-css">
-/* ARCHIVE PRO MOBILE VIEWER FINAL FIT FIX — fit/swipe/pinch only */
+
+<style id="archive-pro-mobile-stable-layout-swipe-zoom-css">
+/* ARCHIVE PRO MOBILE VIEWER STABLE LAYOUT + SWIPE ZOOM RESTORE */
 .viewer,
 .lightbox,
 #viewer,
@@ -4062,7 +4063,7 @@
     grid-template-columns:none !important;
     box-sizing:border-box !important;
     padding-top:calc(env(safe-area-inset-top, 0px) + 82px) !important;
-    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 54px) !important;
+    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 60px) !important;
     overflow:visible !important;
   }
 
@@ -4083,13 +4084,13 @@
   .lightbox-media,
   .lightbox-stage{
     width:100% !important;
-    min-height:50dvh !important;
+    min-height:54dvh !important;
     height:auto !important;
     display:flex !important;
     align-items:center !important;
     justify-content:center !important;
     box-sizing:border-box !important;
-    padding:0 10px 10px !important;
+    padding:0 0 36px 0 !important;
     overflow:visible !important;
     touch-action:pan-y pinch-zoom !important;
   }
@@ -4103,7 +4104,7 @@
     width:auto !important;
     height:auto !important;
     max-width:92vw !important;
-    max-height:52dvh !important;
+    max-height:54dvh !important;
     object-fit:contain !important;
     display:block !important;
     margin:0 auto !important;
@@ -4132,12 +4133,15 @@
   .lightbox-caption,
   .lightbox-side,
   .detail-panel{
+    position:relative !important;
+    z-index:2 !important;
     width:100% !important;
     height:auto !important;
     max-height:none !important;
     overflow:visible !important;
     box-sizing:border-box !important;
-    padding:20px 22px calc(env(safe-area-inset-bottom, 0px) + 42px) !important;
+    margin-top:8px !important;
+    padding:24px 24px calc(env(safe-area-inset-bottom, 0px) + 56px) 24px !important;
     font-size:0.84rem !important;
     line-height:1.38 !important;
     border-left:0 !important;
@@ -6864,7 +6868,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 
         els.lightbox.addEventListener('touchstart', (e) => {
           if (!isViewerOpen()) return;
-          e.preventDefault();
+          if (e.touches.length === 2 || viewerScale > 1) e.preventDefault();
 
           if (e.touches.length === 2) {
             viewerIsZooming = true;
@@ -6886,7 +6890,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 
         els.lightbox.addEventListener('touchmove', (e) => {
           if (!isViewerOpen()) return;
-          e.preventDefault();
+          if (viewerIsZooming || viewerScale > 1 || (e.touches && e.touches.length > 1)) e.preventDefault();
 
           if (viewerIsZooming && e.touches.length === 2) {
             const newDistance = getViewerDistance(e.touches[0], e.touches[1]);

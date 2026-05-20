@@ -4239,6 +4239,28 @@
 }
 </style>
 
+
+<style id="archivepro-mobile-caption-safe-scroll-final-fix-only">
+/* ARCHIVE PRO MOBILE VIEWER CAPTION SAFE SCROLL FINAL FIX ONLY
+   Caption CSS only. No swipe / pinch / image / button / render logic change. */
+@media (max-width: 768px) {
+  .viewer-caption,
+  .lightbox-caption {
+    max-height: min(42dvh, 360px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 140px) !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .viewer-caption-inner,
+  .lightbox-caption-inner {
+    padding-bottom: 24px !important;
+  }
+}
+</style>
+
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>

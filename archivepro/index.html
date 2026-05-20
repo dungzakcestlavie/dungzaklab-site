@@ -4113,7 +4113,7 @@
           </a>
         </div>
       </div>
-      <a class="back-link" href="../index.html" aria-label="LAB으로 돌아가기">LAB</a>
+      <a class="back-link" href="https://dungzaklab.art/" target="_self" aria-label="LAB으로 돌아가기">LAB</a>
     </div>
   </header>
 
@@ -4763,6 +4763,19 @@
         return String(work && work.section_id) === '0' || String((work && work.id) || '').toUpperCase().startsWith('OR-');
       }
 
+      function getOriginsWorksInCurrentOrder() {
+        const base =
+          Array.isArray(state.filtered) && state.filtered.length
+            ? state.filtered
+            : Array.isArray(state.all) && state.all.length
+              ? state.all
+              : [];
+
+        return base.filter(function(item) {
+          return isOriginsWork(item) && isSectionAllowedForRender(item);
+        });
+      }
+
       function getWorkById(workId) {
         const target = String(workId || '');
         if (!target) return null;
@@ -4797,19 +4810,36 @@
       function prepareViewerScopeForWork(work, preserveExistingScope) {
         if (!work) return null;
 
-        if (!preserveExistingScope || !Array.isArray(viewerScopeWorks) || !viewerScopeWorks.length) {
-          viewerScopeWorks = getCurrentFilteredWorks().slice();
-        }
+        if (isOriginsWork(work)) {
+          viewerScopeWorks = getOriginsWorksInCurrentOrder().slice();
 
-        if (state.section !== 'all') {
-          viewerScopeWorks = viewerScopeWorks.filter(function(item) {
-            return item && Number(item.section_id) === Number(state.section) && !isExcludedFromSectionView(item, state.section);
-          });
-        }
+          if (!viewerScopeWorks.some(function(item) { return isSameWorkIdentity(item, work); })) {
+            const exactOrigin = (state.all || []).find(function(item) {
+              return isOriginsWork(item) && isSameWorkIdentity(item, work);
+            });
+            if (exactOrigin && isSectionAllowedForRender(exactOrigin)) viewerScopeWorks.push(exactOrigin);
+          }
 
-        if (!viewerScopeWorks.some(function(item) { return isSameWorkIdentity(item, work); })) {
-          const exact = (state.all || []).find(function(item) { return isSameWorkIdentity(item, work); });
-          if (exact && isSectionAllowedForRender(exact)) viewerScopeWorks.push(exact);
+          if (!viewerScopeWorks.length) {
+            viewerScopeWorks = (state.all || []).filter(function(item) {
+              return isOriginsWork(item) && isSectionAllowedForRender(item);
+            });
+          }
+        } else {
+          if (!preserveExistingScope || !Array.isArray(viewerScopeWorks) || !viewerScopeWorks.length) {
+            viewerScopeWorks = getCurrentFilteredWorks().slice();
+          }
+
+          if (state.section !== 'all') {
+            viewerScopeWorks = viewerScopeWorks.filter(function(item) {
+              return item && Number(item.section_id) === Number(state.section) && !isExcludedFromSectionView(item, state.section);
+            });
+          }
+
+          if (!viewerScopeWorks.some(function(item) { return isSameWorkIdentity(item, work); })) {
+            const exact = (state.all || []).find(function(item) { return isSameWorkIdentity(item, work); });
+            if (exact && isSectionAllowedForRender(exact)) viewerScopeWorks.push(exact);
+          }
         }
 
         if (!viewerScopeWorks.length) viewerScopeWorks = [work];
@@ -4817,6 +4847,11 @@
         currentViewerIndex = viewerScopeWorks.findIndex(function(item) {
           return isSameWorkIdentity(item, work);
         });
+        if (currentViewerIndex < 0) {
+          currentViewerIndex = viewerScopeWorks.findIndex(function(item) {
+            return String(item && item.id) === String(work && work.id) && String(item && item.section_id) === String(work && work.section_id);
+          });
+        }
         if (currentViewerIndex < 0) currentViewerIndex = 0;
 
         return viewerScopeWorks[currentViewerIndex] || work;
@@ -4852,8 +4887,10 @@
         openLightbox(viewerScopeWorks[nextIndex], true);
       }
 
-      function nextViewer() { openViewerByOffset(1); }
-      function prevViewer() { openViewerByOffset(-1); }
+      function viewerPrev() { openViewerByOffset(-1); }
+      function viewerNext() { openViewerByOffset(1); }
+      function nextViewer() { viewerNext(); }
+      function prevViewer() { viewerPrev(); }
 
       const lazyImageObserver = 'IntersectionObserver' in window
         ? new IntersectionObserver((entries, observer) => {

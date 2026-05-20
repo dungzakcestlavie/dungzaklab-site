@@ -4261,6 +4261,103 @@
 }
 </style>
 
+
+<style id="archive-pro-mobile-caption-compact-fix-only">
+  /* ARCHIVE PRO MOBILE CAPTION COMPACT FIX — REMOVE SECTION + SMALLER FONT ONLY */
+  @media (max-width: 768px) {
+    .viewer-caption .section,
+    .viewer-caption .section-name,
+    .viewer-caption .viewer-section,
+    .lightbox-caption .section,
+    .lightbox-caption .section-name,
+    .lightbox-caption .lightbox-section,
+    .viewer-caption .lb-section,
+    .lightbox-caption .lb-section,
+    .lightbox-side .section,
+    .lightbox-side .section-name,
+    .lightbox-side .viewer-section,
+    .lightbox-side .lightbox-section,
+    .lightbox-side .lb-section {
+      display: none !important;
+    }
+
+    .viewer-caption,
+    .lightbox-caption,
+    .lightbox-side {
+      font-size: 14px !important;
+      line-height: 1.35 !important;
+      max-height: min(42dvh, 360px) !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 120px) !important;
+      touch-action: pan-y !important;
+      overscroll-behavior: contain !important;
+    }
+
+    .viewer-caption h1,
+    .viewer-caption h2,
+    .viewer-caption .title,
+    .viewer-caption .viewer-title,
+    .viewer-caption .lb-title,
+    .lightbox-caption h1,
+    .lightbox-caption h2,
+    .lightbox-caption .title,
+    .lightbox-caption .lightbox-title,
+    .lightbox-caption .lb-title,
+    .lightbox-side h1,
+    .lightbox-side h2,
+    .lightbox-side .title,
+    .lightbox-side .viewer-title,
+    .lightbox-side .lightbox-title,
+    .lightbox-side .lb-title {
+      font-size: clamp(22px, 6vw, 30px) !important;
+      line-height: 1.18 !important;
+      margin-bottom: 10px !important;
+    }
+
+    .viewer-caption .meta,
+    .viewer-caption .caption-row,
+    .viewer-caption .viewer-meta,
+    .viewer-caption .lb-meta,
+    .viewer-caption .lb-row,
+    .lightbox-caption .meta,
+    .lightbox-caption .caption-row,
+    .lightbox-caption .lightbox-meta,
+    .lightbox-caption .lb-meta,
+    .lightbox-caption .lb-row,
+    .lightbox-side .meta,
+    .lightbox-side .caption-row,
+    .lightbox-side .viewer-meta,
+    .lightbox-side .lightbox-meta,
+    .lightbox-side .lb-meta,
+    .lightbox-side .lb-row,
+    .lightbox-side .lb-key,
+    .lightbox-side .lb-val {
+      font-size: 14px !important;
+      line-height: 1.35 !important;
+    }
+
+    .viewer-caption .caption-row,
+    .viewer-caption .viewer-meta,
+    .viewer-caption .lb-row,
+    .lightbox-caption .caption-row,
+    .lightbox-caption .lightbox-meta,
+    .lightbox-caption .lb-row,
+    .lightbox-side .caption-row,
+    .lightbox-side .viewer-meta,
+    .lightbox-side .lightbox-meta,
+    .lightbox-side .lb-row {
+      margin-bottom: 6px !important;
+    }
+
+    .viewer-caption-inner,
+    .lightbox-caption-inner,
+    .lightbox-side .caption-inner {
+      padding-bottom: 24px !important;
+    }
+  }
+</style>
+
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>

@@ -4323,7 +4323,7 @@
         </div>
 
         <div class="lb-actions">
-          <a id="lbOpenFull" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">전체보기 / Full View</a>
+          <a id="lbOpenFull" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">전체보기</a>
           <a id="lbOpenImage" class="lb-link" href="#" target="_blank" rel="noopener noreferrer" aria-hidden="true" tabindex="-1">이미지 열기</a>
           <a id="lbOpenZoom" class="lb-link" href="#" target="_blank" rel="noopener noreferrer" aria-hidden="true" tabindex="-1">줌 열기</a>
         </div>
@@ -6102,7 +6102,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         els.lbZoomPath.textContent = '';
         if (els.lbOpenFull) {
           els.lbOpenFull.href = zoomUrl || imageUrl || '#';
-          els.lbOpenFull.textContent = state.lang === 'en' ? 'Full View' : '전체보기 / Full View';
+          els.lbOpenFull.textContent = state.lang === 'en' ? 'Full View' : (state.lang === 'both' ? '전체보기 / Full View' : '전체보기');
         }
         els.lbOpenImage.href = imageUrl || '#';
         els.lbOpenZoom.href = zoomUrl || imageUrl || '#';

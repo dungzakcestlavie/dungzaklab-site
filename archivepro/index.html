@@ -5977,6 +5977,17 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         return '[data-work-id="' + fallback + '"], [data-id="' + fallback + '"]';
       }
 
+      function getReturnScrollOffset() {
+        const isMobile = window.innerWidth <= 768;
+        if (!isMobile) return 96;
+
+        const header = document.querySelector('.site-header');
+        const headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
+        const visualOffset = window.visualViewport ? Math.max(0, Math.round(window.visualViewport.offsetTop || 0)) : 0;
+
+        return Math.max(104, Math.min(138, headerHeight + visualOffset + 22));
+      }
+
       function scrollToWorkCard(workId) {
         if (!workId) return false;
 
@@ -5986,8 +5997,13 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         const card = selector ? document.querySelector(selector) : null;
         if (!card) return false;
 
-        const offset = window.innerWidth <= 768 ? 72 : 96;
+        if (window.__archiveProReturnTimers && Array.isArray(window.__archiveProReturnTimers)) {
+          window.__archiveProReturnTimers.forEach(function(timerId) { window.clearTimeout(timerId); });
+        }
+        window.__archiveProReturnTimers = [];
+
         const getY = function() {
+          const offset = getReturnScrollOffset();
           return Math.max(0, Math.round(card.getBoundingClientRect().top + window.pageYOffset - offset));
         };
 
@@ -5995,9 +6011,14 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           window.scrollTo({ top: getY(), behavior: behavior || 'auto' });
         };
 
-        scrollExact('auto');
-        window.setTimeout(function() { scrollExact('smooth'); }, 80);
-        window.setTimeout(function() { scrollExact('auto'); }, 220);
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            scrollExact('auto');
+            window.__archiveProReturnTimers.push(window.setTimeout(function() { scrollExact('smooth'); }, 90));
+            window.__archiveProReturnTimers.push(window.setTimeout(function() { scrollExact('auto'); }, 360));
+          });
+        });
+
         return true;
       }
 

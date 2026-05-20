@@ -4442,6 +4442,66 @@
     }
 
 </style>
+
+<style>
+
+/* ARCHIVE PRO MOBILE CAPTION FINAL FIX — HIDE FULL VIEW + EXPAND CAPTION ONLY */
+@media (max-width: 768px) {
+
+  .viewer-caption .full-view,
+  .viewer-caption .view-full,
+  .viewer-caption .fullview,
+  .viewer-caption .viewer-full-view,
+  .viewer-caption .full-view-btn,
+  .viewer-caption .view-full-btn,
+  .viewer-caption button.full-view,
+  .viewer-caption button.view-full,
+  .viewer-caption a.full-view,
+  .viewer-caption a.view-full,
+  .viewer-caption [data-full-view],
+  .viewer-caption [data-view-full],
+
+  .lightbox-caption .full-view,
+  .lightbox-caption .view-full,
+  .lightbox-caption .fullview,
+  .lightbox-caption .lightbox-full-view,
+  .lightbox-caption .full-view-btn,
+  .lightbox-caption .view-full-btn,
+  .lightbox-caption button.full-view,
+  .lightbox-caption button.view-full,
+  .lightbox-caption a.full-view,
+  .lightbox-caption a.view-full,
+  .lightbox-caption [data-full-view],
+  .lightbox-caption [data-view-full],
+  .lightbox-side .full-view,
+  .lightbox-side .view-full,
+  .lightbox-side .fullview,
+  .lightbox-side .lightbox-full-view,
+  .lightbox-side .full-view-btn,
+  .lightbox-side .view-full-btn,
+  .lightbox-side button.full-view,
+  .lightbox-side button.view-full,
+  .lightbox-side a.full-view,
+  .lightbox-side a.view-full,
+  .lightbox-side [data-full-view],
+  .lightbox-side [data-view-full] {
+    display: none !important;
+  }
+
+  .viewer-caption,
+  .lightbox-caption,
+  .lightbox-side {
+    max-height: min(72dvh, 760px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 190px) !important;
+    touch-action: pan-y !important;
+    overscroll-behavior-y: contain !important;
+  }
+}
+
+</style>
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>

@@ -1303,8 +1303,8 @@
 
     body.viewer-open{
       overflow:hidden !important;
-      touch-action:pan-y;
-      overscroll-behavior:contain;
+      touch-action:none;
+      overscroll-behavior:none;
     }
 
     .archive-root,
@@ -1332,22 +1332,22 @@
     .lightbox,
     #viewer,
     #lightbox{
-      touch-action:pan-y;
-      overscroll-behavior:contain;
+      touch-action:none;
+      overscroll-behavior:none;
     }
 
     .viewer img,
     .lightbox img,
     #viewer img,
     #lightbox img{
-      touch-action:pinch-zoom;
+      touch-action:none;
       user-select:none;
       -webkit-user-drag:none;
     }
 
     .lightbox-stage{
       overflow:hidden;
-      touch-action:pan-y pinch-zoom;
+      touch-action:none;
       cursor:default;
     }
 
@@ -1402,7 +1402,7 @@
       .lightbox-stage img,
       #lightboxImage{
         pointer-events:auto !important;
-        touch-action:pinch-zoom !important;
+        touch-action:none !important;
       }
     }
 
@@ -5097,7 +5097,18 @@ let viewerMouseDragging = false;
       function prepareViewerScopeForWork(work, preserveExistingScope) {
         if (!work) return null;
 
-        if (isOriginsWork(work)) {
+        /* ARCHIVE PRO LIGHTBOX SCOPE LOCK
+           Keep the viewer inside the exact card array that opened it.
+           Do not recalculate Origins from the full works array while swiping. */
+        const hasPreservedScope =
+          preserveExistingScope &&
+          Array.isArray(viewerScopeWorks) &&
+          viewerScopeWorks.length &&
+          viewerScopeWorks.some(function(item) { return isSameWorkIdentity(item, work); });
+
+        if (hasPreservedScope) {
+          viewerScopeWorks = viewerScopeWorks.filter(isSectionAllowedForRender);
+        } else if (isOriginsWork(work)) {
           viewerScopeWorks = getOriginsWorksInCurrentOrder().slice();
 
           if (!viewerScopeWorks.some(function(item) { return isSameWorkIdentity(item, work); })) {
@@ -5113,9 +5124,7 @@ let viewerMouseDragging = false;
             });
           }
         } else {
-          if (!preserveExistingScope || !Array.isArray(viewerScopeWorks) || !viewerScopeWorks.length) {
-            viewerScopeWorks = getCurrentFilteredWorks().slice();
-          }
+          viewerScopeWorks = getCurrentFilteredWorks().slice();
 
           if (state.section !== 'all') {
             viewerScopeWorks = viewerScopeWorks.filter(function(item) {
@@ -5170,7 +5179,11 @@ let viewerMouseDragging = false;
         if (viewerScale > 1.001) return;
         const current = getCurrentViewerIndex();
         if (current < 0) return;
-        const nextIndex = (current + offset + viewerScopeWorks.length) % viewerScopeWorks.length;
+
+        /* No circular modulo: stop cleanly at both ends. */
+        const nextIndex = Math.max(0, Math.min(viewerScopeWorks.length - 1, current + offset));
+        if (nextIndex === current) return;
+
         currentViewerIndex = nextIndex;
         openLightbox(viewerScopeWorks[nextIndex], true);
       }
@@ -6996,7 +7009,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
             if (!card) return;
             const targetKey = safeText(card.dataset.key);
             const targetId = safeText(card.dataset.id);
-            const sourceList = getCurrentFilteredWorks();
+            const sourceList = getVisibleItems().filter(isSectionAllowedForRender);
             const item = sourceList.find((work) => getWorkIdentityKey(work) === String(targetKey)) || state.all.find((work) => getWorkIdentityKey(work) === String(targetKey));
             if (item) {
               viewerScopeWorks = sourceList.slice();
@@ -7011,7 +7024,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
             e.preventDefault();
             const targetKey = safeText(card.dataset.key);
             const targetId = safeText(card.dataset.id);
-            const sourceList = getCurrentFilteredWorks();
+            const sourceList = getVisibleItems().filter(isSectionAllowedForRender);
             const item = sourceList.find((work) => getWorkIdentityKey(work) === String(targetKey)) || state.all.find((work) => getWorkIdentityKey(work) === String(targetKey));
             if (item) {
               viewerScopeWorks = sourceList.slice();

@@ -1,8 +1,6 @@
-const CACHE_NAME = 'archive-pro-app-v5';
+const CACHE_NAME = 'archive-pro-app-v6-lab-route-fix';
 
 const CORE_ASSETS = [
-  './',
-  './index.html',
   './archivepro/',
   './archivepro/index.html',
   './manifest.webmanifest?v=2',
@@ -135,10 +133,8 @@ self.addEventListener('activate', event => {
           if (key !== CACHE_NAME) return caches.delete(key);
         })
       )
-    )
+    ).then(() => self.clients.claim())
   );
-
-  self.clients.claim();
 });
 
 self.addEventListener('message', event => {
@@ -159,24 +155,30 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
 
   if (request.mode === 'navigate' || request.destination === 'document') {
+    const isArchiveProRoute =
+      url.pathname === '/archivepro/' ||
+      url.pathname === '/archivepro/index.html' ||
+      url.pathname.startsWith('/archivepro/');
+
     event.respondWith(
       fetch(request, { cache: 'no-store' })
         .then(response => {
-          if (response && response.ok) {
+          if (response && response.ok && isArchiveProRoute) {
             const copy = response.clone();
             caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           }
           return response;
         })
         .catch(async () => {
-          const cached = await caches.match(request);
-          if (cached) return cached;
+          if (isArchiveProRoute) {
+            const cached = await caches.match(request);
+            if (cached) return cached;
 
-          if (url.pathname.startsWith('/archivepro')) {
-            return caches.match('./archivepro/index.html');
+            const archiveFallback = await caches.match('./archivepro/index.html');
+            if (archiveFallback) return archiveFallback;
           }
 
-          return caches.match('./index.html');
+          return fetch(request);
         })
     );
     return;

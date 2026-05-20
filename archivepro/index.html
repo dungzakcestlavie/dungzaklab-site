@@ -1358,12 +1358,120 @@
       transition:transform .05s linear;
       user-select:none;
       -webkit-user-drag:none;
-      touch-action:pinch-zoom;
+      touch-action:none;
     }
 
     body.viewer-open .lightbox-stage.is-zoomed{ cursor:grab; }
     body.viewer-open .lightbox-stage.is-zoomed.is-dragging{ cursor:grabbing; }
 
+    /* ARCHIVE PRO MOBILE LIGHTBOX RATIO FIX — image area / caption area / safe-area only */
+    html.viewer-open,
+    body.viewer-open{
+      overflow:hidden !important;
+      width:100%;
+      height:100%;
+      overscroll-behavior:none;
+    }
+
+    @media (max-width:768px){
+      .viewer,
+      .lightbox,
+      #viewer,
+      #lightbox{
+        position:fixed;
+        inset:0;
+        width:100vw;
+        height:100dvh;
+        overflow:hidden;
+        background:#070A14;
+      }
+
+      .viewer-inner,
+      .lightbox-inner{
+        position:absolute;
+        inset:0;
+        height:100dvh;
+        display:grid;
+        grid-template-columns:1fr;
+        grid-template-rows:minmax(0,52dvh) minmax(0,48dvh);
+        overflow:hidden;
+      }
+
+      .viewer-media,
+      .lightbox-media,
+      .lightbox-stage{
+        position:relative;
+        min-width:0;
+        min-height:0;
+        height:100%;
+        padding:calc(env(safe-area-inset-top, 0px) + 58px) 18px 14px 18px;
+        box-sizing:border-box;
+        overflow:hidden;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        touch-action:none;
+      }
+
+      .viewer-media img,
+      .lightbox-media img,
+      .lightbox-stage img,
+      #lightboxImage{
+        width:100%;
+        height:100%;
+        max-width:100%;
+        max-height:100%;
+        object-fit:contain;
+        display:block;
+        border-radius:10px;
+      }
+
+      .viewer-close,
+      .lightbox-close,
+      .close-viewer,
+      #lightboxClose{
+        position:fixed;
+        top:calc(env(safe-area-inset-top, 0px) + 18px);
+        right:18px;
+        z-index:9999;
+        width:54px;
+        height:54px;
+        min-width:54px;
+        min-height:54px;
+        border-radius:50%;
+        display:grid;
+        place-items:center;
+        background:rgba(7,10,20,.72);
+        border:1px solid rgba(255,255,255,.18);
+        color:#fff;
+      }
+
+      .viewer-caption,
+      .lightbox-caption,
+      .detail-panel,
+      .lightbox-side{
+        min-height:0;
+        max-height:none;
+        height:100%;
+        overflow-y:auto;
+        -webkit-overflow-scrolling:touch;
+        padding:28px 22px calc(env(safe-area-inset-bottom, 0px) + 96px) 22px;
+        box-sizing:border-box;
+        border-left:0;
+        border-top:1px solid rgba(255,255,255,.06);
+        overflow-wrap:anywhere;
+        word-break:break-word;
+      }
+
+      .detail-row.image-url,
+      .detail-row.zoom-url,
+      .meta-row.image-url,
+      .meta-row.zoom-url,
+      .lb-meta .lb-row:nth-child(4),
+      .lb-meta .lb-row:nth-child(5){
+        display:none;
+      }
+    }
     /* ARCHIVE PRO MOBILE UX FIX — hide mobile open buttons + make close X always clickable */
     .viewer-close,
     .lightbox-close,
@@ -1401,8 +1509,7 @@
       .lightbox-media img,
       .lightbox-stage img,
       #lightboxImage{
-        pointer-events:auto !important;
-        touch-action:none !important;
+        pointer-events:none !important;
       }
     }
 
@@ -3852,537 +3959,7 @@
       }
     }
 
-    
-
-    /* ARCHIVE PRO LIGHTBOX IMAGE SIZE ONLY FIX — image larger / caption lower, no data or function change */
-    @media (min-width:881px){
-      .lightbox-stage{
-        padding:64px 86px 28px 86px !important;
-      }
-
-      .lightbox-stage img,
-      #lightboxImage{
-        max-width:min(calc(100vw - 380px - 205px), 1010px) !important;
-        max-height:calc(100vh - 125px) !important;
-        object-fit:contain !important;
-      }
-
-      .lightbox-side{
-        padding-top:94px !important;
-      }
-    }
-
-    @media (min-width:881px) and (max-width:1180px){
-      .lightbox-stage{
-        padding:64px 72px 28px 72px !important;
-      }
-
-      .lightbox-stage img,
-      #lightboxImage{
-        max-width:min(calc(100vw - 340px - 165px), 875px) !important;
-        max-height:calc(100vh - 125px) !important;
-      }
-
-      .lightbox-side{
-        padding-top:94px !important;
-      }
-    }
-
-    @media (min-width:881px) and (max-width:1020px){
-      .lightbox-stage{
-        padding:64px 62px 28px 62px !important;
-      }
-
-      .lightbox-stage img,
-      #lightboxImage{
-        max-width:calc(100vw - 340px - 125px) !important;
-        max-height:calc(100vh - 132px) !important;
-      }
-    }
-
-    @media (max-width:768px){
-      .viewer-inner,
-      .lightbox-inner{
-        grid-template-rows:minmax(0,60dvh) minmax(0,40dvh) !important;
-      }
-
-      .viewer-media,
-      .lightbox-media,
-      .lightbox-stage{
-        padding:calc(env(safe-area-inset-top, 0px) + 62px) 12px 8px 12px !important;
-      }
-
-      .viewer-media img,
-      .lightbox-media img,
-      .lightbox-stage img,
-      #lightboxImage{
-        width:100% !important;
-        height:100% !important;
-        max-width:100% !important;
-        max-height:100% !important;
-        object-fit:contain !important;
-      }
-
-      .viewer-caption,
-      .lightbox-caption,
-      .detail-panel,
-      .works-viewer-caption,
-      .lightbox-side{
-        padding:34px 22px calc(env(safe-area-inset-bottom, 0px) + 34px) 22px !important;
-      }
-    }
-
-    @media (max-width:420px){
-      .viewer-inner,
-      .lightbox-inner{
-        grid-template-rows:minmax(0,58dvh) minmax(0,42dvh) !important;
-      }
-
-      .viewer-media,
-      .lightbox-media,
-      .lightbox-stage{
-        padding:calc(env(safe-area-inset-top, 0px) + 60px) 10px 8px 10px !important;
-      }
-    }
-
-    /* DUNGZAKLAB.ART ORIGINS VIEWER SCOPE + IMAGE FRAME STABILITY — minimal viewer-only override */
-    .viewer-image-frame,
-    .lightbox-image-frame,
-    .viewer-art-frame,
-    .lightbox-stage{
-      min-height:60vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .viewer-image-frame img,
-    .lightbox-image-frame img,
-    .viewer-art-frame img,
-    .viewer img,
-    .lightbox img,
-    #lightboxImage{
-      width:auto !important;
-      height:auto !important;
-      max-width:min(92vw, 1200px) !important;
-      max-height:82vh !important;
-      object-fit:contain !important;
-      transform:translate3d(0,0,0) scale(1) !important;
-      scale:1 !important;
-      translate:0 0 !important;
-    }
-
-    @media (max-width:768px){
-      .viewer-image-frame,
-      .lightbox-image-frame,
-      .viewer-art-frame,
-      .lightbox-stage{
-        min-height:56vh;
-      }
-
-      .viewer-image-frame img,
-      .lightbox-image-frame img,
-      .viewer-art-frame img,
-      .viewer img,
-      .lightbox img,
-      #lightboxImage{
-        max-width:96vw !important;
-        max-height:54vh !important;
-      }
-    }
-</style>
-
-
-
-
-
-
-
-
-
-
-
-
-<style id="archive-pro-pointer-pinch-swipe-final-css">
-/* ARCHIVE PRO MOBILE VIEWER FINAL FIX — pointer pinch + swipe stability only */
-body.viewer-open{
-  overflow:hidden !important;
-  overscroll-behavior:contain !important;
-  touch-action:pan-y !important;
-}
-
-.viewer,
-.lightbox,
-#viewer,
-#lightbox{
-  overscroll-behavior:contain !important;
-  touch-action:pan-y !important;
-}
-
-.viewer-media,
-.lightbox-media,
-.lightbox-stage{
-  overscroll-behavior:contain !important;
-  touch-action:none !important;
-  overflow:hidden !important;
-}
-
-.viewer-image,
-.lightbox-image,
-.viewer img,
-.lightbox img,
-.lightbox-stage img,
-#lightboxImage{
-  touch-action:none !important;
-  user-select:none !important;
-  -webkit-user-select:none !important;
-  -webkit-user-drag:none !important;
-  transform-origin:center center !important;
-  will-change:transform !important;
-  backface-visibility:hidden !important;
-  object-fit:contain !important;
-  pointer-events:auto !important;
-  transition:none !important;
-}
-
-@media (max-width:768px){
-  .viewer,
-  .lightbox,
-  #viewer,
-  #lightbox{
-    height:100dvh !important;
-    min-height:100dvh !important;
-    overflow:hidden !important;
-    overscroll-behavior:contain !important;
-    touch-action:pan-y !important;
-  }
-
-  .viewer-inner,
-  .lightbox-inner{
-    min-height:100dvh !important;
-    height:100dvh !important;
-    display:flex !important;
-    flex-direction:column !important;
-    grid-template-columns:none !important;
-    box-sizing:border-box !important;
-    overflow:hidden !important;
-  }
-
-  .viewer-close,
-  .lightbox-close,
-  .close-viewer,
-  #viewerCloseBtn,
-  #lightboxClose{
-    position:fixed !important;
-    top:calc(env(safe-area-inset-top, 0px) + 16px) !important;
-    right:16px !important;
-    z-index:99999 !important;
-    pointer-events:auto !important;
-    touch-action:manipulation !important;
-  }
-
-  .viewer-media,
-  .lightbox-media,
-  .lightbox-stage{
-    width:100% !important;
-    flex:1 1 auto !important;
-    min-height:0 !important;
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    box-sizing:border-box !important;
-    padding:74px 12px 18px !important;
-    overflow:hidden !important;
-    overscroll-behavior:contain !important;
-    touch-action:none !important;
-  }
-
-  .viewer-image,
-  .lightbox-image,
-  .viewer img,
-  .lightbox img,
-  .lightbox-stage img,
-  #lightboxImage{
-    width:auto !important;
-    height:auto !important;
-    max-width:94vw !important;
-    max-height:64dvh !important;
-    object-fit:contain !important;
-    display:block !important;
-    margin:0 auto !important;
-    transform:translate3d(0,0,0) scale(1);
-    touch-action:none !important;
-  }
-}
-</style>
-
-
-<style id="archive-pro-mobile-viewer-final-repair-css">
-/* ARCHIVE PRO MOBILE VIEWER FINAL REPAIR — caption clean + image fit + swipe/pinch only */
-.lb-media-row,
-#lbKeyImage,
-#lbKeyZoom,
-#lbImagePath,
-#lbZoomPath,
-#lbOpenImage,
-#lbOpenZoom{
-  display:none !important;
-}
-
-@media (max-width:880px){
-  .lightbox.open,
-  .lightbox.active{
-    overflow:hidden !important;
-    overscroll-behavior:contain !important;
-  }
-
-  .lightbox-inner{
-    height:100dvh !important;
-    min-height:100dvh !important;
-    display:grid !important;
-    grid-template-columns:1fr !important;
-    grid-template-rows:minmax(0, calc(68dvh + 72px)) minmax(0, 1fr) !important;
-    overflow:hidden !important;
-  }
-
-  .lightbox-stage{
-    width:100vw !important;
-    min-width:0 !important;
-    min-height:0 !important;
-    height:auto !important;
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    padding:calc(env(safe-area-inset-top, 0px) + 64px) 16px 8px !important;
-    overflow:hidden !important;
-    touch-action:none !important;
-    overscroll-behavior:contain !important;
-    contain:layout paint size !important;
-    -webkit-tap-highlight-color:transparent !important;
-  }
-
-  .lightbox-stage img,
-  #lightboxImage{
-    display:block !important;
-    position:relative !important;
-    width:auto !important;
-    height:auto !important;
-    max-width:calc(100vw - 32px) !important;
-    max-height:68vh !important;
-    object-fit:contain !important;
-    object-position:center center !important;
-    margin:0 auto !important;
-    border-radius:8px !important;
-    transform-origin:center center !important;
-    transform:translate3d(0,0,0) scale(1);
-    transition:none !important;
-    will-change:transform !important;
-    user-select:none !important;
-    -webkit-user-select:none !important;
-    -webkit-user-drag:none !important;
-    touch-action:none !important;
-    pointer-events:auto !important;
-  }
-
-  .lightbox-side{
-    min-height:0 !important;
-    max-height:none !important;
-    overflow:auto !important;
-    -webkit-overflow-scrolling:touch !important;
-    padding:14px 18px calc(18px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-
-  .lightbox-stage.is-zoomed{
-    cursor:grab !important;
-  }
-
-  .lightbox-stage.is-zoomed.is-dragging{
-    cursor:grabbing !important;
-  }
-
-  body.viewer-open{
-    overflow:hidden !important;
-    overscroll-behavior:contain !important;
-  }
-}
-
-/* ARCHIVE PRO MOBILE VIEWER CLEAN REBUILD — CAPTION SCROLL + SWIPE + PINCH ZOOM ONLY */
-@media (max-width:880px){
-  .lightbox,
-  #lightbox{
-    background:rgba(4,7,11,.995) !important;
-    overflow:hidden !important;
-    overscroll-behavior:contain !important;
-    touch-action:auto !important;
-  }
-
-  .lightbox::before{
-    background:#04070b !important;
-    opacity:1 !important;
-  }
-
-  .lightbox-inner{
-    position:absolute !important;
-    inset:0 !important;
-    width:100vw !important;
-    height:100dvh !important;
-    min-height:100dvh !important;
-    display:flex !important;
-    flex-direction:column !important;
-    grid-template-columns:none !important;
-    overflow:hidden !important;
-    padding-top:calc(env(safe-area-inset-top, 0px) + 62px) !important;
-    padding-bottom:env(safe-area-inset-bottom, 0px) !important;
-  }
-
-  .lightbox-stage{
-    flex:0 0 auto !important;
-    width:100% !important;
-    min-width:0 !important;
-    height:auto !important;
-    min-height:0 !important;
-    max-height:none !important;
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    padding:10px 16px 12px !important;
-    overflow:hidden !important;
-    contain:layout paint !important;
-    touch-action:none !important;
-    overscroll-behavior:contain !important;
-    -webkit-user-select:none !important;
-    user-select:none !important;
-  }
-
-  .lightbox-stage img,
-  #lightboxImage{
-    display:block !important;
-    width:auto !important;
-    height:auto !important;
-    max-width:calc(100vw - 32px) !important;
-    max-height:60vh !important;
-    object-fit:contain !important;
-    object-position:center center !important;
-    transform:translate3d(0,0,0) scale(1);
-    transform-origin:center center !important;
-    transition:none !important;
-    will-change:transform !important;
-    border-radius:8px !important;
-    user-select:none !important;
-    -webkit-user-select:none !important;
-    -webkit-user-drag:none !important;
-    touch-action:none !important;
-    pointer-events:auto !important;
-  }
-
-  .lightbox-side{
-    flex:1 1 auto !important;
-    min-height:0 !important;
-    width:100% !important;
-    border-left:0 !important;
-    border-top:1px solid rgba(255,255,255,.06) !important;
-    background:linear-gradient(180deg, rgba(10,15,23,.98), rgba(7,11,17,.99)) !important;
-    padding:16px 18px calc(28px + env(safe-area-inset-bottom, 0px)) !important;
-    overflow-y:auto !important;
-    overflow-x:hidden !important;
-    -webkit-overflow-scrolling:touch !important;
-    overscroll-behavior:contain !important;
-    touch-action:pan-y !important;
-  }
-
-  .lightbox-side .lb-title{
-    font-size:20px !important;
-    line-height:1.24 !important;
-    margin-bottom:10px !important;
-  }
-
-  .lightbox-side .lb-section{
-    display:none !important;
-  }
-
-  .lb-meta{
-    gap:10px !important;
-    margin-bottom:0 !important;
-  }
-
-  .lb-row{
-    grid-template-columns:72px minmax(0,1fr) !important;
-    gap:10px !important;
-  }
-
-  .lb-media-row,
-  .lb-actions,
-  #lbOpenImage,
-  #lbOpenZoom{
-    display:none !important;
-  }
-
-  .lightbox-close,
-  .viewer-close,
-  #viewerCloseBtn{
-    position:fixed !important;
-    top:calc(env(safe-area-inset-top, 0px) + 14px) !important;
-    right:calc(env(safe-area-inset-right, 0px) + 14px) !important;
-    z-index:99999 !important;
-    min-width:46px !important;
-    min-height:46px !important;
-    touch-action:manipulation !important;
-    pointer-events:auto !important;
-  }
-}
-
-@supports not (height:100dvh){
-  @media (max-width:880px){
-    .lightbox-inner{
-      height:100vh !important;
-      min-height:100vh !important;
-    }
-  }
-}
-
-</style>
-
-
-
-<style id="archive-pro-viewer-image-size-only-fix">
-  /* ARCHIVE PRO VIEWER IMAGE SIZE ONLY FIX — mobile viewer image CSS only */
-  @media (max-width: 880px) {
-    .viewer-image-wrap,
-    .lightbox-stage {
-      width: 100% !important;
-      max-width: none !important;
-      padding-left: 10px !important;
-      padding-right: 10px !important;
-    }
-
-    .viewer-image,
-    .viewer-image-wrap img,
-    .lightbox-stage img,
-    #lightboxImage {
-      width: 100% !important;
-      height: auto !important;
-      max-width: calc(100vw - 20px) !important;
-      max-height: 68vh !important;
-      object-fit: contain !important;
-    }
-  }
-
-  @media (max-width: 600px) {
-    .viewer-image-wrap,
-    .lightbox-stage {
-      padding-left: 8px !important;
-      padding-right: 8px !important;
-    }
-
-    .viewer-image,
-    .viewer-image-wrap img,
-    .lightbox-stage img,
-    #lightboxImage {
-      max-width: calc(100vw - 16px) !important;
-      max-height: 68vh !important;
-    }
-  }
-</style>
+    </style>
 
 </head>
 <body class="archive-entered archive-filter-open">
@@ -4398,7 +3975,7 @@ body.viewer-open{
           </a>
         </div>
       </div>
-      <a class="back-link" href="https://dungzaklab.art/" target="_self" onclick="window.location.href='https://dungzaklab.art/'; return false;" aria-label="LAB으로 돌아가기">LAB</a>
+      <a class="back-link" href="../index.html" aria-label="LAB으로 돌아가기">LAB</a>
     </div>
   </header>
 
@@ -4548,13 +4125,13 @@ body.viewer-open{
           <div class="lb-row"><div class="lb-key" id="lbKeyMaterial">재료</div><div class="lb-val" id="lbMaterial">—</div></div>
           <div class="lb-row"><div class="lb-key" id="lbKeySize">크기</div><div class="lb-val" id="lbSize">—</div></div>
           <div class="lb-row"><div class="lb-key" id="lbKeyYear">연도</div><div class="lb-val" id="lbYear">—</div></div>
-          <div class="lb-row lb-media-row" hidden aria-hidden="true"><div class="lb-key" id="lbKeyImage">이미지</div><div class="lb-val" id="lbImagePath">—</div></div>
-          <div class="lb-row lb-media-row" hidden aria-hidden="true"><div class="lb-key" id="lbKeyZoom">줌</div><div class="lb-val" id="lbZoomPath">—</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyImage">이미지</div><div class="lb-val" id="lbImagePath">—</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyZoom">줌</div><div class="lb-val" id="lbZoomPath">—</div></div>
         </div>
 
         <div class="lb-actions">
-<a id="lbOpenImage" class="lb-link" href="#" target="_blank" rel="noopener noreferrer" aria-hidden="true" tabindex="-1">이미지 열기</a>
-          <a id="lbOpenZoom" class="lb-link" href="#" target="_blank" rel="noopener noreferrer" aria-hidden="true" tabindex="-1">줌 열기</a>
+          <a id="lbOpenImage" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">이미지 열기</a>
+          <a id="lbOpenZoom" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">줌 열기</a>
         </div>
       </aside>
     </div>
@@ -4568,21 +4145,22 @@ body.viewer-open{
       if (window.__ARCHIVE_PRO_BOOTED__) return;
       window.__ARCHIVE_PRO_BOOTED__ = true;
 
-      /* VIEWER-ONLY iOS GESTURE GUARD — do not block page/caption gestures. */
+      /* PAGE ZOOM LOCK — keep whole Archive Pro viewport fixed.
+         Lightbox image zoom still works through the existing custom viewerScale engine. */
       const preventBrowserZoom = (e) => {
-        const lightbox = document.getElementById('lightbox');
-        const stage = document.querySelector('.lightbox-stage');
-        const target = e && e.target;
-        const viewerOpen = lightbox && lightbox.classList.contains('open') && document.body.classList.contains('viewer-open');
-        const inStage = stage && target && stage.contains(target);
-        const inCaption = target && target.closest && target.closest('.lightbox-side,.viewer-caption');
-        if (viewerOpen && inStage && !inCaption && e && typeof e.preventDefault === 'function') e.preventDefault();
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
       };
 
       ['gesturestart', 'gesturechange', 'gestureend'].forEach((type) => {
         document.addEventListener(type, preventBrowserZoom, { passive: false });
         window.addEventListener(type, preventBrowserZoom, { passive: false });
       });
+
+      document.addEventListener('touchmove', (e) => {
+        if (e.touches && e.touches.length > 1 && !document.body.classList.contains('viewer-open')) {
+          e.preventDefault();
+        }
+      }, { passive: false });
 
       document.addEventListener('dblclick', (e) => {
         const lightbox = document.getElementById('lightbox');
@@ -4996,12 +4574,6 @@ body.viewer-open{
       let searchTimer = null;
       let worksLoadPromise = null;
       let archiveScrollY = 0;
-      let currentViewerWorkId = null;
-      let closeReturnWorkId = null;
-      let currentViewerWorkKey = null;
-      let closeReturnWorkKey = null;
-      let viewerScopeWorks = [];
-      let currentViewerIndex = 0;
       let closeClickBlockUntil = 0;
 
       let viewerScale = 1;
@@ -5015,7 +4587,8 @@ body.viewer-open{
       let viewerIsDragging = false;
       let viewerIsZooming = false;
       let viewerInitialDistance = 0;
-let viewerMouseDragging = false;
+      let viewerLastTap = 0;
+      let viewerMouseDragging = false;
 
       function isViewerOpen() {
         return els.lightbox && els.lightbox.classList.contains('open') && document.body.classList.contains('viewer-open');
@@ -5034,10 +4607,6 @@ let viewerMouseDragging = false;
         viewerIsDragging = false;
         viewerIsZooming = false;
         viewerMouseDragging = false;
-        if (typeof window.__archiveProResetMobileViewerZoom === 'function') {
-          window.__archiveProResetMobileViewerZoom();
-          return;
-        }
         if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging', 'is-zoomed');
         applyViewerTransform();
       }
@@ -5046,152 +4615,21 @@ let viewerMouseDragging = false;
         return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
       }
 
-      function isOriginsWork(work) {
-        return String(work && work.section_id) === '0' || String((work && work.id) || '').toUpperCase().startsWith('OR-');
-      }
-
-      function getOriginsWorksInCurrentOrder() {
-        const base =
-          Array.isArray(state.filtered) && state.filtered.length
-            ? state.filtered
-            : Array.isArray(state.all) && state.all.length
-              ? state.all
-              : [];
-
-        return base.filter(function(item) {
-          return isOriginsWork(item) && isSectionAllowedForRender(item);
-        });
-      }
-
-      function getWorkById(workId) {
-        const target = String(workId || '');
-        if (!target) return null;
-        return (state.all || []).find(function(work) {
-          return work && String(work.id) === target;
-        }) || null;
-      }
-
-      function getWorkIdentityKey(work) {
-        if (!work) return '';
-        return String(work._key || ((work._index !== undefined ? work._index : '') + '::' + work.section_id + '::' + work.id));
-      }
-
-      function isSameWorkIdentity(a, b) {
-        if (!a || !b) return false;
-        const ak = getWorkIdentityKey(a);
-        const bk = getWorkIdentityKey(b);
-        if (ak && bk && ak === bk) return true;
-        return String(a.id) === String(b.id) && String(a.section_id) === String(b.section_id) && String(a._index) === String(b._index);
-      }
-
-      function getCurrentFilteredWorks() {
-        const list = Array.isArray(state.filtered) ? state.filtered : [];
-        const source = list.length ? list : (Array.isArray(state.all) ? state.all : []);
-        return source.filter(function(item) {
-          if (!isSectionAllowedForRender(item)) return false;
-          if (state.section !== 'all') return Number(item.section_id) === Number(state.section);
-          return true;
-        });
-      }
-
-      function prepareViewerScopeForWork(work, preserveExistingScope) {
-        if (!work) return null;
-
-        /* ARCHIVE PRO LIGHTBOX SCOPE LOCK
-           Keep the viewer inside the exact card array that opened it.
-           Do not recalculate Origins from the full works array while swiping. */
-        const hasPreservedScope =
-          preserveExistingScope &&
-          Array.isArray(viewerScopeWorks) &&
-          viewerScopeWorks.length &&
-          viewerScopeWorks.some(function(item) { return isSameWorkIdentity(item, work); });
-
-        if (hasPreservedScope) {
-          viewerScopeWorks = viewerScopeWorks.filter(isSectionAllowedForRender);
-        } else if (isOriginsWork(work)) {
-          viewerScopeWorks = getOriginsWorksInCurrentOrder().slice();
-
-          if (!viewerScopeWorks.some(function(item) { return isSameWorkIdentity(item, work); })) {
-            const exactOrigin = (state.all || []).find(function(item) {
-              return isOriginsWork(item) && isSameWorkIdentity(item, work);
-            });
-            if (exactOrigin && isSectionAllowedForRender(exactOrigin)) viewerScopeWorks.push(exactOrigin);
-          }
-
-          if (!viewerScopeWorks.length) {
-            viewerScopeWorks = (state.all || []).filter(function(item) {
-              return isOriginsWork(item) && isSectionAllowedForRender(item);
-            });
-          }
-        } else {
-          viewerScopeWorks = getCurrentFilteredWorks().slice();
-
-          if (state.section !== 'all') {
-            viewerScopeWorks = viewerScopeWorks.filter(function(item) {
-              return item && Number(item.section_id) === Number(state.section) && !isExcludedFromSectionView(item, state.section);
-            });
-          }
-
-          if (!viewerScopeWorks.some(function(item) { return isSameWorkIdentity(item, work); })) {
-            const exact = (state.all || []).find(function(item) { return isSameWorkIdentity(item, work); });
-            if (exact && isSectionAllowedForRender(exact)) viewerScopeWorks.push(exact);
-          }
-        }
-
-        if (!viewerScopeWorks.length) viewerScopeWorks = [work];
-
-        currentViewerIndex = viewerScopeWorks.findIndex(function(item) {
-          return isSameWorkIdentity(item, work);
-        });
-        if (currentViewerIndex < 0) {
-          currentViewerIndex = viewerScopeWorks.findIndex(function(item) {
-            return String(item && item.id) === String(work && work.id) && String(item && item.section_id) === String(work && work.section_id);
-          });
-        }
-        if (currentViewerIndex < 0) currentViewerIndex = 0;
-
-        return viewerScopeWorks[currentViewerIndex] || work;
-      }
-
-      function normalizeViewerImage(img) {
-        if (!img) return;
-        img.style.width = 'auto';
-        img.style.height = 'auto';
-        img.style.maxWidth = '';
-        img.style.maxHeight = '';
-        img.style.objectFit = 'contain';
-        img.style.transform = 'translate3d(0,0,0) scale(1)';
-        img.style.scale = '1';
-        img.style.translate = '0 0';
-        img.style.aspectRatio = 'auto';
-      }
-
       function getCurrentViewerIndex() {
-        if (!state.lightboxItem || !viewerScopeWorks.length) return -1;
-        const index = viewerScopeWorks.findIndex(function(item) {
-          return isSameWorkIdentity(item, state.lightboxItem);
-        });
-        return index >= 0 ? index : currentViewerIndex;
+        if (!state.lightboxItem || !state.filtered.length) return -1;
+        return state.filtered.findIndex((item) => item === state.lightboxItem || item.id === state.lightboxItem.id);
       }
 
       function openViewerByOffset(offset) {
-        if (!isViewerOpen() || !viewerScopeWorks.length) return;
-        if (viewerScale > 1.001) return;
+        if (!isViewerOpen() || !state.filtered.length) return;
         const current = getCurrentViewerIndex();
         if (current < 0) return;
-
-        /* No circular modulo: stop cleanly at both ends. */
-        const nextIndex = Math.max(0, Math.min(viewerScopeWorks.length - 1, current + offset));
-        if (nextIndex === current) return;
-
-        currentViewerIndex = nextIndex;
-        openLightbox(viewerScopeWorks[nextIndex], true);
+        const nextIndex = (current + offset + state.filtered.length) % state.filtered.length;
+        openLightbox(state.filtered[nextIndex]);
       }
 
-      function viewerPrev() { openViewerByOffset(-1); }
-      function viewerNext() { openViewerByOffset(1); }
-      function nextViewer() { viewerNext(); }
-      function prevViewer() { viewerPrev(); }
+      function nextViewer() { openViewerByOffset(1); }
+      function prevViewer() { openViewerByOffset(-1); }
 
       const lazyImageObserver = 'IntersectionObserver' in window
         ? new IntersectionObserver((entries, observer) => {
@@ -6150,7 +5588,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         const key = String(work._key || (work._index + '::' + work.section_id + '::' + work.id));
 
         return [
-          '<article class="card" tabindex="0" role="button" data-render-index="', escapeHTML(index), '" data-key="', escapeHTML(key), '" data-id="', escapeHTML(work.id), '" data-work-id="', escapeHTML(work.id), '" data-section-id="', escapeHTML(work.section_id), '" aria-label="', escapeHTML(work.id), ' 작품 보기">',
+          '<article class="card" tabindex="0" role="button" data-render-index="', escapeHTML(index), '" data-key="', escapeHTML(key), '" data-id="', escapeHTML(work.id), '" data-section-id="', escapeHTML(work.section_id), '" aria-label="', escapeHTML(work.id), ' 작품 보기">',
             '<div class="thumb-wrap">',
               '<img class="thumb', loadedClass, '" src="', escapeHTML(priority ? imgSrc : SVG_PLACEHOLDER), '"', dataSrc, ' alt="', escapeHTML(title || work.id || ''), '" loading="', loading, '" decoding="async" fetchpriority="', fetchPriority, '" data-zoom="', escapeHTML(work.zoom || ''), '">',
               '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
@@ -6314,17 +5752,9 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         });
       }
 
-      function openLightbox(item, preserveExistingScope = false) {
+      function openLightbox(item) {
         archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-        item = prepareViewerScopeForWork(item, preserveExistingScope);
-        if (!item) return;
         state.lightboxItem = item;
-        if (item && item.id) {
-          currentViewerWorkId = String(item.id);
-          closeReturnWorkId = String(item.id);
-          currentViewerWorkKey = getWorkIdentityKey(item);
-          closeReturnWorkKey = currentViewerWorkKey;
-        }
         resetViewerTransform();
 
         const isOrigin = Number(item.section_id) === 0;
@@ -6338,22 +5768,14 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 
         els.lbId.textContent = item.id;
         els.lbTitle.textContent = title;
-        els.lbSection.textContent = '';
+        els.lbSection.textContent = getSectionTextById(item.section_id);
         els.lbMaterialVal.textContent = material;
         els.lbSizeVal.textContent = size;
         els.lbYearVal.textContent = year;
-        if (els.lbImagePath) els.lbImagePath.textContent = '';
-        if (els.lbZoomPath) els.lbZoomPath.textContent = '';
-        if (els.lbOpenImage) {
-          els.lbOpenImage.href = imageUrl || '#';
-          els.lbOpenImage.setAttribute('aria-hidden', 'true');
-          els.lbOpenImage.setAttribute('tabindex', '-1');
-        }
-        if (els.lbOpenZoom) {
-          els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
-          els.lbOpenZoom.setAttribute('aria-hidden', 'true');
-          els.lbOpenZoom.setAttribute('tabindex', '-1');
-        }
+        els.lbImagePath.textContent = imageUrl || '—';
+        els.lbZoomPath.textContent = zoomUrl || '—';
+        els.lbOpenImage.href = imageUrl || '#';
+        els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
 
         els.lightboxImage.alt = title;
         els.lightboxImage.classList.remove('is-ready');
@@ -6363,25 +5785,21 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         els.lightboxImage.decoding = 'async';
         els.lightboxImage.fetchPriority = 'high';
 
-        normalizeViewerImage(els.lightboxImage);
+        if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
+          els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
+          els.lightboxImage.style.width = 'auto';
+          els.lightboxImage.style.height = 'auto';
+          els.lightboxImage.style.maxWidth = '';
+          els.lightboxImage.style.maxHeight = '';
+        }
 
         els.lightboxImage.onload = () => {
           resetViewerTransform();
-          normalizeViewerImage(els.lightboxImage);
-          nativeResetViewerView();
-          const isLandscapeViewerImage = els.lightboxImage.naturalWidth >= els.lightboxImage.naturalHeight;
-          if (els.lightboxStage) {
-            els.lightboxStage.classList.toggle('is-landscape', isLandscapeViewerImage);
-            els.lightboxStage.classList.toggle('is-portrait', !isLandscapeViewerImage);
+          if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
+            els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
+            els.lightboxImage.style.width = 'auto';
+            els.lightboxImage.style.height = 'auto';
           }
-          els.lightboxImage.classList.toggle('landscape', isLandscapeViewerImage);
-          els.lightboxImage.classList.toggle('portrait', !isLandscapeViewerImage);
-
-          requestAnimationFrame(function() {
-            requestAnimationFrame(function() {
-              normalizeViewerImage(els.lightboxImage);
-            });
-          });
           els.lightboxImage.classList.remove('is-loading');
           els.lightboxImage.classList.add('is-ready');
         };
@@ -6396,7 +5814,11 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           els.lightboxImage.src = displayUrl;
         });
 
-        normalizeViewerImage(els.lightboxImage);
+        if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
+          els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
+          els.lightboxImage.style.width = 'auto';
+          els.lightboxImage.style.height = 'auto';
+        }
 
         els.lightbox.classList.add('open');
         els.lightbox.classList.add('active');
@@ -6415,7 +5837,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           shield = document.createElement('div');
           shield.id = 'viewerCloseShield';
           shield.setAttribute('aria-hidden', 'true');
-          shield.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:transparent;pointer-events:auto;touch-action:pan-y;';
+          shield.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:transparent;pointer-events:auto;touch-action:none;';
           const kill = function(ev) {
             if (!ev) return;
             if (typeof ev.preventDefault === 'function') ev.preventDefault();
@@ -6434,94 +5856,14 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         }, 700);
       }
 
-      function ensureWorkRenderedForReturn(workKey, workId) {
-        const source = Array.isArray(state.filtered) && state.filtered.length ? state.filtered : [];
-        if (!source.length) return;
-        const index = source.findIndex(function(work) {
-          return (workKey && getWorkIdentityKey(work) === String(workKey)) || (!workKey && workId && String(work.id) === String(workId));
-        });
-        if (index < 0) return;
-        if (index >= state.visibleCount) {
-          state.visibleCount = index + 1;
-          visibleCount = state.visibleCount;
-          renderGrid();
-        }
-      }
-
-      function getReturnCardSelector(workKey, workId) {
-        const keyValue = String(workKey || '');
-        const idValue = String(workId || '');
-        const esc = function(value) {
-          return window.CSS && typeof window.CSS.escape === 'function'
-            ? window.CSS.escape(value)
-            : String(value).replace(/"/g, '\"');
-        };
-        if (keyValue) return '[data-key="' + esc(keyValue) + '"]';
-        if (idValue) return '[data-work-id="' + esc(idValue) + '"], [data-id="' + esc(idValue) + '"]';
-        return '';
-      }
-
-      function getReturnScrollOffset() {
-        const isMobile = window.innerWidth <= 768;
-        if (!isMobile) return 96;
-
-        const header = document.querySelector('.site-header');
-        const headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
-        const visualOffset = window.visualViewport ? Math.max(0, Math.round(window.visualViewport.offsetTop || 0)) : 0;
-
-        return Math.max(104, Math.min(138, headerHeight + visualOffset + 22));
-      }
-
-      function scrollToWorkCard(workId, workKey) {
-        if (!workId && !workKey) return false;
-
-        ensureWorkRenderedForReturn(workKey, workId);
-
-        const selector = getReturnCardSelector(workKey, workId);
-        const card = selector ? document.querySelector(selector) : null;
-        if (!card) return false;
-
-        if (window.__archiveProReturnTimers && Array.isArray(window.__archiveProReturnTimers)) {
-          window.__archiveProReturnTimers.forEach(function(timerId) { window.clearTimeout(timerId); });
-        }
-        window.__archiveProReturnTimers = [];
-
-        const getY = function() {
-          const offset = getReturnScrollOffset();
-          return Math.max(0, Math.round(card.getBoundingClientRect().top + window.pageYOffset - offset));
-        };
-
-        const scrollExact = function(behavior) {
-          window.scrollTo({ top: getY(), behavior: behavior || 'auto' });
-        };
-
-        requestAnimationFrame(function() {
-          requestAnimationFrame(function() {
-            scrollExact('auto');
-            window.__archiveProReturnTimers.push(window.setTimeout(function() { scrollExact('smooth'); }, 90));
-            window.__archiveProReturnTimers.push(window.setTimeout(function() { scrollExact('auto'); }, 360));
-          });
-        });
-
-        return true;
-      }
-
       function restoreArchiveScroll() {
-        const targetWorkId = closeReturnWorkId || currentViewerWorkId;
-        const targetWorkKey = closeReturnWorkKey || currentViewerWorkKey;
-        requestAnimationFrame(function() {
-          requestAnimationFrame(function() {
-            if (!scrollToWorkCard(targetWorkId, targetWorkKey)) {
-              window.scrollTo(0, archiveScrollY || 0);
-            }
-          });
-        });
+        window.setTimeout(function() {
+          window.scrollTo(0, archiveScrollY || 0);
+        }, 0);
       }
 
       function closeLightbox() {
         armCloseNavigationShield();
-        closeReturnWorkId = currentViewerWorkId || (state.lightboxItem && state.lightboxItem.id ? String(state.lightboxItem.id) : closeReturnWorkId);
-        closeReturnWorkKey = currentViewerWorkKey || (state.lightboxItem ? getWorkIdentityKey(state.lightboxItem) : closeReturnWorkKey);
         state.lightboxItem = null;
         resetViewerTransform();
         if (els.lightbox) {
@@ -6539,8 +5881,6 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 
       function closeViewer() {
         armCloseNavigationShield();
-        closeReturnWorkId = currentViewerWorkId || (state.lightboxItem && state.lightboxItem.id ? String(state.lightboxItem.id) : closeReturnWorkId);
-        closeReturnWorkKey = currentViewerWorkKey || (state.lightboxItem ? getWorkIdentityKey(state.lightboxItem) : closeReturnWorkKey);
         state.lightboxItem = null;
         resetViewerTransform();
 
@@ -6599,7 +5939,6 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         CURRENT_LIST = state.filtered;
         finalFilteredWorks = state.filtered;
         visibleCount = state.visibleCount;
-        if (!isViewerOpen()) viewerScopeWorks = [];
 
         renderAll();
       }
@@ -7009,12 +6348,9 @@ function normalizeImageUrl(url, kind, id, sectionId) {
             if (!card) return;
             const targetKey = safeText(card.dataset.key);
             const targetId = safeText(card.dataset.id);
-            const sourceList = getVisibleItems().filter(isSectionAllowedForRender);
-            const item = sourceList.find((work) => getWorkIdentityKey(work) === String(targetKey)) || state.all.find((work) => getWorkIdentityKey(work) === String(targetKey));
-            if (item) {
-              viewerScopeWorks = sourceList.slice();
-              openLightbox(item, true);
-            }
+            const sourceList = Array.isArray(state.filtered) && state.filtered.length ? state.filtered : state.all;
+            const item = sourceList.find((work) => String(work._key) === String(targetKey)) || state.all.find((work) => String(work._key) === String(targetKey)) || state.all.find((work) => String(work.id) === String(targetId));
+            if (item) openLightbox(item);
           });
 
           els.grid.addEventListener('keydown', (e) => {
@@ -7024,12 +6360,9 @@ function normalizeImageUrl(url, kind, id, sectionId) {
             e.preventDefault();
             const targetKey = safeText(card.dataset.key);
             const targetId = safeText(card.dataset.id);
-            const sourceList = getVisibleItems().filter(isSectionAllowedForRender);
-            const item = sourceList.find((work) => getWorkIdentityKey(work) === String(targetKey)) || state.all.find((work) => getWorkIdentityKey(work) === String(targetKey));
-            if (item) {
-              viewerScopeWorks = sourceList.slice();
-              openLightbox(item, true);
-            }
+            const sourceList = Array.isArray(state.filtered) && state.filtered.length ? state.filtered : state.all;
+            const item = sourceList.find((work) => String(work._key) === String(targetKey)) || state.all.find((work) => String(work._key) === String(targetKey)) || state.all.find((work) => String(work.id) === String(targetId));
+            if (item) openLightbox(item);
           });
         }
 
@@ -7102,205 +6435,102 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           if (e.target === els.lightbox) closeLightbox();
         });
 
+        els.lightbox.addEventListener('dblclick', (e) => {
+          if (!isViewerOpen()) return;
+          e.preventDefault();
+          viewerScale = viewerScale > 1 ? 1 : 2;
+          viewerX = 0;
+          viewerY = 0;
+          applyViewerTransform();
+        });
 
-
-
-
-        /* ARCHIVE PRO FINAL MOBILE VIEWER TOUCH ENGINE REBUILD ONLY
-           Single touch engine for the Viewer/Lightbox image area.
-           Card rendering, search/filter/sort/load-more, captions, data and layout are untouched. */
-        const viewerImgWrap = els.lightboxStage;
-        const viewerImg = els.lightboxImage;
-
-        let zoomScale = 1;
-        let zoomX = 0;
-        let zoomY = 0;
-        let startX = 0;
-        let startY = 0;
-        let lastX = 0;
-        let lastY = 0;
-        let startDistance = 0;
-        let startScale = 1;
-        let isPinching = false;
-        let isDragging = false;
-        let isSwiping = false;
-
-        function syncTouchZoomToViewerState() {
-          viewerScale = zoomScale;
-          viewerX = zoomX;
-          viewerY = zoomY;
-          viewerIsZooming = isPinching;
-          viewerIsDragging = isDragging;
-        }
-
-        function applyZoomTransform() {
-          if (!viewerImg) return;
-          syncTouchZoomToViewerState();
-          viewerImg.style.transform = `translate3d(${zoomX}px, ${zoomY}px, 0) scale(${zoomScale})`;
-          if (viewerImgWrap) {
-            viewerImgWrap.classList.toggle('is-zoomed', zoomScale > 1);
-            viewerImgWrap.classList.toggle('is-dragging', isDragging && zoomScale > 1);
-          }
-        }
-
-        function resetZoom() {
-          zoomScale = 1;
-          zoomX = 0;
-          zoomY = 0;
-          isPinching = false;
-          isDragging = false;
-          isSwiping = false;
-          startDistance = 0;
-          startScale = 1;
-          syncTouchZoomToViewerState();
-          applyZoomTransform();
-        }
-
-        window.__archiveProResetMobileViewerZoom = resetZoom;
-
-        function getDistance(t1, t2) {
-          const dx = t1.clientX - t2.clientX;
-          const dy = t1.clientY - t2.clientY;
-          return Math.hypot(dx, dy);
-        }
-
-        function clampZoomPosition() {
-          if (zoomScale <= 1) {
-            zoomScale = 1;
-            zoomX = 0;
-            zoomY = 0;
-            return;
-          }
-
-          const maxX = (viewerImgWrap.clientWidth * (zoomScale - 1)) / 2;
-          const maxY = (viewerImgWrap.clientHeight * (zoomScale - 1)) / 2;
-
-          zoomX = Math.max(-maxX, Math.min(maxX, zoomX));
-          zoomY = Math.max(-maxY, Math.min(maxY, zoomY));
-        }
-
-        function isViewerCaptionTarget(target) {
-          return !!(target && target.closest && target.closest('.viewer-caption,.lightbox-side'));
-        }
-
-        function onViewerTouchStart(e) {
-          if (!isViewerOpen() || !viewerImgWrap || !viewerImg) return;
-          if (isViewerCaptionTarget(e.target)) return;
+        els.lightbox.addEventListener('touchstart', (e) => {
+          if (!isViewerOpen()) return;
+          e.preventDefault();
 
           if (e.touches.length === 2) {
-            isPinching = true;
-            isDragging = false;
-            isSwiping = false;
-            startDistance = Math.max(1, getDistance(e.touches[0], e.touches[1]));
-            startScale = zoomScale;
-            e.preventDefault();
-            return;
-          }
-
-          if (e.touches.length === 1) {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            lastX = startX;
-            lastY = startY;
-
-            isDragging = zoomScale > 1;
-            isSwiping = zoomScale === 1;
-            isPinching = false;
-          }
-        }
-
-        function onViewerTouchMove(e) {
-          if (!isViewerOpen() || !viewerImgWrap || !viewerImg) return;
-          if (isViewerCaptionTarget(e.target)) return;
-
-          if (isPinching && e.touches.length === 2) {
-            const distance = Math.max(1, getDistance(e.touches[0], e.touches[1]));
-            zoomScale = Math.max(1, Math.min(4, startScale * (distance / Math.max(1, startDistance))));
-            clampZoomPosition();
-            applyZoomTransform();
-            e.preventDefault();
+            viewerIsZooming = true;
+            viewerIsDragging = false;
+            viewerInitialDistance = getViewerDistance(e.touches[0], e.touches[1]);
             return;
           }
 
           if (e.touches.length !== 1) return;
+          const touch = e.touches[0];
+          viewerStartX = touch.clientX;
+          viewerStartY = touch.clientY;
+          viewerLastX = touch.clientX;
+          viewerLastY = touch.clientY;
+          viewerStartTime = Date.now();
+          viewerIsDragging = true;
+          if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
+        }, { passive:false });
 
-          const x = e.touches[0].clientX;
-          const y = e.touches[0].clientY;
-          const dx = x - lastX;
-          const dy = y - lastY;
+        els.lightbox.addEventListener('touchmove', (e) => {
+          if (!isViewerOpen()) return;
+          e.preventDefault();
 
-          if (zoomScale > 1) {
-            zoomX += dx;
-            zoomY += dy;
-            clampZoomPosition();
-            lastX = x;
-            lastY = y;
-            isDragging = true;
-            isSwiping = false;
-            applyZoomTransform();
-            e.preventDefault();
+          if (viewerIsZooming && e.touches.length === 2) {
+            const newDistance = getViewerDistance(e.touches[0], e.touches[1]);
+            if (!viewerInitialDistance) viewerInitialDistance = newDistance;
+            const delta = newDistance / viewerInitialDistance;
+            viewerScale = Math.min(Math.max(1, viewerScale * delta), 4);
+            viewerInitialDistance = newDistance;
+            if (viewerScale === 1) { viewerX = 0; viewerY = 0; }
+            applyViewerTransform();
             return;
           }
 
-          if (zoomScale === 1 && isSwiping) {
-            const totalDx = x - startX;
-            const totalDy = y - startY;
-            lastX = x;
-            lastY = y;
+          if (!viewerIsDragging || e.touches.length !== 1) return;
 
-            if (Math.abs(totalDx) > Math.abs(totalDy) && Math.abs(totalDx) > 12) {
-              e.preventDefault();
-            }
+          const touch = e.touches[0];
+          const dx = touch.clientX - viewerLastX;
+          const dy = touch.clientY - viewerLastY;
+
+          if (viewerScale > 1) {
+            viewerX += dx;
+            viewerY += dy;
+            applyViewerTransform();
           }
-        }
 
-        function onViewerTouchEnd(e) {
-          if (!isViewerOpen()) {
-            resetZoom();
+          viewerLastX = touch.clientX;
+          viewerLastY = touch.clientY;
+        }, { passive:false });
+
+        els.lightbox.addEventListener('touchend', (e) => {
+          if (!isViewerOpen()) return;
+
+          if (viewerIsZooming) {
+            if (e.touches.length < 2) viewerIsZooming = false;
             return;
           }
 
-          if (isPinching && e.touches.length < 2) {
-            isPinching = false;
-            clampZoomPosition();
-            applyZoomTransform();
+          const changed = e.changedTouches && e.changedTouches[0];
+          const endX = changed ? changed.clientX : viewerLastX;
+          const endY = changed ? changed.clientY : viewerLastY;
+          const totalDx = endX - viewerStartX;
+          const totalDy = endY - viewerStartY;
+          const elapsed = Date.now() - viewerStartTime;
+
+          if (viewerScale === 1 && Math.abs(totalDx) > 60 && Math.abs(totalDx) > Math.abs(totalDy) * 1.25) {
+            if (totalDx > 0) prevViewer();
+            else nextViewer();
           }
 
-          if (e.touches.length === 1 && zoomScale > 1) {
-            lastX = e.touches[0].clientX;
-            lastY = e.touches[0].clientY;
-            isDragging = true;
-            isSwiping = false;
-            return;
+          const now = Date.now();
+          if (Math.abs(totalDx) < 12 && Math.abs(totalDy) < 12 && elapsed < 320 && now - viewerLastTap < 300) {
+            viewerScale = viewerScale > 1 ? 1 : 2;
+            viewerX = 0;
+            viewerY = 0;
+            applyViewerTransform();
+            viewerLastTap = 0;
+          } else {
+            viewerLastTap = now;
           }
 
-          if (e.touches.length === 0) {
-            if (isSwiping && zoomScale === 1) {
-              const dx = lastX - startX;
-              const dy = lastY - startY;
-
-              if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-                if (dx < 0 && zoomScale === 1) nextViewer();
-                else if (dx > 0 && zoomScale === 1) prevViewer();
-              }
-            }
-
-            isDragging = false;
-            isSwiping = false;
-            isPinching = false;
-            startDistance = 0;
-            startScale = 1;
-            syncTouchZoomToViewerState();
-            if (viewerImgWrap) viewerImgWrap.classList.remove('is-dragging');
-          }
-        }
-
-        if (viewerImgWrap) {
-          viewerImgWrap.addEventListener('touchstart', onViewerTouchStart, { passive:false });
-          viewerImgWrap.addEventListener('touchmove', onViewerTouchMove, { passive:false });
-          viewerImgWrap.addEventListener('touchend', onViewerTouchEnd, { passive:false });
-          viewerImgWrap.addEventListener('touchcancel', onViewerTouchEnd, { passive:false });
-        }
+          viewerIsDragging = false;
+          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
+        }, { passive:false });
 
         els.lightbox.addEventListener('mousedown', (e) => {
           if (!isViewerOpen() || viewerScale <= 1 || e.button !== 0) return;
@@ -7603,11 +6833,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/service-worker.js?v=11-lab-route-fix-20260520', { updateViaCache: 'none' }).then(function(registration){
+      navigator.serviceWorker.register('/service-worker.js?v=6', { updateViaCache: 'none' }).then(function(registration){
         try {
           registration.update();
           if (navigator.serviceWorker.controller) {
-            navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_ARCHIVE_PRO_CACHES' });
             navigator.serviceWorker.controller.postMessage({ type: 'CACHE_NON_ORIGINS' });
           }
         } catch (e) {}
@@ -7615,238 +6844,6 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       }).catch(function () {});
     });
   }
-</script>
-
-
-
-<!-- ARCHIVE PRO FINAL MOBILE VIEWER TOUCH ENGINE CSS — VIEWER ONLY -->
-<style id="archive-pro-final-mobile-viewer-touch-engine-css">
-  .lightbox.open,
-  .lightbox.active{
-    touch-action:none !important;
-    overscroll-behavior:contain !important;
-  }
-
-  .lightbox.open .lightbox-stage,
-  .lightbox.active .lightbox-stage{
-    touch-action:none !important;
-    overscroll-behavior:contain !important;
-    overflow:hidden !important;
-    -webkit-tap-highlight-color:transparent !important;
-  }
-
-  .lightbox.open #lightboxImage,
-  .lightbox.active #lightboxImage{
-    transform-origin:center center !important;
-    will-change:transform !important;
-    user-select:none !important;
-    -webkit-user-select:none !important;
-    -webkit-user-drag:none !important;
-    touch-action:none !important;
-  }
-
-  .lightbox.open .lightbox-side,
-  .lightbox.active .lightbox-side,
-  .lightbox.open .viewer-caption,
-  .lightbox.active .viewer-caption{
-    touch-action:pan-y !important;
-    overflow-y:auto !important;
-    -webkit-overflow-scrolling:touch !important;
-  }
-</style>
-
-<!-- ARCHIVE PRO VIEWER SCOPE IDENTITY LOCK APPLIED 2026-05-20 -->
-
-<script id="archive-pro-single-viewer-engine-reset">
-(function(){
-  'use strict';
-
-  let viewerEngineBound = false;
-  let activeViewer = null;
-  let zoomScale = 1;
-  let startX = 0;
-  let startY = 0;
-  let currentX = 0;
-  let currentY = 0;
-  let pinchStartDistance = 0;
-  let imageTranslateX = 0;
-  let imageTranslateY = 0;
-  let isDragging = false;
-  let isPinching = false;
-
-  function removeExistingViewer(){
-    document.querySelectorAll('.lightbox, .viewer, #lightbox, #viewer').forEach(function(v){
-      if(v && v.parentNode){
-        v.parentNode.removeChild(v);
-      }
-    });
-    document.body.classList.remove('viewer-open');
-    viewerEngineBound = false;
-    activeViewer = null;
-  }
-
-  function resetZoom(img){
-    zoomScale = 1;
-    imageTranslateX = 0;
-    imageTranslateY = 0;
-    if(img){
-      img.style.transform = 'translate3d(0,0,0) scale(1)';
-    }
-  }
-
-  function getDistance(t1, t2){
-    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-  }
-
-  function updateTransform(img){
-    img.style.transform =
-      'translate3d(' + imageTranslateX + 'px,' + imageTranslateY + 'px,0) scale(' + zoomScale + ')';
-  }
-
-  function bindViewerTouchEngine(viewer, wrap, img){
-    if(viewerEngineBound) return;
-    viewerEngineBound = true;
-
-    wrap.addEventListener('gesturestart', function(e){
-      e.preventDefault();
-    }, { passive:false });
-
-    wrap.addEventListener('gesturechange', function(e){
-      e.preventDefault();
-    }, { passive:false });
-
-    wrap.addEventListener('touchstart', function(e){
-      if(e.target.closest('.lightbox-side, .viewer-caption, .lightbox-close')) return;
-
-      if(e.touches.length === 2){
-        isPinching = true;
-        pinchStartDistance = getDistance(e.touches[0], e.touches[1]);
-        return;
-      }
-
-      if(e.touches.length !== 1) return;
-
-      isDragging = true;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      currentX = startX;
-      currentY = startY;
-    }, { passive:false });
-
-    wrap.addEventListener('touchmove', function(e){
-      if(e.target.closest('.lightbox-side, .viewer-caption')) return;
-
-      if(e.touches.length === 2){
-        e.preventDefault();
-        isPinching = true;
-
-        const distance = getDistance(e.touches[0], e.touches[1]);
-
-        if(pinchStartDistance > 0){
-          const scaleDelta = distance / pinchStartDistance;
-          zoomScale = Math.max(1, Math.min(5, zoomScale * scaleDelta));
-          updateTransform(img);
-        }
-
-        pinchStartDistance = distance;
-        return;
-      }
-
-      if(!isDragging || e.touches.length !== 1) return;
-
-      const touch = e.touches[0];
-      const dx = touch.clientX - currentX;
-      const dy = touch.clientY - currentY;
-
-      currentX = touch.clientX;
-      currentY = touch.clientY;
-
-      if(zoomScale > 1){
-        e.preventDefault();
-        imageTranslateX += dx;
-        imageTranslateY += dy;
-        updateTransform(img);
-      }
-    }, { passive:false });
-
-    wrap.addEventListener('touchend', function(e){
-      if(isPinching){
-        isPinching = false;
-        pinchStartDistance = 0;
-        return;
-      }
-
-      if(zoomScale > 1){
-        isDragging = false;
-        return;
-      }
-
-      const dx = currentX - startX;
-
-      if(Math.abs(dx) > 48){
-        if(dx < 0){
-          const nextBtn = viewer.querySelector('.lightbox-next');
-          if(nextBtn) nextBtn.click();
-        } else {
-          const prevBtn = viewer.querySelector('.lightbox-prev');
-          if(prevBtn) prevBtn.click();
-        }
-      }
-
-      isDragging = false;
-    }, { passive:false });
-
-    const closeBtn = viewer.querySelector('.lightbox-close');
-    if(closeBtn){
-      closeBtn.addEventListener('click', function(){
-        removeExistingViewer();
-      });
-    }
-
-    viewer.addEventListener('viewer:imageChanged', function(){
-      resetZoom(img);
-    });
-  }
-
-  const originalOpen = window.openLightbox || window.openViewer || null;
-
-  function patchOpenFunction(fnName){
-    const original = window[fnName];
-    if(typeof original !== 'function') return;
-
-    window[fnName] = function(){
-      removeExistingViewer();
-
-      const result = original.apply(this, arguments);
-
-      requestAnimationFrame(function(){
-        const viewer =
-          document.querySelector('.lightbox.open, .lightbox.active, .viewer.open, #lightbox.open');
-
-        if(!viewer) return;
-
-        activeViewer = viewer;
-
-        const wrap =
-          viewer.querySelector('.lightbox-stage, .viewer-image-wrap, .viewer-media');
-
-        const img =
-          viewer.querySelector('img');
-
-        if(!wrap || !img) return;
-
-        resetZoom(img);
-        bindViewerTouchEngine(viewer, wrap, img);
-      });
-
-      return result;
-    };
-  }
-
-  patchOpenFunction('openLightbox');
-  patchOpenFunction('openViewer');
-
-})();
 </script>
 
 </body>

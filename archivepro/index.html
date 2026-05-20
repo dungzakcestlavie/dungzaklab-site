@@ -4195,6 +4195,32 @@
     }
 </style>
 
+
+<style>
+/* ARCHIVE PRO FINAL MICRO FIX — KR/EN MOBILE VIEWER CAPTION SAFE SCROLL ONLY */
+@media (max-width: 768px) {
+  .viewer-caption,
+  .lightbox-caption,
+  .detail-panel,
+  .lightbox-side {
+    max-height: 38vh !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 128px) !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .viewer-content,
+  .lightbox-content {
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+}
+</style>
+
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>

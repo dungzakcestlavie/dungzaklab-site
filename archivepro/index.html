@@ -4713,8 +4713,8 @@
       let worksLoadPromise = null;
       let archiveScrollY = 0;
       let currentViewerWorkId = null;
-      let currentViewerWorkKey = null;
       let closeReturnWorkId = null;
+      let currentViewerWorkKey = null;
       let closeReturnWorkKey = null;
       let viewerScopeWorks = [];
       let currentViewerIndex = 0;
@@ -4771,31 +4771,51 @@
         }) || null;
       }
 
-      function getCurrentFilteredWorks() {
-        /* VIEWER SCOPE LOCK:
-           The viewer must use only the exact current filter/search/sort result array.
-           Never fall back to state.all while a section/filter/search result is active,
-           because that mixes sections during prev/next/swipe/keyboard navigation. */
-        const list = Array.isArray(state.filtered) ? state.filtered : [];
-        return list.filter(isSectionAllowedForRender);
-      }
-
-      function getWorkKey(work) {
+      function getWorkIdentityKey(work) {
         if (!work) return '';
-        return String(work._key || (work._index + '::' + work.section_id + '::' + work.id));
+        return String(work._key || ((work._index !== undefined ? work._index : '') + '::' + work.section_id + '::' + work.id));
       }
 
-      function prepareViewerScopeForWork(work) {
-        const currentFilteredWorks = getCurrentFilteredWorks();
-        const targetKey = getWorkKey(work);
-        const targetId = String((work && work.id) || '');
+      function isSameWorkIdentity(a, b) {
+        if (!a || !b) return false;
+        const ak = getWorkIdentityKey(a);
+        const bk = getWorkIdentityKey(b);
+        if (ak && bk && ak === bk) return true;
+        return String(a.id) === String(b.id) && String(a.section_id) === String(b.section_id) && String(a._index) === String(b._index);
+      }
 
-        viewerScopeWorks = currentFilteredWorks.slice();
+      function getCurrentFilteredWorks() {
+        const list = Array.isArray(state.filtered) ? state.filtered : [];
+        const source = list.length ? list : (Array.isArray(state.all) ? state.all : []);
+        return source.filter(function(item) {
+          if (!isSectionAllowedForRender(item)) return false;
+          if (state.section !== 'all') return Number(item.section_id) === Number(state.section);
+          return true;
+        });
+      }
 
-        if (!viewerScopeWorks.length && work) viewerScopeWorks = [work];
+      function prepareViewerScopeForWork(work, preserveExistingScope) {
+        if (!work) return null;
+
+        if (!preserveExistingScope || !Array.isArray(viewerScopeWorks) || !viewerScopeWorks.length) {
+          viewerScopeWorks = getCurrentFilteredWorks().slice();
+        }
+
+        if (state.section !== 'all') {
+          viewerScopeWorks = viewerScopeWorks.filter(function(item) {
+            return item && Number(item.section_id) === Number(state.section) && !isExcludedFromSectionView(item, state.section);
+          });
+        }
+
+        if (!viewerScopeWorks.some(function(item) { return isSameWorkIdentity(item, work); })) {
+          const exact = (state.all || []).find(function(item) { return isSameWorkIdentity(item, work); });
+          if (exact && isSectionAllowedForRender(exact)) viewerScopeWorks.push(exact);
+        }
+
+        if (!viewerScopeWorks.length) viewerScopeWorks = [work];
 
         currentViewerIndex = viewerScopeWorks.findIndex(function(item) {
-          return item && (getWorkKey(item) === targetKey || (targetKey === '' && String(item.id) === targetId));
+          return isSameWorkIdentity(item, work);
         });
         if (currentViewerIndex < 0) currentViewerIndex = 0;
 
@@ -4818,7 +4838,7 @@
       function getCurrentViewerIndex() {
         if (!state.lightboxItem || !viewerScopeWorks.length) return -1;
         const index = viewerScopeWorks.findIndex(function(item) {
-          return item === state.lightboxItem || (item && state.lightboxItem && getWorkKey(item) === getWorkKey(state.lightboxItem));
+          return isSameWorkIdentity(item, state.lightboxItem);
         });
         return index >= 0 ? index : currentViewerIndex;
       }
@@ -4829,7 +4849,7 @@
         if (current < 0) return;
         const nextIndex = (current + offset + viewerScopeWorks.length) % viewerScopeWorks.length;
         currentViewerIndex = nextIndex;
-        openLightbox(viewerScopeWorks[nextIndex]);
+        openLightbox(viewerScopeWorks[nextIndex], true);
       }
 
       function nextViewer() { openViewerByOffset(1); }
@@ -5956,14 +5976,15 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         });
       }
 
-      function openLightbox(item) {
+      function openLightbox(item, preserveExistingScope = false) {
         archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-        item = prepareViewerScopeForWork(item);
+        item = prepareViewerScopeForWork(item, preserveExistingScope);
+        if (!item) return;
         state.lightboxItem = item;
         if (item && item.id) {
           currentViewerWorkId = String(item.id);
-          currentViewerWorkKey = getWorkKey(item);
           closeReturnWorkId = String(item.id);
+          currentViewerWorkKey = getWorkIdentityKey(item);
           closeReturnWorkKey = currentViewerWorkKey;
         }
         resetViewerTransform();
@@ -6058,12 +6079,11 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         }, 700);
       }
 
-      function ensureWorkRenderedForReturn(workId, workKey) {
-        if (!Array.isArray(state.filtered) || !state.filtered.length) return;
-        const targetKey = String(workKey || '');
-        const targetId = String(workId || '');
-        const index = state.filtered.findIndex(function(work) {
-          return work && ((targetKey && getWorkKey(work) === targetKey) || (!targetKey && String(work.id) === targetId));
+      function ensureWorkRenderedForReturn(workKey, workId) {
+        const source = Array.isArray(state.filtered) && state.filtered.length ? state.filtered : [];
+        if (!source.length) return;
+        const index = source.findIndex(function(work) {
+          return (workKey && getWorkIdentityKey(work) === String(workKey)) || (!workKey && workId && String(work.id) === String(workId));
         });
         if (index < 0) return;
         if (index >= state.visibleCount) {
@@ -6073,14 +6093,17 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         }
       }
 
-      function getReturnCardSelector(workId) {
-        const value = String(workId || '');
-        if (!value) return '';
-        if (window.CSS && typeof window.CSS.escape === 'function') {
-          return '[data-work-id="' + window.CSS.escape(value) + '"], [data-id="' + window.CSS.escape(value) + '"]';
-        }
-        const fallback = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-        return '[data-work-id="' + fallback + '"], [data-id="' + fallback + '"]';
+      function getReturnCardSelector(workKey, workId) {
+        const keyValue = String(workKey || '');
+        const idValue = String(workId || '');
+        const esc = function(value) {
+          return window.CSS && typeof window.CSS.escape === 'function'
+            ? window.CSS.escape(value)
+            : String(value).replace(/"/g, '\"');
+        };
+        if (keyValue) return '[data-key="' + esc(keyValue) + '"]';
+        if (idValue) return '[data-work-id="' + esc(idValue) + '"], [data-id="' + esc(idValue) + '"]';
+        return '';
       }
 
       function getReturnScrollOffset() {
@@ -6097,9 +6120,9 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       function scrollToWorkCard(workId, workKey) {
         if (!workId && !workKey) return false;
 
-        ensureWorkRenderedForReturn(workId, workKey);
+        ensureWorkRenderedForReturn(workKey, workId);
 
-        const selector = getReturnCardSelector(workId, workKey);
+        const selector = getReturnCardSelector(workKey, workId);
         const card = selector ? document.querySelector(selector) : null;
         if (!card) return false;
 
@@ -6143,7 +6166,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       function closeLightbox() {
         armCloseNavigationShield();
         closeReturnWorkId = currentViewerWorkId || (state.lightboxItem && state.lightboxItem.id ? String(state.lightboxItem.id) : closeReturnWorkId);
-        closeReturnWorkKey = currentViewerWorkKey || (state.lightboxItem ? getWorkKey(state.lightboxItem) : closeReturnWorkKey);
+        closeReturnWorkKey = currentViewerWorkKey || (state.lightboxItem ? getWorkIdentityKey(state.lightboxItem) : closeReturnWorkKey);
         state.lightboxItem = null;
         resetViewerTransform();
         if (els.lightbox) {
@@ -6162,7 +6185,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       function closeViewer() {
         armCloseNavigationShield();
         closeReturnWorkId = currentViewerWorkId || (state.lightboxItem && state.lightboxItem.id ? String(state.lightboxItem.id) : closeReturnWorkId);
-        closeReturnWorkKey = currentViewerWorkKey || (state.lightboxItem ? getWorkKey(state.lightboxItem) : closeReturnWorkKey);
+        closeReturnWorkKey = currentViewerWorkKey || (state.lightboxItem ? getWorkIdentityKey(state.lightboxItem) : closeReturnWorkKey);
         state.lightboxItem = null;
         resetViewerTransform();
 
@@ -6221,6 +6244,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         CURRENT_LIST = state.filtered;
         finalFilteredWorks = state.filtered;
         visibleCount = state.visibleCount;
+        if (!isViewerOpen()) viewerScopeWorks = [];
 
         renderAll();
       }
@@ -6630,11 +6654,12 @@ function normalizeImageUrl(url, kind, id, sectionId) {
             if (!card) return;
             const targetKey = safeText(card.dataset.key);
             const targetId = safeText(card.dataset.id);
-            const renderIndex = Number(card.dataset.renderIndex);
-            const visibleItems = getVisibleItems();
-            const sourceList = Array.isArray(state.filtered) ? state.filtered : [];
-            const item = (Number.isFinite(renderIndex) ? visibleItems[renderIndex] : null) || sourceList.find((work) => getWorkKey(work) === targetKey) || sourceList.find((work) => String(work.id) === String(targetId));
-            if (item) openLightbox(item);
+            const sourceList = getCurrentFilteredWorks();
+            const item = sourceList.find((work) => getWorkIdentityKey(work) === String(targetKey)) || state.all.find((work) => getWorkIdentityKey(work) === String(targetKey));
+            if (item) {
+              viewerScopeWorks = sourceList.slice();
+              openLightbox(item, true);
+            }
           });
 
           els.grid.addEventListener('keydown', (e) => {
@@ -6644,11 +6669,12 @@ function normalizeImageUrl(url, kind, id, sectionId) {
             e.preventDefault();
             const targetKey = safeText(card.dataset.key);
             const targetId = safeText(card.dataset.id);
-            const renderIndex = Number(card.dataset.renderIndex);
-            const visibleItems = getVisibleItems();
-            const sourceList = Array.isArray(state.filtered) ? state.filtered : [];
-            const item = (Number.isFinite(renderIndex) ? visibleItems[renderIndex] : null) || sourceList.find((work) => getWorkKey(work) === targetKey) || sourceList.find((work) => String(work.id) === String(targetId));
-            if (item) openLightbox(item);
+            const sourceList = getCurrentFilteredWorks();
+            const item = sourceList.find((work) => getWorkIdentityKey(work) === String(targetKey)) || state.all.find((work) => getWorkIdentityKey(work) === String(targetKey));
+            if (item) {
+              viewerScopeWorks = sourceList.slice();
+              openLightbox(item, true);
+            }
           });
         }
 
@@ -7132,5 +7158,6 @@ function normalizeImageUrl(url, kind, id, sectionId) {
   }
 </script>
 
+<!-- ARCHIVE PRO VIEWER SCOPE IDENTITY LOCK APPLIED 2026-05-20 -->
 </body>
 </html>

@@ -4002,29 +4002,29 @@
 
 
 
-<style id="archive-pro-native-swipe-pinch-final-css">
-/* ARCHIVE PRO NATIVE PINCH + SIMPLE SWIPE FINAL FIX — Viewer only */
+
+<style id="archive-pro-pointer-pinch-swipe-final-css">
+/* ARCHIVE PRO MOBILE VIEWER FINAL FIX — pointer pinch + swipe stability only */
 body.viewer-open{
   overflow:hidden !important;
-  touch-action:auto !important;
   overscroll-behavior:contain !important;
+  touch-action:pan-y !important;
 }
 
 .viewer,
 .lightbox,
 #viewer,
 #lightbox{
-  touch-action:auto !important;
   overscroll-behavior:contain !important;
+  touch-action:pan-y !important;
 }
 
 .viewer-media,
 .lightbox-media,
 .lightbox-stage{
-  overflow:auto !important;
-  -webkit-overflow-scrolling:touch !important;
-  touch-action:auto !important;
   overscroll-behavior:contain !important;
+  touch-action:none !important;
+  overflow:hidden !important;
 }
 
 .viewer-image,
@@ -4033,66 +4033,39 @@ body.viewer-open{
 .lightbox img,
 .lightbox-stage img,
 #lightboxImage{
-  touch-action:auto !important;
+  touch-action:none !important;
   user-select:none !important;
   -webkit-user-select:none !important;
   -webkit-user-drag:none !important;
-  transform:none !important;
-  transition:none !important;
-  will-change:auto !important;
+  transform-origin:center center !important;
+  will-change:transform !important;
+  backface-visibility:hidden !important;
   object-fit:contain !important;
   pointer-events:auto !important;
-}
-
-#lbSection,
-#lbKeyImage,
-#lbImagePath,
-#lbKeyZoom,
-#lbZoomPath,
-#lbOpenFull,
-#lbOpenImage,
-#lbOpenZoom,
-.lb-actions{
-  display:none !important;
-}
-
-.lb-row:has(#lbImagePath),
-.lb-row:has(#lbZoomPath){
-  display:none !important;
+  transition:none !important;
 }
 
 @media (max-width:768px){
-  .lightbox.open,
-  .lightbox.active,
-  .viewer.active{
-    display:block !important;
-  }
-
   .viewer,
   .lightbox,
   #viewer,
   #lightbox{
-    position:fixed !important;
-    inset:0 !important;
     height:100dvh !important;
     min-height:100dvh !important;
-    overflow:auto !important;
-    -webkit-overflow-scrolling:touch !important;
-    touch-action:auto !important;
+    overflow:hidden !important;
     overscroll-behavior:contain !important;
+    touch-action:pan-y !important;
   }
 
   .viewer-inner,
   .lightbox-inner{
     min-height:100dvh !important;
-    height:auto !important;
+    height:100dvh !important;
     display:flex !important;
     flex-direction:column !important;
     grid-template-columns:none !important;
     box-sizing:border-box !important;
-    padding-top:calc(env(safe-area-inset-top, 0px) + 82px) !important;
-    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 60px) !important;
-    overflow:visible !important;
+    overflow:hidden !important;
   }
 
   .viewer-close,
@@ -4101,8 +4074,8 @@ body.viewer-open{
   #viewerCloseBtn,
   #lightboxClose{
     position:fixed !important;
-    top:calc(env(safe-area-inset-top, 0px) + 18px) !important;
-    right:18px !important;
+    top:calc(env(safe-area-inset-top, 0px) + 16px) !important;
+    right:16px !important;
     z-index:99999 !important;
     pointer-events:auto !important;
     touch-action:manipulation !important;
@@ -4112,16 +4085,16 @@ body.viewer-open{
   .lightbox-media,
   .lightbox-stage{
     width:100% !important;
-    min-height:54dvh !important;
-    height:auto !important;
+    flex:1 1 auto !important;
+    min-height:0 !important;
     display:flex !important;
     align-items:center !important;
     justify-content:center !important;
     box-sizing:border-box !important;
-    padding:0 0 36px 0 !important;
-    overflow:auto !important;
-    -webkit-overflow-scrolling:touch !important;
-    touch-action:auto !important;
+    padding:74px 12px 18px !important;
+    overflow:hidden !important;
+    overscroll-behavior:contain !important;
+    touch-action:none !important;
   }
 
   .viewer-image,
@@ -4130,37 +4103,15 @@ body.viewer-open{
   .lightbox img,
   .lightbox-stage img,
   #lightboxImage{
-    display:block !important;
     width:auto !important;
     height:auto !important;
-    max-width:96vw !important;
-    max-height:82dvh !important;
+    max-width:94vw !important;
+    max-height:64dvh !important;
     object-fit:contain !important;
+    display:block !important;
     margin:0 auto !important;
-    transform:none !important;
-    touch-action:auto !important;
-  }
-
-  .viewer-caption,
-  .lightbox-caption,
-  .lightbox-side,
-  .detail-panel{
-    width:100% !important;
-    height:auto !important;
-    max-height:none !important;
-    overflow:visible !important;
-    box-sizing:border-box !important;
-    margin-top:24px !important;
-    padding:22px 24px calc(env(safe-area-inset-bottom, 0px) + 54px) 24px !important;
-    border-left:0 !important;
-    border-top:1px solid rgba(255,255,255,.06) !important;
-  }
-
-  .lightbox-nav,
-  .viewer-nav,
-  .viewer-prev,
-  .viewer-next{
-    display:none !important;
+    transform:translate3d(0,0,0) scale(1);
+    touch-action:none !important;
   }
 }
 </style>
@@ -4797,8 +4748,7 @@ body.viewer-open{
       let viewerIsDragging = false;
       let viewerIsZooming = false;
       let viewerInitialDistance = 0;
-      let viewerLastTap = 0;
-      let viewerMouseDragging = false;
+let viewerMouseDragging = false;
 
       function isViewerOpen() {
         return els.lightbox && els.lightbox.classList.contains('open') && document.body.classList.contains('viewer-open');
@@ -6863,78 +6813,309 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 
 
 
-        const viewerTouchTarget = els.lightboxStage || els.lightbox;
-        let nativeSwipeStartX = 0;
-        let nativeSwipeStartY = 0;
-        let nativeSwipeActive = false;
-        let nativeSwipeLocked = false;
 
-        function nativeResetViewerView() {
+        const viewerGestureTarget = els.lightboxStage || els.lightbox;
+        const viewerPointers = new Map();
+
+        let pointerScale = 1;
+        let pointerX = 0;
+        let pointerY = 0;
+        let pointerStartScale = 1;
+        let pointerStartDistance = 0;
+        let pointerStartMidX = 0;
+        let pointerStartMidY = 0;
+        let pointerStartX = 0;
+        let pointerStartY = 0;
+        let pointerLastX = 0;
+        let pointerLastY = 0;
+        let pointerMode = 'idle';
+        let pointerSwipeLocked = false;
+        let pointerRaf = 0;
+
+        function clampPointerValue(value, min, max) {
+          return Math.min(max, Math.max(min, value));
+        }
+
+        function getPointerDistance(a, b) {
+          const dx = a.clientX - b.clientX;
+          const dy = a.clientY - b.clientY;
+          return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function getPointerMidpoint(a, b) {
+          return {
+            x: (a.clientX + b.clientX) / 2,
+            y: (a.clientY + b.clientY) / 2
+          };
+        }
+
+        function getViewerImageBounds() {
+          if (!els.lightboxImage || !els.lightboxStage) {
+            return { maxX: 0, maxY: 0 };
+          }
+
+          const stageRect = els.lightboxStage.getBoundingClientRect();
+          const rawWidth = els.lightboxImage.offsetWidth || els.lightboxImage.naturalWidth || stageRect.width;
+          const rawHeight = els.lightboxImage.offsetHeight || els.lightboxImage.naturalHeight || stageRect.height;
+          const scaledW = rawWidth * pointerScale;
+          const scaledH = rawHeight * pointerScale;
+
+          return {
+            maxX: Math.max(0, (scaledW - stageRect.width) / 2 + 80),
+            maxY: Math.max(0, (scaledH - stageRect.height) / 2 + 80)
+          };
+        }
+
+        function clampPointerTranslate() {
+          if (pointerScale <= 1.001) {
+            pointerX = 0;
+            pointerY = 0;
+            return;
+          }
+
+          const bounds = getViewerImageBounds();
+          pointerX = clampPointerValue(pointerX, -bounds.maxX, bounds.maxX);
+          pointerY = clampPointerValue(pointerY, -bounds.maxY, bounds.maxY);
+        }
+
+        function applyPointerTransform() {
+          if (!els.lightboxImage) return;
+
+          clampPointerTranslate();
+
+          if (pointerRaf) cancelAnimationFrame(pointerRaf);
+          pointerRaf = requestAnimationFrame(() => {
+            els.lightboxImage.style.transform =
+              `translate3d(${pointerX}px, ${pointerY}px, 0) scale(${pointerScale})`;
+
+            if (els.lightboxStage) {
+              els.lightboxStage.classList.toggle('is-zoomed', pointerScale > 1.001);
+            }
+
+            viewerScale = pointerScale;
+            viewerX = pointerX;
+            viewerY = pointerY;
+          });
+        }
+
+        function resetPointerViewerZoom() {
+          pointerScale = 1;
+          pointerX = 0;
+          pointerY = 0;
+          pointerStartScale = 1;
+          pointerStartDistance = 0;
+          pointerMode = 'idle';
+          pointerSwipeLocked = false;
+          viewerPointers.clear();
+
           viewerScale = 1;
           viewerX = 0;
           viewerY = 0;
           viewerIsZooming = false;
           viewerIsDragging = false;
+
           if (els.lightboxStage) {
-            els.lightboxStage.scrollLeft = 0;
-            els.lightboxStage.scrollTop = 0;
-            els.lightboxStage.classList.remove('is-dragging', 'is-zoomed');
+            els.lightboxStage.classList.remove('is-zoomed', 'is-dragging');
           }
+
           if (els.lightboxImage) {
-            els.lightboxImage.style.transform = 'none';
+            els.lightboxImage.style.transition = 'none';
+            els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
           }
         }
 
-        function nativeOnViewerTouchStart(e) {
+        function blockViewerNativeGesture(event) {
           if (!isViewerOpen()) return;
+          event.preventDefault();
+        }
 
-          if (e.touches.length !== 1) {
-            nativeSwipeActive = false;
-            nativeSwipeLocked = true;
+        document.addEventListener('gesturestart', blockViewerNativeGesture, { passive: false });
+        document.addEventListener('gesturechange', blockViewerNativeGesture, { passive: false });
+        document.addEventListener('gestureend', blockViewerNativeGesture, { passive: false });
+
+        function syncPointerFromEvent(event) {
+          viewerPointers.set(event.pointerId, {
+            pointerId: event.pointerId,
+            clientX: event.clientX,
+            clientY: event.clientY
+          });
+        }
+
+        function removePointer(event) {
+          viewerPointers.delete(event.pointerId);
+        }
+
+        function activePointerList() {
+          return Array.from(viewerPointers.values());
+        }
+
+        function onViewerPointerDown(event) {
+          if (!isViewerOpen() || !els.lightboxImage) return;
+          if (event.pointerType === 'mouse') return;
+
+          syncPointerFromEvent(event);
+
+          try {
+            viewerGestureTarget.setPointerCapture(event.pointerId);
+          } catch (e) {}
+
+          const points = activePointerList();
+
+          if (points.length >= 2) {
+            const a = points[0];
+            const b = points[1];
+            const mid = getPointerMidpoint(a, b);
+
+            pointerMode = 'pinch';
+            pointerSwipeLocked = true;
+            viewerIsZooming = true;
+            viewerIsDragging = false;
+
+            pointerStartDistance = Math.max(1, getPointerDistance(a, b));
+            pointerStartScale = pointerScale;
+            pointerStartMidX = mid.x;
+            pointerStartMidY = mid.y;
+
+            event.preventDefault();
             return;
           }
 
-          const touch = e.touches[0];
-          nativeSwipeStartX = touch.clientX;
-          nativeSwipeStartY = touch.clientY;
-          nativeSwipeActive = true;
-          nativeSwipeLocked = false;
+          if (points.length === 1) {
+            pointerStartX = event.clientX;
+            pointerStartY = event.clientY;
+            pointerLastX = event.clientX;
+            pointerLastY = event.clientY;
+            pointerSwipeLocked = false;
+
+            if (pointerScale > 1.001) {
+              pointerMode = 'pan';
+              viewerIsDragging = true;
+              viewerIsZooming = false;
+              if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
+              event.preventDefault();
+            } else {
+              pointerMode = 'swipe';
+              viewerIsDragging = false;
+              viewerIsZooming = false;
+            }
+          }
         }
 
-        function nativeOnViewerTouchMove(e) {
-          if (!isViewerOpen()) return;
+        function onViewerPointerMove(event) {
+          if (!isViewerOpen() || !els.lightboxImage) return;
+          if (!viewerPointers.has(event.pointerId)) return;
 
-          if (e.touches.length !== 1) {
-            nativeSwipeActive = false;
-            nativeSwipeLocked = true;
+          syncPointerFromEvent(event);
+          const points = activePointerList();
+
+          if (pointerMode === 'pinch' && points.length >= 2) {
+            const a = points[0];
+            const b = points[1];
+            const newDistance = Math.max(1, getPointerDistance(a, b));
+            const mid = getPointerMidpoint(a, b);
+            const nextScale = clampPointerValue(pointerStartScale * (newDistance / pointerStartDistance), 1, 4);
+
+            const scaleRatio = nextScale / Math.max(pointerScale, 0.001);
+            pointerX = (pointerX + (mid.x - pointerStartMidX) * 0.25) * scaleRatio;
+            pointerY = (pointerY + (mid.y - pointerStartMidY) * 0.25) * scaleRatio;
+            pointerScale = nextScale;
+
+            if (pointerScale <= 1.001) {
+              pointerScale = 1;
+              pointerX = 0;
+              pointerY = 0;
+            }
+
+            event.preventDefault();
+            applyPointerTransform();
             return;
           }
 
-          if (!nativeSwipeActive || nativeSwipeLocked) return;
+          if (pointerMode === 'pan' && pointerScale > 1.001 && points.length === 1) {
+            pointerX += event.clientX - pointerLastX;
+            pointerY += event.clientY - pointerLastY;
+            pointerLastX = event.clientX;
+            pointerLastY = event.clientY;
 
-          const touch = e.touches[0];
-          const dx = touch.clientX - nativeSwipeStartX;
-          const dy = touch.clientY - nativeSwipeStartY;
+            event.preventDefault();
+            applyPointerTransform();
+            return;
+          }
 
-          if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.35) {
-            nativeSwipeLocked = true;
-            nativeSwipeActive = false;
+          if (pointerMode === 'swipe' && pointerScale === 1 && points.length === 1 && !pointerSwipeLocked) {
+            const dx = event.clientX - pointerStartX;
+            const dy = event.clientY - pointerStartY;
 
-            if (dx < 0) nextViewer();
-            else prevViewer();
+            if (Math.abs(dx) > 72 && Math.abs(dx) > Math.abs(dy) * 1.35) {
+              pointerSwipeLocked = true;
+              pointerMode = 'idle';
+
+              if (dx < 0) nextViewer();
+              else prevViewer();
+            }
           }
         }
 
-        function nativeOnViewerTouchEnd(e) {
+        function onViewerPointerUp(event) {
           if (!isViewerOpen()) return;
-          nativeSwipeActive = false;
-          nativeSwipeLocked = false;
+
+          removePointer(event);
+
+          const points = activePointerList();
+
+          if (points.length >= 2) {
+            pointerMode = 'pinch';
+            pointerStartDistance = Math.max(1, getPointerDistance(points[0], points[1]));
+            pointerStartScale = pointerScale;
+            return;
+          }
+
+          if (points.length === 1 && pointerScale > 1.001) {
+            pointerMode = 'pan';
+            pointerLastX = points[0].clientX;
+            pointerLastY = points[0].clientY;
+            return;
+          }
+
+          if (pointerScale < 1.02) {
+            pointerScale = 1;
+            pointerX = 0;
+            pointerY = 0;
+            applyPointerTransform();
+          }
+
+          pointerMode = 'idle';
+          pointerSwipeLocked = false;
+          viewerIsZooming = false;
+          viewerIsDragging = false;
+
+          if (els.lightboxStage) {
+            els.lightboxStage.classList.remove('is-dragging');
+          }
         }
 
-        viewerTouchTarget.addEventListener('touchstart', nativeOnViewerTouchStart, { passive:true });
-        viewerTouchTarget.addEventListener('touchmove', nativeOnViewerTouchMove, { passive:true });
-        viewerTouchTarget.addEventListener('touchend', nativeOnViewerTouchEnd, { passive:true });
-        viewerTouchTarget.addEventListener('touchcancel', nativeOnViewerTouchEnd, { passive:true });
+        function onViewerPointerCancel(event) {
+          removePointer(event);
+
+          if (viewerPointers.size === 0) {
+            pointerMode = 'idle';
+            pointerSwipeLocked = false;
+            viewerIsZooming = false;
+            viewerIsDragging = false;
+
+            if (pointerScale < 1.02) {
+              resetPointerViewerZoom();
+            } else {
+              applyPointerTransform();
+            }
+          }
+        }
+
+        viewerGestureTarget.addEventListener('pointerdown', onViewerPointerDown, { passive: false });
+        viewerGestureTarget.addEventListener('pointermove', onViewerPointerMove, { passive: false });
+        viewerGestureTarget.addEventListener('pointerup', onViewerPointerUp, { passive: true });
+        viewerGestureTarget.addEventListener('pointercancel', onViewerPointerCancel, { passive: true });
+        viewerGestureTarget.addEventListener('lostpointercapture', onViewerPointerCancel, { passive: true });
 
         els.lightbox.addEventListener('mousedown', (e) => {
           if (!isViewerOpen() || viewerScale <= 1 || e.button !== 0) return;

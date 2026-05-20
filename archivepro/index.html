@@ -4116,6 +4116,97 @@ body.viewer-open{
 }
 </style>
 
+
+<style id="archive-pro-mobile-viewer-final-repair-css">
+/* ARCHIVE PRO MOBILE VIEWER FINAL REPAIR — caption clean + image fit + swipe/pinch only */
+.lb-media-row,
+#lbKeyImage,
+#lbKeyZoom,
+#lbImagePath,
+#lbZoomPath,
+#lbOpenImage,
+#lbOpenZoom{
+  display:none !important;
+}
+
+@media (max-width:880px){
+  .lightbox.open,
+  .lightbox.active{
+    overflow:hidden !important;
+    overscroll-behavior:contain !important;
+  }
+
+  .lightbox-inner{
+    height:100dvh !important;
+    min-height:100dvh !important;
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    grid-template-rows:minmax(0, calc(68dvh + 72px)) minmax(0, 1fr) !important;
+    overflow:hidden !important;
+  }
+
+  .lightbox-stage{
+    width:100vw !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    height:auto !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:calc(env(safe-area-inset-top, 0px) + 64px) 16px 8px !important;
+    overflow:hidden !important;
+    touch-action:none !important;
+    overscroll-behavior:contain !important;
+    contain:layout paint size !important;
+    -webkit-tap-highlight-color:transparent !important;
+  }
+
+  .lightbox-stage img,
+  #lightboxImage{
+    display:block !important;
+    position:relative !important;
+    width:auto !important;
+    height:auto !important;
+    max-width:calc(100vw - 32px) !important;
+    max-height:68vh !important;
+    object-fit:contain !important;
+    object-position:center center !important;
+    margin:0 auto !important;
+    border-radius:8px !important;
+    transform-origin:center center !important;
+    transform:translate3d(0,0,0) scale(1);
+    transition:none !important;
+    will-change:transform !important;
+    user-select:none !important;
+    -webkit-user-select:none !important;
+    -webkit-user-drag:none !important;
+    touch-action:none !important;
+    pointer-events:auto !important;
+  }
+
+  .lightbox-side{
+    min-height:0 !important;
+    max-height:none !important;
+    overflow:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    padding:14px 18px calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .lightbox-stage.is-zoomed{
+    cursor:grab !important;
+  }
+
+  .lightbox-stage.is-zoomed.is-dragging{
+    cursor:grabbing !important;
+  }
+
+  body.viewer-open{
+    overflow:hidden !important;
+    overscroll-behavior:contain !important;
+  }
+}
+</style>
+
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>
@@ -4280,8 +4371,8 @@ body.viewer-open{
           <div class="lb-row"><div class="lb-key" id="lbKeyMaterial">재료</div><div class="lb-val" id="lbMaterial">—</div></div>
           <div class="lb-row"><div class="lb-key" id="lbKeySize">크기</div><div class="lb-val" id="lbSize">—</div></div>
           <div class="lb-row"><div class="lb-key" id="lbKeyYear">연도</div><div class="lb-val" id="lbYear">—</div></div>
-          <div class="lb-row"><div class="lb-key" id="lbKeyImage">이미지</div><div class="lb-val" id="lbImagePath">—</div></div>
-          <div class="lb-row"><div class="lb-key" id="lbKeyZoom">줌</div><div class="lb-val" id="lbZoomPath">—</div></div>
+          <div class="lb-row lb-media-row" hidden aria-hidden="true"><div class="lb-key" id="lbKeyImage">이미지</div><div class="lb-val" id="lbImagePath">—</div></div>
+          <div class="lb-row lb-media-row" hidden aria-hidden="true"><div class="lb-key" id="lbKeyZoom">줌</div><div class="lb-val" id="lbZoomPath">—</div></div>
         </div>
 
         <div class="lb-actions">
@@ -4767,6 +4858,10 @@ let viewerMouseDragging = false;
         viewerIsDragging = false;
         viewerIsZooming = false;
         viewerMouseDragging = false;
+        if (typeof window.__archiveProResetMobileViewerZoom === 'function') {
+          window.__archiveProResetMobileViewerZoom();
+          return;
+        }
         if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging', 'is-zoomed');
         applyViewerTransform();
       }
@@ -6057,10 +6152,18 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         els.lbMaterialVal.textContent = material;
         els.lbSizeVal.textContent = size;
         els.lbYearVal.textContent = year;
-        els.lbImagePath.textContent = '';
-        els.lbZoomPath.textContent = '';
-        els.lbOpenImage.href = imageUrl || '#';
-        els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
+        if (els.lbImagePath) els.lbImagePath.textContent = '';
+        if (els.lbZoomPath) els.lbZoomPath.textContent = '';
+        if (els.lbOpenImage) {
+          els.lbOpenImage.href = imageUrl || '#';
+          els.lbOpenImage.setAttribute('aria-hidden', 'true');
+          els.lbOpenImage.setAttribute('tabindex', '-1');
+        }
+        if (els.lbOpenZoom) {
+          els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
+          els.lbOpenZoom.setAttribute('aria-hidden', 'true');
+          els.lbOpenZoom.setAttribute('tabindex', '-1');
+        }
 
         els.lightboxImage.alt = title;
         els.lightboxImage.classList.remove('is-ready');
@@ -6813,106 +6916,132 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 
 
 
-
         const viewerGestureTarget = els.lightboxStage || els.lightbox;
-        const viewerPointers = new Map();
+        const MOBILE_VIEWER_MIN_SCALE = 1;
+        const MOBILE_VIEWER_MAX_SCALE = 4;
+        const mobileViewerPointers = new Map();
 
-        let pointerScale = 1;
-        let pointerX = 0;
-        let pointerY = 0;
-        let pointerStartScale = 1;
-        let pointerStartDistance = 0;
-        let pointerStartMidX = 0;
-        let pointerStartMidY = 0;
-        let pointerStartX = 0;
-        let pointerStartY = 0;
-        let pointerLastX = 0;
-        let pointerLastY = 0;
-        let pointerMode = 'idle';
-        let pointerSwipeLocked = false;
-        let pointerRaf = 0;
+        let mobileViewerScale = 1;
+        let mobileViewerX = 0;
+        let mobileViewerY = 0;
+        let mobileViewerStartScale = 1;
+        let mobileViewerStartDistance = 1;
+        let mobileViewerStartMid = { x: 0, y: 0 };
+        let mobileViewerStartX = 0;
+        let mobileViewerStartY = 0;
+        let mobileViewerLastX = 0;
+        let mobileViewerLastY = 0;
+        let mobileViewerMode = 'idle';
+        let mobileViewerSwipeLocked = false;
+        let mobileViewerRaf = 0;
+        let mobileViewerLastTap = 0;
 
-        function clampPointerValue(value, min, max) {
+        function isMobileViewerSize() {
+          return window.matchMedia && window.matchMedia('(max-width: 880px)').matches;
+        }
+
+        function clampMobileViewerValue(value, min, max) {
           return Math.min(max, Math.max(min, value));
         }
 
-        function getPointerDistance(a, b) {
-          const dx = a.clientX - b.clientX;
-          const dy = a.clientY - b.clientY;
-          return Math.sqrt(dx * dx + dy * dy);
+        function getMobileViewerPoints() {
+          return Array.from(mobileViewerPointers.values());
         }
 
-        function getPointerMidpoint(a, b) {
+        function getMobileViewerDistance(a, b) {
+          return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+        }
+
+        function getMobileViewerMidpoint(a, b) {
           return {
             x: (a.clientX + b.clientX) / 2,
             y: (a.clientY + b.clientY) / 2
           };
         }
 
-        function getViewerImageBounds() {
-          if (!els.lightboxImage || !els.lightboxStage) {
-            return { maxX: 0, maxY: 0 };
-          }
-
-          const stageRect = els.lightboxStage.getBoundingClientRect();
-          const rawWidth = els.lightboxImage.offsetWidth || els.lightboxImage.naturalWidth || stageRect.width;
-          const rawHeight = els.lightboxImage.offsetHeight || els.lightboxImage.naturalHeight || stageRect.height;
-          const scaledW = rawWidth * pointerScale;
-          const scaledH = rawHeight * pointerScale;
-
+        function getMobileViewerStageCenter() {
+          const rect = els.lightboxStage
+            ? els.lightboxStage.getBoundingClientRect()
+            : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
           return {
-            maxX: Math.max(0, (scaledW - stageRect.width) / 2 + 80),
-            maxY: Math.max(0, (scaledH - stageRect.height) / 2 + 80)
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+            rect
           };
         }
 
-        function clampPointerTranslate() {
-          if (pointerScale <= 1.001) {
-            pointerX = 0;
-            pointerY = 0;
+        function getMobileViewerImageBaseSize() {
+          if (!els.lightboxImage || !els.lightboxStage) {
+            return { width: 0, height: 0, stageWidth: 0, stageHeight: 0 };
+          }
+
+          const stageRect = els.lightboxStage.getBoundingClientRect();
+          const imgRect = els.lightboxImage.getBoundingClientRect();
+          const width = (imgRect.width || els.lightboxImage.offsetWidth || els.lightboxImage.naturalWidth || 0) / Math.max(mobileViewerScale, 1);
+          const height = (imgRect.height || els.lightboxImage.offsetHeight || els.lightboxImage.naturalHeight || 0) / Math.max(mobileViewerScale, 1);
+
+          return {
+            width,
+            height,
+            stageWidth: stageRect.width,
+            stageHeight: stageRect.height
+          };
+        }
+
+        function clampMobileViewerTranslate() {
+          if (mobileViewerScale <= 1.001) {
+            mobileViewerScale = 1;
+            mobileViewerX = 0;
+            mobileViewerY = 0;
             return;
           }
 
-          const bounds = getViewerImageBounds();
-          pointerX = clampPointerValue(pointerX, -bounds.maxX, bounds.maxX);
-          pointerY = clampPointerValue(pointerY, -bounds.maxY, bounds.maxY);
+          const size = getMobileViewerImageBaseSize();
+          const maxX = Math.max(0, (size.width * mobileViewerScale - size.stageWidth) / 2);
+          const maxY = Math.max(0, (size.height * mobileViewerScale - size.stageHeight) / 2);
+
+          mobileViewerX = clampMobileViewerValue(mobileViewerX, -maxX, maxX);
+          mobileViewerY = clampMobileViewerValue(mobileViewerY, -maxY, maxY);
         }
 
-        function applyPointerTransform() {
+        function applyMobileViewerTransform() {
           if (!els.lightboxImage) return;
+          clampMobileViewerTranslate();
 
-          clampPointerTranslate();
-
-          if (pointerRaf) cancelAnimationFrame(pointerRaf);
-          pointerRaf = requestAnimationFrame(() => {
-            els.lightboxImage.style.transform =
-              `translate3d(${pointerX}px, ${pointerY}px, 0) scale(${pointerScale})`;
-
+          if (mobileViewerRaf) cancelAnimationFrame(mobileViewerRaf);
+          mobileViewerRaf = requestAnimationFrame(function() {
+            els.lightboxImage.style.transform = 'translate3d(' + mobileViewerX + 'px,' + mobileViewerY + 'px,0) scale(' + mobileViewerScale + ')';
             if (els.lightboxStage) {
-              els.lightboxStage.classList.toggle('is-zoomed', pointerScale > 1.001);
+              els.lightboxStage.classList.toggle('is-zoomed', mobileViewerScale > 1.001);
             }
 
-            viewerScale = pointerScale;
-            viewerX = pointerX;
-            viewerY = pointerY;
+            viewerScale = mobileViewerScale;
+            viewerX = mobileViewerX;
+            viewerY = mobileViewerY;
           });
         }
 
-        function resetPointerViewerZoom() {
-          pointerScale = 1;
-          pointerX = 0;
-          pointerY = 0;
-          pointerStartScale = 1;
-          pointerStartDistance = 0;
-          pointerMode = 'idle';
-          pointerSwipeLocked = false;
-          viewerPointers.clear();
+        function resetMobileViewerZoom() {
+          mobileViewerScale = 1;
+          mobileViewerX = 0;
+          mobileViewerY = 0;
+          mobileViewerStartScale = 1;
+          mobileViewerStartDistance = 1;
+          mobileViewerMode = 'idle';
+          mobileViewerSwipeLocked = false;
+          mobileViewerPointers.clear();
 
           viewerScale = 1;
           viewerX = 0;
           viewerY = 0;
           viewerIsZooming = false;
           viewerIsDragging = false;
+          viewerMouseDragging = false;
+
+          if (mobileViewerRaf) {
+            cancelAnimationFrame(mobileViewerRaf);
+            mobileViewerRaf = 0;
+          }
 
           if (els.lightboxStage) {
             els.lightboxStage.classList.remove('is-zoomed', 'is-dragging');
@@ -6924,131 +7053,168 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           }
         }
 
-        function blockViewerNativeGesture(event) {
-          if (!isViewerOpen()) return;
-          event.preventDefault();
-        }
+        window.__archiveProResetMobileViewerZoom = resetMobileViewerZoom;
 
-        document.addEventListener('gesturestart', blockViewerNativeGesture, { passive: false });
-        document.addEventListener('gesturechange', blockViewerNativeGesture, { passive: false });
-        document.addEventListener('gestureend', blockViewerNativeGesture, { passive: false });
-
-        function syncPointerFromEvent(event) {
-          viewerPointers.set(event.pointerId, {
+        function syncMobileViewerPointer(event) {
+          mobileViewerPointers.set(event.pointerId, {
             pointerId: event.pointerId,
             clientX: event.clientX,
             clientY: event.clientY
           });
         }
 
-        function removePointer(event) {
-          viewerPointers.delete(event.pointerId);
+        function removeMobileViewerPointer(event) {
+          if (event && event.pointerId !== undefined) {
+            mobileViewerPointers.delete(event.pointerId);
+          }
         }
 
-        function activePointerList() {
-          return Array.from(viewerPointers.values());
+        function cleanupMobileViewerPointers() {
+          mobileViewerPointers.clear();
+          mobileViewerSwipeLocked = false;
+          viewerIsZooming = false;
+          viewerIsDragging = false;
+          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
+          if (mobileViewerScale <= 1.02) {
+            resetMobileViewerZoom();
+          } else {
+            mobileViewerMode = 'idle';
+            applyMobileViewerTransform();
+          }
         }
 
-        function onViewerPointerDown(event) {
-          if (!isViewerOpen() || !els.lightboxImage) return;
+        function blockMobileViewerNativeGesture(event) {
+          if (!isViewerOpen()) return;
+          if (!els.lightbox || !els.lightbox.contains(event.target)) return;
+          event.preventDefault();
+        }
+
+        ['gesturestart', 'gesturechange', 'gestureend'].forEach(function(type) {
+          document.addEventListener(type, blockMobileViewerNativeGesture, { passive: false });
+          window.addEventListener(type, blockMobileViewerNativeGesture, { passive: false });
+        });
+
+        function preventMobileViewerBounce(event) {
+          if (!isViewerOpen() || !isMobileViewerSize()) return;
+          if (!els.lightbox || !els.lightbox.contains(event.target)) return;
+          if (event.target && event.target.closest && event.target.closest('.lightbox-close')) return;
+          event.preventDefault();
+        }
+
+        document.addEventListener('touchmove', preventMobileViewerBounce, { capture: true, passive: false });
+        document.addEventListener('touchcancel', function() {
+          if (isViewerOpen()) cleanupMobileViewerPointers();
+        }, { capture: true, passive: false });
+
+        function onMobileViewerPointerDown(event) {
+          if (!isViewerOpen() || !els.lightboxImage || !viewerGestureTarget) return;
           if (event.pointerType === 'mouse') return;
+          if (event.target && event.target.closest && event.target.closest('.lightbox-close')) return;
 
-          syncPointerFromEvent(event);
+          const now = Date.now();
+          if (now - mobileViewerLastTap < 300 && mobileViewerScale <= 1.001) {
+            event.preventDefault();
+            mobileViewerLastTap = 0;
+            return;
+          }
+          mobileViewerLastTap = now;
+
+          syncMobileViewerPointer(event);
 
           try {
             viewerGestureTarget.setPointerCapture(event.pointerId);
-          } catch (e) {}
+          } catch (error) {}
 
-          const points = activePointerList();
+          const points = getMobileViewerPoints();
 
           if (points.length >= 2) {
-            const a = points[0];
-            const b = points[1];
-            const mid = getPointerMidpoint(a, b);
-
-            pointerMode = 'pinch';
-            pointerSwipeLocked = true;
+            const mid = getMobileViewerMidpoint(points[0], points[1]);
+            mobileViewerMode = 'pinch';
+            mobileViewerSwipeLocked = true;
             viewerIsZooming = true;
             viewerIsDragging = false;
-
-            pointerStartDistance = Math.max(1, getPointerDistance(a, b));
-            pointerStartScale = pointerScale;
-            pointerStartMidX = mid.x;
-            pointerStartMidY = mid.y;
-
+            mobileViewerStartDistance = Math.max(1, getMobileViewerDistance(points[0], points[1]));
+            mobileViewerStartScale = mobileViewerScale;
+            mobileViewerStartMid = mid;
             event.preventDefault();
             return;
           }
 
           if (points.length === 1) {
-            pointerStartX = event.clientX;
-            pointerStartY = event.clientY;
-            pointerLastX = event.clientX;
-            pointerLastY = event.clientY;
-            pointerSwipeLocked = false;
+            mobileViewerStartX = event.clientX;
+            mobileViewerStartY = event.clientY;
+            mobileViewerLastX = event.clientX;
+            mobileViewerLastY = event.clientY;
+            mobileViewerSwipeLocked = false;
 
-            if (pointerScale > 1.001) {
-              pointerMode = 'pan';
+            if (mobileViewerScale > 1.001) {
+              mobileViewerMode = 'pan';
               viewerIsDragging = true;
               viewerIsZooming = false;
               if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
               event.preventDefault();
             } else {
-              pointerMode = 'swipe';
+              mobileViewerMode = 'swipe';
               viewerIsDragging = false;
               viewerIsZooming = false;
             }
           }
         }
 
-        function onViewerPointerMove(event) {
+        function onMobileViewerPointerMove(event) {
           if (!isViewerOpen() || !els.lightboxImage) return;
-          if (!viewerPointers.has(event.pointerId)) return;
+          if (!mobileViewerPointers.has(event.pointerId)) return;
 
-          syncPointerFromEvent(event);
-          const points = activePointerList();
+          syncMobileViewerPointer(event);
+          const points = getMobileViewerPoints();
 
-          if (pointerMode === 'pinch' && points.length >= 2) {
-            const a = points[0];
-            const b = points[1];
-            const newDistance = Math.max(1, getPointerDistance(a, b));
-            const mid = getPointerMidpoint(a, b);
-            const nextScale = clampPointerValue(pointerStartScale * (newDistance / pointerStartDistance), 1, 4);
+          if (mobileViewerMode === 'pinch' && points.length >= 2) {
+            const oldScale = mobileViewerScale;
+            const newDistance = Math.max(1, getMobileViewerDistance(points[0], points[1]));
+            const mid = getMobileViewerMidpoint(points[0], points[1]);
+            const nextScale = clampMobileViewerValue(mobileViewerStartScale * (newDistance / mobileViewerStartDistance), MOBILE_VIEWER_MIN_SCALE, MOBILE_VIEWER_MAX_SCALE);
+            const scaleRatio = nextScale / Math.max(oldScale, 0.001);
+            const center = getMobileViewerStageCenter();
 
-            const scaleRatio = nextScale / Math.max(pointerScale, 0.001);
-            pointerX = (pointerX + (mid.x - pointerStartMidX) * 0.25) * scaleRatio;
-            pointerY = (pointerY + (mid.y - pointerStartMidY) * 0.25) * scaleRatio;
-            pointerScale = nextScale;
+            const midLocalX = mid.x - center.x;
+            const midLocalY = mid.y - center.y;
+            const midMoveX = mid.x - mobileViewerStartMid.x;
+            const midMoveY = mid.y - mobileViewerStartMid.y;
 
-            if (pointerScale <= 1.001) {
-              pointerScale = 1;
-              pointerX = 0;
-              pointerY = 0;
+            mobileViewerX = midLocalX - (midLocalX - mobileViewerX) * scaleRatio + midMoveX;
+            mobileViewerY = midLocalY - (midLocalY - mobileViewerY) * scaleRatio + midMoveY;
+            mobileViewerScale = nextScale;
+
+            if (mobileViewerScale <= 1.001) {
+              mobileViewerScale = 1;
+              mobileViewerX = 0;
+              mobileViewerY = 0;
             }
 
             event.preventDefault();
-            applyPointerTransform();
+            applyMobileViewerTransform();
             return;
           }
 
-          if (pointerMode === 'pan' && pointerScale > 1.001 && points.length === 1) {
-            pointerX += event.clientX - pointerLastX;
-            pointerY += event.clientY - pointerLastY;
-            pointerLastX = event.clientX;
-            pointerLastY = event.clientY;
+          if (mobileViewerMode === 'pan' && mobileViewerScale > 1.001 && points.length === 1) {
+            mobileViewerX += event.clientX - mobileViewerLastX;
+            mobileViewerY += event.clientY - mobileViewerLastY;
+            mobileViewerLastX = event.clientX;
+            mobileViewerLastY = event.clientY;
 
             event.preventDefault();
-            applyPointerTransform();
+            applyMobileViewerTransform();
             return;
           }
 
-          if (pointerMode === 'swipe' && pointerScale === 1 && points.length === 1 && !pointerSwipeLocked) {
-            const dx = event.clientX - pointerStartX;
-            const dy = event.clientY - pointerStartY;
+          if (mobileViewerMode === 'swipe' && mobileViewerScale === 1 && points.length === 1 && !mobileViewerSwipeLocked) {
+            const dx = event.clientX - mobileViewerStartX;
+            const dy = event.clientY - mobileViewerStartY;
 
-            if (Math.abs(dx) > 72 && Math.abs(dx) > Math.abs(dy) * 1.35) {
-              pointerSwipeLocked = true;
-              pointerMode = 'idle';
+            if (Math.abs(dx) > 66 && Math.abs(dx) > Math.abs(dy) * 1.35) {
+              mobileViewerSwipeLocked = true;
+              mobileViewerMode = 'idle';
+              event.preventDefault();
 
               if (dx < 0) nextViewer();
               else prevViewer();
@@ -7056,36 +7222,35 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           }
         }
 
-        function onViewerPointerUp(event) {
+        function onMobileViewerPointerUp(event) {
           if (!isViewerOpen()) return;
 
-          removePointer(event);
-
-          const points = activePointerList();
+          removeMobileViewerPointer(event);
+          const points = getMobileViewerPoints();
 
           if (points.length >= 2) {
-            pointerMode = 'pinch';
-            pointerStartDistance = Math.max(1, getPointerDistance(points[0], points[1]));
-            pointerStartScale = pointerScale;
+            mobileViewerMode = 'pinch';
+            mobileViewerStartDistance = Math.max(1, getMobileViewerDistance(points[0], points[1]));
+            mobileViewerStartScale = mobileViewerScale;
+            mobileViewerStartMid = getMobileViewerMidpoint(points[0], points[1]);
             return;
           }
 
-          if (points.length === 1 && pointerScale > 1.001) {
-            pointerMode = 'pan';
-            pointerLastX = points[0].clientX;
-            pointerLastY = points[0].clientY;
+          if (points.length === 1 && mobileViewerScale > 1.001) {
+            mobileViewerMode = 'pan';
+            mobileViewerLastX = points[0].clientX;
+            mobileViewerLastY = points[0].clientY;
             return;
           }
 
-          if (pointerScale < 1.02) {
-            pointerScale = 1;
-            pointerX = 0;
-            pointerY = 0;
-            applyPointerTransform();
+          if (mobileViewerScale <= 1.02) {
+            resetMobileViewerZoom();
+          } else {
+            mobileViewerMode = 'idle';
+            applyMobileViewerTransform();
           }
 
-          pointerMode = 'idle';
-          pointerSwipeLocked = false;
+          mobileViewerSwipeLocked = false;
           viewerIsZooming = false;
           viewerIsDragging = false;
 
@@ -7094,28 +7259,20 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           }
         }
 
-        function onViewerPointerCancel(event) {
-          removePointer(event);
-
-          if (viewerPointers.size === 0) {
-            pointerMode = 'idle';
-            pointerSwipeLocked = false;
-            viewerIsZooming = false;
-            viewerIsDragging = false;
-
-            if (pointerScale < 1.02) {
-              resetPointerViewerZoom();
-            } else {
-              applyPointerTransform();
-            }
+        function onMobileViewerPointerCancel(event) {
+          removeMobileViewerPointer(event);
+          if (mobileViewerPointers.size === 0) {
+            cleanupMobileViewerPointers();
           }
         }
 
-        viewerGestureTarget.addEventListener('pointerdown', onViewerPointerDown, { passive: false });
-        viewerGestureTarget.addEventListener('pointermove', onViewerPointerMove, { passive: false });
-        viewerGestureTarget.addEventListener('pointerup', onViewerPointerUp, { passive: true });
-        viewerGestureTarget.addEventListener('pointercancel', onViewerPointerCancel, { passive: true });
-        viewerGestureTarget.addEventListener('lostpointercapture', onViewerPointerCancel, { passive: true });
+        if (viewerGestureTarget) {
+          viewerGestureTarget.addEventListener('pointerdown', onMobileViewerPointerDown, { passive: false });
+          viewerGestureTarget.addEventListener('pointermove', onMobileViewerPointerMove, { passive: false });
+          viewerGestureTarget.addEventListener('pointerup', onMobileViewerPointerUp, { passive: false });
+          viewerGestureTarget.addEventListener('pointercancel', onMobileViewerPointerCancel, { passive: false });
+          viewerGestureTarget.addEventListener('lostpointercapture', onMobileViewerPointerCancel, { passive: false });
+        }
 
         els.lightbox.addEventListener('mousedown', (e) => {
           if (!isViewerOpen() || viewerScale <= 1 || e.button !== 0) return;

@@ -4022,11 +4022,15 @@
 #lbKeyImage,
 #lbImagePath,
 #lbKeyZoom,
-#lbZoomPath,
+#lbZoomPath{
+  display:none !important;
+}
+
+/* keep fullscreen/open buttons visible */
 #lbOpenImage,
 #lbOpenZoom,
 .lb-actions{
-  display:none !important;
+  display:flex !important;
 }
 
 .lb-row:has(#lbImagePath),

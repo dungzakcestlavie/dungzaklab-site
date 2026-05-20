@@ -4221,6 +4221,24 @@
 }
 </style>
 
+
+<style>
+/* ARCHIVE PRO MOBILE CAPTION CUT-OFF FINAL FIX — caption CSS only */
+@media (max-width: 768px) {
+  .viewer-caption,
+  .lightbox-caption,
+  .detail-panel,
+  .lightbox-side {
+    max-height: 40dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 120px) !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
+  }
+}
+</style>
+
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>

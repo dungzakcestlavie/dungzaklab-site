@@ -4548,9 +4548,9 @@
 </style>
 
 <style>
-/* ARCHIVE PRO MOBILE CAPTION +10 POINT EXPAND + FULLVIEW REMOVE FINAL FIX
-   Mobile caption/fullview display only.
-   Swipe, pinch zoom, pointer/touch events, image paths, works data, search/filter/sort/load more unchanged. */
+/* ARCHIVE PRO MOBILE VIEWER BALANCE FINAL FIX — IMAGE RESTORE + COMPACT CAPTION
+   Mobile viewer balance only.
+   Swipe, pinch zoom, pointer/touch events, X, arrows, image paths, works data, search/filter/sort/load more unchanged. */
 @media (max-width: 768px) {
   #lbOpenZoom.mobile-hide-fullview,
   .mobile-hide-fullview,
@@ -4568,7 +4568,7 @@
 
   .viewer-inner,
   .lightbox-inner {
-    grid-template-rows: minmax(0, 42dvh) minmax(0, 58dvh) !important;
+    grid-template-rows: minmax(0, 66dvh) minmax(0, 34dvh) !important;
   }
 
   .viewer-caption,
@@ -4579,13 +4579,51 @@
   .lightbox-meta-panel,
   .detail-panel,
   .lightbox-side {
-    max-height: min(94dvh, 1080px) !important;
+    max-height: min(30dvh, 340px) !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 260px) !important;
+    padding-top: 14px !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 120px) !important;
     touch-action: pan-y !important;
     overscroll-behavior-y: contain !important;
+  }
+
+  .viewer-title,
+  .lightbox-title,
+  .viewer-caption h1,
+  .lightbox-caption h1,
+  .lightbox-side .lb-title {
+    font-size: clamp(17px, 5vw, 24px) !important;
+    line-height: 1.02 !important;
+    letter-spacing: -0.055em !important;
+    margin-bottom: 6px !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .viewer-meta,
+  .lightbox-meta,
+  .viewer-caption .meta,
+  .lightbox-caption .meta,
+  .lightbox-side .lb-section,
+  .lightbox-side .lb-meta,
+  .lightbox-side .lb-row,
+  .lightbox-side .lb-key,
+  .lightbox-side .lb-val {
+    font-size: 12.5px !important;
+    line-height: 1.12 !important;
+    letter-spacing: -0.02em !important;
+    margin-bottom: 3px !important;
+  }
+
+  .lightbox-side .lb-meta {
+    gap: 4px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .lightbox-side .lb-row {
+    gap: 6px !important;
   }
 }
 </style>

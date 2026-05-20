@@ -3998,8 +3998,9 @@
 
 
 
-<style id="archive-pro-mobile-stable-layout-swipe-zoom-css">
-/* ARCHIVE PRO MOBILE VIEWER STABLE LAYOUT + SWIPE ZOOM RESTORE */
+
+<style id="archive-pro-mobile-swipe-pinch-hard-css">
+/* ARCHIVE PRO MOBILE SWIPE + PINCH ZOOM HARD FIX */
 .viewer,
 .lightbox,
 #viewer,
@@ -4008,37 +4009,24 @@
   overscroll-behavior:contain !important;
 }
 
-.viewer img,
-.lightbox img,
+.viewer-media,
+.lightbox-media,
+.lightbox-stage{
+  touch-action:pan-y pinch-zoom !important;
+}
+
 .viewer-image,
 .lightbox-image,
+.viewer img,
+.lightbox img,
 .lightbox-stage img,
 #lightboxImage{
-  touch-action:pinch-zoom !important;
-  pointer-events:auto !important;
+  touch-action:none !important;
   user-select:none !important;
   -webkit-user-drag:none !important;
-  object-fit:contain !important;
-}
-
-#lbSection,
-#lbKeyImage,
-#lbImagePath,
-#lbKeyZoom,
-#lbZoomPath,
-#lbOpenFull,
-#lbOpenImage,
-#lbOpenZoom,
-.lb-actions,
-.viewer-full-button,
-.lightbox-full-button,
-.fullscreen-button{
-  display:none !important;
-}
-
-.lb-row:has(#lbImagePath),
-.lb-row:has(#lbZoomPath){
-  display:none !important;
+  transform-origin:center center !important;
+  will-change:transform !important;
+  pointer-events:auto !important;
 }
 
 @media (max-width:768px){
@@ -4108,7 +4096,6 @@
     object-fit:contain !important;
     display:block !important;
     margin:0 auto !important;
-    touch-action:pinch-zoom !important;
   }
 
   .landscape .viewer-image,
@@ -4146,20 +4133,6 @@
     line-height:1.38 !important;
     border-left:0 !important;
     border-top:1px solid rgba(255,255,255,.06) !important;
-  }
-
-  .lightbox-side .lb-title,
-  #lbTitle{
-    font-size:clamp(1.35rem, 5.3vw, 1.9rem) !important;
-    line-height:1.15 !important;
-    margin-bottom:12px !important;
-  }
-
-  .lb-row{
-    grid-template-columns:64px minmax(0,1fr) !important;
-    gap:10px !important;
-    font-size:0.84rem !important;
-    line-height:1.38 !important;
   }
 }
 </style>
@@ -6857,102 +6830,162 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           if (e.target === els.lightbox) closeLightbox();
         });
 
-        els.lightbox.addEventListener('dblclick', (e) => {
-          if (!isViewerOpen()) return;
-          e.preventDefault();
+
+        const viewerTouchTarget = els.lightboxStage || els.lightbox;
+        let viewerTouchMode = 'idle';
+        let viewerPinchStartDistance = 0;
+        let viewerPinchStartScale = 1;
+        let viewerTouchStartX = 0;
+        let viewerTouchStartY = 0;
+        let viewerTouchLastX = 0;
+        let viewerTouchLastY = 0;
+        let viewerTouchStartTime = 0;
+        let viewerTapTime = 0;
+        let viewerTapX = 0;
+        let viewerTapY = 0;
+
+        function clampViewerScale(value, min, max) {
+          return Math.min(max, Math.max(min, value));
+        }
+
+        function resetViewerGestureState() {
+          viewerTouchMode = 'idle';
+          viewerIsZooming = false;
+          viewerIsDragging = false;
+          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
+        }
+
+        function normalizeViewerScale() {
+          if (viewerScale < 1.02) {
+            viewerScale = 1;
+            viewerX = 0;
+            viewerY = 0;
+          }
+          applyViewerTransform();
+        }
+
+        function onViewerDoubleTap() {
           viewerScale = viewerScale > 1 ? 1 : 2;
           viewerX = 0;
           viewerY = 0;
           applyViewerTransform();
-        });
+        }
 
-        els.lightbox.addEventListener('touchstart', (e) => {
+        function onViewerTouchStart(e) {
           if (!isViewerOpen()) return;
-          if (e.touches.length === 2 || viewerScale > 1) e.preventDefault();
 
-          if (e.touches.length === 2) {
+          if (e.touches && e.touches.length === 2) {
+            viewerTouchMode = 'pinch';
             viewerIsZooming = true;
             viewerIsDragging = false;
-            viewerInitialDistance = getViewerDistance(e.touches[0], e.touches[1]);
+            viewerPinchStartDistance = getViewerDistance(e.touches[0], e.touches[1]);
+            viewerPinchStartScale = viewerScale;
             return;
           }
 
-          if (e.touches.length !== 1) return;
-          const touch = e.touches[0];
-          viewerStartX = touch.clientX;
-          viewerStartY = touch.clientY;
-          viewerLastX = touch.clientX;
-          viewerLastY = touch.clientY;
-          viewerStartTime = Date.now();
-          viewerIsDragging = true;
-          if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
-        }, { passive:false });
-
-        els.lightbox.addEventListener('touchmove', (e) => {
-          if (!isViewerOpen()) return;
-          if (viewerIsZooming || viewerScale > 1 || (e.touches && e.touches.length > 1)) e.preventDefault();
-
-          if (viewerIsZooming && e.touches.length === 2) {
-            const newDistance = getViewerDistance(e.touches[0], e.touches[1]);
-            if (!viewerInitialDistance) viewerInitialDistance = newDistance;
-            const delta = newDistance / viewerInitialDistance;
-            viewerScale = Math.min(Math.max(1, viewerScale * delta), 4);
-            viewerInitialDistance = newDistance;
-            if (viewerScale === 1) { viewerX = 0; viewerY = 0; }
-            applyViewerTransform();
-            return;
-          }
-
-          if (!viewerIsDragging || e.touches.length !== 1) return;
+          if (!e.touches || e.touches.length !== 1) return;
 
           const touch = e.touches[0];
-          const dx = touch.clientX - viewerLastX;
-          const dy = touch.clientY - viewerLastY;
+          viewerTouchStartX = touch.clientX;
+          viewerTouchStartY = touch.clientY;
+          viewerTouchLastX = touch.clientX;
+          viewerTouchLastY = touch.clientY;
+          viewerTouchStartTime = Date.now();
 
           if (viewerScale > 1) {
-            viewerX += dx;
-            viewerY += dy;
-            applyViewerTransform();
+            viewerTouchMode = 'drag';
+            viewerIsDragging = true;
+            viewerIsZooming = false;
+            if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
+          } else {
+            viewerTouchMode = 'swipe';
+            viewerIsDragging = false;
+            viewerIsZooming = false;
           }
+        }
 
-          viewerLastX = touch.clientX;
-          viewerLastY = touch.clientY;
-        }, { passive:false });
-
-        els.lightbox.addEventListener('touchend', (e) => {
+        function onViewerTouchMove(e) {
           if (!isViewerOpen()) return;
 
-          if (viewerIsZooming) {
-            if (e.touches.length < 2) viewerIsZooming = false;
+          if (viewerTouchMode === 'pinch' && e.touches && e.touches.length === 2) {
+            e.preventDefault();
+            const newDistance = getViewerDistance(e.touches[0], e.touches[1]);
+            if (!viewerPinchStartDistance) viewerPinchStartDistance = newDistance;
+            viewerScale = clampViewerScale(viewerPinchStartScale * (newDistance / viewerPinchStartDistance), 1, 4);
+            if (viewerScale === 1) {
+              viewerX = 0;
+              viewerY = 0;
+            }
+            applyViewerTransform();
+            return;
+          }
+
+          if (viewerTouchMode === 'drag' && viewerScale > 1 && e.touches && e.touches.length === 1) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            viewerX += touch.clientX - viewerTouchLastX;
+            viewerY += touch.clientY - viewerTouchLastY;
+            viewerTouchLastX = touch.clientX;
+            viewerTouchLastY = touch.clientY;
+            applyViewerTransform();
+            return;
+          }
+
+          if (viewerTouchMode === 'swipe' && viewerScale === 1 && e.touches && e.touches.length === 1) {
+            const touch = e.touches[0];
+            viewerTouchLastX = touch.clientX;
+            viewerTouchLastY = touch.clientY;
+          }
+        }
+
+        function onViewerTouchEnd(e) {
+          if (!isViewerOpen()) return;
+
+          if (e.touches && e.touches.length > 0) {
+            if (viewerTouchMode === 'pinch' && e.touches.length < 2) {
+              viewerTouchMode = viewerScale > 1 ? 'drag' : 'idle';
+              viewerIsZooming = false;
+              viewerPinchStartDistance = 0;
+              viewerPinchStartScale = viewerScale;
+            }
+            normalizeViewerScale();
             return;
           }
 
           const changed = e.changedTouches && e.changedTouches[0];
-          const endX = changed ? changed.clientX : viewerLastX;
-          const endY = changed ? changed.clientY : viewerLastY;
-          const totalDx = endX - viewerStartX;
-          const totalDy = endY - viewerStartY;
-          const elapsed = Date.now() - viewerStartTime;
+          const endX = changed ? changed.clientX : viewerTouchLastX;
+          const endY = changed ? changed.clientY : viewerTouchLastY;
+          const totalDx = endX - viewerTouchStartX;
+          const totalDy = endY - viewerTouchStartY;
+          const elapsed = Date.now() - viewerTouchStartTime;
 
-          if (viewerScale === 1 && Math.abs(totalDx) > 60 && Math.abs(totalDx) > Math.abs(totalDy) * 1.25) {
-            if (totalDx > 0) prevViewer();
-            else nextViewer();
+          if (viewerTouchMode === 'swipe' && viewerScale === 1) {
+            if (Math.abs(totalDx) > 52 && Math.abs(totalDx) > Math.abs(totalDy) * 1.2 && elapsed < 900) {
+              if (totalDx > 0) prevViewer();
+              else nextViewer();
+            }
+
+            const now = Date.now();
+            if (Math.abs(totalDx) < 12 && Math.abs(totalDy) < 12 && elapsed < 320) {
+              if (now - viewerTapTime < 320 && Math.abs(endX - viewerTapX) < 24 && Math.abs(endY - viewerTapY) < 24) {
+                onViewerDoubleTap();
+                viewerTapTime = 0;
+              } else {
+                viewerTapTime = now;
+                viewerTapX = endX;
+                viewerTapY = endY;
+              }
+            }
           }
 
-          const now = Date.now();
-          if (Math.abs(totalDx) < 12 && Math.abs(totalDy) < 12 && elapsed < 320 && now - viewerLastTap < 300) {
-            viewerScale = viewerScale > 1 ? 1 : 2;
-            viewerX = 0;
-            viewerY = 0;
-            applyViewerTransform();
-            viewerLastTap = 0;
-          } else {
-            viewerLastTap = now;
-          }
+          normalizeViewerScale();
+          resetViewerGestureState();
+        }
 
-          viewerIsDragging = false;
-          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
-        }, { passive:false });
+        viewerTouchTarget.addEventListener('touchstart', onViewerTouchStart, { passive:true });
+        viewerTouchTarget.addEventListener('touchmove', onViewerTouchMove, { passive:false });
+        viewerTouchTarget.addEventListener('touchend', onViewerTouchEnd, { passive:true });
+        viewerTouchTarget.addEventListener('touchcancel', onViewerTouchEnd, { passive:true });
 
         els.lightbox.addEventListener('mousedown', (e) => {
           if (!isViewerOpen() || viewerScale <= 1 || e.button !== 0) return;

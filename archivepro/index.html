@@ -4426,6 +4426,22 @@
   }
 
 </style>
+
+<style>
+
+    /* ARCHIVE PRO MOBILE CAPTION HEIGHT FINAL CALC FIX — LONG TITLE SAFE AREA ONLY */
+    @media (max-width: 768px) {
+      .viewer-caption,
+      .lightbox-caption {
+        max-height: min(56dvh, 520px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 170px) !important;
+      }
+    }
+
+</style>
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>

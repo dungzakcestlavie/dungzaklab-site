@@ -4342,6 +4342,48 @@ body.viewer-open{
 
 </style>
 
+
+
+<style id="archive-pro-viewer-image-size-only-fix">
+  /* ARCHIVE PRO VIEWER IMAGE SIZE ONLY FIX — mobile viewer image CSS only */
+  @media (max-width: 880px) {
+    .viewer-image-wrap,
+    .lightbox-stage {
+      width: 100% !important;
+      max-width: none !important;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+    }
+
+    .viewer-image,
+    .viewer-image-wrap img,
+    .lightbox-stage img,
+    #lightboxImage {
+      width: 100% !important;
+      height: auto !important;
+      max-width: calc(100vw - 20px) !important;
+      max-height: 68vh !important;
+      object-fit: contain !important;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .viewer-image-wrap,
+    .lightbox-stage {
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+    }
+
+    .viewer-image,
+    .viewer-image-wrap img,
+    .lightbox-stage img,
+    #lightboxImage {
+      max-width: calc(100vw - 16px) !important;
+      max-height: 68vh !important;
+    }
+  }
+</style>
+
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>

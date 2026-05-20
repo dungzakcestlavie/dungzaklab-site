@@ -3999,8 +3999,9 @@
 
 
 
-<style id="archive-pro-mobile-swipe-pinch-hard-css">
-/* ARCHIVE PRO MOBILE SWIPE + PINCH ZOOM HARD FIX */
+
+<style id="archive-pro-one-shot-final-css">
+/* ARCHIVE PRO VIEWER ONE-SHOT FINAL FIX — caption clean + swipe + pinch */
 .viewer,
 .lightbox,
 #viewer,
@@ -4013,6 +4014,7 @@
 .lightbox-media,
 .lightbox-stage{
   touch-action:pan-y pinch-zoom !important;
+  overflow:visible !important;
 }
 
 .viewer-image,
@@ -4026,7 +4028,25 @@
   -webkit-user-drag:none !important;
   transform-origin:center center !important;
   will-change:transform !important;
+  object-fit:contain !important;
   pointer-events:auto !important;
+}
+
+#lbSection,
+#lbKeyImage,
+#lbImagePath,
+#lbKeyZoom,
+#lbZoomPath,
+#lbOpenFull,
+#lbOpenImage,
+#lbOpenZoom,
+.lb-actions{
+  display:none !important;
+}
+
+.lb-row:has(#lbImagePath),
+.lb-row:has(#lbZoomPath){
+  display:none !important;
 }
 
 @media (max-width:768px){
@@ -4055,19 +4075,6 @@
     overflow:visible !important;
   }
 
-  .viewer-close,
-  .lightbox-close,
-  .close-viewer,
-  #viewerCloseBtn,
-  #lightboxClose{
-    position:fixed !important;
-    top:calc(env(safe-area-inset-top, 0px) + 18px) !important;
-    right:18px !important;
-    z-index:99999 !important;
-    pointer-events:auto !important;
-    touch-action:manipulation !important;
-  }
-
   .viewer-media,
   .lightbox-media,
   .lightbox-stage{
@@ -4092,45 +4099,24 @@
     width:auto !important;
     height:auto !important;
     max-width:92vw !important;
-    max-height:54dvh !important;
+    max-height:56dvh !important;
     object-fit:contain !important;
     display:block !important;
     margin:0 auto !important;
-  }
-
-  .landscape .viewer-image,
-  .landscape .lightbox-image,
-  .landscape #lightboxImage,
-  .lightbox-stage.landscape img,
-  .lightbox-stage.is-landscape img{
-    max-width:94vw !important;
-    max-height:46dvh !important;
-  }
-
-  .portrait .viewer-image,
-  .portrait .lightbox-image,
-  .portrait #lightboxImage,
-  .lightbox-stage.portrait img,
-  .lightbox-stage.is-portrait img{
-    max-width:84vw !important;
-    max-height:60dvh !important;
+    touch-action:none !important;
   }
 
   .viewer-caption,
   .lightbox-caption,
   .lightbox-side,
   .detail-panel{
-    position:relative !important;
-    z-index:2 !important;
     width:100% !important;
     height:auto !important;
     max-height:none !important;
     overflow:visible !important;
     box-sizing:border-box !important;
-    margin-top:8px !important;
-    padding:24px 24px calc(env(safe-area-inset-bottom, 0px) + 56px) 24px !important;
-    font-size:0.84rem !important;
-    line-height:1.38 !important;
+    margin-top:24px !important;
+    padding:22px 24px calc(env(safe-area-inset-bottom, 0px) + 54px) 24px !important;
     border-left:0 !important;
     border-top:1px solid rgba(255,255,255,.06) !important;
   }
@@ -6831,155 +6817,160 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         });
 
 
+
         const viewerTouchTarget = els.lightboxStage || els.lightbox;
-        let viewerTouchMode = 'idle';
-        let viewerPinchStartDistance = 0;
-        let viewerPinchStartScale = 1;
-        let viewerTouchStartX = 0;
-        let viewerTouchStartY = 0;
-        let viewerTouchLastX = 0;
-        let viewerTouchLastY = 0;
-        let viewerTouchStartTime = 0;
-        let viewerTapTime = 0;
-        let viewerTapX = 0;
-        let viewerTapY = 0;
+        let oneShotMode = 'idle';
+        let oneShotStartDistance = 0;
+        let oneShotStartScale = 1;
+        let oneShotStartX = 0;
+        let oneShotStartY = 0;
+        let oneShotLastX = 0;
+        let oneShotLastY = 0;
+        let oneShotSwipeLocked = false;
+        let oneShotLastTap = 0;
+        let oneShotLastTapX = 0;
+        let oneShotLastTapY = 0;
 
-        function clampViewerScale(value, min, max) {
-          return Math.min(max, Math.max(min, value));
+        function oneShotDistance(a, b) {
+          const dx = a.clientX - b.clientX;
+          const dy = a.clientY - b.clientY;
+          return Math.sqrt(dx * dx + dy * dy);
         }
 
-        function resetViewerGestureState() {
-          viewerTouchMode = 'idle';
-          viewerIsZooming = false;
-          viewerIsDragging = false;
-          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
+        function oneShotClamp(v, min, max) {
+          return Math.min(max, Math.max(min, v));
         }
 
-        function normalizeViewerScale() {
-          if (viewerScale < 1.02) {
-            viewerScale = 1;
-            viewerX = 0;
-            viewerY = 0;
-          }
-          applyViewerTransform();
-        }
-
-        function onViewerDoubleTap() {
-          viewerScale = viewerScale > 1 ? 1 : 2;
+        function oneShotResetViewerZoom() {
+          viewerScale = 1;
           viewerX = 0;
           viewerY = 0;
           applyViewerTransform();
         }
 
-        function onViewerTouchStart(e) {
-          if (!isViewerOpen()) return;
+        function oneShotEndGesture() {
+          oneShotMode = 'idle';
+          viewerIsZooming = false;
+          viewerIsDragging = false;
+          oneShotSwipeLocked = false;
+          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
+        }
 
-          if (e.touches && e.touches.length === 2) {
-            viewerTouchMode = 'pinch';
+        function onViewerTouchStart(e) {
+          if (!isViewerOpen() || !els.lightboxImage) return;
+
+          if (e.touches.length === 2) {
+            oneShotMode = 'pinch';
             viewerIsZooming = true;
             viewerIsDragging = false;
-            viewerPinchStartDistance = getViewerDistance(e.touches[0], e.touches[1]);
-            viewerPinchStartScale = viewerScale;
+            oneShotSwipeLocked = true;
+            oneShotStartDistance = oneShotDistance(e.touches[0], e.touches[1]);
+            oneShotStartScale = viewerScale;
             return;
           }
 
-          if (!e.touches || e.touches.length !== 1) return;
+          if (e.touches.length !== 1) return;
 
-          const touch = e.touches[0];
-          viewerTouchStartX = touch.clientX;
-          viewerTouchStartY = touch.clientY;
-          viewerTouchLastX = touch.clientX;
-          viewerTouchLastY = touch.clientY;
-          viewerTouchStartTime = Date.now();
+          const t = e.touches[0];
+          oneShotStartX = t.clientX;
+          oneShotStartY = t.clientY;
+          oneShotLastX = t.clientX;
+          oneShotLastY = t.clientY;
+          oneShotSwipeLocked = false;
 
           if (viewerScale > 1) {
-            viewerTouchMode = 'drag';
+            oneShotMode = 'pan';
             viewerIsDragging = true;
             viewerIsZooming = false;
             if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
           } else {
-            viewerTouchMode = 'swipe';
+            oneShotMode = 'swipe';
             viewerIsDragging = false;
             viewerIsZooming = false;
           }
         }
 
         function onViewerTouchMove(e) {
-          if (!isViewerOpen()) return;
+          if (!isViewerOpen() || !els.lightboxImage) return;
 
-          if (viewerTouchMode === 'pinch' && e.touches && e.touches.length === 2) {
+          if (oneShotMode === 'pinch' && e.touches.length === 2) {
             e.preventDefault();
-            const newDistance = getViewerDistance(e.touches[0], e.touches[1]);
-            if (!viewerPinchStartDistance) viewerPinchStartDistance = newDistance;
-            viewerScale = clampViewerScale(viewerPinchStartScale * (newDistance / viewerPinchStartDistance), 1, 4);
-            if (viewerScale === 1) {
-              viewerX = 0;
-              viewerY = 0;
+            const d = oneShotDistance(e.touches[0], e.touches[1]);
+            viewerScale = oneShotClamp(oneShotStartScale * (d / oneShotStartDistance), 1, 4);
+            applyViewerTransform();
+            return;
+          }
+
+          if (oneShotMode === 'pan' && viewerScale > 1 && e.touches.length === 1) {
+            e.preventDefault();
+            const t = e.touches[0];
+            viewerX += t.clientX - oneShotLastX;
+            viewerY += t.clientY - oneShotLastY;
+            oneShotLastX = t.clientX;
+            oneShotLastY = t.clientY;
+            applyViewerTransform();
+            return;
+          }
+
+          if (oneShotMode === 'swipe' && viewerScale === 1 && e.touches.length === 1 && !oneShotSwipeLocked) {
+            const t = e.touches[0];
+            const dx = t.clientX - oneShotStartX;
+            const dy = t.clientY - oneShotStartY;
+
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 70) {
+              oneShotSwipeLocked = true;
+              oneShotMode = 'idle';
+
+              if (dx < 0) nextViewer();
+              else prevViewer();
             }
-            applyViewerTransform();
-            return;
-          }
-
-          if (viewerTouchMode === 'drag' && viewerScale > 1 && e.touches && e.touches.length === 1) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            viewerX += touch.clientX - viewerTouchLastX;
-            viewerY += touch.clientY - viewerTouchLastY;
-            viewerTouchLastX = touch.clientX;
-            viewerTouchLastY = touch.clientY;
-            applyViewerTransform();
-            return;
-          }
-
-          if (viewerTouchMode === 'swipe' && viewerScale === 1 && e.touches && e.touches.length === 1) {
-            const touch = e.touches[0];
-            viewerTouchLastX = touch.clientX;
-            viewerTouchLastY = touch.clientY;
           }
         }
 
         function onViewerTouchEnd(e) {
           if (!isViewerOpen()) return;
 
-          if (e.touches && e.touches.length > 0) {
-            if (viewerTouchMode === 'pinch' && e.touches.length < 2) {
-              viewerTouchMode = viewerScale > 1 ? 'drag' : 'idle';
+          if (e.touches.length > 0) {
+            if (oneShotMode === 'pinch' && e.touches.length < 2) {
+              oneShotMode = viewerScale > 1 ? 'pan' : 'idle';
               viewerIsZooming = false;
-              viewerPinchStartDistance = 0;
-              viewerPinchStartScale = viewerScale;
             }
-            normalizeViewerScale();
             return;
           }
 
           const changed = e.changedTouches && e.changedTouches[0];
-          const endX = changed ? changed.clientX : viewerTouchLastX;
-          const endY = changed ? changed.clientY : viewerTouchLastY;
-          const totalDx = endX - viewerTouchStartX;
-          const totalDy = endY - viewerTouchStartY;
-          const elapsed = Date.now() - viewerTouchStartTime;
 
-          if (viewerTouchMode === 'swipe' && viewerScale === 1) {
-            if (Math.abs(totalDx) > 52 && Math.abs(totalDx) > Math.abs(totalDy) * 1.2 && elapsed < 900) {
-              if (totalDx > 0) prevViewer();
-              else nextViewer();
-            }
-
+          if (changed && oneShotMode === 'swipe' && !oneShotSwipeLocked) {
+            const dx = changed.clientX - oneShotStartX;
+            const dy = changed.clientY - oneShotStartY;
             const now = Date.now();
-            if (Math.abs(totalDx) < 12 && Math.abs(totalDy) < 12 && elapsed < 320) {
-              if (now - viewerTapTime < 320 && Math.abs(endX - viewerTapX) < 24 && Math.abs(endY - viewerTapY) < 24) {
-                onViewerDoubleTap();
-                viewerTapTime = 0;
+
+            if (Math.abs(dx) < 12 && Math.abs(dy) < 12) {
+              if (now - oneShotLastTap < 280 &&
+                  Math.abs(changed.clientX - oneShotLastTapX) < 24 &&
+                  Math.abs(changed.clientY - oneShotLastTapY) < 24) {
+                if (viewerScale === 1) {
+                  viewerScale = 2;
+                } else {
+                  viewerScale = 1;
+                  viewerX = 0;
+                  viewerY = 0;
+                }
+                applyViewerTransform();
+                oneShotLastTap = 0;
               } else {
-                viewerTapTime = now;
-                viewerTapX = endX;
-                viewerTapY = endY;
+                oneShotLastTap = now;
+                oneShotLastTapX = changed.clientX;
+                oneShotLastTapY = changed.clientY;
               }
             }
           }
 
-          normalizeViewerScale();
-          resetViewerGestureState();
+          if (viewerScale < 1.02) {
+            oneShotResetViewerZoom();
+          }
+
+          oneShotEndGesture();
         }
 
         viewerTouchTarget.addEventListener('touchstart', onViewerTouchStart, { passive:true });

@@ -7643,5 +7643,198 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 </style>
 
 <!-- ARCHIVE PRO VIEWER SCOPE IDENTITY LOCK APPLIED 2026-05-20 -->
+
+<script id="archive-pro-single-viewer-engine-reset">
+(function(){
+  'use strict';
+
+  let viewerEngineBound = false;
+  let activeViewer = null;
+  let zoomScale = 1;
+  let startX = 0;
+  let startY = 0;
+  let currentX = 0;
+  let currentY = 0;
+  let pinchStartDistance = 0;
+  let imageTranslateX = 0;
+  let imageTranslateY = 0;
+  let isDragging = false;
+  let isPinching = false;
+
+  function removeExistingViewer(){
+    document.querySelectorAll('.lightbox, .viewer, #lightbox, #viewer').forEach(function(v){
+      if(v && v.parentNode){
+        v.parentNode.removeChild(v);
+      }
+    });
+    document.body.classList.remove('viewer-open');
+    viewerEngineBound = false;
+    activeViewer = null;
+  }
+
+  function resetZoom(img){
+    zoomScale = 1;
+    imageTranslateX = 0;
+    imageTranslateY = 0;
+    if(img){
+      img.style.transform = 'translate3d(0,0,0) scale(1)';
+    }
+  }
+
+  function getDistance(t1, t2){
+    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+  }
+
+  function updateTransform(img){
+    img.style.transform =
+      'translate3d(' + imageTranslateX + 'px,' + imageTranslateY + 'px,0) scale(' + zoomScale + ')';
+  }
+
+  function bindViewerTouchEngine(viewer, wrap, img){
+    if(viewerEngineBound) return;
+    viewerEngineBound = true;
+
+    wrap.addEventListener('gesturestart', function(e){
+      e.preventDefault();
+    }, { passive:false });
+
+    wrap.addEventListener('gesturechange', function(e){
+      e.preventDefault();
+    }, { passive:false });
+
+    wrap.addEventListener('touchstart', function(e){
+      if(e.target.closest('.lightbox-side, .viewer-caption, .lightbox-close')) return;
+
+      if(e.touches.length === 2){
+        isPinching = true;
+        pinchStartDistance = getDistance(e.touches[0], e.touches[1]);
+        return;
+      }
+
+      if(e.touches.length !== 1) return;
+
+      isDragging = true;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      currentX = startX;
+      currentY = startY;
+    }, { passive:false });
+
+    wrap.addEventListener('touchmove', function(e){
+      if(e.target.closest('.lightbox-side, .viewer-caption')) return;
+
+      if(e.touches.length === 2){
+        e.preventDefault();
+        isPinching = true;
+
+        const distance = getDistance(e.touches[0], e.touches[1]);
+
+        if(pinchStartDistance > 0){
+          const scaleDelta = distance / pinchStartDistance;
+          zoomScale = Math.max(1, Math.min(5, zoomScale * scaleDelta));
+          updateTransform(img);
+        }
+
+        pinchStartDistance = distance;
+        return;
+      }
+
+      if(!isDragging || e.touches.length !== 1) return;
+
+      const touch = e.touches[0];
+      const dx = touch.clientX - currentX;
+      const dy = touch.clientY - currentY;
+
+      currentX = touch.clientX;
+      currentY = touch.clientY;
+
+      if(zoomScale > 1){
+        e.preventDefault();
+        imageTranslateX += dx;
+        imageTranslateY += dy;
+        updateTransform(img);
+      }
+    }, { passive:false });
+
+    wrap.addEventListener('touchend', function(e){
+      if(isPinching){
+        isPinching = false;
+        pinchStartDistance = 0;
+        return;
+      }
+
+      if(zoomScale > 1){
+        isDragging = false;
+        return;
+      }
+
+      const dx = currentX - startX;
+
+      if(Math.abs(dx) > 48){
+        if(dx < 0){
+          const nextBtn = viewer.querySelector('.lightbox-next');
+          if(nextBtn) nextBtn.click();
+        } else {
+          const prevBtn = viewer.querySelector('.lightbox-prev');
+          if(prevBtn) prevBtn.click();
+        }
+      }
+
+      isDragging = false;
+    }, { passive:false });
+
+    const closeBtn = viewer.querySelector('.lightbox-close');
+    if(closeBtn){
+      closeBtn.addEventListener('click', function(){
+        removeExistingViewer();
+      });
+    }
+
+    viewer.addEventListener('viewer:imageChanged', function(){
+      resetZoom(img);
+    });
+  }
+
+  const originalOpen = window.openLightbox || window.openViewer || null;
+
+  function patchOpenFunction(fnName){
+    const original = window[fnName];
+    if(typeof original !== 'function') return;
+
+    window[fnName] = function(){
+      removeExistingViewer();
+
+      const result = original.apply(this, arguments);
+
+      requestAnimationFrame(function(){
+        const viewer =
+          document.querySelector('.lightbox.open, .lightbox.active, .viewer.open, #lightbox.open');
+
+        if(!viewer) return;
+
+        activeViewer = viewer;
+
+        const wrap =
+          viewer.querySelector('.lightbox-stage, .viewer-image-wrap, .viewer-media');
+
+        const img =
+          viewer.querySelector('img');
+
+        if(!wrap || !img) return;
+
+        resetZoom(img);
+        bindViewerTouchEngine(viewer, wrap, img);
+      });
+
+      return result;
+    };
+  }
+
+  patchOpenFunction('openLightbox');
+  patchOpenFunction('openViewer');
+
+})();
+</script>
+
 </body>
 </html>

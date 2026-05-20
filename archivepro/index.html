@@ -4090,103 +4090,109 @@
     }
 
 
-    /* ARCHIVE PRO FINAL MICRO FIX — arrow size + safe close + caption language label only */
-    .caption-full-view{
-      display:inline-flex !important;
-      align-items:center !important;
-      justify-content:center !important;
-      width:max-content !important;
-      max-width:100% !important;
-      min-height:30px !important;
-      margin-top:9px !important;
-      padding:0 10px !important;
-      border-radius:999px !important;
-      border:1px solid rgba(212,180,109,.28) !important;
-      background:rgba(212,180,109,.045) !important;
-      color:rgba(212,180,109,.92) !important;
-      font-size:11px !important;
-      line-height:30px !important;
-      font-weight:600 !important;
-      letter-spacing:.04em !important;
-      white-space:nowrap !important;
-      pointer-events:none !important;
-    }
 
-    /* Desktop/lightbox caption: filename, title, material, size, year only */
+    /* ARCHIVE PRO FINAL MICRO FIX — caption full view label only
+       - Keeps swipe / pinch zoom / touch events untouched.
+       - Restores one caption action inside Lightbox: 전체보기 / View Full.
+       - Removes the separate image/open-zoom wording from the caption UI. */
     .lb-meta .lb-row:nth-child(4),
     .lb-meta .lb-row:nth-child(5),
-    #lbOpenImage,
-    #lbOpenZoom,
-    .lb-actions{
+    #lbOpenImage{
       display:none !important;
     }
 
+    .lb-actions{
+      display:flex !important;
+      gap:10px !important;
+      flex-wrap:wrap !important;
+      margin-top:14px !important;
+    }
+
+    #lbOpenZoom{
+      display:inline-flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      width:auto !important;
+      min-width:0 !important;
+      min-height:34px !important;
+      padding:0 13px !important;
+      border-radius:999px !important;
+      border:1px solid rgba(212,180,109,.34) !important;
+      background:rgba(212,180,109,.055) !important;
+      color:rgba(212,180,109,.92) !important;
+      font-size:12px !important;
+      font-weight:700 !important;
+      line-height:34px !important;
+      letter-spacing:.04em !important;
+      text-decoration:none !important;
+      white-space:nowrap !important;
+      box-shadow:none !important;
+      transform:none !important;
+      touch-action:manipulation !important;
+      -webkit-tap-highlight-color:rgba(212,180,109,.16) !important;
+    }
+
+    #lbOpenZoom:hover,
+    #lbOpenZoom:focus-visible{
+      color:#f4efe6 !important;
+      border-color:rgba(212,180,109,.58) !important;
+      background:rgba(212,180,109,.09) !important;
+      outline:none !important;
+      transform:none !important;
+      box-shadow:none !important;
+    }
+
+    .card .full-view,
+    .card .view-full,
+    .card .fullview,
+    .card .card-fullview,
+    .card .caption-fullview,
+    .card .open-full,
+    .card .open-viewer{
+      display:none !important;
+    }
+
+
+    /* ARCHIVE PRO MOBILE CARD CAPTION FULLVIEW HIDE ONLY
+       - Removes only the duplicated Full View text above collection/email inquiry in mobile card captions.
+       - Does not touch Lightbox/View Full caption action, swipe, pinch zoom, touch events, image fit, rendering, search, sort, or LOAD MORE. */
+    @media (max-width:880px){
+      .card .full-view,
+      .card .view-full,
+      .card .fullview,
+      .card .card-fullview,
+      .card .caption-fullview,
+      .card .open-full,
+      .card .open-viewer,
+      .card .view-full-btn,
+      .card .full-view-btn,
+      .card .caption-action-fullview{
+        display:none !important;
+      }
+    }
+
+
+    /* ARCHIVE PRO MOBILE X CIRCLE MICRO FIX ONLY — smaller close button, no touch/swipe/zoom changes */
     @media (max-width:768px){
-      .lightbox.open .lightbox-nav,
-      .lightbox.active .lightbox-nav{
-        display:flex !important;
-        position:fixed !important;
-        top:50% !important;
-        transform:translateY(-50%) !important;
-        z-index:10020 !important;
-        width:34px !important;
-        height:44px !important;
-        min-width:34px !important;
-        min-height:44px !important;
-        border-radius:999px !important;
-        border:1px solid rgba(212,180,109,.24) !important;
-        background:rgba(7,10,20,.52) !important;
-        color:rgba(212,180,109,.88) !important;
-        font-size:24px !important;
-        line-height:1 !important;
-        align-items:center !important;
-        justify-content:center !important;
-        padding:0 !important;
-        opacity:.78 !important;
-        box-shadow:0 8px 18px rgba(0,0,0,.24) !important;
-        touch-action:manipulation !important;
-        -webkit-tap-highlight-color:transparent !important;
-      }
-
-      .lightbox-prev{
-        left:calc(8px + env(safe-area-inset-left, 0px)) !important;
-      }
-
-      .lightbox-next{
-        right:calc(8px + env(safe-area-inset-right, 0px)) !important;
-      }
-
       .viewer-close,
       .lightbox-close,
       .close-viewer,
       #viewerCloseBtn,
       #lightboxClose{
-        position:fixed !important;
-        top:calc(env(safe-area-inset-top, 0px) + 8px) !important;
-        right:calc(env(safe-area-inset-right, 0px) + 10px) !important;
-        z-index:10040 !important;
-        width:42px !important;
-        height:42px !important;
-        min-width:42px !important;
-        min-height:42px !important;
+        width:34px !important;
+        height:34px !important;
+        min-width:34px !important;
+        min-height:34px !important;
+        top:calc(env(safe-area-inset-top, 0px) + 10px) !important;
+        right:10px !important;
+        font-size:16px !important;
+        line-height:1 !important;
+        border-radius:999px !important;
         display:grid !important;
         place-items:center !important;
-        border-radius:999px !important;
-        background:rgba(7,10,20,.96) !important;
-        border:1px solid rgba(255,255,255,.18) !important;
-        color:#fff !important;
-        pointer-events:auto !important;
-        touch-action:manipulation !important;
-      }
-
-      .caption-full-view{
-        min-height:28px !important;
-        line-height:28px !important;
-        margin-top:8px !important;
-        font-size:10.8px !important;
+        padding:0 !important;
       }
     }
-
 </style>
 
 </head>
@@ -4609,7 +4615,7 @@
           emptyState: '조건에 맞는 작품이 없습니다.',
           loadMore: '더 보기 / Load more',
           footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: '무제',
+          untitled: '무제 / 캡션 없음',
           noInfo: '정보 없음',
           allSections: '전체 섹션',
           lbMaterial: '재료',
@@ -4618,7 +4624,7 @@
           lbImage: '이미지',
           lbZoom: '줌',
           openImage: '이미지 열기',
-          openZoom: '줌 열기',
+          openZoom: '전체보기',
           sortOptions: [
             '기본순',
             '번호 늦은순',
@@ -4653,7 +4659,7 @@
           emptyState: 'No artworks match the current filters.',
           loadMore: '더 보기 / Load more',
           footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: 'Untitled',
+          untitled: 'Untitled / No Caption',
           noInfo: 'No information',
           allSections: 'All sections',
           lbMaterial: 'Material',
@@ -4662,7 +4668,7 @@
           lbImage: 'Image',
           lbZoom: 'Zoom',
           openImage: 'Open image',
-          openZoom: 'Open zoom',
+          openZoom: 'View Full',
           sortOptions: [
             'Default',
             'Late ID',
@@ -4706,7 +4712,7 @@
           lbImage: '이미지 / Image',
           lbZoom: '줌 / Zoom',
           openImage: '이미지 열기 / Open image',
-          openZoom: '줌 열기 / Open zoom',
+          openZoom: '전체보기 / View Full',
           sortOptions: [
             '기본순 / Default',
             '번호 늦은순 / Late ID',
@@ -4951,33 +4957,37 @@
         return lang === 'en' ? sec.en : sec.kr;
       }
 
-      function getBilingualValue(krValue, enValue) {
-        const kr = safeText(krValue);
-        const en = safeText(enValue);
-        if (state.lang === 'en') return en;
+      function getTitle(item) {
+        const kr = safeText(item.title_kr);
+        const en = safeText(item.title_en);
+        if (state.lang === 'en') return en || kr || '';
         if (state.lang === 'both') {
           if (kr && en && kr !== en) return `${kr} / ${en}`;
           return kr || en || '';
         }
-        return kr;
-      }
-
-      function getFullViewLabel() {
-        if (state.lang === 'en') return 'View Full';
-        if (state.lang === 'both') return '전체보기 / View Full';
-        return '전체보기';
-      }
-
-      function getTitle(item) {
-        return getBilingualValue(item.title_kr, item.title_en);
+        return kr || en || '';
       }
 
       function getMaterial(item) {
-        return getBilingualValue(item.material_kr, item.material_en);
+        const kr = safeText(item.material_kr);
+        const en = safeText(item.material_en);
+        if (state.lang === 'en') return en || kr;
+        if (state.lang === 'both') {
+          if (kr && en && kr !== en) return `${kr} / ${en}`;
+          return kr || en;
+        }
+        return kr || en;
       }
 
       function getSize(item) {
-        return getBilingualValue(item.size_kr, item.size_en);
+        const kr = safeText(item.size_kr);
+        const en = safeText(item.size_en);
+        if (state.lang === 'en') return en || kr;
+        if (state.lang === 'both') {
+          if (kr && en && kr !== en) return `${kr} / ${en}`;
+          return kr || en;
+        }
+        return kr || en;
       }
 
       function getYear(item) {
@@ -5801,7 +5811,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         const rawImage = safeText(work.image);
         if (!rawImage) console.warn('MISSING IMAGE', work.id);
         const imageSrc = rawImage ? withCacheBust(rawImage) : '';
-        const detailText = getFullViewLabel();
+        const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(work);
         const priority = index < INITIAL_RENDER_COUNT;
         const imgSrc = imageSrc || SVG_PLACEHOLDER;
@@ -5815,7 +5825,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           '<article class="card" tabindex="0" role="button" data-render-index="', escapeHTML(index), '" data-key="', escapeHTML(key), '" data-id="', escapeHTML(work.id), '" data-section-id="', escapeHTML(work.section_id), '" aria-label="', escapeHTML(work.id), ' 작품 보기">',
             '<div class="thumb-wrap">',
               '<img class="thumb', loadedClass, '" src="', escapeHTML(priority ? imgSrc : SVG_PLACEHOLDER), '"', dataSrc, ' alt="', escapeHTML(title || work.id || ''), '" loading="', loading, '" decoding="async" fetchpriority="', fetchPriority, '" data-zoom="', escapeHTML(work.zoom || ''), '">',
-              '<span class="detail-hover">', escapeHTML(detailText), '</span>',
+              '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
             '</div>',
             '<div class="card-body">',
               '<div class="card-top">',
@@ -5824,7 +5834,6 @@ function normalizeImageUrl(url, kind, id, sectionId) {
               '</div>',
               '<p class="title', title ? '' : ' empty', '">', escapeHTML(title || t('untitled')), '</p>',
               isOrigin ? '' : '<p class="caption">' + escapeHTML(infoLine || t('noInfo')) + '</p>',
-              '<span class="caption-full-view" data-full-view-label="true">', escapeHTML(detailText), '</span>',
               statusHTML,
             '</div>',
           '</article>'

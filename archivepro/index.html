@@ -4546,6 +4546,50 @@
   }
 }
 </style>
+
+<style>
+/* ARCHIVE PRO MOBILE CAPTION +10 POINT EXPAND + FULLVIEW REMOVE FINAL FIX
+   Mobile caption/fullview display only.
+   Swipe, pinch zoom, pointer/touch events, image paths, works data, search/filter/sort/load more unchanged. */
+@media (max-width: 768px) {
+  #lbOpenZoom.mobile-hide-fullview,
+  .mobile-hide-fullview,
+  .lb-actions.mobile-hide-fullview-wrap {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .viewer-inner,
+  .lightbox-inner {
+    grid-template-rows: minmax(0, 42dvh) minmax(0, 58dvh) !important;
+  }
+
+  .viewer-caption,
+  .lightbox-caption,
+  .viewer-info,
+  .lightbox-info,
+  .viewer-meta-panel,
+  .lightbox-meta-panel,
+  .detail-panel,
+  .lightbox-side {
+    max-height: min(94dvh, 1080px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 260px) !important;
+    touch-action: pan-y !important;
+    overscroll-behavior-y: contain !important;
+  }
+}
+</style>
+
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>
@@ -4714,9 +4758,9 @@
           <div class="lb-row"><div class="lb-key" id="lbKeyZoom">줌</div><div class="lb-val" id="lbZoomPath">—</div></div>
         </div>
 
-        <div class="lb-actions">
+        <div class="lb-actions mobile-hide-fullview-wrap">
           <a id="lbOpenImage" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">이미지 열기</a>
-          <a id="lbOpenZoom" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">줌 열기</a>
+          <a id="lbOpenZoom" class="lb-link mobile-hide-fullview" href="#" target="_blank" rel="noopener noreferrer">줌 열기</a>
         </div>
       </aside>
     </div>
@@ -6361,6 +6405,23 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         els.lbZoomPath.textContent = zoomUrl || '—';
         els.lbOpenImage.href = imageUrl || '#';
         els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
+
+        /* ARCHIVE PRO MOBILE FULLVIEW REMOVE ONLY
+           Mobile Viewer caption should not render/show the Full View action.
+           Desktop keeps the same Full View action and function. */
+        const isMobileCaptionView = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+        if (els.lbOpenZoom) {
+          els.lbOpenZoom.classList.add('mobile-hide-fullview');
+          els.lbOpenZoom.hidden = !!isMobileCaptionView;
+          els.lbOpenZoom.setAttribute('aria-hidden', isMobileCaptionView ? 'true' : 'false');
+          els.lbOpenZoom.tabIndex = isMobileCaptionView ? -1 : 0;
+        }
+        const lbActions = els.lbOpenZoom ? els.lbOpenZoom.closest('.lb-actions') : null;
+        if (lbActions) {
+          lbActions.classList.add('mobile-hide-fullview-wrap');
+          lbActions.hidden = !!isMobileCaptionView;
+          lbActions.setAttribute('aria-hidden', isMobileCaptionView ? 'true' : 'false');
+        }
 
         els.lightboxImage.alt = title;
         els.lightboxImage.classList.remove('is-ready');

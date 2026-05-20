@@ -4089,6 +4089,104 @@
       }
     }
 
+
+    /* ARCHIVE PRO FINAL MICRO FIX — arrow size + safe close + caption language label only */
+    .caption-full-view{
+      display:inline-flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      width:max-content !important;
+      max-width:100% !important;
+      min-height:30px !important;
+      margin-top:9px !important;
+      padding:0 10px !important;
+      border-radius:999px !important;
+      border:1px solid rgba(212,180,109,.28) !important;
+      background:rgba(212,180,109,.045) !important;
+      color:rgba(212,180,109,.92) !important;
+      font-size:11px !important;
+      line-height:30px !important;
+      font-weight:600 !important;
+      letter-spacing:.04em !important;
+      white-space:nowrap !important;
+      pointer-events:none !important;
+    }
+
+    /* Desktop/lightbox caption: filename, title, material, size, year only */
+    .lb-meta .lb-row:nth-child(4),
+    .lb-meta .lb-row:nth-child(5),
+    #lbOpenImage,
+    #lbOpenZoom,
+    .lb-actions{
+      display:none !important;
+    }
+
+    @media (max-width:768px){
+      .lightbox.open .lightbox-nav,
+      .lightbox.active .lightbox-nav{
+        display:flex !important;
+        position:fixed !important;
+        top:50% !important;
+        transform:translateY(-50%) !important;
+        z-index:10020 !important;
+        width:34px !important;
+        height:44px !important;
+        min-width:34px !important;
+        min-height:44px !important;
+        border-radius:999px !important;
+        border:1px solid rgba(212,180,109,.24) !important;
+        background:rgba(7,10,20,.52) !important;
+        color:rgba(212,180,109,.88) !important;
+        font-size:24px !important;
+        line-height:1 !important;
+        align-items:center !important;
+        justify-content:center !important;
+        padding:0 !important;
+        opacity:.78 !important;
+        box-shadow:0 8px 18px rgba(0,0,0,.24) !important;
+        touch-action:manipulation !important;
+        -webkit-tap-highlight-color:transparent !important;
+      }
+
+      .lightbox-prev{
+        left:calc(8px + env(safe-area-inset-left, 0px)) !important;
+      }
+
+      .lightbox-next{
+        right:calc(8px + env(safe-area-inset-right, 0px)) !important;
+      }
+
+      .viewer-close,
+      .lightbox-close,
+      .close-viewer,
+      #viewerCloseBtn,
+      #lightboxClose{
+        position:fixed !important;
+        top:calc(env(safe-area-inset-top, 0px) + 8px) !important;
+        right:calc(env(safe-area-inset-right, 0px) + 10px) !important;
+        z-index:10040 !important;
+        width:42px !important;
+        height:42px !important;
+        min-width:42px !important;
+        min-height:42px !important;
+        display:grid !important;
+        place-items:center !important;
+        border-radius:999px !important;
+        background:rgba(7,10,20,.96) !important;
+        border:1px solid rgba(255,255,255,.18) !important;
+        color:#fff !important;
+        pointer-events:auto !important;
+        touch-action:manipulation !important;
+      }
+
+      .caption-full-view{
+        min-height:28px !important;
+        line-height:28px !important;
+        margin-top:8px !important;
+        font-size:10.8px !important;
+      }
+    }
+
 </style>
 
 </head>
@@ -4511,7 +4609,7 @@
           emptyState: '조건에 맞는 작품이 없습니다.',
           loadMore: '더 보기 / Load more',
           footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: '무제 / 캡션 없음',
+          untitled: '무제',
           noInfo: '정보 없음',
           allSections: '전체 섹션',
           lbMaterial: '재료',
@@ -4555,7 +4653,7 @@
           emptyState: 'No artworks match the current filters.',
           loadMore: '더 보기 / Load more',
           footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: 'Untitled / No Caption',
+          untitled: 'Untitled',
           noInfo: 'No information',
           allSections: 'All sections',
           lbMaterial: 'Material',
@@ -4853,37 +4951,33 @@
         return lang === 'en' ? sec.en : sec.kr;
       }
 
-      function getTitle(item) {
-        const kr = safeText(item.title_kr);
-        const en = safeText(item.title_en);
-        if (state.lang === 'en') return en || kr || '';
+      function getBilingualValue(krValue, enValue) {
+        const kr = safeText(krValue);
+        const en = safeText(enValue);
+        if (state.lang === 'en') return en;
         if (state.lang === 'both') {
           if (kr && en && kr !== en) return `${kr} / ${en}`;
           return kr || en || '';
         }
-        return kr || en || '';
+        return kr;
+      }
+
+      function getFullViewLabel() {
+        if (state.lang === 'en') return 'View Full';
+        if (state.lang === 'both') return '전체보기 / View Full';
+        return '전체보기';
+      }
+
+      function getTitle(item) {
+        return getBilingualValue(item.title_kr, item.title_en);
       }
 
       function getMaterial(item) {
-        const kr = safeText(item.material_kr);
-        const en = safeText(item.material_en);
-        if (state.lang === 'en') return en || kr;
-        if (state.lang === 'both') {
-          if (kr && en && kr !== en) return `${kr} / ${en}`;
-          return kr || en;
-        }
-        return kr || en;
+        return getBilingualValue(item.material_kr, item.material_en);
       }
 
       function getSize(item) {
-        const kr = safeText(item.size_kr);
-        const en = safeText(item.size_en);
-        if (state.lang === 'en') return en || kr;
-        if (state.lang === 'both') {
-          if (kr && en && kr !== en) return `${kr} / ${en}`;
-          return kr || en;
-        }
-        return kr || en;
+        return getBilingualValue(item.size_kr, item.size_en);
       }
 
       function getYear(item) {
@@ -5707,7 +5801,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         const rawImage = safeText(work.image);
         if (!rawImage) console.warn('MISSING IMAGE', work.id);
         const imageSrc = rawImage ? withCacheBust(rawImage) : '';
-        const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
+        const detailText = getFullViewLabel();
         const statusHTML = renderStatusUI(work);
         const priority = index < INITIAL_RENDER_COUNT;
         const imgSrc = imageSrc || SVG_PLACEHOLDER;
@@ -5721,7 +5815,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           '<article class="card" tabindex="0" role="button" data-render-index="', escapeHTML(index), '" data-key="', escapeHTML(key), '" data-id="', escapeHTML(work.id), '" data-section-id="', escapeHTML(work.section_id), '" aria-label="', escapeHTML(work.id), ' 작품 보기">',
             '<div class="thumb-wrap">',
               '<img class="thumb', loadedClass, '" src="', escapeHTML(priority ? imgSrc : SVG_PLACEHOLDER), '"', dataSrc, ' alt="', escapeHTML(title || work.id || ''), '" loading="', loading, '" decoding="async" fetchpriority="', fetchPriority, '" data-zoom="', escapeHTML(work.zoom || ''), '">',
-              '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
+              '<span class="detail-hover">', escapeHTML(detailText), '</span>',
             '</div>',
             '<div class="card-body">',
               '<div class="card-top">',
@@ -5730,6 +5824,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
               '</div>',
               '<p class="title', title ? '' : ' empty', '">', escapeHTML(title || t('untitled')), '</p>',
               isOrigin ? '' : '<p class="caption">' + escapeHTML(infoLine || t('noInfo')) + '</p>',
+              '<span class="caption-full-view" data-full-view-label="true">', escapeHTML(detailText), '</span>',
               statusHTML,
             '</div>',
           '</article>'

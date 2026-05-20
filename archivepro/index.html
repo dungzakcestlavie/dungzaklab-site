@@ -4666,6 +4666,8 @@
       let searchTimer = null;
       let worksLoadPromise = null;
       let archiveScrollY = 0;
+      let currentViewerWorkId = null;
+      let closeReturnWorkId = null;
       let closeClickBlockUntil = 0;
 
       let viewerScale = 1;
@@ -5680,7 +5682,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         const key = String(work._key || (work._index + '::' + work.section_id + '::' + work.id));
 
         return [
-          '<article class="card" tabindex="0" role="button" data-render-index="', escapeHTML(index), '" data-key="', escapeHTML(key), '" data-id="', escapeHTML(work.id), '" data-section-id="', escapeHTML(work.section_id), '" aria-label="', escapeHTML(work.id), ' 작품 보기">',
+          '<article class="card" tabindex="0" role="button" data-render-index="', escapeHTML(index), '" data-key="', escapeHTML(key), '" data-id="', escapeHTML(work.id), '" data-work-id="', escapeHTML(work.id), '" data-section-id="', escapeHTML(work.section_id), '" aria-label="', escapeHTML(work.id), ' 작품 보기">',
             '<div class="thumb-wrap">',
               '<img class="thumb', loadedClass, '" src="', escapeHTML(priority ? imgSrc : SVG_PLACEHOLDER), '"', dataSrc, ' alt="', escapeHTML(title || work.id || ''), '" loading="', loading, '" decoding="async" fetchpriority="', fetchPriority, '" data-zoom="', escapeHTML(work.zoom || ''), '">',
               '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
@@ -5847,6 +5849,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       function openLightbox(item) {
         archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
         state.lightboxItem = item;
+        if (item && item.id) {
+          currentViewerWorkId = String(item.id);
+          closeReturnWorkId = String(item.id);
+        }
         resetViewerTransform();
 
         const isOrigin = Number(item.section_id) === 0;
@@ -5948,14 +5954,67 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         }, 700);
       }
 
+      function ensureWorkRenderedForReturn(workId) {
+        if (!workId || !Array.isArray(state.filtered) || !state.filtered.length) return;
+        const index = state.filtered.findIndex(function(work) {
+          return work && String(work.id) === String(workId);
+        });
+        if (index < 0) return;
+        if (index >= state.visibleCount) {
+          state.visibleCount = index + 1;
+          visibleCount = state.visibleCount;
+          renderGrid();
+        }
+      }
+
+      function getReturnCardSelector(workId) {
+        const value = String(workId || '');
+        if (!value) return '';
+        if (window.CSS && typeof window.CSS.escape === 'function') {
+          return '[data-work-id="' + window.CSS.escape(value) + '"], [data-id="' + window.CSS.escape(value) + '"]';
+        }
+        const fallback = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+        return '[data-work-id="' + fallback + '"], [data-id="' + fallback + '"]';
+      }
+
+      function scrollToWorkCard(workId) {
+        if (!workId) return false;
+
+        ensureWorkRenderedForReturn(workId);
+
+        const selector = getReturnCardSelector(workId);
+        const card = selector ? document.querySelector(selector) : null;
+        if (!card) return false;
+
+        const offset = window.innerWidth <= 768 ? 72 : 96;
+        const getY = function() {
+          return Math.max(0, Math.round(card.getBoundingClientRect().top + window.pageYOffset - offset));
+        };
+
+        const scrollExact = function(behavior) {
+          window.scrollTo({ top: getY(), behavior: behavior || 'auto' });
+        };
+
+        scrollExact('auto');
+        window.setTimeout(function() { scrollExact('smooth'); }, 80);
+        window.setTimeout(function() { scrollExact('auto'); }, 220);
+        return true;
+      }
+
       function restoreArchiveScroll() {
-        window.setTimeout(function() {
-          window.scrollTo(0, archiveScrollY || 0);
-        }, 0);
+        const targetWorkId = closeReturnWorkId || currentViewerWorkId;
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            if (!scrollToWorkCard(targetWorkId)) {
+              window.scrollTo(0, archiveScrollY || 0);
+            }
+          });
+        });
       }
 
       function closeLightbox() {
         armCloseNavigationShield();
+        closeReturnWorkId = currentViewerWorkId || (state.lightboxItem && state.lightboxItem.id ? String(state.lightboxItem.id) : closeReturnWorkId);
         state.lightboxItem = null;
         resetViewerTransform();
         if (els.lightbox) {
@@ -5973,6 +6032,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 
       function closeViewer() {
         armCloseNavigationShield();
+        closeReturnWorkId = currentViewerWorkId || (state.lightboxItem && state.lightboxItem.id ? String(state.lightboxItem.id) : closeReturnWorkId);
         state.lightboxItem = null;
         resetViewerTransform();
 

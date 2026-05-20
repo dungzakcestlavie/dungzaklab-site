@@ -4051,6 +4051,52 @@
         padding:calc(env(safe-area-inset-top, 0px) + 60px) 10px 8px 10px !important;
       }
     }
+
+    /* DUNGZAKLAB.ART ORIGINS VIEWER SCOPE + IMAGE FRAME STABILITY — minimal viewer-only override */
+    .viewer-image-frame,
+    .lightbox-image-frame,
+    .viewer-art-frame,
+    .lightbox-stage{
+      min-height:60vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .viewer-image-frame img,
+    .lightbox-image-frame img,
+    .viewer-art-frame img,
+    .viewer img,
+    .lightbox img,
+    #lightboxImage{
+      width:auto !important;
+      height:auto !important;
+      max-width:min(92vw, 1200px) !important;
+      max-height:82vh !important;
+      object-fit:contain !important;
+      transform:translate3d(0,0,0) scale(1) !important;
+      scale:1 !important;
+      translate:0 0 !important;
+    }
+
+    @media (max-width:768px){
+      .viewer-image-frame,
+      .lightbox-image-frame,
+      .viewer-art-frame,
+      .lightbox-stage{
+        min-height:56vh;
+      }
+
+      .viewer-image-frame img,
+      .lightbox-image-frame img,
+      .viewer-art-frame img,
+      .viewer img,
+      .lightbox img,
+      #lightboxImage{
+        max-width:96vw !important;
+        max-height:54vh !important;
+      }
+    }
 </style>
 
 </head>
@@ -4667,7 +4713,11 @@
       let worksLoadPromise = null;
       let archiveScrollY = 0;
       let currentViewerWorkId = null;
+      let currentViewerWorkKey = null;
       let closeReturnWorkId = null;
+      let closeReturnWorkKey = null;
+      let viewerScopeWorks = [];
+      let currentViewerIndex = 0;
       let closeClickBlockUntil = 0;
 
       let viewerScale = 1;
@@ -4709,17 +4759,77 @@
         return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
       }
 
+      function isOriginsWork(work) {
+        return String(work && work.section_id) === '0' || String((work && work.id) || '').toUpperCase().startsWith('OR-');
+      }
+
+      function getWorkById(workId) {
+        const target = String(workId || '');
+        if (!target) return null;
+        return (state.all || []).find(function(work) {
+          return work && String(work.id) === target;
+        }) || null;
+      }
+
+      function getCurrentFilteredWorks() {
+        /* VIEWER SCOPE LOCK:
+           The viewer must use only the exact current filter/search/sort result array.
+           Never fall back to state.all while a section/filter/search result is active,
+           because that mixes sections during prev/next/swipe/keyboard navigation. */
+        const list = Array.isArray(state.filtered) ? state.filtered : [];
+        return list.filter(isSectionAllowedForRender);
+      }
+
+      function getWorkKey(work) {
+        if (!work) return '';
+        return String(work._key || (work._index + '::' + work.section_id + '::' + work.id));
+      }
+
+      function prepareViewerScopeForWork(work) {
+        const currentFilteredWorks = getCurrentFilteredWorks();
+        const targetKey = getWorkKey(work);
+        const targetId = String((work && work.id) || '');
+
+        viewerScopeWorks = currentFilteredWorks.slice();
+
+        if (!viewerScopeWorks.length && work) viewerScopeWorks = [work];
+
+        currentViewerIndex = viewerScopeWorks.findIndex(function(item) {
+          return item && (getWorkKey(item) === targetKey || (targetKey === '' && String(item.id) === targetId));
+        });
+        if (currentViewerIndex < 0) currentViewerIndex = 0;
+
+        return viewerScopeWorks[currentViewerIndex] || work;
+      }
+
+      function normalizeViewerImage(img) {
+        if (!img) return;
+        img.style.width = 'auto';
+        img.style.height = 'auto';
+        img.style.maxWidth = '';
+        img.style.maxHeight = '';
+        img.style.objectFit = 'contain';
+        img.style.transform = 'translate3d(0,0,0) scale(1)';
+        img.style.scale = '1';
+        img.style.translate = '0 0';
+        img.style.aspectRatio = 'auto';
+      }
+
       function getCurrentViewerIndex() {
-        if (!state.lightboxItem || !state.filtered.length) return -1;
-        return state.filtered.findIndex((item) => item === state.lightboxItem || item.id === state.lightboxItem.id);
+        if (!state.lightboxItem || !viewerScopeWorks.length) return -1;
+        const index = viewerScopeWorks.findIndex(function(item) {
+          return item === state.lightboxItem || (item && state.lightboxItem && getWorkKey(item) === getWorkKey(state.lightboxItem));
+        });
+        return index >= 0 ? index : currentViewerIndex;
       }
 
       function openViewerByOffset(offset) {
-        if (!isViewerOpen() || !state.filtered.length) return;
+        if (!isViewerOpen() || !viewerScopeWorks.length) return;
         const current = getCurrentViewerIndex();
         if (current < 0) return;
-        const nextIndex = (current + offset + state.filtered.length) % state.filtered.length;
-        openLightbox(state.filtered[nextIndex]);
+        const nextIndex = (current + offset + viewerScopeWorks.length) % viewerScopeWorks.length;
+        currentViewerIndex = nextIndex;
+        openLightbox(viewerScopeWorks[nextIndex]);
       }
 
       function nextViewer() { openViewerByOffset(1); }
@@ -5848,10 +5958,13 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 
       function openLightbox(item) {
         archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        item = prepareViewerScopeForWork(item);
         state.lightboxItem = item;
         if (item && item.id) {
           currentViewerWorkId = String(item.id);
+          currentViewerWorkKey = getWorkKey(item);
           closeReturnWorkId = String(item.id);
+          closeReturnWorkKey = currentViewerWorkKey;
         }
         resetViewerTransform();
 
@@ -5883,21 +5996,16 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         els.lightboxImage.decoding = 'async';
         els.lightboxImage.fetchPriority = 'high';
 
-        if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
-          els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
-          els.lightboxImage.style.width = 'auto';
-          els.lightboxImage.style.height = 'auto';
-          els.lightboxImage.style.maxWidth = '';
-          els.lightboxImage.style.maxHeight = '';
-        }
+        normalizeViewerImage(els.lightboxImage);
 
         els.lightboxImage.onload = () => {
           resetViewerTransform();
-          if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
-            els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
-            els.lightboxImage.style.width = 'auto';
-            els.lightboxImage.style.height = 'auto';
-          }
+          normalizeViewerImage(els.lightboxImage);
+          requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+              normalizeViewerImage(els.lightboxImage);
+            });
+          });
           els.lightboxImage.classList.remove('is-loading');
           els.lightboxImage.classList.add('is-ready');
         };
@@ -5912,11 +6020,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           els.lightboxImage.src = displayUrl;
         });
 
-        if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
-          els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
-          els.lightboxImage.style.width = 'auto';
-          els.lightboxImage.style.height = 'auto';
-        }
+        normalizeViewerImage(els.lightboxImage);
 
         els.lightbox.classList.add('open');
         els.lightbox.classList.add('active');
@@ -5954,10 +6058,12 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         }, 700);
       }
 
-      function ensureWorkRenderedForReturn(workId) {
-        if (!workId || !Array.isArray(state.filtered) || !state.filtered.length) return;
+      function ensureWorkRenderedForReturn(workId, workKey) {
+        if (!Array.isArray(state.filtered) || !state.filtered.length) return;
+        const targetKey = String(workKey || '');
+        const targetId = String(workId || '');
         const index = state.filtered.findIndex(function(work) {
-          return work && String(work.id) === String(workId);
+          return work && ((targetKey && getWorkKey(work) === targetKey) || (!targetKey && String(work.id) === targetId));
         });
         if (index < 0) return;
         if (index >= state.visibleCount) {
@@ -5988,12 +6094,12 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         return Math.max(104, Math.min(138, headerHeight + visualOffset + 22));
       }
 
-      function scrollToWorkCard(workId) {
-        if (!workId) return false;
+      function scrollToWorkCard(workId, workKey) {
+        if (!workId && !workKey) return false;
 
-        ensureWorkRenderedForReturn(workId);
+        ensureWorkRenderedForReturn(workId, workKey);
 
-        const selector = getReturnCardSelector(workId);
+        const selector = getReturnCardSelector(workId, workKey);
         const card = selector ? document.querySelector(selector) : null;
         if (!card) return false;
 
@@ -6024,9 +6130,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 
       function restoreArchiveScroll() {
         const targetWorkId = closeReturnWorkId || currentViewerWorkId;
+        const targetWorkKey = closeReturnWorkKey || currentViewerWorkKey;
         requestAnimationFrame(function() {
           requestAnimationFrame(function() {
-            if (!scrollToWorkCard(targetWorkId)) {
+            if (!scrollToWorkCard(targetWorkId, targetWorkKey)) {
               window.scrollTo(0, archiveScrollY || 0);
             }
           });
@@ -6036,6 +6143,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       function closeLightbox() {
         armCloseNavigationShield();
         closeReturnWorkId = currentViewerWorkId || (state.lightboxItem && state.lightboxItem.id ? String(state.lightboxItem.id) : closeReturnWorkId);
+        closeReturnWorkKey = currentViewerWorkKey || (state.lightboxItem ? getWorkKey(state.lightboxItem) : closeReturnWorkKey);
         state.lightboxItem = null;
         resetViewerTransform();
         if (els.lightbox) {
@@ -6054,6 +6162,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       function closeViewer() {
         armCloseNavigationShield();
         closeReturnWorkId = currentViewerWorkId || (state.lightboxItem && state.lightboxItem.id ? String(state.lightboxItem.id) : closeReturnWorkId);
+        closeReturnWorkKey = currentViewerWorkKey || (state.lightboxItem ? getWorkKey(state.lightboxItem) : closeReturnWorkKey);
         state.lightboxItem = null;
         resetViewerTransform();
 
@@ -6521,8 +6630,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
             if (!card) return;
             const targetKey = safeText(card.dataset.key);
             const targetId = safeText(card.dataset.id);
-            const sourceList = Array.isArray(state.filtered) && state.filtered.length ? state.filtered : state.all;
-            const item = sourceList.find((work) => String(work._key) === String(targetKey)) || state.all.find((work) => String(work._key) === String(targetKey)) || state.all.find((work) => String(work.id) === String(targetId));
+            const renderIndex = Number(card.dataset.renderIndex);
+            const visibleItems = getVisibleItems();
+            const sourceList = Array.isArray(state.filtered) ? state.filtered : [];
+            const item = (Number.isFinite(renderIndex) ? visibleItems[renderIndex] : null) || sourceList.find((work) => getWorkKey(work) === targetKey) || sourceList.find((work) => String(work.id) === String(targetId));
             if (item) openLightbox(item);
           });
 
@@ -6533,8 +6644,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
             e.preventDefault();
             const targetKey = safeText(card.dataset.key);
             const targetId = safeText(card.dataset.id);
-            const sourceList = Array.isArray(state.filtered) && state.filtered.length ? state.filtered : state.all;
-            const item = sourceList.find((work) => String(work._key) === String(targetKey)) || state.all.find((work) => String(work._key) === String(targetKey)) || state.all.find((work) => String(work.id) === String(targetId));
+            const renderIndex = Number(card.dataset.renderIndex);
+            const visibleItems = getVisibleItems();
+            const sourceList = Array.isArray(state.filtered) ? state.filtered : [];
+            const item = (Number.isFinite(renderIndex) ? visibleItems[renderIndex] : null) || sourceList.find((work) => getWorkKey(work) === targetKey) || sourceList.find((work) => String(work.id) === String(targetId));
             if (item) openLightbox(item);
           });
         }
@@ -7017,202 +7130,6 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       }).catch(function () {});
     });
   }
-</script>
-
-
-<script>
-(function(){
-
-let viewerScopeWorks = [];
-let currentViewerIndex = 0;
-let currentViewerWorkId = null;
-let closeReturnWorkId = null;
-
-window.viewerScopeWorks = viewerScopeWorks;
-
-function safeArray(v){
-  return Array.isArray(v) ? v : [];
-}
-
-function getViewerBaseList(){
-  if (Array.isArray(window.currentFilteredWorks) && window.currentFilteredWorks.length){
-    return window.currentFilteredWorks;
-  }
-  if (Array.isArray(window.filteredWorks) && window.filteredWorks.length){
-    return window.filteredWorks;
-  }
-  if (Array.isArray(window.renderedWorks) && window.renderedWorks.length){
-    return window.renderedWorks;
-  }
-  if (Array.isArray(window.works)){
-    return window.works;
-  }
-  return [];
-}
-
-window.getViewerBaseList = getViewerBaseList;
-
-function resolveWork(workId){
-  return safeArray(window.works).find(
-    w => String(w && w.id) === String(workId)
-  );
-}
-
-function normalizeViewerImage(img){
-  if(!img) return;
-  img.style.width = 'auto';
-  img.style.height = 'auto';
-  img.style.objectFit = 'contain';
-  img.style.transform = 'none';
-  img.style.scale = '1';
-  img.style.translate = '0 0';
-  img.style.aspectRatio = 'auto';
-}
-
-window.normalizeViewerImage = normalizeViewerImage;
-
-window.openViewer = function(workId){
-
-  const baseList = getViewerBaseList();
-
-  viewerScopeWorks = baseList.slice();
-
-  currentViewerIndex = viewerScopeWorks.findIndex(
-    w => String(w && w.id) === String(workId)
-  );
-
-  if(currentViewerIndex < 0){
-    viewerScopeWorks = safeArray(window.works).slice();
-
-    currentViewerIndex = viewerScopeWorks.findIndex(
-      w => String(w && w.id) === String(workId)
-    );
-  }
-
-  if(currentViewerIndex < 0) return;
-
-  window.viewerScopeWorks = viewerScopeWorks;
-
-  window.showViewerWork(currentViewerIndex);
-};
-
-window.showViewerWork = function(index){
-
-  if(!Array.isArray(viewerScopeWorks) || !viewerScopeWorks.length) return;
-
-  currentViewerIndex =
-    (index + viewerScopeWorks.length) % viewerScopeWorks.length;
-
-  const work = viewerScopeWorks[currentViewerIndex];
-
-  if(!work) return;
-
-  currentViewerWorkId = work.id;
-
-  const viewerImg =
-    document.querySelector('#lf-image') ||
-    document.querySelector('.viewer img') ||
-    document.querySelector('.lightbox img');
-
-  if(viewerImg){
-    normalizeViewerImage(viewerImg);
-
-    viewerImg.onload = function(){
-      normalizeViewerImage(viewerImg);
-    };
-
-    viewerImg.src = work.zoom || work.image || '';
-  }
-
-  if(typeof window.renderViewerWork === 'function'){
-    try{
-      window.renderViewerWork(work);
-    }catch(e){}
-  }
-
-  if(typeof window.renderViewerCaption === 'function'){
-    try{
-      window.renderViewerCaption(work);
-    }catch(e){}
-  }
-};
-
-window.viewerNext = function(){
-  window.showViewerWork(currentViewerIndex + 1);
-};
-
-window.viewerPrev = function(){
-  window.showViewerWork(currentViewerIndex - 1);
-};
-
-function scrollToWorkCardSafe(workId){
-
-  if(!workId) return;
-
-  let selector = '[data-work-id="' + String(workId).replace(/"/g,'\\"') + '"]';
-
-  let card = document.querySelector(selector);
-
-  if(!card) return;
-
-  const offset = window.innerWidth <= 768 ? 72 : 96;
-
-  const y =
-    card.getBoundingClientRect().top +
-    window.pageYOffset -
-    offset;
-
-  window.scrollTo({
-    top: Math.max(0, y),
-    behavior: window.innerWidth <= 768 ? 'auto' : 'smooth'
-  });
-}
-
-const originalCloseViewer = window.closeViewer;
-
-window.closeViewer = function(){
-
-  closeReturnWorkId = currentViewerWorkId;
-
-  if(typeof originalCloseViewer === 'function'){
-    try{
-      originalCloseViewer();
-    }catch(e){}
-  }
-
-  document.documentElement.style.overflow = '';
-  document.body.style.overflow = '';
-  document.body.style.position = '';
-  document.body.style.width = '';
-  document.body.style.height = '';
-  document.body.style.top = '';
-
-  setTimeout(function(){
-    try{
-      scrollToWorkCardSafe(closeReturnWorkId);
-    }catch(e){}
-  }, window.innerWidth <= 768 ? 120 : 60);
-};
-
-document.addEventListener('keydown', function(e){
-  const active =
-    document.body.classList.contains('viewer-open') ||
-    document.body.classList.contains('lightbox-open');
-
-  if(!active) return;
-
-  if(e.key === 'ArrowRight'){
-    e.preventDefault();
-    window.viewerNext();
-  }
-
-  if(e.key === 'ArrowLeft'){
-    e.preventDefault();
-    window.viewerPrev();
-  }
-}, {passive:false});
-
-})();
 </script>
 
 </body>

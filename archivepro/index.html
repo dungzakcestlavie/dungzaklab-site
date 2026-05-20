@@ -4001,21 +4001,30 @@
 
 
 
-<style id="archive-pro-reference-gesture-css">
-/* ARCHIVE PRO VIEWER GESTURE RESTORE — based on stable dungzak.art lightbox */
+
+<style id="archive-pro-native-swipe-pinch-final-css">
+/* ARCHIVE PRO NATIVE PINCH + SIMPLE SWIPE FINAL FIX — Viewer only */
+body.viewer-open{
+  overflow:hidden !important;
+  touch-action:auto !important;
+  overscroll-behavior:contain !important;
+}
+
 .viewer,
 .lightbox,
 #viewer,
 #lightbox{
-  touch-action:pan-y !important;
+  touch-action:auto !important;
   overscroll-behavior:contain !important;
 }
 
 .viewer-media,
 .lightbox-media,
 .lightbox-stage{
-  touch-action:pan-y pinch-zoom !important;
-  overflow:visible !important;
+  overflow:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  touch-action:auto !important;
+  overscroll-behavior:contain !important;
 }
 
 .viewer-image,
@@ -4024,11 +4033,13 @@
 .lightbox img,
 .lightbox-stage img,
 #lightboxImage{
-  touch-action:none !important;
+  touch-action:auto !important;
   user-select:none !important;
+  -webkit-user-select:none !important;
   -webkit-user-drag:none !important;
-  transform-origin:center center !important;
-  will-change:transform !important;
+  transform:none !important;
+  transition:none !important;
+  will-change:auto !important;
   object-fit:contain !important;
   pointer-events:auto !important;
 }
@@ -4051,16 +4062,24 @@
 }
 
 @media (max-width:768px){
+  .lightbox.open,
+  .lightbox.active,
+  .viewer.active{
+    display:block !important;
+  }
+
   .viewer,
   .lightbox,
   #viewer,
   #lightbox{
+    position:fixed !important;
+    inset:0 !important;
     height:100dvh !important;
     min-height:100dvh !important;
-    overflow-y:auto !important;
-    overflow-x:hidden !important;
+    overflow:auto !important;
     -webkit-overflow-scrolling:touch !important;
-    touch-action:pan-y !important;
+    touch-action:auto !important;
+    overscroll-behavior:contain !important;
   }
 
   .viewer-inner,
@@ -4100,8 +4119,9 @@
     justify-content:center !important;
     box-sizing:border-box !important;
     padding:0 0 36px 0 !important;
-    overflow:visible !important;
-    touch-action:pan-y pinch-zoom !important;
+    overflow:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    touch-action:auto !important;
   }
 
   .viewer-image,
@@ -4110,14 +4130,15 @@
   .lightbox img,
   .lightbox-stage img,
   #lightboxImage{
+    display:block !important;
     width:auto !important;
     height:auto !important;
-    max-width:92vw !important;
-    max-height:56dvh !important;
+    max-width:96vw !important;
+    max-height:82dvh !important;
     object-fit:contain !important;
-    display:block !important;
     margin:0 auto !important;
-    touch-action:none !important;
+    transform:none !important;
+    touch-action:auto !important;
   }
 
   .viewer-caption,
@@ -4133,6 +4154,13 @@
     padding:22px 24px calc(env(safe-area-inset-bottom, 0px) + 54px) 24px !important;
     border-left:0 !important;
     border-top:1px solid rgba(255,255,255,.06) !important;
+  }
+
+  .lightbox-nav,
+  .viewer-nav,
+  .viewer-prev,
+  .viewer-next{
+    display:none !important;
   }
 }
 </style>
@@ -6097,6 +6125,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         els.lightboxImage.onload = () => {
           resetViewerTransform();
           normalizeViewerImage(els.lightboxImage);
+          nativeResetViewerView();
           const isLandscapeViewerImage = els.lightboxImage.naturalWidth >= els.lightboxImage.naturalHeight;
           if (els.lightboxStage) {
             els.lightboxStage.classList.toggle('is-landscape', isLandscapeViewerImage);
@@ -6833,175 +6862,79 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 
 
 
+
         const viewerTouchTarget = els.lightboxStage || els.lightbox;
+        let nativeSwipeStartX = 0;
+        let nativeSwipeStartY = 0;
+        let nativeSwipeActive = false;
+        let nativeSwipeLocked = false;
 
-        let referenceGestureMode = 'idle';
-        let referenceStartDistance = 0;
-        let referenceStartScale = 1;
-        let referenceStartX = 0;
-        let referenceStartY = 0;
-        let referenceLastX = 0;
-        let referenceLastY = 0;
-        let referenceSwipeDone = false;
-        let referenceLastTap = 0;
-        let referenceLastTapX = 0;
-        let referenceLastTapY = 0;
-
-        function referenceDistance(a, b) {
-          const dx = a.clientX - b.clientX;
-          const dy = a.clientY - b.clientY;
-          return Math.sqrt(dx * dx + dy * dy);
-        }
-
-        function referenceClamp(value, min, max) {
-          return Math.min(max, Math.max(min, value));
-        }
-
-        function referenceResetZoom() {
+        function nativeResetViewerView() {
           viewerScale = 1;
           viewerX = 0;
           viewerY = 0;
           viewerIsZooming = false;
           viewerIsDragging = false;
-          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging', 'is-zoomed');
-          applyViewerTransform();
-        }
-
-        function referenceEndGesture() {
-          referenceGestureMode = 'idle';
-          viewerIsZooming = false;
-          viewerIsDragging = false;
-          referenceSwipeDone = false;
-          if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
-        }
-
-        function referenceTouchStart(event) {
-          if (!isViewerOpen() || !els.lightboxImage) return;
-
-          if (event.touches.length === 2) {
-            referenceGestureMode = 'pinch';
-            viewerIsZooming = true;
-            viewerIsDragging = false;
-            referenceSwipeDone = true;
-            referenceStartDistance = referenceDistance(event.touches[0], event.touches[1]);
-            referenceStartScale = viewerScale;
-            return;
+          if (els.lightboxStage) {
+            els.lightboxStage.scrollLeft = 0;
+            els.lightboxStage.scrollTop = 0;
+            els.lightboxStage.classList.remove('is-dragging', 'is-zoomed');
           }
-
-          if (event.touches.length !== 1) return;
-
-          const touch = event.touches[0];
-          referenceStartX = touch.clientX;
-          referenceStartY = touch.clientY;
-          referenceLastX = touch.clientX;
-          referenceLastY = touch.clientY;
-          referenceSwipeDone = false;
-
-          if (viewerScale > 1) {
-            referenceGestureMode = 'pan';
-            viewerIsDragging = true;
-            viewerIsZooming = false;
-            if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
-          } else {
-            referenceGestureMode = 'swipe';
-            viewerIsDragging = false;
-            viewerIsZooming = false;
+          if (els.lightboxImage) {
+            els.lightboxImage.style.transform = 'none';
           }
         }
 
-        function referenceTouchMove(event) {
-          if (!isViewerOpen() || !els.lightboxImage) return;
-
-          if (referenceGestureMode === 'pinch' && event.touches.length === 2) {
-            event.preventDefault();
-            const newDistance = referenceDistance(event.touches[0], event.touches[1]);
-            if (!referenceStartDistance) referenceStartDistance = newDistance;
-            viewerScale = referenceClamp(referenceStartScale * (newDistance / referenceStartDistance), 1, 4);
-            if (viewerScale <= 1.02) {
-              viewerScale = 1;
-              viewerX = 0;
-              viewerY = 0;
-            }
-            applyViewerTransform();
-            return;
-          }
-
-          if (referenceGestureMode === 'pan' && viewerScale > 1 && event.touches.length === 1) {
-            event.preventDefault();
-            const touch = event.touches[0];
-            viewerX += touch.clientX - referenceLastX;
-            viewerY += touch.clientY - referenceLastY;
-            referenceLastX = touch.clientX;
-            referenceLastY = touch.clientY;
-            applyViewerTransform();
-            return;
-          }
-
-          if (referenceGestureMode === 'swipe' && viewerScale === 1 && event.touches.length === 1 && !referenceSwipeDone) {
-            const touch = event.touches[0];
-            const dx = touch.clientX - referenceStartX;
-            const dy = touch.clientY - referenceStartY;
-
-            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
-              referenceSwipeDone = true;
-              referenceGestureMode = 'idle';
-              if (dx < 0) nextViewer();
-              else prevViewer();
-            }
-          }
-        }
-
-        function referenceTouchEnd(event) {
+        function nativeOnViewerTouchStart(e) {
           if (!isViewerOpen()) return;
 
-          if (event.touches.length > 0) {
-            if (referenceGestureMode === 'pinch' && event.touches.length < 2) {
-              referenceGestureMode = viewerScale > 1 ? 'pan' : 'idle';
-              viewerIsZooming = false;
-              referenceStartDistance = 0;
-            }
+          if (e.touches.length !== 1) {
+            nativeSwipeActive = false;
+            nativeSwipeLocked = true;
             return;
           }
 
-          const changed = event.changedTouches && event.changedTouches[0];
-
-          if (changed && referenceGestureMode === 'swipe' && !referenceSwipeDone) {
-            const dx = changed.clientX - referenceStartX;
-            const dy = changed.clientY - referenceStartY;
-            const now = Date.now();
-
-            if (Math.abs(dx) < 12 && Math.abs(dy) < 12) {
-              if (now - referenceLastTap < 300 &&
-                  Math.abs(changed.clientX - referenceLastTapX) < 26 &&
-                  Math.abs(changed.clientY - referenceLastTapY) < 26) {
-                if (viewerScale === 1) {
-                  viewerScale = 2;
-                } else {
-                  viewerScale = 1;
-                  viewerX = 0;
-                  viewerY = 0;
-                }
-                applyViewerTransform();
-                referenceLastTap = 0;
-              } else {
-                referenceLastTap = now;
-                referenceLastTapX = changed.clientX;
-                referenceLastTapY = changed.clientY;
-              }
-            }
-          }
-
-          if (viewerScale < 1.02) {
-            referenceResetZoom();
-          }
-
-          referenceEndGesture();
+          const touch = e.touches[0];
+          nativeSwipeStartX = touch.clientX;
+          nativeSwipeStartY = touch.clientY;
+          nativeSwipeActive = true;
+          nativeSwipeLocked = false;
         }
 
-        viewerTouchTarget.addEventListener('touchstart', referenceTouchStart, { passive:true });
-        viewerTouchTarget.addEventListener('touchmove', referenceTouchMove, { passive:false });
-        viewerTouchTarget.addEventListener('touchend', referenceTouchEnd, { passive:true });
-        viewerTouchTarget.addEventListener('touchcancel', referenceTouchEnd, { passive:true });
+        function nativeOnViewerTouchMove(e) {
+          if (!isViewerOpen()) return;
+
+          if (e.touches.length !== 1) {
+            nativeSwipeActive = false;
+            nativeSwipeLocked = true;
+            return;
+          }
+
+          if (!nativeSwipeActive || nativeSwipeLocked) return;
+
+          const touch = e.touches[0];
+          const dx = touch.clientX - nativeSwipeStartX;
+          const dy = touch.clientY - nativeSwipeStartY;
+
+          if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.35) {
+            nativeSwipeLocked = true;
+            nativeSwipeActive = false;
+
+            if (dx < 0) nextViewer();
+            else prevViewer();
+          }
+        }
+
+        function nativeOnViewerTouchEnd(e) {
+          if (!isViewerOpen()) return;
+          nativeSwipeActive = false;
+          nativeSwipeLocked = false;
+        }
+
+        viewerTouchTarget.addEventListener('touchstart', nativeOnViewerTouchStart, { passive:true });
+        viewerTouchTarget.addEventListener('touchmove', nativeOnViewerTouchMove, { passive:true });
+        viewerTouchTarget.addEventListener('touchend', nativeOnViewerTouchEnd, { passive:true });
+        viewerTouchTarget.addEventListener('touchcancel', nativeOnViewerTouchEnd, { passive:true });
 
         els.lightbox.addEventListener('mousedown', (e) => {
           if (!isViewerOpen() || viewerScale <= 1 || e.button !== 0) return;

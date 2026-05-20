@@ -4141,6 +4141,19 @@
 }
 </style>
 
+
+<style id="archive-pro-full-view-button-css">
+/* ARCHIVE PRO FULL VIEW BUTTON — unify image / zoom buttons */
+#lbOpenFull{
+  display:inline-flex !important;
+}
+
+#lbOpenImage,
+#lbOpenZoom{
+  display:none !important;
+}
+</style>
+
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>
@@ -4310,8 +4323,9 @@
         </div>
 
         <div class="lb-actions">
-          <a id="lbOpenImage" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">이미지 열기</a>
-          <a id="lbOpenZoom" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">줌 열기</a>
+          <a id="lbOpenFull" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">전체보기</a>
+          <a id="lbOpenImage" class="lb-link" href="#" target="_blank" rel="noopener noreferrer" aria-hidden="true" tabindex="-1">이미지 열기</a>
+          <a id="lbOpenZoom" class="lb-link" href="#" target="_blank" rel="noopener noreferrer" aria-hidden="true" tabindex="-1">줌 열기</a>
         </div>
       </aside>
     </div>
@@ -4734,6 +4748,7 @@
         lbYearVal: document.getElementById('lbYear'),
         lbImagePath: document.getElementById('lbImagePath'),
         lbZoomPath: document.getElementById('lbZoomPath'),
+        lbOpenFull: document.getElementById('lbOpenFull'),
         lbOpenImage: document.getElementById('lbOpenImage'),
         lbOpenZoom: document.getElementById('lbOpenZoom'),
         lbKeyMaterial: document.getElementById('lbKeyMaterial'),
@@ -6085,6 +6100,10 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         els.lbYearVal.textContent = year;
         els.lbImagePath.textContent = '';
         els.lbZoomPath.textContent = '';
+        if (els.lbOpenFull) {
+          els.lbOpenFull.href = zoomUrl || imageUrl || '#';
+          els.lbOpenFull.textContent = state.lang === 'en' ? 'Full View' : '전체보기';
+        }
         els.lbOpenImage.href = imageUrl || '#';
         els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
 

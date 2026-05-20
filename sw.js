@@ -1,36 +1,47 @@
-const CACHE_NAME = 'archive-pro-app-v6-lab-route-fix';
+const CACHE_NAME = 'archive-pro-pwa-v1-20260520';
 
 const CORE_ASSETS = [
-  './archivepro/',
-  './archivepro/index.html',
-  './manifest.webmanifest?v=2',
-  './archivepro-icon-192-v2.png?v=2',
-  './archivepro-icon-512-v2.png?v=2'
+  '/archivepro/',
+  '/archivepro/index.html',
+  '/archivepro/manifest.webmanifest',
+  '/archivepro-icon-192-v2.png?v=2',
+  '/archivepro-icon-512-v2.png?v=2'
 ];
 
 const LIVE_JSON_URLS = {
   works: [
     'https://dungzak.art/data/works.json',
-    './data/works.json'
+    '/archivepro/data/works.json',
+    '/data/works.json'
   ],
   dcao: [
     'https://dungzak.art/data/dcao.json',
-    './data/dcao.json'
+    '/archivepro/data/dcao.json',
+    '/data/dcao.json'
   ],
   dcap: [
     'https://dungzak.art/data/dcap.json',
-    './data/dcap.json'
+    '/archivepro/data/dcap.json',
+    '/data/dcap.json'
   ]
 };
 
 function isCacheableRequest(request) {
-  if (request.method !== 'GET') return false;
+  if (!request || request.method !== 'GET') return false;
 
   const url = new URL(request.url);
 
   if (url.href.includes('/zoom/')) return false;
 
   return true;
+}
+
+function isArchiveProRoute(url) {
+  return (
+    url.pathname === '/archivepro/' ||
+    url.pathname === '/archivepro/index.html' ||
+    url.pathname.startsWith('/archivepro/')
+  );
 }
 
 function isLiveJson(url) {
@@ -60,7 +71,9 @@ async function fetchFresh(urls) {
       const freshUrl = baseUrl + joiner + 'v=' + Date.now();
 
       const response = await fetch(freshUrl, {
-        cache: 'no-store'
+        cache: 'no-store',
+        mode: 'cors',
+        credentials: 'omit'
       });
 
       if (!response.ok) throw new Error('fetch failed: ' + response.status);
@@ -95,12 +108,16 @@ async function cacheNonOriginsWorks(cache) {
   const json = await getWorksJson();
   const works = normalizeWorks(json);
 
-  const urls = works
-    .filter(work => Number(work.section_id) !== 0)
-    .map(work => work.image)
-    .filter(Boolean)
-    .filter(url => !String(url).includes('/zoom/'))
-    .filter(url => String(url).includes('/standard/'));
+  const urls = Array.from(
+    new Set(
+      works
+        .filter(work => Number(work && work.section_id) !== 0)
+        .map(work => work && work.image)
+        .filter(Boolean)
+        .filter(url => !String(url).includes('/zoom/'))
+        .filter(url => String(url).includes('/standard/'))
+    )
+  );
 
   for (const url of urls) {
     try {
@@ -129,22 +146,36 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) return caches.delete(key);
-        })
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
       )
     ).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('message', event => {
-  if (!event.data || event.data.type !== 'CACHE_EXHIBITION_SET') return;
+  const type = event && event.data && event.data.type;
 
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(async cache => {
-      await cacheNonOriginsWorks(cache);
-    })
-  );
+  if (type === 'CACHE_EXHIBITION_SET' || type === 'CACHE_NON_ORIGINS') {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then(async cache => {
+        await cacheNonOriginsWorks(cache);
+      })
+    );
+  }
+
+  if (type === 'CLEAR_ARCHIVE_PRO_CACHES') {
+    event.waitUntil(
+      caches.keys().then(keys =>
+        Promise.all(
+          keys
+            .filter(key => key.includes('archive-pro'))
+            .map(key => caches.delete(key))
+        )
+      )
+    );
+  }
 });
 
 self.addEventListener('fetch', event => {
@@ -154,31 +185,30 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(request.url);
 
-  if (request.mode === 'navigate' || request.destination === 'document') {
-    const isArchiveProRoute =
-      url.pathname === '/archivepro/' ||
-      url.pathname === '/archivepro/index.html' ||
-      url.pathname.startsWith('/archivepro/');
+  if (!isArchiveProRoute(url)) {
+    return;
+  }
 
+  if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(
       fetch(request, { cache: 'no-store' })
         .then(response => {
-          if (response && response.ok && isArchiveProRoute) {
+          if (response && response.ok) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+            caches.open(CACHE_NAME).then(cache => {
+              try {
+                cache.put(request, copy);
+              } catch (e) {}
+            });
           }
+
           return response;
         })
         .catch(async () => {
-          if (isArchiveProRoute) {
-            const cached = await caches.match(request);
-            if (cached) return cached;
+          const cached = await caches.match(request);
+          if (cached) return cached;
 
-            const archiveFallback = await caches.match('./archivepro/index.html');
-            if (archiveFallback) return archiveFallback;
-          }
-
-          return fetch(request);
+          return caches.match('/archivepro/index.html');
         })
     );
     return;
@@ -196,6 +226,7 @@ self.addEventListener('fetch', event => {
               } catch (e) {}
             });
           }
+
           return response;
         })
         .catch(async () => {

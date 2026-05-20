@@ -7182,10 +7182,11 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/service-worker.js?v=6', { updateViaCache: 'none' }).then(function(registration){
+      navigator.serviceWorker.register('/service-worker.js?v=11-lab-route-fix-20260520', { updateViaCache: 'none' }).then(function(registration){
         try {
           registration.update();
           if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_ARCHIVE_PRO_CACHES' });
             navigator.serviceWorker.controller.postMessage({ type: 'CACHE_NON_ORIGINS' });
           }
         } catch (e) {}

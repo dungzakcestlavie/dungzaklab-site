@@ -7724,6 +7724,359 @@ function normalizeImageUrl(url, kind, id, sectionId) {
   }
 </script>
 
+
+
+<!-- ARCHIVE PRO LIGHTBOX SWIPE + PINCH ZOOM FINAL ISOLATED ENGINE — ONLY VIEWER GESTURE -->
+<style id="archive-pro-lightbox-gesture-final-only-css">
+  .lightbox.open .lightbox-stage,
+  .lightbox.active .lightbox-stage{
+    touch-action:none !important;
+    overscroll-behavior:contain !important;
+    overflow:hidden !important;
+    -webkit-tap-highlight-color:transparent !important;
+  }
+
+  .lightbox.open #lightboxImage,
+  .lightbox.active #lightboxImage{
+    touch-action:none !important;
+    user-select:none !important;
+    -webkit-user-select:none !important;
+    -webkit-user-drag:none !important;
+    will-change:transform !important;
+    transform-origin:center center !important;
+  }
+
+  .lightbox.open .lightbox-stage.ap-gesture-zoomed,
+  .lightbox.active .lightbox-stage.ap-gesture-zoomed{
+    cursor:grab !important;
+  }
+
+  .lightbox.open .lightbox-stage.ap-gesture-dragging,
+  .lightbox.active .lightbox-stage.ap-gesture-dragging{
+    cursor:grabbing !important;
+  }
+</style>
+
+<script id="archive-pro-lightbox-gesture-final-only-script">
+(function(){
+  'use strict';
+
+  if (window.__ARCHIVE_PRO_LIGHTBOX_GESTURE_FINAL_ONLY__) return;
+  window.__ARCHIVE_PRO_LIGHTBOX_GESTURE_FINAL_ONLY__ = true;
+
+  var MIN_SCALE = 1;
+  var MAX_SCALE = 4;
+  var SWIPE_THRESHOLD = 42;
+  var SWIPE_RATIO = 1.15;
+
+  var pointers = new Map();
+  var mode = 'idle';
+  var scale = 1;
+  var startScale = 1;
+  var x = 0;
+  var y = 0;
+  var startX = 0;
+  var startY = 0;
+  var lastX = 0;
+  var lastY = 0;
+  var startDistance = 1;
+  var startMid = { x:0, y:0 };
+  var swipeDX = 0;
+  var swipeDY = 0;
+  var raf = 0;
+
+  function $(sel){ return document.querySelector(sel); }
+
+  function getLightbox(){ return $('#lightbox'); }
+  function getStage(){ return $('.lightbox-stage'); }
+  function getImage(){ return $('#lightboxImage'); }
+
+  function isOpen(){
+    var lb = getLightbox();
+    return !!(lb && (lb.classList.contains('open') || lb.classList.contains('active')) && document.body.classList.contains('viewer-open'));
+  }
+
+  function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+  function getStageRect(){
+    var stage = getStage();
+    if (!stage) return { left:0, top:0, width:window.innerWidth, height:window.innerHeight };
+    var r = stage.getBoundingClientRect();
+    return { left:r.left, top:r.top, width:r.width || window.innerWidth, height:r.height || window.innerHeight };
+  }
+
+  function getBaseSize(){
+    var img = getImage();
+    var stageRect = getStageRect();
+    if (!img) return { width:0, height:0, stageWidth:stageRect.width, stageHeight:stageRect.height };
+    var r = img.getBoundingClientRect();
+    var safeScale = Math.max(scale, 1);
+    return {
+      width:(r.width || img.offsetWidth || img.naturalWidth || 0) / safeScale,
+      height:(r.height || img.offsetHeight || img.naturalHeight || 0) / safeScale,
+      stageWidth:stageRect.width,
+      stageHeight:stageRect.height
+    };
+  }
+
+  function clampTranslate(){
+    if (scale <= 1.001) {
+      scale = 1;
+      x = 0;
+      y = 0;
+      return;
+    }
+    var s = getBaseSize();
+    var maxX = Math.max(0, (s.width * scale - s.stageWidth) / 2 + 36);
+    var maxY = Math.max(0, (s.height * scale - s.stageHeight) / 2 + 36);
+    x = clamp(x, -maxX, maxX);
+    y = clamp(y, -maxY, maxY);
+  }
+
+  function apply(){
+    var img = getImage();
+    var stage = getStage();
+    if (!img) return;
+    clampTranslate();
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(function(){
+      raf = 0;
+      img.style.transition = 'none';
+      img.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0) scale(' + scale + ')';
+      if (stage) stage.classList.toggle('ap-gesture-zoomed', scale > 1.001);
+    });
+  }
+
+  function reset(){
+    pointers.clear();
+    mode = 'idle';
+    scale = 1;
+    startScale = 1;
+    x = 0;
+    y = 0;
+    startX = 0;
+    startY = 0;
+    lastX = 0;
+    lastY = 0;
+    startDistance = 1;
+    startMid = { x:0, y:0 };
+    swipeDX = 0;
+    swipeDY = 0;
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    var img = getImage();
+    var stage = getStage();
+    if (stage) stage.classList.remove('ap-gesture-zoomed', 'ap-gesture-dragging');
+    if (img) {
+      img.style.transition = 'none';
+      img.style.transform = 'translate3d(0,0,0) scale(1)';
+    }
+  }
+
+  function syncPointer(e){
+    pointers.set(e.pointerId, { id:e.pointerId, x:e.clientX, y:e.clientY });
+  }
+
+  function removePointer(e){
+    pointers.delete(e.pointerId);
+  }
+
+  function points(){ return Array.from(pointers.values()); }
+
+  function distance(a,b){ return Math.hypot(b.x - a.x, b.y - a.y); }
+
+  function midpoint(a,b){ return { x:(a.x + b.x) / 2, y:(a.y + b.y) / 2 }; }
+
+  function clickButton(sel){
+    var btn = $(sel);
+    if (btn) btn.click();
+  }
+
+  function block(e){
+    if (!e) return;
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+    else if (typeof e.stopPropagation === 'function') e.stopPropagation();
+  }
+
+  function beginPinch(list, e){
+    mode = 'pinch';
+    startDistance = Math.max(1, distance(list[0], list[1]));
+    startScale = scale;
+    startMid = midpoint(list[0], list[1]);
+    var stage = getStage();
+    if (stage) stage.classList.remove('ap-gesture-dragging');
+    block(e);
+  }
+
+  function onPointerDown(e){
+    if (!isOpen()) return;
+    var stage = getStage();
+    if (!stage || !stage.contains(e.target)) return;
+    if (e.target && e.target.closest && e.target.closest('.lightbox-close,.lightbox-nav,.lightbox-side,a,button')) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+    syncPointer(e);
+    try { stage.setPointerCapture(e.pointerId); } catch(_e) {}
+
+    var list = points();
+    if (list.length >= 2) {
+      beginPinch(list, e);
+      return;
+    }
+
+    startX = e.clientX;
+    startY = e.clientY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    swipeDX = 0;
+    swipeDY = 0;
+
+    if (scale > 1.001) {
+      mode = 'pan';
+      stage.classList.add('ap-gesture-dragging');
+    } else {
+      mode = 'swipe';
+      stage.classList.remove('ap-gesture-dragging');
+    }
+    block(e);
+  }
+
+  function onPointerMove(e){
+    if (!isOpen() || !pointers.has(e.pointerId)) return;
+    syncPointer(e);
+    var list = points();
+
+    if (list.length >= 2) {
+      if (mode !== 'pinch') beginPinch(list, e);
+      var oldScale = scale;
+      var newDistance = Math.max(1, distance(list[0], list[1]));
+      var mid = midpoint(list[0], list[1]);
+      var nextScale = clamp(startScale * (newDistance / startDistance), MIN_SCALE, MAX_SCALE);
+      var ratio = nextScale / Math.max(oldScale, 0.001);
+      var rect = getStageRect();
+      var centerX = rect.left + rect.width / 2;
+      var centerY = rect.top + rect.height / 2;
+      var localX = mid.x - centerX;
+      var localY = mid.y - centerY;
+      var moveX = mid.x - startMid.x;
+      var moveY = mid.y - startMid.y;
+
+      x = localX - (localX - x) * ratio + moveX;
+      y = localY - (localY - y) * ratio + moveY;
+      scale = nextScale;
+      apply();
+      block(e);
+      return;
+    }
+
+    if (mode === 'pan' && scale > 1.001) {
+      x += e.clientX - lastX;
+      y += e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      apply();
+      block(e);
+      return;
+    }
+
+    if (mode === 'swipe' && scale <= 1.001) {
+      swipeDX = e.clientX - startX;
+      swipeDY = e.clientY - startY;
+      block(e);
+    }
+  }
+
+  function finishPointer(e){
+    if (!isOpen()) { removePointer(e); return; }
+    var stage = getStage();
+    var endedMode = mode;
+    var dx = swipeDX;
+    var dy = swipeDY;
+    removePointer(e);
+
+    if (pointers.size >= 2) {
+      beginPinch(points(), e);
+      return;
+    }
+
+    if (endedMode === 'pinch') {
+      if (scale <= 1.001) reset();
+      mode = 'idle';
+      block(e);
+      return;
+    }
+
+    if (endedMode === 'pan') {
+      if (stage) stage.classList.remove('ap-gesture-dragging');
+      if (scale <= 1.001) reset();
+      mode = 'idle';
+      block(e);
+      return;
+    }
+
+    if (endedMode === 'swipe' && scale <= 1.001) {
+      if (Math.abs(dx) >= SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy) * SWIPE_RATIO) {
+        if (dx < 0) clickButton('#lightboxNext');
+        else clickButton('#lightboxPrev');
+        block(e);
+        return;
+      }
+    }
+
+    mode = 'idle';
+    if (stage) stage.classList.remove('ap-gesture-dragging');
+    block(e);
+  }
+
+  function onDblClick(e){
+    if (!isOpen()) return;
+    var stage = getStage();
+    if (!stage || !stage.contains(e.target)) return;
+    if (e.target && e.target.closest && e.target.closest('.lightbox-close,.lightbox-nav,.lightbox-side,a,button')) return;
+
+    if (scale > 1.001) {
+      reset();
+    } else {
+      scale = 2.2;
+      x = 0;
+      y = 0;
+      apply();
+    }
+    block(e);
+  }
+
+  function bind(){
+    var stage = getStage();
+    var img = getImage();
+    var lb = getLightbox();
+    if (!stage || stage.dataset.apGestureFinalBound === '1') return;
+    stage.dataset.apGestureFinalBound = '1';
+
+    stage.addEventListener('pointerdown', onPointerDown, { capture:true, passive:false });
+    stage.addEventListener('pointermove', onPointerMove, { capture:true, passive:false });
+    stage.addEventListener('pointerup', finishPointer, { capture:true, passive:false });
+    stage.addEventListener('pointercancel', finishPointer, { capture:true, passive:false });
+    stage.addEventListener('lostpointercapture', finishPointer, { capture:true, passive:false });
+    stage.addEventListener('dblclick', onDblClick, { capture:true, passive:false });
+
+    if (img) {
+      img.addEventListener('load', function(){ reset(); }, { passive:true });
+    }
+
+    if (lb) {
+      var obs = new MutationObserver(function(){
+        if (!isOpen()) reset();
+      });
+      obs.observe(lb, { attributes:true, attributeFilter:['class','style','aria-hidden'] });
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once:true });
+  else bind();
+})();
+</script>
+
 <!-- ARCHIVE PRO VIEWER SCOPE IDENTITY LOCK APPLIED 2026-05-20 -->
 </body>
 </html>

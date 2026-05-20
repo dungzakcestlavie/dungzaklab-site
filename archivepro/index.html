@@ -7019,5 +7019,201 @@ function normalizeImageUrl(url, kind, id, sectionId) {
   }
 </script>
 
+
+<script>
+(function(){
+
+let viewerScopeWorks = [];
+let currentViewerIndex = 0;
+let currentViewerWorkId = null;
+let closeReturnWorkId = null;
+
+window.viewerScopeWorks = viewerScopeWorks;
+
+function safeArray(v){
+  return Array.isArray(v) ? v : [];
+}
+
+function getViewerBaseList(){
+  if (Array.isArray(window.currentFilteredWorks) && window.currentFilteredWorks.length){
+    return window.currentFilteredWorks;
+  }
+  if (Array.isArray(window.filteredWorks) && window.filteredWorks.length){
+    return window.filteredWorks;
+  }
+  if (Array.isArray(window.renderedWorks) && window.renderedWorks.length){
+    return window.renderedWorks;
+  }
+  if (Array.isArray(window.works)){
+    return window.works;
+  }
+  return [];
+}
+
+window.getViewerBaseList = getViewerBaseList;
+
+function resolveWork(workId){
+  return safeArray(window.works).find(
+    w => String(w && w.id) === String(workId)
+  );
+}
+
+function normalizeViewerImage(img){
+  if(!img) return;
+  img.style.width = 'auto';
+  img.style.height = 'auto';
+  img.style.objectFit = 'contain';
+  img.style.transform = 'none';
+  img.style.scale = '1';
+  img.style.translate = '0 0';
+  img.style.aspectRatio = 'auto';
+}
+
+window.normalizeViewerImage = normalizeViewerImage;
+
+window.openViewer = function(workId){
+
+  const baseList = getViewerBaseList();
+
+  viewerScopeWorks = baseList.slice();
+
+  currentViewerIndex = viewerScopeWorks.findIndex(
+    w => String(w && w.id) === String(workId)
+  );
+
+  if(currentViewerIndex < 0){
+    viewerScopeWorks = safeArray(window.works).slice();
+
+    currentViewerIndex = viewerScopeWorks.findIndex(
+      w => String(w && w.id) === String(workId)
+    );
+  }
+
+  if(currentViewerIndex < 0) return;
+
+  window.viewerScopeWorks = viewerScopeWorks;
+
+  window.showViewerWork(currentViewerIndex);
+};
+
+window.showViewerWork = function(index){
+
+  if(!Array.isArray(viewerScopeWorks) || !viewerScopeWorks.length) return;
+
+  currentViewerIndex =
+    (index + viewerScopeWorks.length) % viewerScopeWorks.length;
+
+  const work = viewerScopeWorks[currentViewerIndex];
+
+  if(!work) return;
+
+  currentViewerWorkId = work.id;
+
+  const viewerImg =
+    document.querySelector('#lf-image') ||
+    document.querySelector('.viewer img') ||
+    document.querySelector('.lightbox img');
+
+  if(viewerImg){
+    normalizeViewerImage(viewerImg);
+
+    viewerImg.onload = function(){
+      normalizeViewerImage(viewerImg);
+    };
+
+    viewerImg.src = work.zoom || work.image || '';
+  }
+
+  if(typeof window.renderViewerWork === 'function'){
+    try{
+      window.renderViewerWork(work);
+    }catch(e){}
+  }
+
+  if(typeof window.renderViewerCaption === 'function'){
+    try{
+      window.renderViewerCaption(work);
+    }catch(e){}
+  }
+};
+
+window.viewerNext = function(){
+  window.showViewerWork(currentViewerIndex + 1);
+};
+
+window.viewerPrev = function(){
+  window.showViewerWork(currentViewerIndex - 1);
+};
+
+function scrollToWorkCardSafe(workId){
+
+  if(!workId) return;
+
+  let selector = '[data-work-id="' + String(workId).replace(/"/g,'\\"') + '"]';
+
+  let card = document.querySelector(selector);
+
+  if(!card) return;
+
+  const offset = window.innerWidth <= 768 ? 72 : 96;
+
+  const y =
+    card.getBoundingClientRect().top +
+    window.pageYOffset -
+    offset;
+
+  window.scrollTo({
+    top: Math.max(0, y),
+    behavior: window.innerWidth <= 768 ? 'auto' : 'smooth'
+  });
+}
+
+const originalCloseViewer = window.closeViewer;
+
+window.closeViewer = function(){
+
+  closeReturnWorkId = currentViewerWorkId;
+
+  if(typeof originalCloseViewer === 'function'){
+    try{
+      originalCloseViewer();
+    }catch(e){}
+  }
+
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
+  document.body.style.height = '';
+  document.body.style.top = '';
+
+  setTimeout(function(){
+    try{
+      scrollToWorkCardSafe(closeReturnWorkId);
+    }catch(e){}
+  }, window.innerWidth <= 768 ? 120 : 60);
+};
+
+document.addEventListener('keydown', function(e){
+  const active =
+    document.body.classList.contains('viewer-open') ||
+    document.body.classList.contains('lightbox-open');
+
+  if(!active) return;
+
+  if(e.key === 'ArrowRight'){
+    e.preventDefault();
+    window.viewerNext();
+  }
+
+  if(e.key === 'ArrowLeft'){
+    e.preventDefault();
+    window.viewerPrev();
+  }
+}, {passive:false});
+
+})();
+</script>
+
 </body>
 </html>

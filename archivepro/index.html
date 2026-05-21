@@ -873,17 +873,7 @@ html, body {
       justify-content:center;
       padding:18px 0 8px;
     }
-
-    .footer-note{
-      margin:22px 0 0;
-      padding:0 2px;
-      color:var(--soft);
-      font-size:12px;
-      text-align:center;
-      letter-spacing:.04em;
-    }
-
-    .lightbox{
+.lightbox{
       position:fixed;
       inset:0;
       z-index:120;
@@ -2076,9 +2066,7 @@ html, body {
     body.archive-entered #resultsMeta{order:2;}
     body.archive-entered #emptyState{order:3;}
     body.archive-entered #loadWrap{order:4;}
-    body.archive-entered .footer-note{order:7;}
-
-    body.archive-entered #filterToggleWrap{
+body.archive-entered #filterToggleWrap{
       display:flex;
       justify-content:center;
       order:2;
@@ -2536,14 +2524,7 @@ html, body {
         0 0 18px rgba(212,180,109,.14) !important;
       transform:none !important;
     }
-
-    body.archive-entered .footer-note{
-      margin:4px 0 0 !important;
-      opacity:.54 !important;
-      font-size:12px !important;
-    }
-
-    @media (max-width:640px){
+@media (max-width:640px){
       body.archive-entered #loadWrap{
         padding:22px 0 28px !important;
       }
@@ -3487,13 +3468,7 @@ html, body {
     body.archive-entered #loadWrap[hidden]{
       display:none !important;
     }
-
-    body.archive-entered #footerNote{
-      order:2 !important;
-      margin:12px 0 10px !important;
-    }
-
-    body.archive-entered .hero{
+body.archive-entered .hero{
       order:3 !important;
       display:grid !important;
     }
@@ -3571,12 +3546,7 @@ html, body {
       padding:12px 0 !important;
       gap:12px !important;
     }
-
-    .site-shell > #footerNote{
-      margin:8px 0 8px !important;
-    }
-
-    body.archive-entered .hero{
+body.archive-entered .hero{
       padding-top:8px !important;
       gap:8px !important;
     }
@@ -4503,9 +4473,7 @@ html, body {
   </header>
 
   <div class="site-shell">
-    <p class="footer-note" id="footerNote">DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json</p>
-
-    <section class="hero hero-compressed" aria-label="Archive controls summary">
+<section class="hero hero-compressed" aria-label="Archive controls summary">
       <article class="lang-inline" aria-label="Language mode and site link">
         <div class="lang-tabs" role="tablist" aria-label="Language mode">
           <button class="lang-tab active" type="button" data-lang="kr" aria-pressed="true">KR</button>
@@ -4901,8 +4869,7 @@ html, body {
           yearPrefix: '연도',
           emptyState: '조건에 맞는 작품이 없습니다.',
           loadMore: '더 보기 / Load more',
-          footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: '무제 / 캡션 없음',
+untitled: '무제 / 캡션 없음',
           noInfo: '정보 없음',
           allSections: '전체 섹션',
           lbMaterial: '재료',
@@ -4945,8 +4912,7 @@ html, body {
           yearPrefix: 'Year',
           emptyState: 'No artworks match the current filters.',
           loadMore: '더 보기 / Load more',
-          footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: 'Untitled / No Caption',
+untitled: 'Untitled / No Caption',
           noInfo: 'No information',
           allSections: 'All sections',
           lbMaterial: 'Material',
@@ -4989,8 +4955,7 @@ html, body {
           yearPrefix: '연도 / Year',
           emptyState: '조건에 맞는 작품이 없습니다 / No artworks match the current filters.',
           loadMore: '더 보기 / Load more',
-          footerNote: 'DUNGZAK CESTLAVIE LAB / Archive Pro / interface for dungzak.art works.json',
-          untitled: '무제 / Untitled',
+untitled: '무제 / Untitled',
           noInfo: '정보 없음 / No information',
           allSections: '전체 섹션 / All sections',
           lbMaterial: '재료 / Material',
@@ -5060,8 +5025,7 @@ html, body {
         emptyState: document.getElementById('emptyState'),
         loadWrap: document.getElementById('loadWrap'),
         loadMoreBtn: document.getElementById('loadMoreBtn'),
-        footerNote: document.getElementById('footerNote'),
-        lightbox: document.getElementById('lightbox'),
+lightbox: document.getElementById('lightbox'),
         lightboxClose: document.getElementById('viewerCloseBtn') || document.getElementById('lightboxClose'),
         lightboxPrev: document.getElementById('lightboxPrev'),
         lightboxNext: document.getElementById('lightboxNext'),
@@ -5839,8 +5803,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         renderFilterToggleLabel();
         els.emptyState.textContent = t('emptyState');
         els.loadMoreBtn.textContent = t('loadMore');
-        els.footerNote.textContent = t('footerNote');
-        els.lbKeyMaterial.textContent = t('lbMaterial');
+els.lbKeyMaterial.textContent = t('lbMaterial');
         els.lbKeySize.textContent = t('lbSize');
         els.lbKeyYear.textContent = t('lbYear');
         els.lbKeyImage.textContent = t('lbImage');
@@ -6738,37 +6701,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           updateStats();
           updateMeta();
           if (archiveEntered) scheduleFirstGridRender();
-
-          const buildSimulationSnapshot = () => {
-            const duplicateImageRows = (() => {
-              const map = new Map();
-              for (const item of WORKS_DATA) {
-                const baseImage = safeText(item.image).split('?')[0];
-                if (!baseImage) continue;
-                if (!map.has(baseImage)) map.set(baseImage, []);
-                map.get(baseImage).push({ id:item.id, section_id:item.section_id, title_kr:item.title_kr, image:item.image });
-              }
-              return Array.from(map.values()).filter(group => group.length > 1).slice(0, 30);
-            })();
-
-            window.__ARCHIVE_PRO_SIMULATION__ = {
-              loaded: WORKS_DATA.length,
-              filtered: CURRENT_LIST.length,
-              sections: new Set(WORKS_DATA.map(item => Number(item.section_id))).size,
-              first: WORKS_DATA[0] || null,
-              last: WORKS_DATA[WORKS_DATA.length - 1] || null,
-              duplicateImageRows,
-              sectionImageRule: 'all card images use work.image from the same work object only'
-            };
-
-          };
-
-          if ('requestIdleCallback' in window) {
-            requestIdleCallback(buildSimulationSnapshot, { timeout: 1600 });
-          } else {
-            setTimeout(buildSimulationSnapshot, 900);
-          }
-        } catch (error) {
+} catch (error) {
           state.loadState = 'failed';
           state.isLoaded = false;
           WORKS_READY = false;
@@ -6871,6 +6804,8 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       }
 
       function bindEvents() {
+        if (bindEvents._bound) return;
+        bindEvents._bound = true;
         els.searchInput.addEventListener('input', debouncedSearch);
 
         els.sectionSelect.addEventListener('change', () => {
@@ -7002,7 +6937,8 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           applyViewerTransform();
         });
 
-        els.lightbox.addEventListener('touchstart', (e) => {
+        const viewerTouchTarget = els.lightboxStage || els.lightbox;
+        viewerTouchTarget.addEventListener('touchstart', (e) => {
           if (!isViewerOpen()) return;
           e.preventDefault();
 
@@ -7024,7 +6960,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           if (els.lightboxStage) els.lightboxStage.classList.add('is-dragging');
         }, { passive:false });
 
-        els.lightbox.addEventListener('touchmove', (e) => {
+        viewerTouchTarget.addEventListener('touchmove', (e) => {
           if (!isViewerOpen()) return;
           e.preventDefault();
 
@@ -7055,7 +6991,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           viewerLastY = touch.clientY;
         }, { passive:false });
 
-        els.lightbox.addEventListener('touchend', (e) => {
+        viewerTouchTarget.addEventListener('touchend', (e) => {
           if (!isViewerOpen()) return;
 
           if (viewerIsZooming) {

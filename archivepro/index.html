@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <style>
-  html, body {
+html, body {
     background:#070A14 !important;
   }
 
@@ -50,7 +50,6 @@
     }
   }
 
-    /* ARCHIVE PRO DESKTOP UI COMPRESSION — no design/data/function change */
     .visually-hidden{
       position:absolute !important;
       width:1px !important;
@@ -245,26 +244,6 @@
       }
     }
 
-</style>
-
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b0f14" />
-  <meta name="color-scheme" content="dark" />
-  <meta name="format-detection" content="telephone=no,address=no,email=no" />
-
-  <title>Archive Pro — DUNGZAK CESTLAVIE LAB</title>
-  <meta name="description" content="Archive Pro — artwork archive engine for search, filter, and zoom view." />
-  <link rel="manifest" href="/manifest.webmanifest?v=2" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Archive Pro" />
-  <link rel="apple-touch-icon" href="/archivepro-icon-512-v2.png?v=2" />
-  <link rel="icon" type="image/png" sizes="192x192" href="/archivepro-icon-192-v2.png?v=2" />
-  <link rel="icon" type="image/png" sizes="512x512" href="/archivepro-icon-512-v2.png?v=2" />
-
-  <style>
     :root{
       --bg:#0b0f14;
       --panel:#101722;
@@ -1043,10 +1022,6 @@
       color:var(--muted);
     }
 
-
-
-
-/* REFINED SEARCH / FILTER / SORT CONTROLS — precise desktop + mobile */
 .controls{
   grid-template-columns:minmax(260px, 1.35fr) minmax(220px, .9fr) minmax(220px, .9fr) auto;
   align-items:end;
@@ -1131,7 +1106,7 @@
   .control-actions{grid-template-columns:1fr 1fr;}
   .input,.select,.control-actions .btn{height:50px;min-height:50px;line-height:50px;}
 }
-/* MICRO CLICK RESPONSE — lightweight card feedback */
+
 .card,
 .btn,
 .section-btn,
@@ -1197,7 +1172,6 @@
   outline:1px solid #B8963E;
   outline-offset:2px;
 }
-
 
     .work-status {
       margin-top: 6px;
@@ -1291,7 +1265,6 @@
       .section-btn{width:100%}
     }
 
-    /* ARCHIVE PRO VIEWPORT LOCK + LIGHTBOX ONLY ZOOM */
     html,
     body{
       width:100%;
@@ -1364,7 +1337,6 @@
     body.viewer-open .lightbox-stage.is-zoomed{ cursor:grab; }
     body.viewer-open .lightbox-stage.is-zoomed.is-dragging{ cursor:grabbing; }
 
-    /* ARCHIVE PRO MOBILE LIGHTBOX RATIO FIX — image area / caption area / safe-area only */
     html.viewer-open,
     body.viewer-open{
       overflow:hidden !important;
@@ -1472,7 +1444,7 @@
         display:none;
       }
     }
-    /* ARCHIVE PRO MOBILE UX FIX — hide mobile open buttons + make close X always clickable */
+
     .viewer-close,
     .lightbox-close,
     .close-viewer,
@@ -1513,7 +1485,6 @@
       }
     }
 
-    /* ARCHIVE PRO CLOSE X NO NAVIGATION PATCH */
     .viewer,
     .lightbox,
     .viewer-inner,
@@ -1521,20 +1492,14 @@
       pointer-events:auto;
     }
 
-
-    /* SEARCH SPEED PATCH — layout/paint containment only, no design change */
     #grid{ contain:layout paint style; }
     .card{ content-visibility:auto; contain-intrinsic-size:360px 520px; will-change:auto; }
     .thumb{ will-change:auto; }
 
-
-    /* NO LOADING STATE — no 0 / … / loading flash */
     #loadingScreen{
       display:none !important;
     }
 
-
-    /* ENTRY DELAY FIX — mobile-only expensive visual effects reduction */
     .bio-panel {
       content-visibility:auto;
       contain-intrinsic-size:360px 520px;
@@ -1559,8 +1524,6 @@
       }
     }
 
-
-    /* ARCHIVE PRO FINAL SPEED FIX — no design/data change, only initial work reduction */
     .entry-btn{
       transition:none !important;
       animation:none !important;
@@ -1605,8 +1568,6 @@
       }
     }
 
-
-    /* ENTRY BUTTON FIRST PAINT FIX — fixed DOM presence / no first-screen motion */
     body{
       overflow-anchor:none;
     }
@@ -1674,9 +1635,6 @@
       min-height:56px;
     }
 
-
-
-    /* CRITICAL FIRST PAINT FIX — above-the-fold visible before JSON/render */
     html,
     body{
       background:#070A14 !important;
@@ -1760,7 +1718,6 @@
       min-height:128px;
     }
 
-    /* ENTRY CRITICAL PAINT ISOLATION FIX — first-painted anchor separated from archive shell */
     #criticalEntry,
     .critical-entry,
     #enterArchivePro,
@@ -1787,9 +1744,6 @@
       scroll-margin-top:110px;
     }
 
-
-
-    /* FINAL ZERO-LAG PIPELINE — first screen isolated from data/render */
     body{
       overflow-anchor:none;
     }
@@ -1832,8 +1786,6 @@
       contain:layout paint;
     }
 
-
-    /* ENTRY BUTTON VISUAL BALANCE + LANGUAGE SYNC FIX */
     .entry-panel{
       padding:18px 24px !important;
       min-height:auto !important;
@@ -1870,8 +1822,6 @@
       }
     }
 
-
-    /* ENTRY BORDER BALANCE FIX — minimal border adjustment only */
     .entry-panel{
       border:1px solid rgba(212,180,109,0.18) !important;
       background:transparent !important;
@@ -1883,8 +1833,6 @@
       min-height:48px !important;
     }
 
-
-    /* ARCHIVE PRO MOBILE VERTICAL COMPRESSION FIX — mobile only */
     @media (max-width:768px){
 
       .stats-panel,
@@ -1956,10 +1904,6 @@
 
     }
 
-
-    /* ARCHIVE PRO LIGHTBOX LAPTOP/PC FINAL STABLE IMAGE LOCK
-       Fixes the momentary oversized flash before image returns to its correct size.
-       Only desktop/laptop lightbox image sizing + arrow position are affected. */
     .lightbox-nav{
       display:none !important;
     }
@@ -2093,9 +2037,6 @@
       }
     }
 
-
-
-    /* ARCHIVE PRO ENTRY UX — exhibition-first entrance / no data or design structure change */
     body:not(.archive-entered) #searchArea,
     body:not(.archive-entered) .archive-source-meta,
     body:not(.archive-entered) #archiveMain,
@@ -2236,8 +2177,6 @@
       }
     }
 
-
-    /* ARCHIVE PRO ENTRY REFINEMENT — language before entry + gold-blue title */
     .brand-row h1{
       color:rgba(212,180,109,.94) !important;
       text-shadow:0 0 18px rgba(212,180,109,.16), 0 0 34px rgba(78,110,164,.10) !important;
@@ -2263,8 +2202,6 @@
       color:#d4b46d !important;
     }
 
-
-    /* ARCHIVE PRO BUTTON HIERARCHY FINAL — language visible / Load more quiet / Filter Search strong */
     .lang-inline{
       padding:12px 16px !important;
       border:1px solid rgba(212,180,109,.26) !important;
@@ -2416,7 +2353,7 @@
         line-height:34px !important;
       }
     }
-    /* ARCHIVE PRO HEADER SIMPLIFICATION — title is the reset trigger */
+
     .brand-row{
       align-items:center !important;
       gap:12px 14px !important;
@@ -2503,8 +2440,6 @@
       }
     }
 
-
-    /* LOAD MORE / FILTER SEARCH FINAL BALANCE — distinct hierarchy, stable gold harmony */
     body.archive-entered #loadWrap{
       order:4;
       padding:24px 0 30px !important;
@@ -2637,8 +2572,6 @@
       }
     }
 
-
-    /* ARCHIVE PRO FINAL FILTER SEARCH SQUARE + WIDE LETTERSPACING OVERRIDE */
     #filterToggleBtn{
       min-height:58px !important;
       padding:0 34px !important;
@@ -2712,10 +2645,6 @@
       }
     }
 
-
-    /* ARCHIVE PRO FINAL BALANCED BOTTOM CONTROLS — based on square-tracking build
-       Only the opened Filter/Search control panel is modestly enlarged.
-       No data, render, lightbox, sound, language, or works.json logic is changed. */
     body.archive-entered.archive-filter-open #searchArea.controls{
       padding:16px !important;
       gap:14px !important;
@@ -2826,8 +2755,6 @@
       }
     }
 
-
-    /* ARCHIVE PRO FINAL TYPO + CTA GLOW REFINEMENT — speed-safe, no transform/blur */
     .brand-row h1,
     .brand-home-link h1{
       font-size:clamp(22px, 3.2vw, 34px) !important;
@@ -2946,9 +2873,6 @@
       }
     }
 
-
-
-    /* ARCHIVE PRO FINAL LUXURY CTA TYPE — click restored / high-fashion gothic-roman tension */
     #filterToggleBtn{
       width:min(500px, 92%) !important;
       min-height:76px !important;
@@ -3015,12 +2939,6 @@
       }
     }
 
-
-    /* ==========================================================
-       ARCHIVE PRO — FINAL BRAND SYSTEM OVERRIDE
-       DUNGZAK CESTLAVIE LAB / exhibition-grade UI
-       Principles: deep blue, exact gold, no blur, no scale, no visual noise.
-       ========================================================== */
     :root{
       --dz-bg-deep:#070A14;
       --dz-bg-blue:#0B1324;
@@ -3371,9 +3289,6 @@
       }
     }
 
-
-
-    /* ARCHIVE PRO LOAD MORE BRAND REFINEMENT — bilingual, larger, distinct typography */
     #loadMoreBtn{
       width:min(214px, 72vw) !important;
       min-height:52px !important;
@@ -3460,8 +3375,6 @@
       }
     }
 
-
-    /* ARCHIVE PRO MOBILE LIGHTBOX CLOSE + CAPTION SIZE FIX — mobile only, PC unchanged */
     @media (max-width:768px){
       .viewer-close,
       .lightbox-close,
@@ -3550,9 +3463,6 @@
         line-height:1.55 !important;
       }
     }
-
-
-    /* ARCHIVE PRO INTERFACE RESTRUCTURE — always open / no filter-search toggle / structure-select-sort-search */
 
     #filterToggleWrap,
     #filterToggleBtn{
@@ -3644,7 +3554,6 @@
       }
     }
 
-
     #ap-reset-trigger{
       cursor:pointer !important;
     }
@@ -3653,8 +3562,6 @@
       cursor:pointer !important;
     }
 
-
-    /* ARCHIVE PRO LAYOUT REFINEMENT — compact top interface + load more below works grid only */
     body.archive-entered .site-shell{
       padding-top:12px !important;
     }
@@ -3757,9 +3664,7 @@
         padding:16px 0 10px !important;
       }
     }
-</style>
-  <style>
-    /* ARCHIVE PRO MOBILE LOAD MORE ANCHOR FIX — restore browser anchoring while JS positions first newly appended card */
+
     html,
     body{
       overflow-anchor:auto !important;
@@ -3768,9 +3673,7 @@
     #grid{
       overflow-anchor:none;
     }
-  
 
-    /* ARCHIVE PRO PWA INSTALL UX — Android native install + iPhone Safari guide */
     .install-panel{
       margin:12px 0 10px;
       padding:13px 14px;
@@ -3959,12 +3862,6 @@
       }
     }
 
-    
-
-    /* ARCHIVE PRO LIGHTBOX CAPTION + MOBILE IMAGE SIZE + CLOSE RETURN ONLY
-       - Does not change swipe / pinch zoom event logic.
-       - Desktop caption matches mobile: id(title/material/size/year), no image/zoom URL rows/buttons.
-       - Mobile image area enlarged; caption remains scrollable and unclipped. */
     .lb-meta .lb-row:nth-child(4),
     .lb-meta .lb-row:nth-child(5),
     .lb-actions .lb-link,
@@ -4089,12 +3986,6 @@
       }
     }
 
-
-
-    /* ARCHIVE PRO FINAL MICRO FIX — caption full view label only
-       - Keeps swipe / pinch zoom / touch events untouched.
-       - Restores one caption action inside Lightbox: 전체보기 / View Full.
-       - Removes the separate image/open-zoom wording from the caption UI. */
     .lb-meta .lb-row:nth-child(4),
     .lb-meta .lb-row:nth-child(5),
     #lbOpenImage{
@@ -4152,10 +4043,6 @@
       display:none !important;
     }
 
-
-    /* ARCHIVE PRO MOBILE CARD CAPTION FULLVIEW HIDE ONLY
-       - Removes only the duplicated Full View text above collection/email inquiry in mobile card captions.
-       - Does not touch Lightbox/View Full caption action, swipe, pinch zoom, touch events, image fit, rendering, search, sort, or LOAD MORE. */
     @media (max-width:880px){
       .card .full-view,
       .card .view-full,
@@ -4171,8 +4058,6 @@
       }
     }
 
-
-    /* ARCHIVE PRO MOBILE X CIRCLE MICRO FIX ONLY — smaller close button, no touch/swipe/zoom changes */
     @media (max-width:768px){
       .viewer-close,
       .lightbox-close,
@@ -4193,11 +4078,7 @@
         padding:0 !important;
       }
     }
-</style>
 
-
-<style>
-/* ARCHIVE PRO FINAL MICRO FIX — KR/EN MOBILE VIEWER CAPTION SAFE SCROLL ONLY */
 @media (max-width: 768px) {
   .viewer-caption,
   .lightbox-caption,
@@ -4219,11 +4100,7 @@
     overflow: hidden !important;
   }
 }
-</style>
 
-
-<style>
-/* ARCHIVE PRO MOBILE CAPTION CUT-OFF FINAL FIX — caption CSS only */
 @media (max-width: 768px) {
   .viewer-caption,
   .lightbox-caption,
@@ -4237,12 +4114,7 @@
     overscroll-behavior: contain !important;
   }
 }
-</style>
 
-
-<style id="archivepro-mobile-caption-safe-scroll-final-fix-only">
-/* ARCHIVE PRO MOBILE VIEWER CAPTION SAFE SCROLL FINAL FIX ONLY
-   Caption CSS only. No swipe / pinch / image / button / render logic change. */
 @media (max-width: 768px) {
   .viewer-caption,
   .lightbox-caption {
@@ -4259,11 +4131,7 @@
     padding-bottom: 24px !important;
   }
 }
-</style>
 
-
-<style id="archive-pro-mobile-caption-compact-fix-only">
-  /* ARCHIVE PRO MOBILE CAPTION COMPACT FIX — REMOVE SECTION + SMALLER FONT ONLY */
   @media (max-width: 768px) {
     .viewer-caption .section,
     .viewer-caption .section-name,
@@ -4356,12 +4224,7 @@
       padding-bottom: 24px !important;
     }
   }
-</style>
 
-
-<style>
-
-/* ARCHIVE PRO MOBILE CAPTION ULTRA COMPACT FIX — TITLE SIZE + LETTER SPACING ONLY */
 @media (max-width: 768px) {
 
   .viewer-caption h1,
@@ -4413,11 +4276,6 @@
   }
 }
 
-</style>
-
-<style>
-
-  /* ARCHIVE PRO MOBILE CAPTION HEIGHT MICRO FIX — TITLE NOT CUT ONLY */
   @media (max-width: 768px) {
     .viewer-caption,
     .lightbox-caption {
@@ -4425,11 +4283,6 @@
     }
   }
 
-</style>
-
-<style>
-
-    /* ARCHIVE PRO MOBILE CAPTION HEIGHT FINAL CALC FIX — LONG TITLE SAFE AREA ONLY */
     @media (max-width: 768px) {
       .viewer-caption,
       .lightbox-caption {
@@ -4441,11 +4294,6 @@
       }
     }
 
-</style>
-
-<style>
-
-/* ARCHIVE PRO MOBILE CAPTION FINAL FIX — HIDE FULL VIEW + EXPAND CAPTION ONLY */
 @media (max-width: 768px) {
 
   .viewer-caption .full-view,
@@ -4501,11 +4349,6 @@
   }
 }
 
-</style>
-
-
-<style>
-/* ARCHIVE PRO MOBILE CAPTION FINAL NOTEBOOK FIX — REMOVE FULL VIEW + 84DVH CAPTION ONLY */
 @media (max-width: 768px) {
 
   .viewer-caption .full-view,
@@ -4545,12 +4388,7 @@
     overscroll-behavior-y: contain !important;
   }
 }
-</style>
 
-<style>
-/* ARCHIVE PRO MOBILE VIEWER BALANCE FINAL FIX — IMAGE RESTORE + COMPACT CAPTION
-   Mobile viewer balance only.
-   Swipe, pinch zoom, pointer/touch events, X, arrows, image paths, works data, search/filter/sort/load more unchanged. */
 @media (max-width: 768px) {
   #lbOpenZoom.mobile-hide-fullview,
   .mobile-hide-fullview,
@@ -4628,6 +4466,24 @@
 }
 </style>
 
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f14" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="format-detection" content="telephone=no,address=no,email=no" />
+
+  <title>Archive Pro — DUNGZAK CESTLAVIE LAB</title>
+  <meta name="description" content="Archive Pro — artwork archive engine for search, filter, and zoom view." />
+  <link rel="manifest" href="/archivepro/manifest.json" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Archive Pro" />
+  <link rel="apple-touch-icon" href="/archivepro-icon-512-v2.png?v=2" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/archivepro-icon-192-v2.png?v=2" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/archivepro-icon-512-v2.png?v=2" />
+
+
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>
@@ -4675,7 +4531,6 @@
         <a id="enterArchivePro" class="critical-entry-btn" href="#archiveWorks" data-kr="아카이브 입장 →" data-en="Enter Archive →">아카이브 입장 →</a>
       </div>
     </section>
-
 
 
     <section id="installPanel" class="install-panel install-appstore" aria-label="Archive Pro app installation" hidden>
@@ -4914,7 +4769,6 @@
       }
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
-
 
 
       function normalizeStatus(status) {
@@ -6223,11 +6077,9 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         if (!item) return false;
         if (state.section === 'all') return true;
         if (isExcludedFromSectionView(item, state.section)) {
-          console.warn('SECTION IV HARD LOCK BLOCKED', item.id, item.section_id, state.section);
           return false;
         }
         const ok = Number(item.section_id) === Number(state.section);
-        if (!ok) console.warn('SECTION MISMATCH BLOCKED', item.id, item.section_id, state.section);
         return ok;
       }
 
@@ -6242,7 +6094,6 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         const year = isOrigin ? '' : getYear(work);
         const infoLine = isOrigin ? '' : [material, size, year].filter(Boolean).join(' / ');
         const rawImage = safeText(work.image);
-        if (!rawImage) console.warn('MISSING IMAGE', work.id);
         const imageSrc = rawImage ? withCacheBust(rawImage) : '';
         const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(work);
@@ -6918,7 +6769,6 @@ function normalizeImageUrl(url, kind, id, sectionId) {
             setTimeout(buildSimulationSnapshot, 900);
           }
         } catch (error) {
-          console.error('Load error:', error);
           state.loadState = 'failed';
           state.isLoaded = false;
           WORKS_READY = false;
@@ -7541,7 +7391,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/service-worker.js?v=6', { updateViaCache: 'none' }).then(function(registration){
+      navigator.serviceWorker.register('/archivepro/sw.js', { scope: '/archivepro/', updateViaCache: 'none' }).then(function(registration){
         try {
           registration.update();
           if (navigator.serviceWorker.controller) {

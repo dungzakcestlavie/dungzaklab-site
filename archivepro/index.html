@@ -4714,26 +4714,12 @@ body.archive-entered .hero{
       }
 
       async function cacheNonOriginStandardImagesFromPage(items) {
-        if (!('caches' in window)) return;
-        if (isArchiveOfflineMode()) return;
-
-        const urls = Array.from(new Set(nonOriginsOnly(items)
-          .map(function(item){ return standardImageUrlOnly(item.image); })
-          .filter(Boolean)));
-
-        if (!urls.length) return;
-
-        try {
-          const cache = await caches.open(PAGE_OFFLINE_CACHE_NAME);
-          for (const url of urls) {
-            try {
-              const cached = await cache.match(url);
-              if (cached) continue;
-              const response = await fetch(url, { mode: 'cors', credentials: 'omit', cache: 'default' });
-              if (response && response.ok) await cache.put(url, response.clone());
-            } catch (_) {}
-          }
-        } catch (_) {}
+        /*
+          CPU Blocking Time Reduction:
+          The page no longer preloads/caches every non-Origin standard image.
+          Service worker may handle offline caching separately inside /archivepro/ scope.
+        */
+        return;
       }
 
       const ART_EMAIL = "dungzakcestlavie@gmail.com";
@@ -4989,7 +4975,8 @@ untitled: '무제 / Untitled',
         lang: 'kr',
         loadState: 'idle',
         isLoaded: false,
-        _searchPrepared: false
+        _searchPrepared: false,
+        _sectionCount: 0
       };
 
       let visibleCount = getInitialVisibleCount();
@@ -5628,26 +5615,23 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       }
 
       function prepareFastSearchCache(item) {
+        if (!item) return item;
+        if (item._fastSearchReady) return item;
         item._fastSearch = buildFastSearchText(item);
         item._yearEndNumber = parseYearEndNumber(item.year) || 0;
         item._yearStartNumber = parseYearNumber(item.year) || 0;
+        item._fastSearchReady = true;
         return item;
       }
 
       function scheduleFullSearchIndex() {
-        if (state._searchPrepared || !state.all.length) return;
-
-        const run = () => {
-          if (state._searchPrepared || !state.all.length) return;
-          state.all.forEach(prepareFastSearchCache);
-          state._searchPrepared = true;
-        };
-
-        if ('requestIdleCallback' in window) {
-          requestIdleCallback(run, { timeout: 1200 });
-        } else {
-          setTimeout(run, 500);
-        }
+        /*
+          CPU Blocking Time Reduction:
+          Do not pre-index the full archive during initial load. Search cache is built
+          lazily on the first real search, so the first screen does not spend CPU time
+          preparing all works.
+        */
+        return;
       }
 
       function getQueryTokens(rawQuery) {
@@ -5823,25 +5807,33 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
       function populateSections() {
         const prev = state.section;
-        els.sectionSelect.innerHTML = '';
+        els.sectionSelect.textContent = '';
 
+        const fragment = document.createDocumentFragment();
         const allOpt = document.createElement('option');
         allOpt.value = 'all';
         allOpt.textContent = t('allSections');
-        els.sectionSelect.appendChild(allOpt);
+        fragment.appendChild(allOpt);
+
+        const sectionIdsWithWorks = new Set(
+          (Array.isArray(state.all) ? state.all : [])
+            .map(item => Number(item.section_id))
+            .filter(n => Number.isFinite(n))
+        );
 
         Object.keys(SECTION_MAP)
           .map(Number)
           .sort((a, b) => a - b)
           .forEach((sectionId) => {
-            const hasWorks = state.all.some(item => item.section_id === sectionId);
-            if (!hasWorks) return;
+            if (!sectionIdsWithWorks.has(sectionId)) return;
 
             const opt = document.createElement('option');
             opt.value = String(sectionId);
             opt.textContent = getSectionTextById(sectionId);
-            els.sectionSelect.appendChild(opt);
+            fragment.appendChild(opt);
           });
+
+        els.sectionSelect.appendChild(fragment);
 
         const values = Array.from(els.sectionSelect.options).map(o => o.value);
         state.section = values.includes(prev) ? prev : 'all';
@@ -5941,11 +5933,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         const total = state.all.length;
         const filtered = state.filtered.length;
-        const sections = new Set(
-          state.all
-            .map(item => Number(item.section_id))
-            .filter(n => Number.isFinite(n))
-        ).size;
+        const sections = state._sectionCount || 0;
         const visibleNow = Math.min(state.visibleCount, filtered);
 
         els.statTotal.textContent = numberFormat.format(total);
@@ -5994,7 +5982,8 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
       }
 
       function observeLazyImages(root = els.grid) {
-        const images = Array.from(root.querySelectorAll('img.thumb[data-src]'));
+        if (!root) return;
+        const images = root.querySelectorAll('img.thumb[data-src]');
 
         if (!lazyImageObserver) {
           images.forEach(loadLazyImage);
@@ -6436,8 +6425,9 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         const queryValue = safeText(state.query);
         if (queryValue && compactSearchToken(queryValue).length >= 2) {
           if (!state._searchPrepared) {
-            state.all = state.all.map(prepareFastSearchCache);
-            result = result.map(prepareFastSearchCache);
+            for (let i = 0; i < state.all.length; i += 1) {
+              prepareFastSearchCache(state.all[i]);
+            }
             state._searchPrepared = true;
           }
           result = result.filter((item) => matchesSearch(item, queryValue));
@@ -6660,8 +6650,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           const works = await fetchWorksDirect();
           const normalizedAll = works
             .map(normalizeItem)
-            .filter(item => item && item.id)
-            .map(prepareFastSearchCache);
+            .filter(item => item && item.id);
 
           /*
             Offline Display Rule:
@@ -6675,7 +6664,12 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           state.section = 'all';
           state.sort = FAST_ORDER;
           state.visibleCount = getInitialVisibleCount();
-          state._searchPrepared = true;
+          state._searchPrepared = false;
+          state._sectionCount = new Set(
+            state.all
+              .map(item => Number(item.section_id))
+              .filter(n => Number.isFinite(n))
+          ).size;
           state.filtered = state.all;
           state.loadState = 'loaded';
           state.isLoaded = true;
@@ -6688,7 +6682,6 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
           if (!isArchiveOfflineMode()) {
             requestServiceWorkerNonOriginsCache();
-            cacheNonOriginStandardImagesFromPage(normalizedAll);
           }
 
           if (els.searchInput) els.searchInput.value = '';
@@ -6701,7 +6694,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           updateStats();
           updateMeta();
           if (archiveEntered) scheduleFirstGridRender();
-} catch (error) {
+        } catch (error) {
           state.loadState = 'failed';
           state.isLoaded = false;
           WORKS_READY = false;
@@ -6709,6 +6702,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           CURRENT_LIST = [];
           state.all = [];
           state.filtered = [];
+          state._sectionCount = 0;
 
           if (els.emptyState) {
             els.emptyState.hidden = false;
@@ -6792,11 +6786,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         state.visibleCount = nextVisibleCount;
         visibleCount = state.visibleCount;
 
-        appendCards(nextItems, loadMoreStartIndex);
-
-        const newFirstCard = els.grid
-          ? els.grid.querySelector('[data-render-index="' + loadMoreStartIndex + '"]')
-          : null;
+        const newFirstCard = appendCards(nextItems, loadMoreStartIndex);
 
         if (els.loadWrap) els.loadWrap.hidden = state.visibleCount >= finalFilteredWorks.length;
         updateStats();

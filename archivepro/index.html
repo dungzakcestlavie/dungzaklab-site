@@ -4434,6 +4434,113 @@ body.archive-entered .hero{
     gap: 6px !important;
   }
 }
+
+
+    /* ARCHIVE PRO MOBILE VIEWER FINAL STABILIZATION ONLY
+       Mobile fullscreen Viewer only: frame clipping, dark overlay, z-index, single image transform.
+       Desktop / notebook, grid, search, filters, sort, LOAD MORE and data are untouched. */
+    @media (max-width:768px){
+      .viewer-overlay,
+      .lightbox-overlay,
+      .archive-viewer,
+      .viewer,
+      .lightbox,
+      #viewer,
+      #lightbox{
+        position:fixed !important;
+        inset:0 !important;
+        width:100vw !important;
+        height:100dvh !important;
+        background:#00060a !important;
+        overflow:hidden !important;
+        z-index:99990 !important;
+        overscroll-behavior:none !important;
+        touch-action:none !important;
+        isolation:isolate !important;
+      }
+
+      .lightbox::before,
+      #lightbox::before{
+        content:"" !important;
+        position:absolute !important;
+        inset:0 !important;
+        z-index:0 !important;
+        background:#00060a !important;
+        opacity:1 !important;
+        pointer-events:none !important;
+      }
+
+      .viewer-inner,
+      .lightbox-inner{
+        position:absolute !important;
+        inset:0 !important;
+        z-index:1 !important;
+        overflow:hidden !important;
+      }
+
+      .viewer-image-wrap,
+      .viewer-img-wrap,
+      .lightbox-image-wrap,
+      .lightbox-img-wrap,
+      .zoom-frame,
+      .viewer-frame,
+      .archive-viewer-frame,
+      .viewer-media,
+      .lightbox-media,
+      .lightbox-stage{
+        position:relative !important;
+        overflow:hidden !important;
+        contain:paint !important;
+        z-index:1 !important;
+        touch-action:none !important;
+        overscroll-behavior:contain !important;
+      }
+
+      .viewer-image,
+      .viewer-img,
+      .lightbox-image,
+      .lightbox-img,
+      .archive-viewer-img,
+      .viewer-media img,
+      .lightbox-media img,
+      .lightbox-stage img,
+      #lightboxImage{
+        display:block !important;
+        max-width:100% !important;
+        max-height:100% !important;
+        object-fit:contain !important;
+        transform-origin:center center !important;
+        will-change:transform !important;
+        user-select:none !important;
+        -webkit-user-drag:none !important;
+        touch-action:none !important;
+        position:relative !important;
+        z-index:1 !important;
+      }
+
+      .viewer-caption,
+      .lightbox-caption,
+      .archive-viewer-caption,
+      .detail-panel,
+      .lightbox-side{
+        position:relative !important;
+        z-index:5 !important;
+      }
+
+      .viewer-close,
+      .lightbox-close,
+      .modal-close,
+      .close-btn,
+      .close-viewer,
+      #viewerCloseBtn,
+      #lightboxClose{
+        position:fixed !important;
+        z-index:100000 !important;
+        pointer-events:auto !important;
+        touch-action:manipulation !important;
+      }
+    }
+
 </style>
 
   <meta charset="utf-8" />
@@ -5066,10 +5173,46 @@ lightbox: document.getElementById('lightbox'),
         return els.lightbox && els.lightbox.classList.contains('open') && document.body.classList.contains('viewer-open');
       }
 
+      function isMobileViewerMode() {
+        return !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+      }
+
+      function clampViewerValue(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      function clampViewerImageToFrame() {
+        if (!isMobileViewerMode() || !els.lightboxStage || !els.lightboxImage) return;
+
+        if (viewerScale <= 1.02) {
+          viewerScale = 1;
+          viewerX = 0;
+          viewerY = 0;
+          return;
+        }
+
+        const frameRect = els.lightboxStage.getBoundingClientRect();
+        const scaledWidth = els.lightboxImage.offsetWidth * viewerScale;
+        const scaledHeight = els.lightboxImage.offsetHeight * viewerScale;
+
+        const maxX = Math.max(0, (scaledWidth - frameRect.width) / 2);
+        const maxY = Math.max(0, (scaledHeight - frameRect.height) / 2);
+
+        viewerX = clampViewerValue(viewerX, -maxX, maxX);
+        viewerY = clampViewerValue(viewerY, -maxY, maxY);
+      }
+
       function applyViewerTransform() {
         if (!els.lightboxImage) return;
+
+        if (isMobileViewerMode()) {
+          clampViewerImageToFrame();
+          els.lightboxImage.style.transformOrigin = 'center center';
+          els.lightboxImage.style.willChange = 'transform';
+        }
+
         els.lightboxImage.style.transform = `translate3d(${viewerX}px, ${viewerY}px, 0) scale(${viewerScale})`;
-        if (els.lightboxStage) els.lightboxStage.classList.toggle('is-zoomed', viewerScale > 1);
+        if (els.lightboxStage) els.lightboxStage.classList.toggle('is-zoomed', viewerScale > 1.02);
       }
 
       function resetViewerTransform() {
@@ -6882,8 +7025,17 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           blockEvent(e);
         };
 
+        const closeFromXTouchStart = (e) => {
+          const closeBtn = getCloseButton(e);
+          if (!closeBtn) return;
+          blockEvent(e);
+          if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches && isViewerOpen()) {
+            closeViewer();
+          }
+        };
+
         document.addEventListener('pointerdown', consumeCloseTouch, true);
-        document.addEventListener('touchstart', consumeCloseTouch, { capture:true, passive:false });
+        document.addEventListener('touchstart', closeFromXTouchStart, { capture:true, passive:false });
         document.addEventListener('pointerup', consumeCloseTouch, true);
         document.addEventListener('touchend', closeFromX, { capture:true, passive:false });
         document.addEventListener('click', closeFromX, true);
@@ -6894,7 +7046,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         if (els.lightboxClose) {
           els.lightboxClose.addEventListener('pointerdown', consumeCloseTouch, { passive:false });
-          els.lightboxClose.addEventListener('touchstart', consumeCloseTouch, { passive:false });
+          els.lightboxClose.addEventListener('touchstart', closeFromXTouchStart, { passive:false });
           els.lightboxClose.addEventListener('pointerup', consumeCloseTouch, { passive:false });
           els.lightboxClose.addEventListener('touchend', closeFromX, { passive:false });
           els.lightboxClose.addEventListener('click', closeFromX, { passive:false });

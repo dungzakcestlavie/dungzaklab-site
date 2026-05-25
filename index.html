@@ -505,6 +505,14 @@ body.menu-open{
   color:#d7e8f8;
 }
 
+.archive-site-note{
+  margin-top:8px;
+  font-size:13px;
+  line-height:1.7;
+  color:rgba(234,246,255,0.66);
+  letter-spacing:0.3px;
+}
+
 .proposal-link{
   display:block;
   width:100%;
@@ -1073,15 +1081,18 @@ body.is-leaving-archive [data-archive-pro-link]{
         <a class="top-fixed-link" href="https://dungzak.art" target="_blank" rel="noopener">dungzak.art</a>
         <a class="top-fixed-link" href="https://jsgallery.art" target="_blank" rel="noopener">jsgallery.art</a>
         <a class="top-fixed-link" href="http://www.iiaa.or.kr" target="_blank" rel="noopener">iiaa.or.kr</a>
+        <a class="top-fixed-link" href="https://kywoo.art" target="_blank" rel="noopener">kywoo.art</a>
 
         <div class="author lang-panel" data-panel="ko">
           등작 燈酌 DUNGZAK CESTLAVIE<br>
           설계 · 구조 · 디자인 구축
+          <div class="archive-site-note">작가 적용형 모바일 아카이브 구조</div>
         </div>
 
         <div class="author en lang-panel" data-panel="en">
           DUNGZAK CESTLAVIE<br>
           Design · Structure · Design Construction
+          <div class="archive-site-note">Artist-oriented mobile archive structure</div>
         </div>
       </div>
     </div>
@@ -1295,6 +1306,17 @@ const fallbackDCAP = {
       summary_kr: "데이터를 구조적으로 연결하고 흐름으로 작동시키는 시스템이다.",
       summary_en: "A system that structurally connects data and operates it as flow.",
       md_path: "archive/DCAP-01.md"
+    },
+    {
+      id: "DCAP-02",
+      slug: "DCAP-02",
+      year: "2026",
+      category: "Archive Structure",
+      title_kr: "작가 적용형 아카이브 시스템",
+      title_en: "Artist-oriented Archive System",
+      summary_kr: "작가별 감각과 구조에 맞춰\n모바일 기반 Viewer · Archive · Language 구조를\n독립적으로 구축하는 시스템.",
+      summary_en: "A system for independently building\nmobile-based Viewer, Archive,\nand Language structures\ntailored to each artist.",
+      md_path: "https://kywoo.art"
     }
   ]
 };
@@ -1303,6 +1325,26 @@ let dcaoLoaded = false;
 let dcapLoaded = false;
 let dcaoData = fallbackDCAO;
 let dcapData = fallbackDCAP;
+
+const kywooDCAPCase = {
+  id: "DCAP-02",
+  slug: "DCAP-02",
+  year: "2026",
+  category: "Archive Structure",
+  title_kr: "작가 적용형 아카이브 시스템",
+  title_en: "Artist-oriented Archive System",
+  summary_kr: "작가별 감각과 구조에 맞춰\n모바일 기반 Viewer · Archive · Language 구조를\n독립적으로 구축하는 시스템.",
+  summary_en: "A system for independently building\nmobile-based Viewer, Archive,\nand Language structures\ntailored to each artist.",
+  md_path: "https://kywoo.art"
+};
+
+function withKywooDCAP(items){
+  const list = Array.isArray(items) ? items.slice() : [];
+  if(!list.some(item => item && item.id === "DCAP-02")){
+    list.push(kywooDCAPCase);
+  }
+  return list;
+}
 
 function lockBodyScroll(){
   document.body.classList.add('menu-open');
@@ -1421,7 +1463,7 @@ function setLanguage(lang){
   }
 
   if(archive.classList.contains('active')){
-    renderList(dcapData.dcap || [], 'dcap');
+    renderList(withKywooDCAP(dcapData.dcap || []), 'dcap');
   }
 }
 
@@ -1460,7 +1502,7 @@ function renderList(items, type){
     const a = document.createElement('a');
     a.className = 'report-item';
     a.href = item.md_path || '#';
-    a.target = '_self';
+    a.target = /^https?:\/\//.test(a.href) ? '_blank' : '_self';
     a.rel = 'noopener';
 
     const idEl = document.createElement('div');
@@ -1500,9 +1542,10 @@ async function loadDCAO(){
 async function loadDCAP(){
   if(!dcapLoaded){
     dcapData = await fetchJSON('data/dcap.json', fallbackDCAP);
+    dcapData.dcap = withKywooDCAP(dcapData.dcap || []);
     dcapLoaded = true;
   }
-  renderList(dcapData.dcap || [], 'dcap');
+  renderList(withKywooDCAP(dcapData.dcap || []), 'dcap');
 }
 
 function escapeHtml(str){

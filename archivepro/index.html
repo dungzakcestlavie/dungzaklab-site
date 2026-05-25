@@ -5162,6 +5162,9 @@ lightbox: document.getElementById('lightbox'),
       let viewerStartScale = 1;
       let viewerLastTap = 0;
       let viewerMouseDragging = false;
+      /* ARCHIVE PRO MOBILE PINCH-END SWIPE MISFIRE FIX ONLY */
+      let mobilePinchJustEnded = false;
+      let mobilePinchEndTimer = null;
 
       function isViewerOpen() {
         return els.lightbox && els.lightbox.classList.contains('open') && document.body.classList.contains('viewer-open');
@@ -5169,6 +5172,27 @@ lightbox: document.getElementById('lightbox'),
 
       function isMobileViewerMode() {
         return window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      }
+
+      function armMobilePinchEndGuard() {
+        mobilePinchJustEnded = true;
+        if (mobilePinchEndTimer) clearTimeout(mobilePinchEndTimer);
+        mobilePinchEndTimer = setTimeout(() => {
+          mobilePinchJustEnded = false;
+          mobilePinchEndTimer = null;
+        }, 350);
+      }
+
+      function clearMobilePinchEndGuard() {
+        mobilePinchJustEnded = false;
+        if (mobilePinchEndTimer) {
+          clearTimeout(mobilePinchEndTimer);
+          mobilePinchEndTimer = null;
+        }
+      }
+
+      function shouldBlockMobileViewerSwipe() {
+        return isMobileViewerMode() && (viewerIsZooming || mobilePinchJustEnded || viewerScale > 1.02);
       }
 
       function clampViewerValue(value, min, max) {
@@ -5210,6 +5234,7 @@ lightbox: document.getElementById('lightbox'),
         viewerMouseDragging = false;
         viewerStartScale = 1;
         viewerInitialDistance = 0;
+        clearMobilePinchEndGuard();
         if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging', 'is-zoomed');
         if (els.lightboxImage) {
           /* ARCHIVE PRO VIEWER TRANSFORM RESET FIX ONLY
@@ -5234,6 +5259,7 @@ lightbox: document.getElementById('lightbox'),
 
       function openViewerByOffset(offset) {
         if (!isViewerOpen() || !state.filtered.length) return;
+        if (shouldBlockMobileViewerSwipe()) return;
         const current = getCurrentViewerIndex();
         if (current < 0) return;
         const nextIndex = (current + offset + state.filtered.length) % state.filtered.length;
@@ -7082,10 +7108,13 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           if (e.touches.length === 2) {
             viewerIsZooming = true;
             viewerIsDragging = false;
+            clearMobilePinchEndGuard();
             viewerInitialDistance = getViewerDistance(e.touches[0], e.touches[1]);
             viewerStartScale = viewerScale;
-            viewerStartX = viewerX;
-            viewerStartY = viewerY;
+            viewerStartX = null;
+            viewerStartY = null;
+            viewerLastX = null;
+            viewerLastY = null;
             return;
           }
 
@@ -7144,6 +7173,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
             if (e.touches.length < 2) {
               viewerIsZooming = false;
               viewerInitialDistance = 0;
+              armMobilePinchEndGuard();
               if (viewerScale <= 1.02) {
                 viewerScale = 1;
                 viewerX = 0;
@@ -7151,6 +7181,12 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
               }
               applyViewerTransform();
             }
+            return;
+          }
+
+          if (shouldBlockMobileViewerSwipe()) {
+            viewerIsDragging = false;
+            if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging');
             return;
           }
 

@@ -1317,6 +1317,28 @@ const fallbackDCAP = {
       summary_kr: "작가별 감각과 구조에 맞춰\n모바일 기반 Viewer · Archive · Language 구조를\n독립적으로 구축하는 시스템.",
       summary_en: "A system for independently building\nmobile-based Viewer, Archive,\nand Language structures\ntailored to each artist.",
       md_path: "https://kywoo.art"
+    },
+    {
+      id: "DCAP-03",
+      slug: "DCAP-03",
+      year: "2026",
+      category: "Gallery Archive",
+      title_kr: "갤러리형 아카이브 시스템",
+      title_en: "Gallery-oriented Archive System",
+      summary_kr: "갤러리 전시와 작가 데이터를\n모바일 Viewer · Archive · Exhibition 구조로\n연결하는 시스템.",
+      summary_en: "A system connecting gallery exhibitions\nand artist data through\nmobile Viewer · Archive · Exhibition structures.",
+      md_path: "#"
+    },
+    {
+      id: "DCAP-04",
+      slug: "DCAP-04",
+      year: "2026",
+      category: "Institution Archive",
+      title_kr: "기관형 아카이브 시스템",
+      title_en: "Institution-oriented Archive System",
+      summary_kr: "협회와 기관의 작가·작품·비전 데이터를\n공공적 미술 플랫폼 구조로 정리하는 시스템.",
+      summary_en: "A system organizing artist, artwork,\nand institutional vision data\nwithin a public art platform structure.",
+      md_path: "#"
     }
   ]
 };
@@ -1326,23 +1348,49 @@ let dcapLoaded = false;
 let dcaoData = fallbackDCAO;
 let dcapData = fallbackDCAP;
 
-const kywooDCAPCase = {
-  id: "DCAP-02",
-  slug: "DCAP-02",
-  year: "2026",
-  category: "Archive Structure",
-  title_kr: "작가 적용형 아카이브 시스템",
-  title_en: "Artist-oriented Archive System",
-  summary_kr: "작가별 감각과 구조에 맞춰\n모바일 기반 Viewer · Archive · Language 구조를\n독립적으로 구축하는 시스템.",
-  summary_en: "A system for independently building\nmobile-based Viewer, Archive,\nand Language structures\ntailored to each artist.",
-  md_path: "https://kywoo.art"
-};
-
-function withKywooDCAP(items){
-  const list = Array.isArray(items) ? items.slice() : [];
-  if(!list.some(item => item && item.id === "DCAP-02")){
-    list.push(kywooDCAPCase);
+const additionalDCAPCases = [
+  {
+    id: "DCAP-02",
+    slug: "DCAP-02",
+    year: "2026",
+    category: "Archive Structure",
+    title_kr: "작가 적용형 아카이브 시스템",
+    title_en: "Artist-oriented Archive System",
+    summary_kr: "작가별 감각과 구조에 맞춰\n모바일 기반 Viewer · Archive · Language 구조를\n독립적으로 구축하는 시스템.",
+    summary_en: "A system for independently building\nmobile-based Viewer, Archive,\nand Language structures\ntailored to each artist.",
+    md_path: "https://kywoo.art"
+  },
+  {
+    id: "DCAP-03",
+    slug: "DCAP-03",
+    year: "2026",
+    category: "Gallery Archive",
+    title_kr: "갤러리형 아카이브 시스템",
+    title_en: "Gallery-oriented Archive System",
+    summary_kr: "갤러리 전시와 작가 데이터를\n모바일 Viewer · Archive · Exhibition 구조로\n연결하는 시스템.",
+    summary_en: "A system connecting gallery exhibitions\nand artist data through\nmobile Viewer · Archive · Exhibition structures.",
+    md_path: "#"
+  },
+  {
+    id: "DCAP-04",
+    slug: "DCAP-04",
+    year: "2026",
+    category: "Institution Archive",
+    title_kr: "기관형 아카이브 시스템",
+    title_en: "Institution-oriented Archive System",
+    summary_kr: "협회와 기관의 작가·작품·비전 데이터를\n공공적 미술 플랫폼 구조로 정리하는 시스템.",
+    summary_en: "A system organizing artist, artwork,\nand institutional vision data\nwithin a public art platform structure.",
+    md_path: "#"
   }
+];
+
+function withAdditionalDCAP(items){
+  const list = Array.isArray(items) ? items.slice() : [];
+  additionalDCAPCases.forEach(dcapCase => {
+    if(!list.some(item => item && item.id === dcapCase.id)){
+      list.push(dcapCase);
+    }
+  });
   return list;
 }
 
@@ -1463,7 +1511,7 @@ function setLanguage(lang){
   }
 
   if(archive.classList.contains('active')){
-    renderList(withKywooDCAP(dcapData.dcap || []), 'dcap');
+    renderList(withAdditionalDCAP(dcapData.dcap || []), 'dcap');
   }
 }
 
@@ -1542,10 +1590,10 @@ async function loadDCAO(){
 async function loadDCAP(){
   if(!dcapLoaded){
     dcapData = await fetchJSON('data/dcap.json', fallbackDCAP);
-    dcapData.dcap = withKywooDCAP(dcapData.dcap || []);
+    dcapData.dcap = withAdditionalDCAP(dcapData.dcap || []);
     dcapLoaded = true;
   }
-  renderList(withKywooDCAP(dcapData.dcap || []), 'dcap');
+  renderList(withAdditionalDCAP(dcapData.dcap || []), 'dcap');
 }
 
 function escapeHtml(str){

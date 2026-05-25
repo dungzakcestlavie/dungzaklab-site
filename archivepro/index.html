@@ -5212,8 +5212,14 @@ lightbox: document.getElementById('lightbox'),
         viewerInitialDistance = 0;
         if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging', 'is-zoomed');
         if (els.lightboxImage) {
-          els.lightboxImage.style.transform = '';
-          els.lightboxImage.style.willChange = '';
+          /* ARCHIVE PRO VIEWER TRANSFORM RESET FIX ONLY
+             Always overwrite the previous zoom/pan matrix before a new artwork renders. */
+          els.lightboxImage.style.transition = 'none';
+          els.lightboxImage.style.transform = 'translate3d(0px, 0px, 0) scale(1)';
+          els.lightboxImage.style.willChange = 'transform';
+          requestAnimationFrame(() => {
+            if (els.lightboxImage) els.lightboxImage.style.transition = '';
+          });
         }
       }
 
@@ -5231,6 +5237,7 @@ lightbox: document.getElementById('lightbox'),
         const current = getCurrentViewerIndex();
         if (current < 0) return;
         const nextIndex = (current + offset + state.filtered.length) % state.filtered.length;
+        resetViewerTransform();
         openLightbox(state.filtered[nextIndex]);
       }
 
@@ -6401,6 +6408,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         els.lightboxImage.alt = title;
         els.lightboxImage.classList.remove('is-ready');
         els.lightboxImage.classList.add('is-loading');
+        resetViewerTransform();
         els.lightboxImage.removeAttribute('src');
         els.lightboxImage.loading = 'eager';
         els.lightboxImage.decoding = 'async';

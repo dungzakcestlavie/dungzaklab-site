@@ -4436,111 +4436,104 @@ body.archive-entered .hero{
 }
 
 
-    /* ARCHIVE PRO MOBILE VIEWER FINAL STABILIZATION ONLY
-       Mobile fullscreen Viewer only: frame clipping, dark overlay, z-index, single image transform.
-       Desktop / notebook, grid, search, filters, sort, LOAD MORE and data are untouched. */
-    @media (max-width:768px){
+    /* ARCHIVE PRO MOBILE VIEWER CLEAN RESET — MATCH DUNGZAK.ART VIEWER
+       Mobile Viewer only: frame clipping, dark overlay, layer order, single transform target. */
+    @media (max-width: 768px) {
+      #lightbox,
+      .lightbox,
       .viewer-overlay,
       .lightbox-overlay,
       .archive-viewer,
-      .viewer,
-      .lightbox,
-      #viewer,
-      #lightbox{
-        position:fixed !important;
-        inset:0 !important;
-        width:100vw !important;
-        height:100dvh !important;
-        background:#00060a !important;
-        overflow:hidden !important;
-        z-index:99990 !important;
-        overscroll-behavior:none !important;
-        touch-action:none !important;
-        isolation:isolate !important;
+      .viewer {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        background: #00060a !important;
+        overflow: hidden !important;
+        z-index: 99990 !important;
+        touch-action: none !important;
+        overscroll-behavior: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        isolation: isolate !important;
       }
 
-      .lightbox::before,
-      #lightbox::before{
-        content:"" !important;
-        position:absolute !important;
-        inset:0 !important;
-        z-index:0 !important;
-        background:#00060a !important;
-        opacity:1 !important;
-        pointer-events:none !important;
+      #lightbox::before,
+      .lightbox::before {
+        content: "" !important;
+        position: absolute !important;
+        inset: 0 !important;
+        z-index: 0 !important;
+        background: #00060a !important;
+        opacity: 1 !important;
+        pointer-events: none !important;
       }
 
-      .viewer-inner,
-      .lightbox-inner{
-        position:absolute !important;
-        inset:0 !important;
-        z-index:1 !important;
-        overflow:hidden !important;
+      #lightbox .lightbox-inner,
+      .lightbox .lightbox-inner,
+      .viewer-inner {
+        position: absolute !important;
+        inset: 0 !important;
+        z-index: 1 !important;
+        overflow: hidden !important;
       }
 
+      #lightbox .lightbox-stage,
+      .lightbox-stage,
       .viewer-image-wrap,
       .viewer-img-wrap,
       .lightbox-image-wrap,
       .lightbox-img-wrap,
       .zoom-frame,
       .viewer-frame,
-      .archive-viewer-frame,
-      .viewer-media,
-      .lightbox-media,
-      .lightbox-stage{
-        position:relative !important;
-        overflow:hidden !important;
-        contain:paint !important;
-        z-index:1 !important;
-        touch-action:none !important;
-        overscroll-behavior:contain !important;
+      .archive-viewer-frame {
+        position: relative !important;
+        overflow: hidden !important;
+        contain: paint !important;
+        z-index: 1 !important;
+        touch-action: none !important;
+        overscroll-behavior: contain !important;
       }
 
+      #lightboxImage,
       .viewer-image,
       .viewer-img,
       .lightbox-image,
       .lightbox-img,
-      .archive-viewer-img,
-      .viewer-media img,
-      .lightbox-media img,
-      .lightbox-stage img,
-      #lightboxImage{
-        display:block !important;
-        max-width:100% !important;
-        max-height:100% !important;
-        object-fit:contain !important;
-        transform-origin:center center !important;
-        will-change:transform !important;
-        user-select:none !important;
-        -webkit-user-drag:none !important;
-        touch-action:none !important;
-        position:relative !important;
-        z-index:1 !important;
+      .archive-viewer-img {
+        display: block !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        object-fit: contain !important;
+        transform-origin: center center !important;
+        will-change: transform !important;
+        user-select: none !important;
+        -webkit-user-drag: none !important;
+        touch-action: none !important;
+        z-index: 1 !important;
       }
 
       .viewer-caption,
       .lightbox-caption,
       .archive-viewer-caption,
-      .detail-panel,
-      .lightbox-side{
-        position:relative !important;
-        z-index:5 !important;
+      .lightbox-side {
+        position: relative !important;
+        z-index: 5 !important;
       }
 
+      #viewerCloseBtn,
+      #lightboxClose,
       .viewer-close,
       .lightbox-close,
       .modal-close,
-      .close-btn,
-      .close-viewer,
-      #viewerCloseBtn,
-      #lightboxClose{
-        position:fixed !important;
-        z-index:100000 !important;
-        pointer-events:auto !important;
-        touch-action:manipulation !important;
+      .close-btn {
+        position: fixed !important;
+        z-index: 100000 !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
       }
     }
-
 </style>
 
   <meta charset="utf-8" />
@@ -5166,6 +5159,7 @@ lightbox: document.getElementById('lightbox'),
       let viewerIsDragging = false;
       let viewerIsZooming = false;
       let viewerInitialDistance = 0;
+      let viewerStartScale = 1;
       let viewerLastTap = 0;
       let viewerMouseDragging = false;
 
@@ -5174,29 +5168,22 @@ lightbox: document.getElementById('lightbox'),
       }
 
       function isMobileViewerMode() {
-        return !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+        return window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
       }
 
       function clampViewerValue(value, min, max) {
         return Math.min(Math.max(value, min), max);
       }
 
-      function clampViewerImageToFrame() {
+      function clampViewerToFrame() {
         if (!isMobileViewerMode() || !els.lightboxStage || !els.lightboxImage) return;
+        const frame = els.lightboxStage.getBoundingClientRect();
+        if (!frame || !frame.width || !frame.height) return;
 
-        if (viewerScale <= 1.02) {
-          viewerScale = 1;
-          viewerX = 0;
-          viewerY = 0;
-          return;
-        }
-
-        const frameRect = els.lightboxStage.getBoundingClientRect();
-        const scaledWidth = els.lightboxImage.offsetWidth * viewerScale;
-        const scaledHeight = els.lightboxImage.offsetHeight * viewerScale;
-
-        const maxX = Math.max(0, (scaledWidth - frameRect.width) / 2);
-        const maxY = Math.max(0, (scaledHeight - frameRect.height) / 2);
+        const scaledWidth = (els.lightboxImage.offsetWidth || frame.width) * viewerScale;
+        const scaledHeight = (els.lightboxImage.offsetHeight || frame.height) * viewerScale;
+        const maxX = Math.max(0, (scaledWidth - frame.width) / 2);
+        const maxY = Math.max(0, (scaledHeight - frame.height) / 2);
 
         viewerX = clampViewerValue(viewerX, -maxX, maxX);
         viewerY = clampViewerValue(viewerY, -maxY, maxY);
@@ -5204,13 +5191,12 @@ lightbox: document.getElementById('lightbox'),
 
       function applyViewerTransform() {
         if (!els.lightboxImage) return;
-
-        if (isMobileViewerMode()) {
-          clampViewerImageToFrame();
-          els.lightboxImage.style.transformOrigin = 'center center';
-          els.lightboxImage.style.willChange = 'transform';
+        if (viewerScale <= 1.02) {
+          viewerScale = 1;
+          viewerX = 0;
+          viewerY = 0;
         }
-
+        clampViewerToFrame();
         els.lightboxImage.style.transform = `translate3d(${viewerX}px, ${viewerY}px, 0) scale(${viewerScale})`;
         if (els.lightboxStage) els.lightboxStage.classList.toggle('is-zoomed', viewerScale > 1.02);
       }
@@ -5222,8 +5208,13 @@ lightbox: document.getElementById('lightbox'),
         viewerIsDragging = false;
         viewerIsZooming = false;
         viewerMouseDragging = false;
+        viewerStartScale = 1;
+        viewerInitialDistance = 0;
         if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging', 'is-zoomed');
-        applyViewerTransform();
+        if (els.lightboxImage) {
+          els.lightboxImage.style.transform = '';
+          els.lightboxImage.style.willChange = '';
+        }
       }
 
       function getViewerDistance(t1, t2) {
@@ -7025,17 +7016,8 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           blockEvent(e);
         };
 
-        const closeFromXTouchStart = (e) => {
-          const closeBtn = getCloseButton(e);
-          if (!closeBtn) return;
-          blockEvent(e);
-          if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches && isViewerOpen()) {
-            closeViewer();
-          }
-        };
-
         document.addEventListener('pointerdown', consumeCloseTouch, true);
-        document.addEventListener('touchstart', closeFromXTouchStart, { capture:true, passive:false });
+        document.addEventListener('touchstart', consumeCloseTouch, { capture:true, passive:false });
         document.addEventListener('pointerup', consumeCloseTouch, true);
         document.addEventListener('touchend', closeFromX, { capture:true, passive:false });
         document.addEventListener('click', closeFromX, true);
@@ -7046,7 +7028,10 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         if (els.lightboxClose) {
           els.lightboxClose.addEventListener('pointerdown', consumeCloseTouch, { passive:false });
-          els.lightboxClose.addEventListener('touchstart', closeFromXTouchStart, { passive:false });
+          els.lightboxClose.addEventListener('touchstart', (e) => {
+            blockEvent(e);
+            closeViewer();
+          }, { passive:false });
           els.lightboxClose.addEventListener('pointerup', consumeCloseTouch, { passive:false });
           els.lightboxClose.addEventListener('touchend', closeFromX, { passive:false });
           els.lightboxClose.addEventListener('click', closeFromX, { passive:false });
@@ -7082,12 +7067,17 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         const viewerTouchTarget = els.lightboxStage || els.lightbox;
         viewerTouchTarget.addEventListener('touchstart', (e) => {
           if (!isViewerOpen()) return;
+          if (e.target && e.target.closest && e.target.closest('.viewer-close, .lightbox-close, .modal-close, .close-btn, #viewerCloseBtn, #lightboxClose')) return;
           e.preventDefault();
+          e.stopPropagation();
 
           if (e.touches.length === 2) {
             viewerIsZooming = true;
             viewerIsDragging = false;
             viewerInitialDistance = getViewerDistance(e.touches[0], e.touches[1]);
+            viewerStartScale = viewerScale;
+            viewerStartX = viewerX;
+            viewerStartY = viewerY;
             return;
           }
 
@@ -7104,15 +7094,20 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         viewerTouchTarget.addEventListener('touchmove', (e) => {
           if (!isViewerOpen()) return;
+          if (e.target && e.target.closest && e.target.closest('.viewer-close, .lightbox-close, .modal-close, .close-btn, #viewerCloseBtn, #lightboxClose')) return;
           e.preventDefault();
+          e.stopPropagation();
 
           if (viewerIsZooming && e.touches.length === 2) {
             const newDistance = getViewerDistance(e.touches[0], e.touches[1]);
             if (!viewerInitialDistance) viewerInitialDistance = newDistance;
-            const delta = newDistance / viewerInitialDistance;
-            viewerScale = Math.min(Math.max(1, viewerScale * delta), 4);
-            viewerInitialDistance = newDistance;
-            if (viewerScale === 1) { viewerX = 0; viewerY = 0; }
+            const nextScale = viewerStartScale * (newDistance / viewerInitialDistance);
+            viewerScale = Math.min(Math.max(1, nextScale), 4);
+            if (viewerScale <= 1.02) {
+              viewerScale = 1;
+              viewerX = 0;
+              viewerY = 0;
+            }
             applyViewerTransform();
             return;
           }
@@ -7123,7 +7118,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           const dx = touch.clientX - viewerLastX;
           const dy = touch.clientY - viewerLastY;
 
-          if (viewerScale > 1) {
+          if (viewerScale > 1.02) {
             viewerX += dx;
             viewerY += dy;
             applyViewerTransform();
@@ -7135,9 +7130,19 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         viewerTouchTarget.addEventListener('touchend', (e) => {
           if (!isViewerOpen()) return;
+          if (e.target && e.target.closest && e.target.closest('.viewer-close, .lightbox-close, .modal-close, .close-btn, #viewerCloseBtn, #lightboxClose')) return;
 
           if (viewerIsZooming) {
-            if (e.touches.length < 2) viewerIsZooming = false;
+            if (e.touches.length < 2) {
+              viewerIsZooming = false;
+              viewerInitialDistance = 0;
+              if (viewerScale <= 1.02) {
+                viewerScale = 1;
+                viewerX = 0;
+                viewerY = 0;
+              }
+              applyViewerTransform();
+            }
             return;
           }
 
@@ -7148,14 +7153,14 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           const totalDy = endY - viewerStartY;
           const elapsed = Date.now() - viewerStartTime;
 
-          if (viewerScale === 1 && Math.abs(totalDx) > 60 && Math.abs(totalDx) > Math.abs(totalDy) * 1.25) {
+          if (viewerScale <= 1.02 && Math.abs(totalDx) > 60 && Math.abs(totalDx) > Math.abs(totalDy) * 1.25) {
             if (totalDx > 0) prevViewer();
             else nextViewer();
           }
 
           const now = Date.now();
-          if (Math.abs(totalDx) < 12 && Math.abs(totalDy) < 12 && elapsed < 320 && now - viewerLastTap < 300) {
-            viewerScale = viewerScale > 1 ? 1 : 2;
+          if (viewerScale <= 1.02 && Math.abs(totalDx) < 12 && Math.abs(totalDy) < 12 && elapsed < 320 && now - viewerLastTap < 300) {
+            viewerScale = 2;
             viewerX = 0;
             viewerY = 0;
             applyViewerTransform();

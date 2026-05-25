@@ -971,6 +971,17 @@ body.is-leaving-archive [data-archive-pro-link]{
   }
 }
 
+
+/* DCAP CARD DIRECT LINK ONLY — keeps existing card design */
+.dcap-card{
+  display:block;
+  text-decoration:none;
+  color:inherit;
+}
+.dcap-card:visited{
+  color:inherit;
+}
+
 </style>
 
 <script>
@@ -1327,7 +1338,7 @@ const fallbackDCAP = {
       title_en: "Gallery-oriented Archive System",
       summary_kr: "갤러리 전시와 작가 데이터를\n모바일 Viewer · Archive · Exhibition 구조로\n연결하는 시스템.",
       summary_en: "A system connecting gallery exhibitions\nand artist data through\nmobile Viewer · Archive · Exhibition structures.",
-      md_path: "#"
+      md_path: "https://jsgallery.art"
     },
     {
       id: "DCAP-04",
@@ -1338,7 +1349,7 @@ const fallbackDCAP = {
       title_en: "Institution-oriented Archive System",
       summary_kr: "협회와 기관의 작가·작품·비전 데이터를\n공공적 미술 플랫폼 구조로 정리하는 시스템.",
       summary_en: "A system organizing artist, artwork,\nand institutional vision data\nwithin a public art platform structure.",
-      md_path: "#"
+      md_path: "https://iiaa.or.kr"
     }
   ]
 };
@@ -1369,7 +1380,7 @@ const additionalDCAPCases = [
     title_en: "Gallery-oriented Archive System",
     summary_kr: "갤러리 전시와 작가 데이터를\n모바일 Viewer · Archive · Exhibition 구조로\n연결하는 시스템.",
     summary_en: "A system connecting gallery exhibitions\nand artist data through\nmobile Viewer · Archive · Exhibition structures.",
-    md_path: "#"
+    md_path: "https://jsgallery.art"
   },
   {
     id: "DCAP-04",
@@ -1380,14 +1391,17 @@ const additionalDCAPCases = [
     title_en: "Institution-oriented Archive System",
     summary_kr: "협회와 기관의 작가·작품·비전 데이터를\n공공적 미술 플랫폼 구조로 정리하는 시스템.",
     summary_en: "A system organizing artist, artwork,\nand institutional vision data\nwithin a public art platform structure.",
-    md_path: "#"
+    md_path: "https://iiaa.or.kr"
   }
 ];
 
 function withAdditionalDCAP(items){
   const list = Array.isArray(items) ? items.slice() : [];
   additionalDCAPCases.forEach(dcapCase => {
-    if(!list.some(item => item && item.id === dcapCase.id)){
+    const existingIndex = list.findIndex(item => item && item.id === dcapCase.id);
+    if(existingIndex >= 0){
+      list[existingIndex] = Object.assign({}, dcapCase, list[existingIndex], { md_path: dcapCase.md_path });
+    }else{
       list.push(dcapCase);
     }
   });
@@ -1548,9 +1562,10 @@ function renderList(items, type){
     const summary = currentLang === 'ko' ? item.summary_kr : item.summary_en;
 
     const a = document.createElement('a');
-    a.className = 'report-item';
-    a.href = item.md_path || '#';
-    a.target = /^https?:\/\//.test(a.href) ? '_blank' : '_self';
+    a.className = type === 'dcap' && ['DCAP-02','DCAP-03','DCAP-04'].includes(item.id) ? 'report-item dcap-card' : 'report-item';
+    const href = item.md_path || '#';
+    a.href = href;
+    a.target = /^https?:\/\//.test(href) ? '_blank' : '_self';
     a.rel = 'noopener';
 
     const idEl = document.createElement('div');

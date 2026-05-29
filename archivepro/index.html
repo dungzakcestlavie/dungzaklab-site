@@ -7535,20 +7535,10 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 </html>
 
 
-/* ARCHIVE PRO iPHONE PWA SAFE-AREA FIX ONLY */
+/* ARCHIVE PRO iPHONE PWA SAFE-AREA WRAPPER FIX ONLY */
 @supports (padding-top: env(safe-area-inset-top)) {
   @media (display-mode: standalone), (display-mode: fullscreen) {
-    .hero-container {
-      padding-top: max(20px, env(safe-area-inset-top));
-    }
-  }
-}
-
-
-/* ARCHIVE PRO iPHONE PWA STATUSBAR SAFE-AREA FIX ONLY */
-@supports (padding-top: env(safe-area-inset-top)) {
-  @media (display-mode: standalone), (display-mode: fullscreen) {
-    body {
+    .site-header {
       padding-top: env(safe-area-inset-top);
     }
   }

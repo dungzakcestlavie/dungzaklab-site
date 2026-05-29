@@ -7535,11 +7535,11 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 </html>
 
 
-/* ARCHIVE PRO iPHONE PWA SAFE-AREA WRAPPER FIX ONLY */
+/* ARCHIVE PRO iPHONE PWA STANDALONE SAFE-AREA FIX ONLY */
 @supports (padding-top: env(safe-area-inset-top)) {
   @media (display-mode: standalone), (display-mode: fullscreen) {
     .site-header {
-      padding-top: env(safe-area-inset-top);
+      padding-top: calc(0px + env(safe-area-inset-top));
     }
   }
 }

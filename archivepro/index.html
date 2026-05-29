@@ -4537,31 +4537,16 @@ body.archive-entered .hero{
 }
     }
 }
-
-      html.archivepro-ios-pwa .site-header {
+html.archivepro-ios-pwa .site-header {
         padding-top: env(safe-area-inset-top);
       }
     }
 }
       }
 
-      html.archivepro-ios-pwa .site-header {
-        padding-top: env(safe-area-inset-top);
-      }
-    }
-
-
-    /* ARCHIVE PRO iPHONE PWA HERO SAFE-AREA ROOT CAUSE FIX — ONE SHOT ONLY */
+    /* ARCHIVE PRO iPHONE PWA HERO BUG ROOT CAUSE FIX ONLY */
     @supports (padding-top: env(safe-area-inset-top)) {
-      @supports (-webkit-touch-callout: none) {
-        @media (display-mode: standalone), (display-mode: fullscreen) {
-          .site-header {
-            padding-top: env(safe-area-inset-top);
-          }
-        }
-      }
-
-      html.archivepro-ios-pwa .site-header {
+      body.app-ios-standalone .site-header {
         padding-top: env(safe-area-inset-top);
       }
     }
@@ -7475,6 +7460,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
     if (isStandaloneMode()) {
       document.body.classList.add('app-standalone');
+        if (isIOSDevice()) document.body.classList.add('app-ios-standalone');
       hideInstallPanel();
     } else {
       if (document.readyState === 'loading') {
@@ -7519,6 +7505,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
     window.addEventListener('appinstalled', function(){
       deferredInstallPrompt = null;
       document.body.classList.add('app-standalone');
+        if (isIOSDevice()) document.body.classList.add('app-ios-standalone');
       hideInstallPanel();
     });
 
@@ -7534,6 +7521,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
     window.matchMedia('(display-mode: standalone)').addEventListener?.('change', function(){
       if (isStandaloneMode()) {
         document.body.classList.add('app-standalone');
+        if (isIOSDevice()) document.body.classList.add('app-ios-standalone');
         hideInstallPanel();
       }
     });
@@ -7541,6 +7529,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
     window.matchMedia('(display-mode: fullscreen)').addEventListener?.('change', function(){
       if (isStandaloneMode()) {
         document.body.classList.add('app-standalone');
+        if (isIOSDevice()) document.body.classList.add('app-ios-standalone');
         hideInstallPanel();
       }
     });

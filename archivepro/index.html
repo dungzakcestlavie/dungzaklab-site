@@ -4536,13 +4536,21 @@ body.archive-entered .hero{
     }
 }
     }
+}
+
+      html.archivepro-ios-pwa .site-header {
+        padding-top: env(safe-area-inset-top);
+      }
+    }
 
 
-    /* ARCHIVE PRO iPHONE PWA FINAL SAFE-AREA FIX ONLY */
+    /* ARCHIVE PRO iPHONE PWA FINAL CACHE + SAFE-AREA SIMULATION ONLY */
     @supports (padding-top: env(safe-area-inset-top)) {
-      @media (display-mode: standalone), (display-mode: fullscreen) {
-        .site-header {
-          padding-top: env(safe-area-inset-top);
+      @supports (-webkit-touch-callout: none) {
+        @media (display-mode: standalone), (display-mode: fullscreen) {
+          .site-header {
+            padding-top: env(safe-area-inset-top);
+          }
         }
       }
 
@@ -4571,16 +4579,6 @@ body.archive-entered .hero{
   <link rel="icon" type="image/png" sizes="512x512" href="/archivepro-icon-512-v2.png?v=2" />
 
 
-
-<script>
-(function(){
-  try{
-    if (window.navigator && window.navigator.standalone === true) {
-      document.documentElement.classList.add('archivepro-ios-pwa');
-    }
-  }catch(e){}
-})();
-</script>
 
 </head>
 <body class="archive-entered archive-filter-open">

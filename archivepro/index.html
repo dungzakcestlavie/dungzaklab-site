@@ -4534,6 +4534,16 @@ body.archive-entered .hero{
         touch-action: manipulation !important;
       }
     }
+
+    /* ARCHIVE PRO iPHONE PWA SAFE-AREA ROOT CAUSE FIX ONLY */
+    @supports (padding-top: env(safe-area-inset-top)) {
+      @media (display-mode: standalone), (display-mode: fullscreen) {
+        .site-header {
+          padding-top: env(safe-area-inset-top);
+        }
+      }
+    }
+
 </style>
 
   <meta charset="utf-8" />
@@ -7533,14 +7543,3 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
 </body>
 </html>
-
-
-/* ARCHIVE PRO iPHONE PWA STANDALONE SAFE-AREA FIX ONLY */
-@supports (padding-top: env(safe-area-inset-top)) {
-  @media (display-mode: standalone), (display-mode: fullscreen) {
-    .site-header {
-      padding-top: calc(0px + env(safe-area-inset-top));
-    }
-  }
-}
-

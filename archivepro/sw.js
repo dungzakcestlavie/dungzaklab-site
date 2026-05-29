@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archive-pro-pwa-v2-20260521';
+const CACHE_NAME = 'archive-pro-pwa-v3-20260529-index-network-first';
 
 const CORE_ASSETS = [
   '/archivepro/',
@@ -35,6 +35,15 @@ function isCacheableRequest(request) {
 
 function isArchiveProRoute(url) {
   return url.pathname.startsWith('/archivepro/');
+}
+
+function isHtmlDocumentRequest(request, url) {
+  return (
+    request.mode === 'navigate' ||
+    request.destination === 'document' ||
+    url.pathname === '/archivepro/' ||
+    url.pathname === '/archivepro/index.html'
+  );
 }
 
 function isLiveJson(url) {
@@ -183,7 +192,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (request.mode === 'navigate' || request.destination === 'document') {
+  if (isHtmlDocumentRequest(request, url)) {
     event.respondWith(
       fetch(request, { cache: 'no-store' })
         .then(response => {
@@ -192,6 +201,9 @@ self.addEventListener('fetch', event => {
             caches.open(CACHE_NAME).then(cache => {
               try {
                 cache.put(request, copy);
+                if (url.pathname === '/archivepro/' || url.pathname === '/archivepro/index.html') {
+                  cache.put('/archivepro/index.html', response.clone());
+                }
               } catch (e) {}
             });
           }

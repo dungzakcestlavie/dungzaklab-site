@@ -4542,9 +4542,16 @@ body.archive-entered .hero{
         padding-top: env(safe-area-inset-top);
       }
     }
+}
+      }
+
+      html.archivepro-ios-pwa .site-header {
+        padding-top: env(safe-area-inset-top);
+      }
+    }
 
 
-    /* ARCHIVE PRO iPHONE PWA FINAL CACHE + SAFE-AREA SIMULATION ONLY */
+    /* ARCHIVE PRO iPHONE PWA HERO SAFE-AREA ROOT CAUSE FIX — ONE SHOT ONLY */
     @supports (padding-top: env(safe-area-inset-top)) {
       @supports (-webkit-touch-callout: none) {
         @media (display-mode: standalone), (display-mode: fullscreen) {

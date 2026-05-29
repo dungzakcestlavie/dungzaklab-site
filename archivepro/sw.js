@@ -1,8 +1,6 @@
-const CACHE_NAME = 'archive-pro-pwa-v3-20260529-index-network-first';
+const CACHE_NAME = 'archive-pro-pwa-v4-20260529-no-html-precache';
 
 const CORE_ASSETS = [
-  '/archivepro/',
-  '/archivepro/index.html',
   '/archivepro/manifest.json',
   '/archivepro-icon-192-v2.png?v=2',
   '/archivepro-icon-512-v2.png?v=2'

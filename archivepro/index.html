@@ -7544,3 +7544,13 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
   }
 }
 
+
+/* ARCHIVE PRO iPHONE PWA STATUSBAR SAFE-AREA FIX ONLY */
+@supports (padding-top: env(safe-area-inset-top)) {
+  @media (display-mode: standalone), (display-mode: fullscreen) {
+    body {
+      padding-top: env(safe-area-inset-top);
+    }
+  }
+}
+

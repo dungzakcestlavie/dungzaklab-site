@@ -4543,12 +4543,18 @@ html.archivepro-ios-pwa .site-header {
     }
 }
       }
+}
 
-    /* ARCHIVE PRO iPHONE PWA HERO BUG ROOT CAUSE FIX ONLY */
-    @supports (padding-top: env(safe-area-inset-top)) {
+
+    /* ARCHIVE PRO iPHONE PWA HERO OFFSET ONLY */
+    @media (display-mode: standalone) {
       body.app-ios-standalone .site-header {
-        padding-top: env(safe-area-inset-top);
+        padding-top: 40px;
       }
+    }
+
+    body.app-ios-standalone .site-header {
+      padding-top: 40px;
     }
 
 </style>

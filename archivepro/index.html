@@ -4534,13 +4534,20 @@ body.archive-entered .hero{
         touch-action: manipulation !important;
       }
     }
+}
+    }
 
-    /* ARCHIVE PRO iPHONE PWA SAFE-AREA ROOT CAUSE FIX ONLY */
+
+    /* ARCHIVE PRO iPHONE PWA FINAL SAFE-AREA FIX ONLY */
     @supports (padding-top: env(safe-area-inset-top)) {
       @media (display-mode: standalone), (display-mode: fullscreen) {
         .site-header {
           padding-top: env(safe-area-inset-top);
         }
+      }
+
+      html.archivepro-ios-pwa .site-header {
+        padding-top: env(safe-area-inset-top);
       }
     }
 
@@ -4563,6 +4570,17 @@ body.archive-entered .hero{
   <link rel="icon" type="image/png" sizes="192x192" href="/archivepro-icon-192-v2.png?v=2" />
   <link rel="icon" type="image/png" sizes="512x512" href="/archivepro-icon-512-v2.png?v=2" />
 
+
+
+<script>
+(function(){
+  try{
+    if (window.navigator && window.navigator.standalone === true) {
+      document.documentElement.classList.add('archivepro-ios-pwa');
+    }
+  }catch(e){}
+})();
+</script>
 
 </head>
 <body class="archive-entered archive-filter-open">

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archive-pro-pwa-v4-20260529-no-html-precache';
+const CACHE_NAME = 'archive-pro-pwa-v5-20260529-final-sw-minimal';
 
 const CORE_ASSETS = [
   '/archivepro/manifest.json',
@@ -133,8 +133,6 @@ self.addEventListener('install', event => {
           await cache.add(asset);
         } catch (e) {}
       }
-
-      await cacheNonOriginsWorks(cache);
     })
   );
 
@@ -193,27 +191,7 @@ self.addEventListener('fetch', event => {
   if (isHtmlDocumentRequest(request, url)) {
     event.respondWith(
       fetch(request, { cache: 'no-store' })
-        .then(response => {
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              try {
-                cache.put(request, copy);
-                if (url.pathname === '/archivepro/' || url.pathname === '/archivepro/index.html') {
-                  cache.put('/archivepro/index.html', response.clone());
-                }
-              } catch (e) {}
-            });
-          }
-
-          return response;
-        })
-        .catch(async () => {
-          const cached = await caches.match(request);
-          if (cached) return cached;
-
-          return caches.match('/archivepro/index.html');
-        })
+        .catch(() => caches.match('/archivepro/index.html'))
     );
     return;
   }

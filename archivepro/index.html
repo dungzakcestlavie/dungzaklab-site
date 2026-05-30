@@ -4597,7 +4597,7 @@ html.archivepro-ios-pwa .site-header {
           </a>
         </div>
       </div>
-      <button id="archiveProLabLink" type="button" class="back-link" aria-label="LAB으로 돌아가기">LAB</button>
+      <a class="back-link" href="https://dungzaklab.art/" aria-label="LAB으로 돌아가기">LAB</a>
     </div>
   </header>
 
@@ -7561,19 +7561,6 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
       }).catch(function () {});
     });
   }
-</script>
-
-
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const lab = document.getElementById("archiveProLabLink");
-  if (!lab) return;
-
-  lab.onclick = function () {
-    window.location.href = "https://dungzaklab.art/";
-  };
-});
 </script>
 </body>
 </html>

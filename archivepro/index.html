@@ -384,7 +384,7 @@ html, body {
       transform:translateY(-1px);
     }
 
-    .lab-only-external-link{
+    .lab-external-only{
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -400,7 +400,7 @@ html, body {
       font:inherit;
     }
 
-    .lab-only-external-link:hover{
+    .lab-external-only:hover{
       border-color:rgba(212,180,109,.52);
       background:rgba(212,180,109,.08);
       transform:translateY(-1px);
@@ -4619,7 +4619,7 @@ html.archivepro-ios-pwa .site-header {
           </a>
         </div>
       </div>
-      <button id="labOnlyExternalLink" type="button" class="lab-only-external-link">LAB</button>
+      <button id="labExternalOnly" type="button" class="lab-external-only">LAB</button>
     </div>
   </header>
 
@@ -4777,6 +4777,19 @@ html.archivepro-ios-pwa .site-header {
       </aside>
     </div>
   </div>
+
+  <script>
+    document.addEventListener("click", function(e) {
+      const lab = e.target && e.target.closest ? e.target.closest("#labExternalOnly") : null;
+      if (!lab) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+
+      window.location.href = "https://dungzaklab.art/";
+    }, true);
+  </script>
 
   <script>
     (() => {
@@ -7085,6 +7098,13 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         };
 
         const blockGhostNavigation = (e) => {
+          if (e && e.target && e.target.closest && e.target.closest('#labExternalOnly')) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            window.location.href = 'https://dungzaklab.art/';
+            return;
+          }
           if (Date.now() <= closeClickBlockUntil) blockEvent(e);
         };
 
@@ -7586,14 +7606,16 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 </script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const lab = document.getElementById("labOnlyExternalLink");
+document.addEventListener("click", function(e) {
+  const lab = e.target.closest("#labExternalOnly");
   if (!lab) return;
 
-  lab.onclick = function () {
-    window.location.href = "https://dungzaklab.art/";
-  };
-});
+  e.preventDefault();
+  e.stopPropagation();
+  e.stopImmediatePropagation();
+
+  window.location.href = "https://dungzaklab.art/";
+}, true);
 </script>
 
 </body>

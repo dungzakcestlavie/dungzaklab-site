@@ -384,6 +384,28 @@ html, body {
       transform:translateY(-1px);
     }
 
+    .lab-only-external-link{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      padding:0 14px;
+      border:1px solid var(--line-strong);
+      border-radius:999px;
+      color:var(--gold);
+      background:rgba(212,180,109,.04);
+      transition:.2s ease;
+      white-space:nowrap;
+      cursor:pointer;
+      font:inherit;
+    }
+
+    .lab-only-external-link:hover{
+      border-color:rgba(212,180,109,.52);
+      background:rgba(212,180,109,.08);
+      transform:translateY(-1px);
+    }
+
     .entry-layer{
       margin-top:18px;
       padding:18px;
@@ -4597,7 +4619,7 @@ html.archivepro-ios-pwa .site-header {
           </a>
         </div>
       </div>
-      <a class="back-link" href="https://dungzaklab.art/" aria-label="LAB으로 돌아가기">LAB</a>
+      <button id="labOnlyExternalLink" type="button" class="lab-only-external-link">LAB</button>
     </div>
   </header>
 
@@ -7562,5 +7584,17 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
     });
   }
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const lab = document.getElementById("labOnlyExternalLink");
+  if (!lab) return;
+
+  lab.onclick = function () {
+    window.location.href = "https://dungzaklab.art/";
+  };
+});
+</script>
+
 </body>
 </html>

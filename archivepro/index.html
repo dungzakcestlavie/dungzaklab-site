@@ -384,7 +384,7 @@ html, body {
       transform:translateY(-1px);
     }
 
-    .lab-external-only{
+    .lab-external-open{
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -400,7 +400,7 @@ html, body {
       font:inherit;
     }
 
-    .lab-external-only:hover{
+    .lab-external-open:hover{
       border-color:rgba(212,180,109,.52);
       background:rgba(212,180,109,.08);
       transform:translateY(-1px);
@@ -4777,21 +4777,7 @@ html.archivepro-ios-pwa .site-header {
       </aside>
     </div>
   </div>
-
-  <script>
-    document.addEventListener("click", function(e) {
-      const lab = e.target && e.target.closest ? e.target.closest("#labExternalOnly") : null;
-      if (!lab) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-
-      window.location.href = "https://dungzaklab.art/";
-    }, true);
-  </script>
-
-  <script>
+<script>
     (() => {
       'use strict';
       const ARCHIVE_PRO_DESKTOP_LIGHTBOX_SIZE_LOCK_JS = true;
@@ -7098,14 +7084,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         };
 
         const blockGhostNavigation = (e) => {
-          if (e && e.target && e.target.closest && e.target.closest('#labExternalOnly')) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            window.location.href = 'https://dungzaklab.art/';
-            return;
-          }
-          if (Date.now() <= closeClickBlockUntil) blockEvent(e);
+if (Date.now() <= closeClickBlockUntil) blockEvent(e);
         };
 
         const closeFromX = (e) => {
@@ -7604,17 +7583,18 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
     });
   }
 </script>
-
 <script>
 document.addEventListener("click", function(e) {
-  const lab = e.target.closest("#labExternalOnly");
+
+  const lab = e.target.closest("#labExternalOpen");
   if (!lab) return;
 
   e.preventDefault();
   e.stopPropagation();
   e.stopImmediatePropagation();
 
-  window.location.href = "https://dungzaklab.art/";
+  location.assign("https://dungzaklab.art/");
+
 }, true);
 </script>
 

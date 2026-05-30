@@ -4597,7 +4597,7 @@ html.archivepro-ios-pwa .site-header {
           </a>
         </div>
       </div>
-      <button id="labDirectOpen" type="button" class="back-link" aria-label="LAB으로 돌아가기">LAB</button>
+      <button id="archiveProLabLink" type="button" class="back-link" aria-label="LAB으로 돌아가기">LAB</button>
     </div>
   </header>
 
@@ -7563,54 +7563,17 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
   }
 </script>
 
+
+
 <script>
-(function () {
-  const lab = document.getElementById("labDirectOpen");
+document.addEventListener("DOMContentLoaded", function () {
+  const lab = document.getElementById("archiveProLabLink");
   if (!lab) return;
 
-  lab.addEventListener("click", function () {
-    document.location = "https://dungzaklab.art/";
-  });
-})();
+  lab.onclick = function () {
+    window.location.href = "https://dungzaklab.art/";
+  };
+});
 </script>
-
-
-<script>
-(function () {
-  const LAB_URL = "https://dungzaklab.art/";
-
-  function rebuildLabButton() {
-    const oldLab = Array.from(document.querySelectorAll("a, button, div, span"))
-      .find(el => el.textContent && el.textContent.trim() === "LAB");
-
-    if (!oldLab) return;
-
-    const newLab = oldLab.cloneNode(true);
-
-    newLab.removeAttribute("href");
-    newLab.removeAttribute("target");
-    newLab.removeAttribute("onclick");
-    newLab.setAttribute("type", "button");
-    newLab.setAttribute("role", "button");
-    newLab.setAttribute("id", "labCleanExitBtn");
-
-    oldLab.parentNode.replaceChild(newLab, oldLab);
-
-    newLab.onclick = function () {
-      window.location.assign(LAB_URL);
-      return false;
-    };
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", rebuildLabButton);
-  } else {
-    rebuildLabButton();
-  }
-
-  window.addEventListener("load", rebuildLabButton);
-})();
-</script>
-
 </body>
 </html>

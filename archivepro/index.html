@@ -4597,7 +4597,7 @@ html.archivepro-ios-pwa .site-header {
           </a>
         </div>
       </div>
-      <button id="labHomeBtn" type="button" class="back-link" aria-label="LAB으로 돌아가기">LAB</button>
+      <button id="labExitBtn" type="button" class="back-link" aria-label="LAB으로 돌아가기">LAB</button>
     </div>
   </header>
 
@@ -5164,7 +5164,7 @@ lightbox: document.getElementById('lightbox'),
         lbKeyZoom: document.getElementById('lbKeyZoom'),
         langTabs: Array.from(document.querySelectorAll('.lang-tab')),
         apResetTrigger: document.getElementById('ap-reset-trigger'),
-        labHomeLink: document.getElementById('labHomeBtn') || document.getElementById('labHomeLink') || document.querySelector('.back-link'),
+        labHomeLink: document.getElementById('labExitBtn') || document.getElementById('labHomeLink') || document.querySelector('.back-link'),
         entryBtn: document.getElementById('entryBtn') || document.getElementById('enterArchivePro'),
         filterToggleWrap: document.getElementById('filterToggleWrap'),
         filterToggleBtn: document.getElementById('filterToggleBtn'),
@@ -7282,25 +7282,6 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         els.langTabs.forEach((tab) => {
           tab.addEventListener('click', () => setLanguage(tab.dataset.lang));
         });
-
-        if (els.labHomeLink) {
-          els.labHomeLink.removeAttribute('href');
-          els.labHomeLink.removeAttribute('target');
-          els.labHomeLink.setAttribute('role', 'button');
-          els.labHomeLink.onclick = null;
-
-          const openLabHome = (e) => {
-            e.preventDefault();
-            if (typeof e.stopPropagation === 'function') e.stopPropagation();
-            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-            window.location.assign('https://dungzaklab.art/');
-          };
-
-          els.labHomeLink.addEventListener('click', openLabHome, true);
-          els.labHomeLink.addEventListener('touchend', openLabHome, true);
-          els.labHomeLink.addEventListener('pointerup', openLabHome, true);
-        }
-
         if (els.apResetTrigger) {
           els.apResetTrigger.addEventListener('click', (e) => {
             e.preventDefault();
@@ -7586,33 +7567,20 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 (function () {
   const LAB_URL = "https://dungzaklab.art/";
 
-  const labBtn =
-    document.getElementById("labHomeBtn") ||
-    document.getElementById("labHomeLink") ||
-    Array.from(document.querySelectorAll("a, button, div, span"))
-      .find(el => el.textContent && el.textContent.trim() === "LAB");
+  const btn = document.getElementById("labExitBtn");
+  if (!btn) return;
 
-  if (!labBtn) return;
+  btn.onclick = null;
 
-  labBtn.removeAttribute("href");
-  labBtn.removeAttribute("target");
-  labBtn.setAttribute("role", "button");
+  btn.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
 
-  labBtn.onclick = null;
-
-  function openLab(e) {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-    }
-
-    window.location.assign(LAB_URL);
-  }
-
-  labBtn.addEventListener("click", openLab, true);
-  labBtn.addEventListener("touchend", openLab, true);
-  labBtn.addEventListener("pointerup", openLab, true);
+    setTimeout(function () {
+      window.location.href = LAB_URL;
+    }, 30);
+  }, true);
 })();
 </script>
 

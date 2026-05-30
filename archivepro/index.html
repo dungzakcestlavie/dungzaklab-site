@@ -7565,22 +7565,12 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
 
 (function () {
-  const LAB_URL = "https://dungzaklab.art/";
-
   const btn = document.getElementById("labExitBtn");
   if (!btn) return;
 
-  btn.onclick = null;
-
-  btn.addEventListener("click", function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-
-    setTimeout(function () {
-      window.location.href = LAB_URL;
-    }, 30);
-  }, true);
+  btn.onclick = function () {
+    window.location.replace("https://dungzaklab.art/");
+  };
 })();
 </script>
 

@@ -383,27 +383,21 @@ html, body {
       background:rgba(212,180,109,.08);
       transform:translateY(-1px);
     }
-
-    .lab-external-open{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:44px;
-      padding:0 14px;
-      border:1px solid var(--line-strong);
-      border-radius:999px;
-      color:var(--gold);
-      background:rgba(212,180,109,.04);
-      transition:.2s ease;
-      white-space:nowrap;
-      cursor:pointer;
-      font:inherit;
+    .lab-link-btn {
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      color: #d6b76f;
+      border: 1px solid rgba(214, 183, 111, 0.42);
+      border-radius: 999px;
+      padding: 14px 22px;
+      font: inherit;
+      letter-spacing: 0.04em;
+      cursor: pointer;
     }
 
-    .lab-external-open:hover{
-      border-color:rgba(212,180,109,.52);
-      background:rgba(212,180,109,.08);
-      transform:translateY(-1px);
+    .lab-link-btn:active {
+      opacity: 0.75;
     }
 
     .entry-layer{
@@ -4619,7 +4613,7 @@ html.archivepro-ios-pwa .site-header {
           </a>
         </div>
       </div>
-      <button id="labExternalOnly" type="button" class="lab-external-only">LAB</button>
+      <button id="labExternalOpen" type="button" class="lab-link-btn">LAB</button>
     </div>
   </header>
 
@@ -7584,18 +7578,14 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
   }
 </script>
 <script>
-document.addEventListener("click", function(e) {
-
-  const lab = e.target.closest("#labExternalOpen");
+document.addEventListener("DOMContentLoaded", function () {
+  const lab = document.getElementById("labExternalOpen");
   if (!lab) return;
 
-  e.preventDefault();
-  e.stopPropagation();
-  e.stopImmediatePropagation();
-
-  location.assign("https://dungzaklab.art/");
-
-}, true);
+  lab.onclick = function () {
+    window.location.href = "https://dungzaklab.art/";
+  };
+});
 </script>
 
 </body>

@@ -1,7 +1,13 @@
-const BUILD = '14';
+const BUILD = '15';
 
 const CACHE_NAME =
 `archive-pro-pwa-v${BUILD}`;
+
+const DATA_CACHE =
+'archive-pro-data-v1';
+
+const IMAGE_CACHE =
+'archive-pro-standard-images-v1';
 
 const WORKS_JSON_URL =
 'https://dungzak.art/data/works.json';
@@ -74,8 +80,11 @@ k.startsWith(
 )
 
 &&
-
 k!==CACHE_NAME
+&&
+k!==DATA_CACHE
+&&
+k!==IMAGE_CACHE
 
 )
 
@@ -104,6 +113,16 @@ return url.pathname.match(
 
 }
 
+function isZoom(
+url
+){
+
+return url.pathname.includes(
+'/zoom/'
+);
+
+}
+
 self.addEventListener(
 'fetch',
 (event)=>{
@@ -126,7 +145,8 @@ req.url
 
 /*
 works.json
-절대 가로채지 않음
+network first
+fail => cache
 */
 
 if(
@@ -135,13 +155,56 @@ WORKS_JSON_URL
 ){
 
 event.respondWith(
-fetch(
+(async()=>{
+
+const cache =
+await caches.open(
+DATA_CACHE
+);
+
+try{
+
+const fresh =
+await fetch(
 req,
 {
-cache:
-'no-store'
+cache:'no-store'
 }
+);
+
+if(
+fresh
+&&
+fresh.ok
+){
+
+await cache.put(
+req,
+fresh.clone()
+);
+
+}
+
+return fresh;
+
+}
+catch(e){
+
+return (
+
+await cache.match(
+req
 )
+
+||
+
+Response.error()
+
+);
+
+}
+
+})()
 );
 
 return;
@@ -149,7 +212,7 @@ return;
 }
 
 /*
-archivepro 페이지
+archivepro page
 */
 
 if(
@@ -201,7 +264,33 @@ return;
 }
 
 /*
-이미지
+zoom images
+online only
+never cache
+*/
+
+if(
+isImage(url)
+&&
+isZoom(url)
+){
+
+event.respondWith(
+fetch(
+req,
+{
+cache:'no-store'
+}
+)
+);
+
+return;
+
+}
+
+/*
+standard images
+cache first
 */
 
 if(
@@ -209,39 +298,56 @@ isImage(url)
 ){
 
 event.respondWith(
-
 (async()=>{
+
+const cache =
+await caches.open(
+IMAGE_CACHE
+);
+
+const cached =
+await cache.match(
+req
+);
+
+if(
+cached
+){
+
+return cached;
+
+}
 
 try{
 
-return await fetch(
+const fresh =
+await fetch(
 req
 );
+
+if(
+fresh
+&&
+fresh.ok
+){
+
+await cache.put(
+req,
+fresh.clone()
+);
+
+}
+
+return fresh;
 
 }
 catch(e){
 
-const cache =
-await caches.open(
-CACHE_NAME
-);
-
-return (
-
-await cache.match(
-req
-)
-
-||
-
-Response.error()
-
-);
+return Response.error();
 
 }
 
 })()
-
 );
 
 return;
@@ -252,5 +358,5 @@ return;
 );
 
 console.log(
-`Archive Pro SW RESTORE v${BUILD}`
+`Archive Pro SIMPLE OFFLINE v${BUILD}`
 );

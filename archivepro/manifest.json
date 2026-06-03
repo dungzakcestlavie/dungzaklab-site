@@ -1,0 +1,23 @@
+{
+  "name": "Archive Pro — DUNGZAK CESTLAVIE",
+  "short_name": "Archive Pro",
+  "id": "/archivepro/",
+  "start_url": "/archivepro/index.html",
+  "scope": "/archivepro/",
+  "display": "standalone",
+  "theme_color": "#031421",
+  "background_color": "#031421",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/archivepro-icon-192-v2.png?v=2",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/archivepro-icon-512-v2.png?v=2",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

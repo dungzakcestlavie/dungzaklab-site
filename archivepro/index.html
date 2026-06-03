@@ -4626,7 +4626,7 @@ html.archivepro-ios-pwa .site-header {
           </a>
         </div>
       </div>
-      <a id="labLink" class="lab-link-btn" href="https://dungzaklab.art/" rel="noopener">LAB</a>
+      <a id="labLink" class="lab-link-btn" href="https://dungzaklab.art/" rel="noopener" data-lab-link ontouchstart="" draggable="false" style="-webkit-touch-callout: none;">LAB</a>
     </div>
   </header>
 
@@ -7318,6 +7318,16 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
             }
             resetAllSections();
           });
+        }
+
+        const labBtn = document.querySelector('[data-lab-link]');
+
+        if (labBtn) {
+          labBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.location.href = 'https://dungzaklab.art/';
+          }, { passive: false });
         }
 
         if (els.entryBtn) {

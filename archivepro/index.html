@@ -4601,7 +4601,7 @@ html.archivepro-ios-pwa .site-header {
 
   <title>Archive Pro — DUNGZAK CESTLAVIE LAB</title>
   <meta name="description" content="Archive Pro — artwork archive engine for search, filter, and zoom view." />
-  <link rel="manifest" href="/archivepro/manifest.json" />
+  <link rel="manifest" href="/archivepro/manifest.json?v=4">
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -7594,14 +7594,8 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/archivepro/sw.js', { scope: '/archivepro/', updateViaCache: 'none' }).then(function(registration){
-        try {
-          registration.update();
-          if (navigator.serviceWorker.controller) {
-            navigator.serviceWorker.controller.postMessage({ type: 'CACHE_NON_ORIGINS' });
-          }
-        } catch (e) {}
-        return registration;
+      navigator.serviceWorker.register("/archivepro/sw.js", {
+        scope: "/archivepro/"
       }).catch(function () {});
     });
   }

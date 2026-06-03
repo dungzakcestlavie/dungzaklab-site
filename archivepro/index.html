@@ -4844,11 +4844,6 @@ html.archivepro-ios-pwa .site-header {
       const DATA_CACHE = 'archive-pro-data-v2';
       const IMAGE_CACHE = 'archive-pro-offline-sections-v2';
       const PAGE_OFFLINE_CACHE_NAME = IMAGE_CACHE;
-      const OFFLINE_ORIGINS_KR = '오프라인에서는 A 기원 섹션을 제외했습니다.';
-      const OFFLINE_ORIGINS_EN = 'Origins section is unavailable offline.';
-      const OFFLINE_ZOOM_KR = '확대 이미지는 온라인에서만 볼 수 있습니다.';
-      const OFFLINE_ZOOM_EN = 'Zoom image is available online only.';
-
       function isArchiveOfflineMode() {
         return typeof navigator !== 'undefined' && navigator.onLine === false;
       }
@@ -4868,15 +4863,15 @@ html.archivepro-ios-pwa .site-header {
       }
 
       function getOfflineOriginsMessage() {
-        if (state && state.lang === 'en') return OFFLINE_ORIGINS_EN;
-        if (state && state.lang === 'both') return OFFLINE_ORIGINS_KR + ' / ' + OFFLINE_ORIGINS_EN;
-        return OFFLINE_ORIGINS_KR;
+        return t('offlineOriginsNotice');
       }
 
       function getOfflineZoomMessage() {
-        if (state && state.lang === 'en') return OFFLINE_ZOOM_EN;
-        if (state && state.lang === 'both') return OFFLINE_ZOOM_KR + ' / ' + OFFLINE_ZOOM_EN;
-        return OFFLINE_ZOOM_KR;
+        return t('offlineZoomNotice');
+      }
+
+      function getOfflineDataMessage() {
+        return t('offlineDataLoaded');
       }
 
       function standardImageUrlOnly(url) {
@@ -5029,6 +5024,9 @@ html.archivepro-ios-pwa .site-header {
           statusFailed: '로드 실패',
           loadingScreen: '',
           loadingScreenError: 'works.json을 불러오지 못했습니다. 경로 또는 접근 권한을 확인해 주세요.',
+          offlineOriginsNotice: '오프라인에서는 A 기원 섹션을 제외했습니다.',
+          offlineZoomNotice: '확대 이미지는 온라인에서만 볼 수 있습니다.',
+          offlineDataLoaded: '오프라인 데이터를 불러왔습니다.',
           resultUnit: '점',
           renderedPrefix: '표시 ',
           renderedSuffix: '점',
@@ -5072,6 +5070,9 @@ untitled: '무제 / 캡션 없음',
           statusFailed: 'Failed',
           loadingScreen: '',
           loadingScreenError: 'Unable to load works.json.',
+          offlineOriginsNotice: 'Origins section is unavailable offline.',
+          offlineZoomNotice: 'Zoom image is available online only.',
+          offlineDataLoaded: 'Loaded offline data.',
           resultUnit: ' works',
           renderedPrefix: 'Visible ',
           renderedSuffix: '',
@@ -5115,6 +5116,12 @@ untitled: 'Untitled / No Caption',
           statusFailed: '로드 실패 / Failed',
           loadingScreen: '',
           loadingScreenError: 'works.json을 불러오지 못했습니다 / Unable to load works.json.',
+          offlineOriginsNotice: '오프라인에서는 A 기원 섹션을 제외했습니다.
+Origins section is unavailable offline.',
+          offlineZoomNotice: '확대 이미지는 온라인에서만 볼 수 있습니다.
+Zoom image is available online only.',
+          offlineDataLoaded: '오프라인 데이터를 불러왔습니다.
+Loaded offline data.',
           resultUnit: '점 / works',
           renderedPrefix: '표시 / Visible ',
           renderedSuffix: '',
@@ -5160,7 +5167,8 @@ untitled: '무제 / Untitled',
         loadState: 'idle',
         isLoaded: false,
         _searchPrepared: false,
-        _sectionCount: 0
+        _sectionCount: 0,
+        _loadedFromOfflineStorage: false
       };
 
       let visibleCount = getInitialVisibleCount();
@@ -5229,6 +5237,7 @@ lightbox: document.getElementById('lightbox'),
       const numberFormat = new Intl.NumberFormat('ko-KR');
       let searchTimer = null;
       let worksLoadPromise = null;
+      let worksLoadedFromOfflineStorage = false;
       let archiveScrollY = 0;
       let closeClickBlockUntil = 0;
 
@@ -6198,7 +6207,13 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           els.resultText.textContent = `${numberFormat.format(filtered)} results · ${numberFormat.format(total)} works`;
           els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}${t('renderedSuffix')}`;
         } else {
-          els.resultText.textContent = `${numberFormat.format(total)} works · ${numberFormat.format(sections)} sections`;
+          if (isArchiveOfflineMode() && total) {
+            els.resultText.textContent = state._loadedFromOfflineStorage
+              ? getOfflineDataMessage() + '\n' + getOfflineOriginsMessage()
+              : getOfflineOriginsMessage();
+          } else {
+            els.resultText.textContent = `${numberFormat.format(total)} works · ${numberFormat.format(sections)} sections`;
+          }
           els.renderedText.textContent = '';
         }
       }
@@ -6904,8 +6919,35 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         if (worksLoadPromise) return worksLoadPromise;
 
         worksLoadPromise = (async () => {
+          worksLoadedFromOfflineStorage = false;
           const urls = buildWorksJsonUrls();
           const failures = [];
+
+          /*
+            Archive Pro Offline Enable:
+            If Android PWA starts with no network, use the last successful
+            localStorage payload first. The display layer removes Origins
+            with section_id === 0 before rendering, so the app never stops.
+          */
+          if (isArchiveOfflineMode()) {
+            const savedJson = loadWorksJsonFromLocalStorage();
+            if (savedJson) {
+              const savedWorks = parseWorksPayload(savedJson);
+              if (Array.isArray(savedWorks) && savedWorks.length) {
+                worksLoadedFromOfflineStorage = true;
+                return savedWorks;
+              }
+            }
+
+            const cachedJson = await readWorksJsonFromCacheStorage();
+            if (cachedJson) {
+              const cachedWorks = parseWorksPayload(cachedJson);
+              if (Array.isArray(cachedWorks) && cachedWorks.length) {
+                worksLoadedFromOfflineStorage = true;
+                return cachedWorks;
+              }
+            }
+          }
 
           for (const url of urls) {
             try {
@@ -6926,19 +6968,21 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
             }
           }
 
-          const cachedJson = await readWorksJsonFromCacheStorage();
-          if (cachedJson) {
-            const cachedWorks = parseWorksPayload(cachedJson);
-            if (Array.isArray(cachedWorks) && cachedWorks.length) {
-              return cachedWorks;
-            }
-          }
-
           const savedJson = loadWorksJsonFromLocalStorage();
           if (savedJson) {
             const savedWorks = parseWorksPayload(savedJson);
             if (Array.isArray(savedWorks) && savedWorks.length) {
+              worksLoadedFromOfflineStorage = true;
               return savedWorks;
+            }
+          }
+
+          const cachedJson = await readWorksJsonFromCacheStorage();
+          if (cachedJson) {
+            const cachedWorks = parseWorksPayload(cachedJson);
+            if (Array.isArray(cachedWorks) && cachedWorks.length) {
+              worksLoadedFromOfflineStorage = true;
+              return cachedWorks;
             }
           }
 
@@ -6986,6 +7030,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           state.sort = FAST_ORDER;
           state.visibleCount = getInitialVisibleCount();
           state._searchPrepared = false;
+          state._loadedFromOfflineStorage = !!worksLoadedFromOfflineStorage;
           state._sectionCount = new Set(
             state.all
               .map(item => Number(item.section_id))
@@ -7015,7 +7060,9 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           updateStats();
           updateMeta();
           if (isArchiveOfflineMode() && els.resultText && state.all.length) {
-            els.resultText.textContent = getOfflineOriginsMessage();
+            els.resultText.textContent = state._loadedFromOfflineStorage
+              ? getOfflineDataMessage() + '\n' + getOfflineOriginsMessage()
+              : getOfflineOriginsMessage();
           }
           if (archiveEntered) scheduleFirstGridRender();
         } catch (error) {

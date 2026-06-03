@@ -4601,7 +4601,7 @@ html.archivepro-ios-pwa .site-header {
 
   <title>Archive Pro — DUNGZAK CESTLAVIE LAB</title>
   <meta name="description" content="Archive Pro — artwork archive engine for search, filter, and zoom view." />
-  <link rel="manifest" href="/archivepro/manifest.json?v=11">
+  <link rel="manifest" href="/archivepro/manifest.json" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -4626,7 +4626,7 @@ html.archivepro-ios-pwa .site-header {
           </a>
         </div>
       </div>
-      <a class="lab-link-btn" href="https://dungzaklab.art/" target="_self" rel="noopener" aria-label="Open DUNGZAK CESTLAVIE LAB">LAB</a>
+      <a id="labLink" class="lab-link-btn" href="https://dungzaklab.art/" rel="noopener">LAB</a>
     </div>
   </header>
 
@@ -4826,9 +4826,8 @@ html.archivepro-ios-pwa .site-header {
       }, { passive: false });
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://dungzak.art/data/works.json';
+      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json';
       const DUNGZAK_ART_DATA_URL = 'https://dungzak.art/data/works.json';
-      const WORKS_LOCAL_STORAGE_KEY = 'archiveProWorksJson';
       const MIN_EXPECTED_WORKS = 100;
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const MOBILE_FIRST_RENDER_COUNT = 24;
@@ -4841,44 +4840,16 @@ html.archivepro-ios-pwa .site-header {
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 220;
       const ASSET_VERSION = 'ap-img';
-      const DATA_CACHE = 'archive-pro-data-v2';
-      const IMAGE_CACHE = 'archive-pro-offline-sections-v2';
-      const PAGE_OFFLINE_CACHE_NAME = IMAGE_CACHE;
-      function isArchiveOfflineMode() {
-        /*
-          ONLINE DATA FIRST ROLLBACK:
-          Offline filtering is paused. Do not let navigator.onLine remove
-          Origins or any other section before render.
-        */
-        return false;
-      }
+      const PAGE_OFFLINE_CACHE_NAME = 'archive-pro-page-non-origins-v3';
 
-      function isOriginsWork(item) {
-        if (!item) return false;
-        const sectionId = Number(item.section_id);
-        const sectionKr = safeText(item.section_kr);
-        const sectionEn = safeText(item.section_en).toLowerCase();
-        return sectionId === 0 || sectionKr === 'A 기원' || sectionEn === 'origins';
+      function isArchiveOfflineMode() {
+        return typeof navigator !== 'undefined' && navigator.onLine === false;
       }
 
       function nonOriginsOnly(list) {
-        /*
-          ONLINE DATA FIRST ROLLBACK:
-          Keep the full archive array. No section removal here.
-        */
-        return Array.isArray(list) ? list : [];
-      }
-
-      function getOfflineOriginsMessage() {
-        return t('offlineOriginsNotice');
-      }
-
-      function getOfflineZoomMessage() {
-        return t('offlineZoomNotice');
-      }
-
-      function getOfflineDataMessage() {
-        return t('offlineDataLoaded');
+        return (Array.isArray(list) ? list : []).filter(function(item){
+          return Number(item && item.section_id) !== 0;
+        });
       }
 
       function standardImageUrlOnly(url) {
@@ -5031,9 +5002,6 @@ html.archivepro-ios-pwa .site-header {
           statusFailed: '로드 실패',
           loadingScreen: '',
           loadingScreenError: 'works.json을 불러오지 못했습니다. 경로 또는 접근 권한을 확인해 주세요.',
-          offlineOriginsNotice: '오프라인에서는 A 기원 섹션을 제외했습니다.',
-          offlineZoomNotice: '확대 이미지는 온라인에서만 볼 수 있습니다.',
-          offlineDataLoaded: '오프라인 데이터를 불러왔습니다.',
           resultUnit: '점',
           renderedPrefix: '표시 ',
           renderedSuffix: '점',
@@ -5077,9 +5045,6 @@ untitled: '무제 / 캡션 없음',
           statusFailed: 'Failed',
           loadingScreen: '',
           loadingScreenError: 'Unable to load works.json.',
-          offlineOriginsNotice: 'Origins section is unavailable offline.',
-          offlineZoomNotice: 'Zoom image is available online only.',
-          offlineDataLoaded: 'Loaded offline data.',
           resultUnit: ' works',
           renderedPrefix: 'Visible ',
           renderedSuffix: '',
@@ -5123,12 +5088,6 @@ untitled: 'Untitled / No Caption',
           statusFailed: '로드 실패 / Failed',
           loadingScreen: '',
           loadingScreenError: 'works.json을 불러오지 못했습니다 / Unable to load works.json.',
-          offlineOriginsNotice: '오프라인에서는 A 기원 섹션을 제외했습니다.
-Origins section is unavailable offline.',
-          offlineZoomNotice: '확대 이미지는 온라인에서만 볼 수 있습니다.
-Zoom image is available online only.',
-          offlineDataLoaded: '오프라인 데이터를 불러왔습니다.
-Loaded offline data.',
           resultUnit: '점 / works',
           renderedPrefix: '표시 / Visible ',
           renderedSuffix: '',
@@ -5174,8 +5133,7 @@ untitled: '무제 / Untitled',
         loadState: 'idle',
         isLoaded: false,
         _searchPrepared: false,
-        _sectionCount: 0,
-        _loadedFromOfflineStorage: false
+        _sectionCount: 0
       };
 
       let visibleCount = getInitialVisibleCount();
@@ -5244,7 +5202,6 @@ lightbox: document.getElementById('lightbox'),
       const numberFormat = new Intl.NumberFormat('ko-KR');
       let searchTimer = null;
       let worksLoadPromise = null;
-      let worksLoadedFromOfflineStorage = false;
       let archiveScrollY = 0;
       let closeClickBlockUntil = 0;
 
@@ -6214,13 +6171,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           els.resultText.textContent = `${numberFormat.format(filtered)} results · ${numberFormat.format(total)} works`;
           els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}${t('renderedSuffix')}`;
         } else {
-          if (isArchiveOfflineMode() && total) {
-            els.resultText.textContent = state._loadedFromOfflineStorage
-              ? getOfflineDataMessage() + '\n' + getOfflineOriginsMessage()
-              : getOfflineOriginsMessage();
-          } else {
-            els.resultText.textContent = `${numberFormat.format(total)} works · ${numberFormat.format(sections)} sections`;
-          }
+          els.resultText.textContent = `${numberFormat.format(total)} works · ${numberFormat.format(sections)} sections`;
           els.renderedText.textContent = '';
         }
       }
@@ -6506,11 +6457,8 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         const size = isOrigin ? '—' : (getSize(item) || '—');
         const year = isOrigin ? '—' : (getYear(item) || '—');
         const imageUrl = item.image ? withCacheBust(toAbsoluteUrl(item.image)) : '';
-        const rawZoomUrl = item.zoom ? toAbsoluteUrl(item.zoom) : '';
-        const zoomUrl = rawZoomUrl ? withCacheBust(rawZoomUrl) : imageUrl;
-        const offlineMode = isArchiveOfflineMode();
-        const displayUrl = offlineMode ? (imageUrl || SVG_PLACEHOLDER) : (zoomUrl || imageUrl || SVG_PLACEHOLDER);
-        const offlineZoomMessage = getOfflineZoomMessage();
+        const zoomUrl = item.zoom ? withCacheBust(toAbsoluteUrl(item.zoom)) : imageUrl;
+        const displayUrl = zoomUrl || imageUrl || SVG_PLACEHOLDER;
 
         els.lbId.textContent = item.id;
         els.lbTitle.textContent = title;
@@ -6519,16 +6467,9 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         els.lbSizeVal.textContent = size;
         els.lbYearVal.textContent = year;
         els.lbImagePath.textContent = imageUrl || '—';
-        els.lbZoomPath.textContent = offlineMode ? offlineZoomMessage : (zoomUrl || '—');
+        els.lbZoomPath.textContent = zoomUrl || '—';
         els.lbOpenImage.href = imageUrl || '#';
-        els.lbOpenZoom.href = offlineMode ? '#' : (zoomUrl || imageUrl || '#');
-        els.lbOpenZoom.onclick = offlineMode
-          ? function(event) {
-              event.preventDefault();
-              alert(offlineZoomMessage);
-            }
-          : null;
-        els.lbOpenZoom.title = offlineMode ? offlineZoomMessage : '';
+        els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
 
         /* ARCHIVE PRO MOBILE FULLVIEW REMOVE ONLY
            Mobile Viewer caption should not render/show the Full View action.
@@ -6850,110 +6791,64 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
       function buildWorksJsonUrls() {
         /*
           Offline App Strategy:
-          Always use dungzak.art works.json as the primary and canonical data source.
-          Service Worker and localStorage provide the offline fallback.
+          Use dungzak.art as the single source when online, but allow cached/root
+          works.json fallbacks when the installed app is opened without Wi‑Fi.
         */
-        return [DATA_URL];
+        return [DATA_URL, DUNGZAK_ART_DATA_URL, '/data/works.json', '../data/works.json'];
       }
 
       function buildLiveJsonUrl(url) {
         /*
-          Offline Works JSON Fix:
-          Keep the canonical works.json URL stable so the Service Worker can store
-          and return the last successful response when Android PWA is offline.
-          fetch(..., { cache: 'no-store' }) still forces fresh network reads online.
+          Live Data Fix:
+          When online, works.json / dcao.json / dcap.json must bypass browser
+          and Service Worker cache so newly uploaded works and counts appear
+          immediately in Chrome, Safari, and installed PWA mode.
+          When offline, keep the original URL so cached fallbacks can still match.
         */
         const clean = String(url || '');
         if (!clean) return clean;
-        if (clean === DATA_URL) return clean;
         if (isArchiveOfflineMode()) return clean;
         const joiner = clean.indexOf('?') === -1 ? '?' : '&';
         return clean + joiner + 'v=' + Date.now();
       }
 
       async function fetchJsonNoStore(url) {
-        /*
-          EMERGENCY RESTORE — WORKS.JSON ONLY:
-          Online data first. Fetch the original works.json directly.
-          No offline branch, no cache-bust URL, no section filtering.
-        */
-        const res = await fetch(DATA_URL, {
-          cache: 'no-store'
+        const liveUrl = buildLiveJsonUrl(url);
+        const res = await fetch(liveUrl, {
+          cache: 'no-store',
+          mode: 'cors',
+          credentials: 'omit'
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
-      }
-
-      function saveWorksJsonToLocalStorage(json) {
-        try {
-          localStorage.setItem(WORKS_LOCAL_STORAGE_KEY, JSON.stringify(json));
-        } catch (_) {}
-      }
-
-      async function saveWorksJsonToCacheStorage(json) {
-        try {
-          if (!('caches' in window)) return;
-          const cache = await caches.open(DATA_CACHE);
-          const response = new Response(JSON.stringify(json), {
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          });
-          await cache.put(DATA_URL, response);
-        } catch (_) {}
-      }
-
-      function loadWorksJsonFromLocalStorage() {
-        try {
-          const saved = localStorage.getItem(WORKS_LOCAL_STORAGE_KEY);
-          if (!saved) return null;
-          return JSON.parse(saved);
-        } catch (_) {
-          return null;
-        }
-      }
-
-      async function readWorksJsonFromCacheStorage() {
-        try {
-          if (!('caches' in window)) return null;
-          const cached = await caches.match(DATA_URL);
-          if (!cached) return null;
-          return await cached.clone().json();
-        } catch (_) {
-          return null;
-        }
       }
 
       async function fetchWorksDirect() {
         if (worksLoadPromise) return worksLoadPromise;
 
         worksLoadPromise = (async () => {
-          /*
-            ARCHIVE PRO DATA RESTORE — DO NOT TOUCH UI:
-            Online works.json restore only.
-            No navigator.onLine branch, no localStorage fallback,
-            no CacheStorage fallback, no offline filter, no empty-array fallback.
-          */
-          worksLoadedFromOfflineStorage = false;
+          const urls = buildWorksJsonUrls();
+          const failures = [];
 
-          const res = await fetch(DATA_URL, {
-            cache: 'no-store'
-          });
+          for (const url of urls) {
+            try {
+              const json = await fetchJsonNoStore(url);
+              const works = parseWorksPayload(json);
+              const count = Array.isArray(works) ? works.length : 0;
 
-          if (!res.ok) {
-            throw new Error(`HTTP ${res.status}`);
+              if (count >= MIN_EXPECTED_WORKS) {
+                return works;
+              }
+
+              failures.push(`${url} → ${count} item(s), skipped`);
+
+            } catch (error) {
+              failures.push(`${url} → ${error && error.message ? error.message : error}`);
+
+            }
           }
 
-          const data = await res.json();
-          const works = parseWorksPayload(data);
-
-          console.log('WORKS:', Array.isArray(works) ? works.length : 0);
-
-          if (!Array.isArray(works) || !works.length) {
-            throw new Error('works.json loaded, but no works array was found');
-          }
-
-          return works;
+          throw new Error('No valid works.json found. ' + failures.join(' | '));
         })().catch((error) => {
           worksLoadPromise = null;
           throw error;
@@ -6962,7 +6857,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         return worksLoadPromise;
       }
 
-            function showArchiveShellImmediately() {
+      function showArchiveShellImmediately() {
         if (els.loadingScreen) {
           els.loadingScreen.hidden = true;
           els.loadingScreen.style.display = 'none';
@@ -6983,11 +6878,11 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
             .filter(item => item && item.id);
 
           /*
-            ONLINE DATA FIRST ROLLBACK:
-            Render the full normalized works array. Never remove section_id 0,
-            A 기원, Origins, or any other section before render.
+            Offline Display Rule:
+            When Archive Pro is opened without Wi‑Fi, hide A Origins (section_id: 0)
+            and show all remaining sections I–V only. Online mode keeps the full archive.
           */
-          const normalized = normalizedAll;
+          const normalized = isArchiveOfflineMode() ? nonOriginsOnly(normalizedAll) : normalizedAll;
 
           state.all = normalized;
           state.query = '';
@@ -6995,7 +6890,6 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           state.sort = FAST_ORDER;
           state.visibleCount = getInitialVisibleCount();
           state._searchPrepared = false;
-          state._loadedFromOfflineStorage = !!worksLoadedFromOfflineStorage;
           state._sectionCount = new Set(
             state.all
               .map(item => Number(item.section_id))
@@ -7011,10 +6905,9 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           finalFilteredWorks = state.filtered;
           visibleCount = state.visibleCount;
 
-          /*
-            Emergency restore: do not start offline image/data caching here.
-            Confirm 1798 works online first.
-          */
+          if (!isArchiveOfflineMode()) {
+            requestServiceWorkerNonOriginsCache();
+          }
 
           if (els.searchInput) els.searchInput.value = '';
           if (els.sectionSelect) els.sectionSelect.value = 'all';
@@ -7025,11 +6918,6 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           renderSectionButtons();
           updateStats();
           updateMeta();
-          if (isArchiveOfflineMode() && els.resultText && state.all.length) {
-            els.resultText.textContent = state._loadedFromOfflineStorage
-              ? getOfflineDataMessage() + '\n' + getOfflineOriginsMessage()
-              : getOfflineOriginsMessage();
-          }
           if (archiveEntered) scheduleFirstGridRender();
         } catch (error) {
           state.loadState = 'failed';
@@ -7432,22 +7320,6 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
           });
         }
 
-        const labLink = document.querySelector('.lab-link-btn[href="https://dungzaklab.art/"]');
-        if (labLink) {
-          const isIosStandalone =
-            window.navigator.standalone === true ||
-            (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-
-          if (isIosStandalone) {
-            labLink.addEventListener('click', (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-              resetAllSections();
-            }, true);
-          }
-        }
-
         if (els.entryBtn) {
           els.entryBtn.addEventListener('click', (e) => {
             if (e && typeof e.preventDefault === 'function') e.preventDefault();
@@ -7669,8 +7541,6 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
     }
 
     window.addEventListener('appinstalled', function(){
-      console.log('Archive Pro appinstalled');
-      try { localStorage.setItem('archivepro_appinstalled_at', new Date().toISOString()); } catch (e) {}
       deferredInstallPrompt = null;
       document.body.classList.add('app-standalone');
         if (isIOSDevice()) document.body.classList.add('app-ios-standalone');
@@ -7704,48 +7574,19 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
   })();
 </script>
 
-<!-- Archive Pro PWA Manifest Health Check -->
-<script>
-  (function(){
-    fetch('/archivepro/manifest.json', { cache: 'reload' })
-      .then(function(response){
-        if (!response.ok) {
-          throw new Error('Manifest HTTP ' + response.status);
-        }
-        return response.json();
-      })
-      .then(function(manifest){
-        if (!manifest || !manifest.start_url || !manifest.scope) {
-          throw new Error('Manifest JSON incomplete');
-        }
-        window.__ARCHIVE_PRO_MANIFEST_OK__ = true;
-        console.log('Archive Pro Manifest OK', manifest);
-      })
-      .catch(function(error){
-        window.__ARCHIVE_PRO_MANIFEST_OK__ = false;
-        console.error('Manifest Missing', error);
-        document.body.classList.add('pwa-manifest-missing');
-        var installPanel = document.getElementById('installPanel');
-        if (installPanel) {
-          installPanel.hidden = true;
-          installPanel.classList.remove('is-visible');
-        }
-      });
-  })();
-</script>
-
 <!-- Archive Pro Exhibition Offline Mode: root Service Worker registration -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register("/archivepro/sw.js", {
-        scope: "/archivepro/"
-      }).then(function(registration){
-        console.log('Archive Pro Service Worker registered', registration.scope);
-        registration.update();
-      }).catch(function (error) {
-        console.error('Archive Pro Service Worker registration failed', error);
-      });
+      navigator.serviceWorker.register('/archivepro/sw.js', { scope: '/archivepro/', updateViaCache: 'none' }).then(function(registration){
+        try {
+          registration.update();
+          if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'CACHE_NON_ORIGINS' });
+          }
+        } catch (e) {}
+        return registration;
+      }).catch(function () {});
     });
   }
 </script>

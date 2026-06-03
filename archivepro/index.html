@@ -6872,11 +6872,13 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
       }
 
       async function fetchJsonNoStore(url) {
-        const liveUrl = buildLiveJsonUrl(url);
-        const res = await fetch(liveUrl, {
-          cache: 'no-store',
-          mode: 'cors',
-          credentials: 'omit'
+        /*
+          EMERGENCY RESTORE — WORKS.JSON ONLY:
+          Online data first. Fetch the original works.json directly.
+          No offline branch, no cache-bust URL, no section filtering.
+        */
+        const res = await fetch(DATA_URL, {
+          cache: 'no-store'
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -6926,56 +6928,24 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         if (worksLoadPromise) return worksLoadPromise;
 
         worksLoadPromise = (async () => {
-          worksLoadedFromOfflineStorage = false;
-          const urls = buildWorksJsonUrls();
-          const failures = [];
-
           /*
-            ONLINE DATA FIRST ROLLBACK:
-            Do not branch on navigator.onLine before the network request.
-            Always try the canonical works.json first.
+            ARCHIVE PRO EMERGENCY RESTORE — WORKS.JSON ONLY:
+            Online restore comes first. Do not use navigator.onLine,
+            localStorage fallback, CacheStorage fallback, or offline filtered data here.
           */
+          worksLoadedFromOfflineStorage = false;
 
-          for (const url of urls) {
-            try {
-              const json = await fetchJsonNoStore(url);
-              const works = parseWorksPayload(json);
-              const count = Array.isArray(works) ? works.length : 0;
+          const json = await fetchJsonNoStore(DATA_URL);
+          const works = parseWorksPayload(json);
 
-              if (count >= MIN_EXPECTED_WORKS) {
-                saveWorksJsonToLocalStorage(json);
-                await saveWorksJsonToCacheStorage(json);
-                return works;
-              }
-
-              failures.push(`${url} → ${count} item(s), skipped`);
-
-            } catch (error) {
-              failures.push(`${url} → ${error && error.message ? error.message : error}`);
-            }
+          if (!Array.isArray(works) || !works.length) {
+            throw new Error('works.json loaded, but no works array was found');
           }
 
-          const savedJson = loadWorksJsonFromLocalStorage();
-          if (savedJson) {
-            const savedWorks = parseWorksPayload(savedJson);
-            if (Array.isArray(savedWorks) && savedWorks.length) {
-              worksLoadedFromOfflineStorage = true;
-              return savedWorks;
-            }
-          }
+          saveWorksJsonToLocalStorage(json);
+          await saveWorksJsonToCacheStorage(json);
 
-          const cachedJson = await readWorksJsonFromCacheStorage();
-          if (cachedJson) {
-            const cachedWorks = parseWorksPayload(cachedJson);
-            if (Array.isArray(cachedWorks) && cachedWorks.length) {
-              worksLoadedFromOfflineStorage = true;
-              return cachedWorks;
-            }
-          }
-
-          const offlineFallback = [];
-          saveWorksJsonToLocalStorage(offlineFallback);
-          return offlineFallback;
+          return works;
         })().catch((error) => {
           worksLoadPromise = null;
           throw error;
@@ -6984,7 +6954,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         return worksLoadPromise;
       }
 
-      function showArchiveShellImmediately() {
+            function showArchiveShellImmediately() {
         if (els.loadingScreen) {
           els.loadingScreen.hidden = true;
           els.loadingScreen.style.display = 'none';
@@ -7033,9 +7003,10 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           finalFilteredWorks = state.filtered;
           visibleCount = state.visibleCount;
 
-          if (!isArchiveOfflineMode()) {
-            requestServiceWorkerNonOriginsCache();
-          }
+          /*
+            Emergency restore: do not start offline image/data caching here.
+            Confirm 1798 works online first.
+          */
 
           if (els.searchInput) els.searchInput.value = '';
           if (els.sectionSelect) els.sectionSelect.value = 'all';

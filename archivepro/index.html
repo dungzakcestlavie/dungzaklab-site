@@ -4826,8 +4826,9 @@ html.archivepro-ios-pwa .site-header {
       }, { passive: false });
 
       const SITE_ROOT = 'https://dungzakcestlavie.github.io/';
-      const DATA_URL = 'https://raw.githubusercontent.com/dungzakcestlavie/dungzakcestlavie.github.io/main/data/works.json';
+      const DATA_URL = 'https://dungzak.art/data/works.json';
       const DUNGZAK_ART_DATA_URL = 'https://dungzak.art/data/works.json';
+      const WORKS_LOCAL_STORAGE_KEY = 'archiveProWorksJson';
       const MIN_EXPECTED_WORKS = 100;
       const AUTO_AVAILABLE_AFTER_COUNT = 1345;
       const MOBILE_FIRST_RENDER_COUNT = 24;
@@ -6791,22 +6792,22 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
       function buildWorksJsonUrls() {
         /*
           Offline App Strategy:
-          Use dungzak.art as the single source when online, but allow cached/root
-          works.json fallbacks when the installed app is opened without Wi‑Fi.
+          Always use dungzak.art works.json as the primary and canonical data source.
+          Service Worker and localStorage provide the offline fallback.
         */
-        return [DATA_URL, DUNGZAK_ART_DATA_URL, '/data/works.json', '../data/works.json'];
+        return [DATA_URL];
       }
 
       function buildLiveJsonUrl(url) {
         /*
-          Live Data Fix:
-          When online, works.json / dcao.json / dcap.json must bypass browser
-          and Service Worker cache so newly uploaded works and counts appear
-          immediately in Chrome, Safari, and installed PWA mode.
-          When offline, keep the original URL so cached fallbacks can still match.
+          Offline Works JSON Fix:
+          Keep the canonical works.json URL stable so the Service Worker can store
+          and return the last successful response when Android PWA is offline.
+          fetch(..., { cache: 'no-store' }) still forces fresh network reads online.
         */
         const clean = String(url || '');
         if (!clean) return clean;
+        if (clean === DATA_URL) return clean;
         if (isArchiveOfflineMode()) return clean;
         const joiner = clean.indexOf('?') === -1 ? '?' : '&';
         return clean + joiner + 'v=' + Date.now();
@@ -6823,6 +6824,33 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         return res.json();
       }
 
+      function saveWorksJsonToLocalStorage(json) {
+        try {
+          localStorage.setItem(WORKS_LOCAL_STORAGE_KEY, JSON.stringify(json));
+        } catch (_) {}
+      }
+
+      function loadWorksJsonFromLocalStorage() {
+        try {
+          const saved = localStorage.getItem(WORKS_LOCAL_STORAGE_KEY);
+          if (!saved) return null;
+          return JSON.parse(saved);
+        } catch (_) {
+          return null;
+        }
+      }
+
+      async function readWorksJsonFromCacheStorage() {
+        try {
+          if (!('caches' in window)) return null;
+          const cached = await caches.match(DATA_URL);
+          if (!cached) return null;
+          return await cached.clone().json();
+        } catch (_) {
+          return null;
+        }
+      }
+
       async function fetchWorksDirect() {
         if (worksLoadPromise) return worksLoadPromise;
 
@@ -6837,6 +6865,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
               const count = Array.isArray(works) ? works.length : 0;
 
               if (count >= MIN_EXPECTED_WORKS) {
+                saveWorksJsonToLocalStorage(json);
                 return works;
               }
 
@@ -6844,11 +6873,28 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
             } catch (error) {
               failures.push(`${url} → ${error && error.message ? error.message : error}`);
-
             }
           }
 
-          throw new Error('No valid works.json found. ' + failures.join(' | '));
+          const cachedJson = await readWorksJsonFromCacheStorage();
+          if (cachedJson) {
+            const cachedWorks = parseWorksPayload(cachedJson);
+            if (Array.isArray(cachedWorks) && cachedWorks.length) {
+              return cachedWorks;
+            }
+          }
+
+          const savedJson = loadWorksJsonFromLocalStorage();
+          if (savedJson) {
+            const savedWorks = parseWorksPayload(savedJson);
+            if (Array.isArray(savedWorks) && savedWorks.length) {
+              return savedWorks;
+            }
+          }
+
+          const offlineFallback = [];
+          saveWorksJsonToLocalStorage(offlineFallback);
+          return offlineFallback;
         })().catch((error) => {
           worksLoadPromise = null;
           throw error;

@@ -1,10 +1,7 @@
-const BUILD = '13';
+const BUILD = '14';
 
 const CACHE_NAME =
 `archive-pro-pwa-v${BUILD}`;
-
-const IMAGE_CACHE =
-'archive-pro-offline-sections-v2';
 
 const WORKS_JSON_URL =
 'https://dungzak.art/data/works.json';
@@ -80,10 +77,6 @@ k.startsWith(
 
 k!==CACHE_NAME
 
-&&
-
-k!==IMAGE_CACHE
-
 )
 
 .map(
@@ -101,12 +94,12 @@ await self.clients.claim();
 }
 );
 
-function isZoom(
+function isImage(
 url
 ){
 
-return url.pathname.includes(
-'/zoom/'
+return url.pathname.match(
+/\.(jpg|jpeg|png|webp)$/i
 );
 
 }
@@ -131,7 +124,10 @@ new URL(
 req.url
 );
 
-/* works.json 통과 */
+/*
+works.json
+절대 가로채지 않음
+*/
 
 if(
 url.href===
@@ -139,114 +135,22 @@ WORKS_JSON_URL
 ){
 
 event.respondWith(
-fetch(req)
-);
-
-return;
-
-}
-
-/* zoom 캐시 금지 */
-
-if(
-isZoom(url)
-){
-
-event.respondWith(
-
-fetch(req)
-.catch(
-
-()=>
-
-new Response(
-'',
-{
-status:204
-}
-
-)
-
-)
-
-);
-
-return;
-
-}
-
-/* 일반 이미지 */
-
-if(
-
-url.pathname.match(
-/\.(jpg|jpeg|png|webp)$/i
-)
-
-){
-
-event.respondWith(
-
-(async()=>{
-
-const cache =
-await caches.open(
-IMAGE_CACHE
-);
-
-const cached =
-await cache.match(
-req
-);
-
-if(
-cached
-){
-
-return cached;
-
-}
-
-try{
-
-const network =
-await fetch(
-req
-);
-
-if(
-network.ok
-){
-
-cache.put(
+fetch(
 req,
-network.clone()
-);
-
+{
+cache:
+'no-store'
 }
-
-return network;
-
-}
-catch(e){
-
-return (
-cached
-||
-Response.error()
-);
-
-}
-
-})()
-
+)
 );
 
 return;
 
 }
 
-/* 앱 페이지 */
+/*
+archivepro 페이지
+*/
 
 if(
 
@@ -264,11 +168,7 @@ url.pathname.startsWith(
 event.respondWith(
 
 fetch(
-req,
-{
-cache:
-'no-store'
-}
+req
 )
 
 .catch(
@@ -280,6 +180,7 @@ CACHE_NAME
 );
 
 return (
+
 await cache.match(
 '/archivepro/index.html'
 )
@@ -299,9 +200,57 @@ return;
 
 }
 
+/*
+이미지
+*/
+
+if(
+isImage(url)
+){
+
+event.respondWith(
+
+(async()=>{
+
+try{
+
+return await fetch(
+req
+);
+
+}
+catch(e){
+
+const cache =
+await caches.open(
+CACHE_NAME
+);
+
+return (
+
+await cache.match(
+req
+)
+
+||
+
+Response.error()
+
+);
+
+}
+
+})()
+
+);
+
+return;
+
+}
+
 }
 );
 
 console.log(
-`Archive Pro SW v${BUILD}`
+`Archive Pro SW RESTORE v${BUILD}`
 );

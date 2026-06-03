@@ -6929,21 +6929,29 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         worksLoadPromise = (async () => {
           /*
-            ARCHIVE PRO EMERGENCY RESTORE — WORKS.JSON ONLY:
-            Online restore comes first. Do not use navigator.onLine,
-            localStorage fallback, CacheStorage fallback, or offline filtered data here.
+            ARCHIVE PRO DATA RESTORE — DO NOT TOUCH UI:
+            Online works.json restore only.
+            No navigator.onLine branch, no localStorage fallback,
+            no CacheStorage fallback, no offline filter, no empty-array fallback.
           */
           worksLoadedFromOfflineStorage = false;
 
-          const json = await fetchJsonNoStore(DATA_URL);
-          const works = parseWorksPayload(json);
+          const res = await fetch(DATA_URL, {
+            cache: 'no-store'
+          });
+
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+          }
+
+          const data = await res.json();
+          const works = parseWorksPayload(data);
+
+          console.log('WORKS:', Array.isArray(works) ? works.length : 0);
 
           if (!Array.isArray(works) || !works.length) {
             throw new Error('works.json loaded, but no works array was found');
           }
-
-          saveWorksJsonToLocalStorage(json);
-          await saveWorksJsonToCacheStorage(json);
 
           return works;
         })().catch((error) => {

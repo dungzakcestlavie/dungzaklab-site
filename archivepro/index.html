@@ -4626,7 +4626,7 @@ html.archivepro-ios-pwa .site-header {
           </a>
         </div>
       </div>
-      <a id="labDirectLink" class="lab-link-btn" href="https://dungzaklab.art/" target="_self" rel="noopener" data-lab-link draggable="false" style="-webkit-touch-callout: none;">LAB</a>
+      <a class="lab-link-btn" href="https://dungzaklab.art/" target="_self" rel="noopener" aria-label="Open DUNGZAK CESTLAVIE LAB">LAB</a>
     </div>
   </header>
 
@@ -7319,38 +7319,6 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
             resetAllSections();
           });
         }
-
-
-        (function () {
-          const LAB_URL = 'https://dungzaklab.art/';
-
-          function openLab(e) {
-            if (e) {
-              e.preventDefault();
-              e.stopPropagation();
-              if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-            }
-
-            setTimeout(function () {
-              window.location.assign(LAB_URL);
-            }, 30);
-
-            return false;
-          }
-
-          const lab = document.getElementById('labDirectLink');
-
-          if (lab) {
-            lab.setAttribute('href', LAB_URL);
-            lab.setAttribute('target', '_self');
-            lab.setAttribute('rel', 'noopener');
-            lab.setAttribute('draggable', 'false');
-
-            lab.onclick = openLab;
-            lab.addEventListener('click', openLab, true);
-            lab.addEventListener('touchend', openLab, true);
-          }
-        })();
 
         if (els.entryBtn) {
           els.entryBtn.addEventListener('click', (e) => {

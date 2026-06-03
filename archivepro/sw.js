@@ -1,229 +1,395 @@
-const CACHE_NAME = 'archive-pro-pwa-v8-offline-works';
-const DATA_CACHE = 'archive-pro-data-v1';
+const CACHE_NAME = 'archive-pro-pwa-v9';
+const DATA_CACHE = 'archive-pro-data-v2';
+const IMAGE_CACHE = 'archive-pro-offline-sections-v2';
 
 const WORKS_JSON_URL =
-  'https://dungzak.art/data/works.json';
+'https://dungzak.art/data/works.json';
 
-const CORE_ASSETS = [
-  '/archivepro/index.html',
-  '/archivepro-icon-192-v2.png?v=2',
-  '/archivepro-icon-512-v2.png?v=2'
+const CORE = [
+'/archivepro/index.html',
+'/archivepro/manifest.json?v=4',
+'/archivepro-icon-192-v2.png?v=2',
+'/archivepro-icon-512-v2.png?v=2'
 ];
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(async cache => {
-        for (const asset of CORE_ASSETS) {
-          try {
-            await cache.add(asset);
-          } catch (e) {}
-        }
-      })
-  );
+self.addEventListener('install',(event)=>{
 
-  self.skipWaiting();
+event.waitUntil(
+(async()=>{
+
+const cache=
+await caches.open(CACHE_NAME);
+
+await Promise.all(
+CORE.map(async(url)=>{
+try{
+await cache.add(url);
+}catch(e){}
+})
+);
+
+await self.skipWaiting();
+
+})()
+);
+
 });
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys =>
-        Promise.all(
-          keys
-            .filter(
-              key =>
-                key.startsWith('archive-pro-') &&
-                key !== CACHE_NAME &&
-                key !== DATA_CACHE
-            )
-            .map(key => caches.delete(key))
-        )
-      )
-      .then(() => self.clients.claim())
-  );
+self.addEventListener('activate',(event)=>{
+
+event.waitUntil(
+(async()=>{
+
+const keys=
+await caches.keys();
+
+await Promise.all(
+
+keys
+.filter(k=>
+k.startsWith('archive-pro-') &&
+k!==CACHE_NAME &&
+k!==DATA_CACHE &&
+k!==IMAGE_CACHE
+)
+.map(k=>caches.delete(k))
+
+);
+
+await self.clients.claim();
+
+})()
+);
+
 });
 
-async function fetchWorksJson() {
-  try {
-    const response = await fetch(
-      WORKS_JSON_URL,
-      {
-        cache: 'no-store',
-        mode: 'cors'
-      }
-    );
+function isZoom(url){
 
-    if (!response.ok) {
-      throw new Error(
-        'works fetch failed'
-      );
-    }
+return (
+url.includes('/zoom/') ||
+url.pathname?.includes('/zoom/')
+);
 
-    const copy =
-      response.clone();
+}
 
-    caches
-      .open(DATA_CACHE)
-      .then(cache => {
-        cache.put(
-          WORKS_JSON_URL,
-          copy
-        );
-      });
+async function cacheStandardImages(list){
 
-    return response;
+try{
 
-  } catch (error) {
+const cache=
+await caches.open(IMAGE_CACHE);
 
-    const cache =
-      await caches.open(
-        DATA_CACHE
-      );
+for(const work of list){
 
-    const cached =
-      await cache.match(
-        WORKS_JSON_URL
-      );
+try{
 
-    if (cached) {
-      return cached;
-    }
+if(
+work &&
+work.section_id!==0 &&
+work.image &&
+!work.image.includes('/zoom/')
+){
 
-    return new Response(
-      '[]',
-      {
-        headers: {
-          'Content-Type':
-            'application/json'
-        }
-      }
-    );
-  }
+const exists=
+await cache.match(work.image);
+
+if(!exists){
+
+const r=
+await fetch(
+work.image,
+{
+mode:'cors'
+}
+);
+
+if(r.ok){
+
+await cache.put(
+work.image,
+r.clone()
+);
+
+}
+
+}
+
+}
+
+}catch(e){}
+
+}
+
+}catch(e){}
+
+}
+
+async function fetchWorks(){
+
+try{
+
+const response=
+await fetch(
+WORKS_JSON_URL,
+{
+cache:'no-store'
+}
+);
+
+if(!response.ok){
+
+throw new Error();
+
+}
+
+const json=
+await response.clone().json();
+
+const cache=
+await caches.open(DATA_CACHE);
+
+await cache.put(
+WORKS_JSON_URL,
+new Response(
+JSON.stringify(json),
+{
+headers:{
+'Content-Type':
+'application/json'
+}
+}
+)
+);
+
+const offline=
+
+Array.isArray(json)
+? json.filter(
+v=>
+v.section_id!==0 &&
+v.section_kr!=='A 기원' &&
+v.section_en!=='Origins'
+)
+: json;
+
+await cache.put(
+'archivepro-offline',
+new Response(
+JSON.stringify(
+offline
+),
+{
+headers:{
+'Content-Type':
+'application/json'
+}
+}
+)
+);
+
+cacheStandardImages(
+offline
+);
+
+return response;
+
+}catch(e){
+
+const cache=
+await caches.open(
+DATA_CACHE
+);
+
+const cached=
+await cache.match(
+'archivepro-offline'
+);
+
+if(cached){
+
+return cached;
+
+}
+
+return new Response(
+'[]',
+{
+headers:{
+'Content-Type':
+'application/json'
+}
+}
+);
+
+}
+
 }
 
 self.addEventListener(
-  'fetch',
-  event => {
+'fetch',
+(event)=>{
 
-    const request =
-      event.request;
+const req=
+event.request;
 
-    if (
-      !request ||
-      request.method !== 'GET'
-    ) {
-      return;
-    }
+if(
+req.method!=='GET'
+){
+return;
+}
 
-    const url =
-      new URL(
-        request.url
-      );
-
-    // works.json
-    if (
-      url.href ===
-      WORKS_JSON_URL
-    ) {
-
-      event.respondWith(
-        fetchWorksJson()
-      );
-
-      return;
-    }
-
-    // archivepro html
-    if (
-      request.mode ===
-        'navigate' &&
-      url.pathname.startsWith(
-        '/archivepro/'
-      )
-    ) {
-
-      event.respondWith(
-
-        fetch(
-          request,
-          {
-            cache:
-              'no-store'
-          }
-        )
-
-        .catch(
-          async () => {
-
-            const cache =
-              await caches.open(
-                CACHE_NAME
-              );
-
-            return (
-              await cache.match(
-                '/archivepro/index.html'
-              )
-            );
-
-          }
-        )
-      );
-
-      return;
-    }
-
-    // asset cache
-    event.respondWith(
-
-      caches
-        .match(
-          request
-        )
-
-        .then(
-          cached => {
-
-            if (
-              cached
-            ) {
-              return cached;
-            }
-
-            return fetch(
-              request
-            )
-
-            .then(
-              response => {
-
-                if (
-                  response &&
-                  response.ok
-                ) {
-
-                  caches
-                    .open(
-                      CACHE_NAME
-                    )
-
-                    .then(
-                      cache =>
-                        cache.put(
-                          request,
-                          response.clone()
-                        )
-                    );
-                }
-
-                return response;
-              }
-            );
-
-          }
-        )
-    );
-
-  }
+const url=
+new URL(
+req.url
 );
+
+// works.json
+if(
+url.href===
+WORKS_JSON_URL
+){
+
+event.respondWith(
+fetchWorks()
+);
+
+return;
+
+}
+
+// zoom 금지
+if(
+isZoom(url)
+){
+
+event.respondWith(
+
+fetch(req)
+
+.catch(()=>{
+
+return new Response(
+'',
+{
+status:204
+}
+);
+
+})
+
+);
+
+return;
+
+}
+
+// standard image
+if(
+
+url.pathname.match(
+/\.(jpg|jpeg|png|webp)$/i
+)
+
+){
+
+event.respondWith(
+
+(async()=>{
+
+const cache=
+await caches.open(
+IMAGE_CACHE
+);
+
+const cached=
+await cache.match(
+req
+);
+
+if(cached){
+
+return cached;
+
+}
+
+try{
+
+const network=
+await fetch(
+req
+);
+
+if(
+network.ok
+){
+
+cache.put(
+req,
+network.clone()
+);
+
+}
+
+return network;
+
+}catch(e){
+
+return (
+cached ||
+Response.error()
+);
+
+}
+
+})()
+
+);
+
+return;
+
+}
+
+// html
+if(
+req.mode===
+'navigate'
+&&
+url.pathname.startsWith(
+'/archivepro/'
+)
+){
+
+event.respondWith(
+
+fetch(
+req,
+{
+cache:
+'no-store'
+}
+)
+
+.catch(
+async()=>{
+
+const cache=
+await caches.open(
+CACHE_NAME
+);
+
+return (
+await cache.match(
+'/archivepro/index.html'
+)
+);
+
+}
+)
+
+);
+
+return;
+
+}
+
+});

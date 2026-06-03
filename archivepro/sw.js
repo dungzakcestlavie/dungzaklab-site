@@ -1,163 +1,362 @@
-const BUILD = '16';
+const BUILD = '15';
 
-const CACHE_NAME = `archive-pro-pwa-v${BUILD}`;
-const DATA_CACHE = 'archive-pro-data-v-final';
-const IMAGE_CACHE = 'archive-pro-standard-images-v-final';
+const CACHE_NAME =
+`archive-pro-pwa-v${BUILD}`;
 
-const WORKS_JSON_URL = 'https://dungzak.art/data/works.json';
+const DATA_CACHE =
+'archive-pro-data-v1';
+
+const IMAGE_CACHE =
+'archive-pro-standard-images-v1';
+
+const WORKS_JSON_URL =
+'https://dungzak.art/data/works.json';
 
 const CORE = [
-  '/archivepro/index.html',
-  `/archivepro/manifest.json?v=${BUILD}`,
-  '/archivepro-icon-192-v2.png?v=2',
-  '/archivepro-icon-512-v2.png?v=2'
+'/archivepro/index.html',
+`/archivepro/manifest.json?v=${BUILD}`,
+'/archivepro-icon-192-v2.png?v=2',
+'/archivepro-icon-512-v2.png?v=2'
 ];
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    (async () => {
-      const cache = await caches.open(CACHE_NAME);
+self.addEventListener(
+'install',
+(event)=>{
 
-      for (const url of CORE) {
-        try {
-          await cache.add(new Request(url, { cache: 'reload' }));
-        } catch (e) {}
-      }
+event.waitUntil(
+(async()=>{
 
-      await self.skipWaiting();
-    })()
-  );
-});
+const cache =
+await caches.open(
+CACHE_NAME
+);
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    (async () => {
-      const keys = await caches.keys();
+for(
+const url
+of CORE
+){
 
-      await Promise.all(
-        keys
-          .filter(
-            (key) =>
-              key.startsWith('archive-pro-') &&
-              key !== CACHE_NAME &&
-              key !== DATA_CACHE &&
-              key !== IMAGE_CACHE
-          )
-          .map((key) => caches.delete(key))
-      );
+try{
 
-      await self.clients.claim();
-    })()
-  );
-});
+await cache.add(
+new Request(
+url,
+{
+cache:'reload'
+}
+)
+);
 
-self.addEventListener('fetch', (event) => {
-  const request = event.request;
+}catch(e){}
 
-  if (request.method !== 'GET') return;
-
-  const url = new URL(request.url);
-
-  if (request.url === WORKS_JSON_URL) {
-    event.respondWith(handleWorksJson(request));
-    return;
-  }
-
-  if (
-    url.hostname === 'raw.githubusercontent.com' &&
-    url.pathname.includes('/archivepro/standard/')
-  ) {
-    event.respondWith(handleStandardImage(request));
-    return;
-  }
-
-  if (
-    url.hostname === 'raw.githubusercontent.com' &&
-    url.pathname.includes('/archivepro/zoom/')
-  ) {
-    return;
-  }
-
-  if (url.origin === self.location.origin) {
-    event.respondWith(handleCore(request));
-    return;
-  }
-});
-
-async function handleWorksJson(request) {
-  const cache = await caches.open(DATA_CACHE);
-
-  try {
-    const fresh = await fetch(
-      new Request(WORKS_JSON_URL, {
-        method: 'GET',
-        mode: 'cors',
-        cache: 'reload',
-        credentials: 'omit'
-      })
-    );
-
-    if (fresh && fresh.ok) {
-      await cache.put(WORKS_JSON_URL, fresh.clone());
-      await cache.put(request, fresh.clone());
-      return fresh;
-    }
-
-    throw new Error('works.json network response not ok');
-  } catch (e) {
-    const saved =
-      (await cache.match(WORKS_JSON_URL)) ||
-      (await cache.match(request));
-
-    if (saved) return saved;
-
-    return new Response('[]', {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8'
-      }
-    });
-  }
 }
 
-async function handleStandardImage(request) {
-  const cache = await caches.open(IMAGE_CACHE);
+await self.skipWaiting();
 
-  const saved = await cache.match(request);
-  if (saved) return saved;
+})()
+);
 
-  try {
-    const fresh = await fetch(request);
+}
+);
 
-    if (fresh && fresh.ok) {
-      await cache.put(request, fresh.clone());
-    }
+self.addEventListener(
+'activate',
+(event)=>{
 
-    return fresh;
-  } catch (e) {
-    return new Response('', {
-      status: 504,
-      statusText: 'Offline image not cached'
-    });
-  }
+event.waitUntil(
+(async()=>{
+
+const keys =
+await caches.keys();
+
+await Promise.all(
+
+keys
+.filter(
+k=>
+
+k.startsWith(
+'archive-pro-'
+)
+
+&&
+k!==CACHE_NAME
+&&
+k!==DATA_CACHE
+&&
+k!==IMAGE_CACHE
+
+)
+
+.map(
+k=>
+caches.delete(k)
+)
+
+);
+
+await self.clients.claim();
+
+})()
+);
+
+}
+);
+
+function isImage(
+url
+){
+
+return url.pathname.match(
+/\.(jpg|jpeg|png|webp)$/i
+);
+
 }
 
-async function handleCore(request) {
-  const cache = await caches.open(CACHE_NAME);
+function isZoom(
+url
+){
 
-  try {
-    const fresh = await fetch(request);
+return url.pathname.includes(
+'/zoom/'
+);
 
-    if (fresh && fresh.ok) {
-      await cache.put(request, fresh.clone());
-    }
-
-    return fresh;
-  } catch (e) {
-    const saved = await cache.match(request);
-
-    if (saved) return saved;
-
-    return cache.match('/archivepro/index.html');
-  }
 }
+
+self.addEventListener(
+'fetch',
+(event)=>{
+
+const req =
+event.request;
+
+if(
+req.method!=='GET'
+){
+
+return;
+
+}
+
+const url =
+new URL(
+req.url
+);
+
+/*
+works.json
+network first
+fail => cache
+*/
+
+if(
+url.href===
+WORKS_JSON_URL
+){
+
+event.respondWith(
+(async()=>{
+
+const cache =
+await caches.open(
+DATA_CACHE
+);
+
+try{
+
+const fresh =
+await fetch(
+req,
+{
+cache:'no-store'
+}
+);
+
+if(
+fresh
+&&
+fresh.ok
+){
+
+await cache.put(
+req,
+fresh.clone()
+);
+
+}
+
+return fresh;
+
+}
+catch(e){
+
+return (
+
+await cache.match(
+req
+)
+
+||
+
+Response.error()
+
+);
+
+}
+
+})()
+);
+
+return;
+
+}
+
+/*
+archivepro page
+*/
+
+if(
+
+req.mode==='navigate'
+
+&&
+
+url.pathname.startsWith(
+'/archivepro/'
+
+)
+
+){
+
+event.respondWith(
+
+fetch(
+req
+)
+
+.catch(
+async()=>{
+
+const cache =
+await caches.open(
+CACHE_NAME
+);
+
+return (
+
+await cache.match(
+'/archivepro/index.html'
+)
+
+||
+
+Response.error()
+
+);
+
+}
+)
+
+);
+
+return;
+
+}
+
+/*
+zoom images
+online only
+never cache
+*/
+
+if(
+isImage(url)
+&&
+isZoom(url)
+){
+
+event.respondWith(
+fetch(
+req,
+{
+cache:'no-store'
+}
+)
+);
+
+return;
+
+}
+
+/*
+standard images
+cache first
+*/
+
+if(
+isImage(url)
+){
+
+event.respondWith(
+(async()=>{
+
+const cache =
+await caches.open(
+IMAGE_CACHE
+);
+
+const cached =
+await cache.match(
+req
+);
+
+if(
+cached
+){
+
+return cached;
+
+}
+
+try{
+
+const fresh =
+await fetch(
+req
+);
+
+if(
+fresh
+&&
+fresh.ok
+){
+
+await cache.put(
+req,
+fresh.clone()
+);
+
+}
+
+return fresh;
+
+}
+catch(e){
+
+return Response.error();
+
+}
+
+})()
+);
+
+return;
+
+}
+
+}
+);
+
+console.log(
+`Archive Pro SIMPLE OFFLINE v${BUILD}`
+);

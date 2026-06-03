@@ -4865,7 +4865,6 @@ html.archivepro-ios-pwa .site-header {
           if (!('serviceWorker' in navigator)) return;
           if (navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({ type: 'CACHE_NON_ORIGINS' });
-            navigator.serviceWorker.controller.postMessage({ type: 'CACHE_EXHIBITION_SET' });
           }
         } catch (_) {}
       }
@@ -5022,6 +5021,8 @@ untitled: '무제 / 캡션 없음',
           lbZoom: '줌',
           openImage: '이미지 열기',
           openZoom: '전체보기',
+          offlineNotice: '오프라인에서는\nA 기원 섹션과 확대 이미지를\n제외했습니다.',
+          zoomOffline: '오프라인에서는 확대 이미지를 사용할 수 없습니다.',
           sortOptions: [
             '기본순',
             '번호 늦은순',
@@ -5065,6 +5066,8 @@ untitled: 'Untitled / No Caption',
           lbZoom: 'Zoom',
           openImage: 'Open image',
           openZoom: 'View Full',
+          offlineNotice: 'Origins section and zoom images\nare unavailable offline.',
+          zoomOffline: 'Zoom images are unavailable offline.',
           sortOptions: [
             'Default',
             'Late ID',
@@ -5108,6 +5111,8 @@ untitled: '무제 / Untitled',
           lbZoom: '줌 / Zoom',
           openImage: '이미지 열기 / Open image',
           openZoom: '전체보기 / View Full',
+          offlineNotice: '오프라인에서는\nA 기원 섹션과 확대 이미지를\n제외했습니다.\nOrigins section and zoom images\nare unavailable offline.',
+          zoomOffline: '오프라인에서는 확대 이미지를 사용할 수 없습니다.\nZoom images are unavailable offline.',
           sortOptions: [
             '기본순 / Default',
             '번호 늦은순 / Late ID',
@@ -6097,6 +6102,19 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           els.activeFilterText.dataset.en = `Filtered: ${enParts.join(' + ')}${sortLabel ? ' / Sort: ' + sortLabel : ''}`;
         }
 
+        if (isArchiveOfflineMode()) {
+          const offlineKr = '오프라인에서는\nA 기원 섹션과 확대 이미지를\n제외했습니다.';
+          const offlineEn = 'Origins section and zoom images\nare unavailable offline.';
+
+          els.activeFilterText.dataset.kr = els.activeFilterText.dataset.kr
+            ? els.activeFilterText.dataset.kr + '\n' + offlineKr
+            : offlineKr;
+
+          els.activeFilterText.dataset.en = els.activeFilterText.dataset.en
+            ? els.activeFilterText.dataset.en + '\n' + offlineEn
+            : offlineEn;
+        }
+
         syncDataLanguage(els.activeFilterText.parentElement);
       }
 
@@ -6271,7 +6289,9 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         const year = isOrigin ? '' : getYear(work);
         const infoLine = isOrigin ? '' : [material, size, year].filter(Boolean).join(' / ');
         const rawImage = safeText(work.image);
-        const imageSrc = rawImage ? withCacheBust(rawImage) : '';
+        const imageSrc = rawImage
+          ? withCacheBust(isArchiveOfflineMode() ? standardImageUrlOnly(rawImage) : rawImage)
+          : '';
         const detailText = state.lang === 'en' ? 'View Detail →' : (state.lang === 'both' ? '상세 보기 →\nView Detail →' : '상세 보기 →');
         const statusHTML = renderStatusUI(work);
         const priority = index < INITIAL_RENDER_COUNT;
@@ -6457,9 +6477,10 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         const material = isOrigin ? '—' : (getMaterial(item) || '—');
         const size = isOrigin ? '—' : (getSize(item) || '—');
         const year = isOrigin ? '—' : (getYear(item) || '—');
+        const offlineMode = isArchiveOfflineMode();
         const imageUrl = item.image ? withCacheBust(toAbsoluteUrl(item.image)) : '';
-        const zoomUrl = item.zoom ? withCacheBust(toAbsoluteUrl(item.zoom)) : imageUrl;
-        const displayUrl = zoomUrl || imageUrl || SVG_PLACEHOLDER;
+        const zoomUrl = (!offlineMode && item.zoom) ? withCacheBust(toAbsoluteUrl(item.zoom)) : '';
+        const displayUrl = (offlineMode ? imageUrl : (zoomUrl || imageUrl)) || SVG_PLACEHOLDER;
 
         els.lbId.textContent = item.id;
         els.lbTitle.textContent = title;
@@ -6468,9 +6489,16 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         els.lbSizeVal.textContent = size;
         els.lbYearVal.textContent = year;
         els.lbImagePath.textContent = imageUrl || '—';
-        els.lbZoomPath.textContent = zoomUrl || '—';
+        els.lbZoomPath.textContent = offlineMode ? t('zoomOffline') : (zoomUrl || '—');
         els.lbOpenImage.href = imageUrl || '#';
-        els.lbOpenZoom.href = zoomUrl || imageUrl || '#';
+        els.lbOpenZoom.href = offlineMode ? '#' : (zoomUrl || imageUrl || '#');
+        els.lbOpenZoom.onclick = offlineMode
+          ? function(event) {
+              event.preventDefault();
+              alert(t('zoomOffline'));
+              return false;
+            }
+          : null;
 
         /* ARCHIVE PRO MOBILE FULLVIEW REMOVE ONLY
            Mobile Viewer caption should not render/show the Full View action.
@@ -6791,11 +6819,11 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
       }
       function buildWorksJsonUrls() {
         /*
-          Offline App Strategy:
-          Use dungzak.art as the single source when online, but allow cached/root
-          works.json fallbacks when the installed app is opened without Wi‑Fi.
+          SIMPLE OFFLINE:
+          Use only the canonical Archive Pro data source.
+          No /archivepro/works.json, no /archivepro/data/*, no generated JSON.
         */
-        return [DATA_URL, DUNGZAK_ART_DATA_URL, '/data/works.json', '../data/works.json'];
+        return [DUNGZAK_ART_DATA_URL];
       }
 
       function buildLiveJsonUrl(url) {

@@ -1,4 +1,8 @@
-const CACHE_NAME = 'archive-pro-pwa-v7-manifest-network-only';
+const CACHE_NAME = 'archive-pro-pwa-v8-offline-works';
+const DATA_CACHE = 'archive-pro-data-v1';
+
+const WORKS_JSON_URL =
+  'https://dungzak.art/data/works.json';
 
 const CORE_ASSETS = [
   '/archivepro/index.html',
@@ -6,73 +10,16 @@ const CORE_ASSETS = [
   '/archivepro-icon-512-v2.png?v=2'
 ];
 
-const CURRENT_MANIFEST = {
-  name: 'Archive Pro — DUNGZAK CESTLAVIE',
-  short_name: 'Archive Pro',
-  description: 'Archive Pro / interface for dungzak.art works.json',
-  start_url: '/archivepro/index.html',
-  scope: '/archivepro/',
-  display: 'standalone',
-  orientation: 'portrait-primary',
-  background_color: '#031421',
-  theme_color: '#031421',
-  icons: [
-    {
-      src: '/archivepro-icon-192-v2.png?v=2',
-      sizes: '192x192',
-      type: 'image/png',
-      purpose: 'any maskable'
-    },
-    {
-      src: '/archivepro-icon-512-v2.png?v=2',
-      sizes: '512x512',
-      type: 'image/png',
-      purpose: 'any maskable'
-    }
-  ]
-};
-
-function currentManifestResponse() {
-  return new Response(
-    JSON.stringify(CURRENT_MANIFEST, null, 2),
-    {
-      status: 200,
-      headers: {
-        'Content-Type':
-          'application/manifest+json; charset=utf-8',
-        'Cache-Control':
-          'no-store, no-cache, must-revalidate, max-age=0'
-      }
-    }
-  );
-}
-
-function isArchiveProPath(url) {
-  return url.pathname.startsWith('/archivepro/');
-}
-
-function isArchiveProManifest(url) {
-  return url.pathname === '/archivepro/manifest.json';
-}
-
-function isArchiveDocument(request, url) {
-  return (
-    request.mode === 'navigate' ||
-    request.destination === 'document' ||
-    url.pathname === '/archivepro/' ||
-    url.pathname === '/archivepro/index.html'
-  );
-}
-
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(async cache => {
-      for (const asset of CORE_ASSETS) {
-        try {
-          await cache.add(asset);
-        } catch (e) {}
-      }
-    })
+    caches.open(CACHE_NAME)
+      .then(async cache => {
+        for (const asset of CORE_ASSETS) {
+          try {
+            await cache.add(asset);
+          } catch (e) {}
+        }
+      })
   );
 
   self.skipWaiting();
@@ -86,8 +33,9 @@ self.addEventListener('activate', event => {
           keys
             .filter(
               key =>
-                key.includes('archive-pro') &&
-                key !== CACHE_NAME
+                key.startsWith('archive-pro-') &&
+                key !== CACHE_NAME &&
+                key !== DATA_CACHE
             )
             .map(key => caches.delete(key))
         )
@@ -96,97 +44,186 @@ self.addEventListener('activate', event => {
   );
 });
 
-self.addEventListener('fetch', event => {
-  const request = event.request;
-
-  if (!request || request.method !== 'GET')
-    return;
-
-  const url = new URL(request.url);
-
-  if (!isArchiveProPath(url))
-    return;
-
-  // 중요:
-  // manifest 절대 캐시 금지
-  if (isArchiveProManifest(url)) {
-    event.respondWith(
-      fetch(request, {
+async function fetchWorksJson() {
+  try {
+    const response = await fetch(
+      WORKS_JSON_URL,
+      {
         cache: 'no-store',
-        credentials: 'same-origin'
-      })
-        .then(response => {
-          if (
-            response &&
-            response.ok
-          ) {
-            return response;
-          }
+        mode: 'cors'
+      }
+    );
 
-          return currentManifestResponse();
-        })
-        .catch(() =>
-          currentManifestResponse()
+    if (!response.ok) {
+      throw new Error(
+        'works fetch failed'
+      );
+    }
+
+    const copy =
+      response.clone();
+
+    caches
+      .open(DATA_CACHE)
+      .then(cache => {
+        cache.put(
+          WORKS_JSON_URL,
+          copy
+        );
+      });
+
+    return response;
+
+  } catch (error) {
+
+    const cache =
+      await caches.open(
+        DATA_CACHE
+      );
+
+    const cached =
+      await cache.match(
+        WORKS_JSON_URL
+      );
+
+    if (cached) {
+      return cached;
+    }
+
+    return new Response(
+      '[]',
+      {
+        headers: {
+          'Content-Type':
+            'application/json'
+        }
+      }
+    );
+  }
+}
+
+self.addEventListener(
+  'fetch',
+  event => {
+
+    const request =
+      event.request;
+
+    if (
+      !request ||
+      request.method !== 'GET'
+    ) {
+      return;
+    }
+
+    const url =
+      new URL(
+        request.url
+      );
+
+    // works.json
+    if (
+      url.href ===
+      WORKS_JSON_URL
+    ) {
+
+      event.respondWith(
+        fetchWorksJson()
+      );
+
+      return;
+    }
+
+    // archivepro html
+    if (
+      request.mode ===
+        'navigate' &&
+      url.pathname.startsWith(
+        '/archivepro/'
+      )
+    ) {
+
+      event.respondWith(
+
+        fetch(
+          request,
+          {
+            cache:
+              'no-store'
+          }
+        )
+
+        .catch(
+          async () => {
+
+            const cache =
+              await caches.open(
+                CACHE_NAME
+              );
+
+            return (
+              await cache.match(
+                '/archivepro/index.html'
+              )
+            );
+
+          }
+        )
+      );
+
+      return;
+    }
+
+    // asset cache
+    event.respondWith(
+
+      caches
+        .match(
+          request
+        )
+
+        .then(
+          cached => {
+
+            if (
+              cached
+            ) {
+              return cached;
+            }
+
+            return fetch(
+              request
+            )
+
+            .then(
+              response => {
+
+                if (
+                  response &&
+                  response.ok
+                ) {
+
+                  caches
+                    .open(
+                      CACHE_NAME
+                    )
+
+                    .then(
+                      cache =>
+                        cache.put(
+                          request,
+                          response.clone()
+                        )
+                    );
+                }
+
+                return response;
+              }
+            );
+
+          }
         )
     );
 
-    return;
   }
-
-  // index 최신 우선
-  if (isArchiveDocument(request, url)) {
-    event.respondWith(
-      fetch(request, {
-        cache: 'no-store'
-      }).catch(async () => {
-        const cache =
-          await caches.open(
-            CACHE_NAME
-          );
-
-        return (
-          await cache.match(
-            '/archivepro/index.html'
-          )
-        );
-      })
-    );
-
-    return;
-  }
-
-  // 일반 asset
-  event.respondWith(
-    caches.match(request).then(
-      cached => {
-        if (cached)
-          return cached;
-
-        return fetch(request).then(
-          response => {
-            if (
-              response &&
-              response.ok
-            ) {
-              const copy =
-                response.clone();
-
-              caches
-                .open(CACHE_NAME)
-                .then(cache => {
-                  try {
-                    cache.put(
-                      request,
-                      copy
-                    );
-                  } catch (e) {}
-                });
-            }
-
-            return response;
-          }
-        );
-      }
-    )
-  );
-});
+);

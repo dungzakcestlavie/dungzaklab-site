@@ -4601,8 +4601,7 @@ html.archivepro-ios-pwa .site-header {
 
   <title>Archive Pro — DUNGZAK CESTLAVIE LAB</title>
   <meta name="description" content="Archive Pro — artwork archive engine for search, filter, and zoom view." />
-  <link rel="manifest" href="/archivepro/manifest.json?v=5">
-  <link rel="manifest" href="/archivepro/manifest.json?v=4">
+  <link rel="manifest" href="/archivepro/manifest.json?v=11">
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -7657,6 +7656,8 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
     }
 
     window.addEventListener('appinstalled', function(){
+      console.log('Archive Pro appinstalled');
+      try { localStorage.setItem('archivepro_appinstalled_at', new Date().toISOString()); } catch (e) {}
       deferredInstallPrompt = null;
       document.body.classList.add('app-standalone');
         if (isIOSDevice()) document.body.classList.add('app-ios-standalone');
@@ -7690,13 +7691,48 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
   })();
 </script>
 
+<!-- Archive Pro PWA Manifest Health Check -->
+<script>
+  (function(){
+    fetch('/archivepro/manifest.json', { cache: 'reload' })
+      .then(function(response){
+        if (!response.ok) {
+          throw new Error('Manifest HTTP ' + response.status);
+        }
+        return response.json();
+      })
+      .then(function(manifest){
+        if (!manifest || !manifest.start_url || !manifest.scope) {
+          throw new Error('Manifest JSON incomplete');
+        }
+        window.__ARCHIVE_PRO_MANIFEST_OK__ = true;
+        console.log('Archive Pro Manifest OK', manifest);
+      })
+      .catch(function(error){
+        window.__ARCHIVE_PRO_MANIFEST_OK__ = false;
+        console.error('Manifest Missing', error);
+        document.body.classList.add('pwa-manifest-missing');
+        var installPanel = document.getElementById('installPanel');
+        if (installPanel) {
+          installPanel.hidden = true;
+          installPanel.classList.remove('is-visible');
+        }
+      });
+  })();
+</script>
+
 <!-- Archive Pro Exhibition Offline Mode: root Service Worker registration -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register("/archivepro/sw.js", {
         scope: "/archivepro/"
-      }).catch(function () {});
+      }).then(function(registration){
+        console.log('Archive Pro Service Worker registered', registration.scope);
+        registration.update();
+      }).catch(function (error) {
+        console.error('Archive Pro Service Worker registration failed', error);
+      });
     });
   }
 </script>

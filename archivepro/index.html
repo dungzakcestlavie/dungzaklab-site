@@ -4845,7 +4845,12 @@ html.archivepro-ios-pwa .site-header {
       const IMAGE_CACHE = 'archive-pro-offline-sections-v2';
       const PAGE_OFFLINE_CACHE_NAME = IMAGE_CACHE;
       function isArchiveOfflineMode() {
-        return typeof navigator !== 'undefined' && navigator.onLine === false;
+        /*
+          ONLINE DATA FIRST ROLLBACK:
+          Offline filtering is paused. Do not let navigator.onLine remove
+          Origins or any other section before render.
+        */
+        return false;
       }
 
       function isOriginsWork(item) {
@@ -4857,9 +4862,11 @@ html.archivepro-ios-pwa .site-header {
       }
 
       function nonOriginsOnly(list) {
-        return (Array.isArray(list) ? list : []).filter(function(item){
-          return !isOriginsWork(item);
-        });
+        /*
+          ONLINE DATA FIRST ROLLBACK:
+          Keep the full archive array. No section removal here.
+        */
+        return Array.isArray(list) ? list : [];
       }
 
       function getOfflineOriginsMessage() {
@@ -6924,30 +6931,10 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           const failures = [];
 
           /*
-            Archive Pro Offline Enable:
-            If Android PWA starts with no network, use the last successful
-            localStorage payload first. The display layer removes Origins
-            with section_id === 0 before rendering, so the app never stops.
+            ONLINE DATA FIRST ROLLBACK:
+            Do not branch on navigator.onLine before the network request.
+            Always try the canonical works.json first.
           */
-          if (isArchiveOfflineMode()) {
-            const savedJson = loadWorksJsonFromLocalStorage();
-            if (savedJson) {
-              const savedWorks = parseWorksPayload(savedJson);
-              if (Array.isArray(savedWorks) && savedWorks.length) {
-                worksLoadedFromOfflineStorage = true;
-                return savedWorks;
-              }
-            }
-
-            const cachedJson = await readWorksJsonFromCacheStorage();
-            if (cachedJson) {
-              const cachedWorks = parseWorksPayload(cachedJson);
-              if (Array.isArray(cachedWorks) && cachedWorks.length) {
-                worksLoadedFromOfflineStorage = true;
-                return cachedWorks;
-              }
-            }
-          }
 
           for (const url of urls) {
             try {
@@ -7018,11 +7005,11 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
             .filter(item => item && item.id);
 
           /*
-            Offline Display Rule:
-            When Archive Pro is opened without Wi‑Fi, hide A Origins (section_id: 0)
-            and show all remaining sections I–V only. Online mode keeps the full archive.
+            ONLINE DATA FIRST ROLLBACK:
+            Render the full normalized works array. Never remove section_id 0,
+            A 기원, Origins, or any other section before render.
           */
-          const normalized = isArchiveOfflineMode() ? nonOriginsOnly(normalizedAll) : normalizedAll;
+          const normalized = normalizedAll;
 
           state.all = normalized;
           state.query = '';

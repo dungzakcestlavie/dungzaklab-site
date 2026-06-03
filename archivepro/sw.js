@@ -1,10 +1,7 @@
-const BUILD = '12';
+const BUILD = '13';
 
 const CACHE_NAME =
 `archive-pro-pwa-v${BUILD}`;
-
-const DATA_CACHE =
-'archive-pro-data-v3';
 
 const IMAGE_CACHE =
 'archive-pro-offline-sections-v2';
@@ -42,8 +39,7 @@ await cache.add(
 new Request(
 url,
 {
-cache:
-'reload'
+cache:'reload'
 }
 )
 );
@@ -86,10 +82,6 @@ k!==CACHE_NAME
 
 &&
 
-k!==DATA_CACHE
-
-&&
-
 k!==IMAGE_CACHE
 
 )
@@ -108,92 +100,6 @@ await self.clients.claim();
 
 }
 );
-
-async function fetchWorks(){
-
-try{
-
-const network =
-await fetch(
-WORKS_JSON_URL,
-{
-cache:
-'no-store'
-}
-);
-
-if(
-!network.ok
-){
-
-throw new Error(
-'works fetch failed'
-);
-
-}
-
-const clone =
-network.clone();
-
-const json =
-await clone.json();
-
-const cache =
-await caches.open(
-DATA_CACHE
-);
-
-await cache.put(
-WORKS_JSON_URL,
-new Response(
-JSON.stringify(
-json
-),
-{
-headers:{
-'Content-Type':
-'application/json'
-}
-}
-)
-);
-
-return network;
-
-}
-catch(e){
-
-const cache =
-await caches.open(
-DATA_CACHE
-);
-
-const cached =
-await cache.match(
-WORKS_JSON_URL
-);
-
-if(
-cached
-){
-
-return cached;
-
-}
-
-return new Response(
-'[]',
-{
-headers:{
-'Content-Type':
-'application/json'
-}
-}
-);
-
-}
-
-}
 
 function isZoom(
 url
@@ -225,18 +131,22 @@ new URL(
 req.url
 );
 
+/* works.json 통과 */
+
 if(
 url.href===
 WORKS_JSON_URL
 ){
 
 event.respondWith(
-fetchWorks()
+fetch(req)
 );
 
 return;
 
 }
+
+/* zoom 캐시 금지 */
 
 if(
 isZoom(url)
@@ -264,6 +174,8 @@ status:204
 return;
 
 }
+
+/* 일반 이미지 */
 
 if(
 
@@ -334,6 +246,8 @@ return;
 
 }
 
+/* 앱 페이지 */
+
 if(
 
 req.mode==='navigate'
@@ -365,8 +279,15 @@ await caches.open(
 CACHE_NAME
 );
 
-return await cache.match(
+return (
+await cache.match(
 '/archivepro/index.html'
+)
+
+||
+
+Response.error()
+
 );
 
 }

@@ -7320,6 +7320,22 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
           });
         }
 
+        const labLink = document.querySelector('.lab-link-btn[href="https://dungzaklab.art/"]');
+        if (labLink) {
+          const isIosStandalone =
+            window.navigator.standalone === true ||
+            (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+
+          if (isIosStandalone) {
+            labLink.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+              resetAllSections();
+            }, true);
+          }
+        }
+
         if (els.entryBtn) {
           els.entryBtn.addEventListener('click', (e) => {
             if (e && typeof e.preventDefault === 'function') e.preventDefault();

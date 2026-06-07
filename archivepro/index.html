@@ -4626,6 +4626,40 @@ opacity:.75;
 }
 }
 
+
+
+/* ARCHIVE PRO — IPAD VIEWER CLOSE BUTTON SUBTLE TUNING ONLY */
+html.is-ipad .viewer-close,
+html.is-ipad .lightbox-close,
+html.is-ipad .close-btn,
+html.is-ipad [data-viewer-close] {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+
+  font-size: 16px !important;
+
+  opacity: 0.38 !important;
+
+  background: rgba(0, 0, 0, 0.12) !important;
+
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+
+  top: max(10px, calc(env(safe-area-inset-top) + 6px)) !important;
+  right: max(10px, calc(env(safe-area-inset-right) + 6px)) !important;
+}
+
+html.is-ipad .viewer-close:hover,
+html.is-ipad .lightbox-close:hover,
+html.is-ipad .close-btn:hover,
+html.is-ipad [data-viewer-close]:hover {
+  opacity: 0.62 !important;
+}
+
 </style>
 
   <meta charset="utf-8" />

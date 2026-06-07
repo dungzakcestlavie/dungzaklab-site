@@ -5290,7 +5290,7 @@ lightbox: document.getElementById('lightbox'),
       }
 
       function shouldBlockMobileViewerSwipe() {
-        return isMobileViewerMode() && (viewerIsZooming || mobilePinchJustEnded || viewerScale > 1.02);
+        return (isMobileViewerMode() || isIPadPortraitViewerMode()) && (viewerIsZooming || mobilePinchJustEnded || viewerScale > 1.01);
       }
 
       function clampViewerValue(value, min, max) {
@@ -7249,7 +7249,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
           e.preventDefault();
           e.stopPropagation();
 
-          if (e.touches.length === 2) {
+          if (e.touches.length >= 2) {
             viewerIsZooming = true;
             viewerIsDragging = false;
             clearMobilePinchEndGuard();
@@ -7279,7 +7279,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
           e.preventDefault();
           e.stopPropagation();
 
-          if (viewerIsZooming && e.touches.length === 2) {
+          if (viewerIsZooming && e.touches.length >= 2) {
             const newDistance = getViewerDistance(e.touches[0], e.touches[1]);
             if (!viewerInitialDistance) viewerInitialDistance = newDistance;
             const nextScale = viewerStartScale * (newDistance / viewerInitialDistance);
@@ -7341,7 +7341,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
           const totalDy = endY - viewerStartY;
           const elapsed = Date.now() - viewerStartTime;
 
-          if (viewerScale <= 1.02 && Math.abs(totalDx) > 60 && Math.abs(totalDx) > Math.abs(totalDy) * 1.25) {
+          if (!viewerIsZooming && viewerScale <= 1.01 && Math.abs(totalDx) > 60 && Math.abs(totalDx) > Math.abs(totalDy) * 1.25) {
             if (totalDx > 0) prevViewer();
             else nextViewer();
           }

@@ -4660,6 +4660,92 @@ html.is-ipad [data-viewer-close]:hover {
   opacity: 0.62 !important;
 }
 
+
+
+    /* ARCHIVE PRO — PHONE LANDSCAPE LAYOUT TUNING ONLY
+       Scope: touch phone landscape only. No viewer behavior, data, PWA, or close button changes. */
+    @media (hover:none) and (pointer:coarse) and (orientation:landscape) and (max-height:520px){
+      .viewer-panel,
+      .viewer-info,
+      .viewer-content,
+      .lightbox-inner,
+      .lightbox-side{
+        justify-content:center !important;
+        gap:14px !important;
+        overflow-y:auto !important;
+        min-height:100dvh !important;
+      }
+
+      .viewer-panel,
+      .viewer-content,
+      .lightbox-inner{
+        display:flex !important;
+        flex-direction:column !important;
+        padding:16px 24px 20px !important;
+        box-sizing:border-box !important;
+      }
+
+      .lightbox-stage,
+      .viewer-media,
+      .viewer-image-wrap,
+      .viewer-img-wrap,
+      .lightbox-image-wrap,
+      .lightbox-img-wrap{
+        width:100% !important;
+        min-height:0 !important;
+        padding:16px 24px 8px !important;
+        display:flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        overflow:hidden !important;
+        box-sizing:border-box !important;
+      }
+
+      .viewer-image,
+      .viewer img,
+      .lightbox-stage img,
+      #lightboxImage{
+        max-width:min(92vw,900px) !important;
+        max-height:56vh !important;
+        width:auto !important;
+        height:auto !important;
+        object-fit:contain !important;
+        margin:auto !important;
+        transform:none;
+      }
+
+      .viewer-caption,
+      .viewer-meta,
+      .lightbox-caption,
+      .lightbox-side,
+      .detail-panel{
+        max-width:92vw !important;
+        margin:0 auto !important;
+        padding-top:8px !important;
+        text-align:left !important;
+        box-sizing:border-box !important;
+      }
+
+      .gallery-grid,
+      .grid,
+      #grid{
+        grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+        gap:12px !important;
+        padding-inline:16px !important;
+        box-sizing:border-box !important;
+      }
+
+      .results-header,
+      .meta-row,
+      #resultsMeta{
+        display:flex !important;
+        align-items:center !important;
+        justify-content:space-between !important;
+        flex-wrap:wrap !important;
+        gap:8px !important;
+      }
+    }
+
 </style>
 
   <meta charset="utf-8" />

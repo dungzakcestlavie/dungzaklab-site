@@ -4746,6 +4746,85 @@ html.is-ipad [data-viewer-close]:hover {
       }
     }
 
+
+    /* ARCHIVE PRO — PHONE LANDSCAPE FULLSCREEN VIEWER ONLY
+       Scope: phone landscape fullscreen viewer CSS only. No grid, data, behavior, PWA, or close button changes. */
+    @media (hover:none) and (pointer:coarse) and (orientation:landscape) and (max-height:520px){
+      .viewer-inner,
+      .viewer-panel,
+      .viewer-content,
+      .lightbox-inner{
+        display:flex !important;
+        flex-direction:row !important;
+        align-items:center !important;
+        justify-content:center !important;
+        gap:18px !important;
+        padding:12px 72px 12px 24px !important;
+        min-height:100dvh !important;
+        height:100dvh !important;
+        width:100vw !important;
+        overflow:hidden !important;
+        box-sizing:border-box !important;
+      }
+
+      .viewer-media,
+      .viewer-image-wrap,
+      .viewer-img-wrap,
+      .lightbox-media,
+      .lightbox-image-wrap,
+      .lightbox-img-wrap,
+      .lightbox-stage{
+        flex:1 1 auto !important;
+        width:auto !important;
+        max-width:64vw !important;
+        height:auto !important;
+        min-width:0 !important;
+        min-height:0 !important;
+        max-height:82vh !important;
+        margin:0 !important;
+        padding:0 !important;
+        display:flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        overflow:hidden !important;
+        box-sizing:border-box !important;
+      }
+
+      .viewer-image,
+      .viewer img,
+      .lightbox-media img,
+      .lightbox-stage img,
+      #lightboxImage{
+        width:auto !important;
+        height:auto !important;
+        max-width:64vw !important;
+        max-height:82vh !important;
+        object-fit:contain !important;
+        margin:0 !important;
+      }
+
+      .viewer-caption,
+      .viewer-meta,
+      .viewer-info,
+      .lightbox-caption,
+      .detail-panel,
+      .lightbox-side{
+        width:240px !important;
+        max-width:28vw !important;
+        max-height:82vh !important;
+        height:auto !important;
+        min-height:0 !important;
+        overflow-y:auto !important;
+        -webkit-overflow-scrolling:touch !important;
+        padding:22px 24px !important;
+        margin:0 !important;
+        flex:0 0 240px !important;
+        flex-shrink:0 !important;
+        box-sizing:border-box !important;
+        border-top:0 !important;
+      }
+    }
+
 </style>
 
   <meta charset="utf-8" />

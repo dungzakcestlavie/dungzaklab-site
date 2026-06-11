@@ -4825,6 +4825,79 @@ html.is-ipad [data-viewer-close]:hover {
       }
     }
 
+
+    /* ARCHIVE PRO — IPAD LANDSCAPE MICRO UI TUNING ONLY
+       Scope: iPad/tablet landscape UI spacing and typography presence only.
+       No data, grid, viewer, touch behavior, PWA, position, transform, height, or overflow changes. */
+    @media (pointer:coarse) and (orientation:landscape) and (min-width:1024px){
+      .header-inner{
+        padding-top:14.5px !important;
+        padding-bottom:14.5px !important;
+      }
+
+      .brand-row{
+        margin-bottom:0 !important;
+      }
+
+      .brand-home-link{
+        margin-bottom:0 !important;
+      }
+
+      .hero,
+      .hero.hero-compressed{
+        padding-top:16px !important;
+        gap:14px !important;
+      }
+
+      .hero-card{
+        padding-top:18px !important;
+        padding-bottom:18px !important;
+        gap:12px !important;
+      }
+
+      .lang-inline{
+        padding-top:11px !important;
+        padding-bottom:11px !important;
+      }
+
+      body.archive-entered #filterToggleWrap{
+        margin-top:18px !important;
+        margin-bottom:16px !important;
+      }
+
+      body.archive-entered.archive-filter-open #searchArea,
+      .controls{
+        margin-top:14px !important;
+        margin-bottom:9px !important;
+        padding-top:14px !important;
+        padding-bottom:14px !important;
+        gap:11px !important;
+      }
+
+      .stats-inline{
+        opacity:.82 !important;
+        border-color:rgba(212,180,109,.23) !important;
+        background:transparent !important;
+      }
+
+      .stats-inline #statTotal,
+      .stats-inline #statFiltered,
+      .stats-inline #statSections{
+        opacity:.82 !important;
+      }
+
+      .input::placeholder,
+      body.archive-entered.archive-filter-open #searchArea .input::placeholder{
+        opacity:.84 !important;
+      }
+
+      .meta-row,
+      #resultsMeta{
+        margin-top:9px !important;
+        margin-bottom:7px !important;
+      }
+    }
+
 </style>
 
   <meta charset="utf-8" />

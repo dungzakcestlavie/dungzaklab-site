@@ -7356,6 +7356,28 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         els.searchArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 
+      function isStandaloneArchiveApp() {
+        return window.matchMedia('(display-mode: standalone)').matches ||
+               window.navigator.standalone === true;
+      }
+
+      function setupLabButtonAppOnlyReset() {
+        if (!els.labLink || !isStandaloneArchiveApp()) return;
+
+        els.labLink.removeAttribute('href');
+        els.labLink.addEventListener('click', function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+
+          if (Date.now() <= closeClickBlockUntil) {
+            blockEvent(event);
+            return;
+          }
+
+          resetAllSections();
+        }, { passive:false });
+      }
+
       function loadMoreWorks() {
         /* Load More id-desc Continuation Fix
            Use only the current finalFilteredWorks/state.filtered array, which already has
@@ -7404,6 +7426,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         if (els.resetBtn) els.resetBtn.addEventListener('click', () => resetFilters(false));
         if (els.filterToggleBtn) els.filterToggleBtn.addEventListener('click', toggleFilterPanel);
+        setupLabButtonAppOnlyReset();
 
         els.focusSearchBtn.addEventListener('click', () => {
           scrollToSearch();

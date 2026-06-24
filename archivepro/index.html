@@ -2183,7 +2183,8 @@ body.archive-entered #filterToggleWrap{
     }
 
     body.archive-entered #activeFilterText:empty,
-    body.archive-entered #renderedText:empty{
+    body.archive-entered #renderedText:empty,
+    body.archive-entered #resultText:empty{
       display:none !important;
     }
 
@@ -5012,10 +5013,10 @@ html.is-ipad [data-viewer-close]:hover {
           id="searchInput"
           class="input"
           type="search"
-          placeholder="ID, 제목, 재료, 연도, 섹션 검색"
+          placeholder="ID · 제목 · 재료 · 연도 · 섹션"
           autocomplete="off"
           spellcheck="false"
-          data-kr="ID, 제목, 재료, 연도, 섹션 검색"
+          data-kr="ID · 제목 · 재료 · 연도 · 섹션"
           data-en="Search ID, title, material, year, section"
         />
       </div>
@@ -5040,9 +5041,9 @@ html.is-ipad [data-viewer-close]:hover {
           <span
             class="meta-pill"
             id="activeFilterText"
-            data-kr="필터 없음"
-            data-en="No filters">
-            필터 없음
+            data-kr=""
+            data-en=""
+            style="display:none;">
           </span>
         </div>
       </div>
@@ -5299,7 +5300,7 @@ html.is-ipad [data-viewer-close]:hover {
           labelSearch: 'Search',
           labelSection: 'Section',
           labelSort: 'Sort',
-          placeholderSearch: 'ID, 제목, 재료, 연도, 섹션 검색',
+          placeholderSearch: 'ID · 제목 · 재료 · 연도 · 섹션',
           resetBtn: '초기화',
           focusSearchBtn: '검색 집중',
           filterToggleBtn: 'Filter / Search',
@@ -6420,13 +6421,15 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           enParts.push(`Search “${state.query}”`);
         }
 
-        const sortLabel = els.sortSelect?.selectedOptions?.[0]?.textContent || '';
+        /* 정렬(SORT) 라벨은 위쪽 SORT 드롭다운에 이미 동일하게 표시되므로
+           이 배지에는 더 이상 중복 표시하지 않음. 필터가 없을 때는
+           '필터 없음' 같은 placeholder 문구도 표시하지 않음(아래에서 배지 자체를 숨김). */
         if (!krParts.length && !enParts.length) {
-          els.activeFilterText.dataset.kr = sortLabel ? `정렬: ${sortLabel}` : '필터 없음';
-          els.activeFilterText.dataset.en = sortLabel ? `Sort: ${sortLabel}` : 'No filters';
+          els.activeFilterText.dataset.kr = '';
+          els.activeFilterText.dataset.en = '';
         } else {
-          els.activeFilterText.dataset.kr = `필터 적용됨: ${krParts.join(' + ')}${sortLabel ? ' / 정렬: ' + sortLabel : ''}`;
-          els.activeFilterText.dataset.en = `Filtered: ${enParts.join(' + ')}${sortLabel ? ' / Sort: ' + sortLabel : ''}`;
+          els.activeFilterText.dataset.kr = `필터 적용됨: ${krParts.join(' + ')}`;
+          els.activeFilterText.dataset.en = `Filtered: ${enParts.join(' + ')}`;
         }
 
         if (isArchiveOfflineMode()) {
@@ -6441,6 +6444,12 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
             ? els.activeFilterText.dataset.en + '\n' + offlineEn
             : offlineEn;
         }
+
+        /* 표시할 내용(필터 적용됨, 오프라인 안내 등)이 전혀 없으면 배지 자체를
+           화면에서 완전히 숨김 — 언어 모드(KR/EN/KR+EN)와 무관하게 글자가 남지 않도록
+           CSS :empty 대신 직접 display를 제어함. */
+        const hasFilterBadgeContent = Boolean(els.activeFilterText.dataset.kr) || Boolean(els.activeFilterText.dataset.en);
+        els.activeFilterText.style.display = hasFilterBadgeContent ? '' : 'none';
 
         syncDataLanguage(els.activeFilterText.parentElement);
       }
@@ -6517,7 +6526,10 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           els.resultText.textContent = `${numberFormat.format(filtered)} results · ${numberFormat.format(total)} works`;
           els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}${t('renderedSuffix')}`;
         } else {
-          els.resultText.textContent = `${numberFormat.format(total)} works · ${numberFormat.format(sections)} sections`;
+          /* [1] 결과 영역 중복 제거: 상단 stats-inline 영역(전체/결과/섹션 수)과
+             동일한 정보이므로 작품 목록 바로 위에는 다시 표시하지 않음.
+             검색/필터가 활성화된 경우의 결과 수 표시 로직은 위 분기에서 그대로 유지됨. */
+          els.resultText.textContent = '';
           els.renderedText.textContent = '';
         }
       }

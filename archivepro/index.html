@@ -761,7 +761,7 @@ html, body {
 
     .thumb-wrap{
       position:relative;
-      aspect-ratio:1/1;
+      aspect-ratio:5/4;
       overflow:hidden;
       background:#0a0f16;
     }
@@ -4899,6 +4899,12 @@ html.is-ipad [data-viewer-close]:hover {
         margin-bottom:7px !important;
       }
     }
+
+    /* Hide duplicate search-result summary (resultText / renderedText / activeFilterText).
+       DOM and JavaScript untouched; element is visually removed only so search/filter/sort/count logic stays intact.
+       !important + last-in-source beats the inline JS style.display='flex' and the media-query display:flex rule. */
+    #resultsMeta{ display:none !important; }
+    body.archive-entered #resultsMeta{ display:none !important; }
 
 </style>
 

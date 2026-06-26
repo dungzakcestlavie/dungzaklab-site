@@ -993,6 +993,24 @@ html, body {
       word-break:keep-all;
     }
 
+    /* VIEWER TITLE — KR+EN two-line layout (display only).
+       KR 제목은 첫 줄·기존 시각적 우선순위 유지, EN 제목은 둘째 줄·약간 작은 크기.
+       컬러/테마/여백 분위기는 변경하지 않는다. */
+    .lb-title.lb-title--stacked{
+      display:flex;
+      flex-direction:column;
+    }
+    .lb-title.lb-title--stacked .lb-title-kr{
+      display:block;
+    }
+    .lb-title.lb-title--stacked .lb-title-en{
+      display:block;
+      margin-top:.22em;
+      font-size:.82em;
+      line-height:1.25;
+      opacity:.92;
+    }
+
     .lightbox-side .lb-section{
       margin:0 0 18px;
       color:var(--muted);
@@ -5771,6 +5789,39 @@ lightbox: document.getElementById('lightbox'),
         return kr || en || '';
       }
 
+      /* VIEWER TITLE — KR+EN two-line render (display only).
+         KR+EN 모드에서만 제목을 KR(첫 줄) / EN(둘째 줄)로 분리해 표시한다.
+         getTitle()은 카드·정렬·alt에 그대로 쓰이므로 변경하지 않는다.
+         "/" 구분자 제거, 언어 전환 로직·JSON 구조·Viewer 기능은 변경 없음. */
+      function setViewerTitle(item, fallbackTitle, isOrigin) {
+        const el = els.lbTitle;
+        if (!el) return;
+        el.classList.remove('lb-title--stacked');
+
+        if (isOrigin || state.lang !== 'both') {
+          el.textContent = fallbackTitle;
+          return;
+        }
+
+        const kr = safeText(item.title_kr);
+        const en = safeText(item.title_en);
+
+        if (kr && en && kr !== en) {
+          el.textContent = '';
+          const krLine = document.createElement('span');
+          krLine.className = 'lb-title-kr';
+          krLine.textContent = kr;
+          const enLine = document.createElement('span');
+          enLine.className = 'lb-title-en';
+          enLine.textContent = en;
+          el.appendChild(krLine);
+          el.appendChild(enLine);
+          el.classList.add('lb-title--stacked');
+        } else {
+          el.textContent = fallbackTitle;
+        }
+      }
+
       function getMaterial(item) {
         const kr = safeText(item.material_kr);
         const en = safeText(item.material_en);
@@ -6829,7 +6880,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         const displayUrl = (offlineMode ? imageUrl : (zoomUrl || imageUrl)) || SVG_PLACEHOLDER;
 
         els.lbId.textContent = item.id;
-        els.lbTitle.textContent = title;
+        setViewerTitle(item, title, isOrigin);
         els.lbSection.textContent = getSectionTextById(item.section_id);
         els.lbMaterialVal.textContent = material;
         els.lbSizeVal.textContent = size;

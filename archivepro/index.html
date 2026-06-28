@@ -5579,8 +5579,25 @@ lightbox: document.getElementById('lightbox'),
         );
       }
 
+      /* ARCHIVE PRO VIEWER ZOOM/PAN BOUNDARY MODE
+         Touch/tablet detection used ONLY to gate the fullscreen Viewer
+         pinch-zoom + drag-pan boundary engine. Desktop (fine pointer with
+         hover) is deliberately excluded so existing desktop behaviour is
+         untouched. */
+      function isCoarsePointerViewerMode() {
+        return !!(window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+      }
+
+      function isIPadDeviceViewerMode() {
+        // iPad in BOTH orientations (portrait + landscape).
+        return (
+          navigator.maxTouchPoints > 1 &&
+          Math.min(window.screen.width, window.screen.height) >= 768
+        );
+      }
+
       function isTouchViewerBoundaryMode() {
-        return isMobileViewerMode() || isIPadPortraitViewerMode();
+        return isMobileViewerMode() || isIPadDeviceViewerMode() || isCoarsePointerViewerMode();
       }
 
       if (
@@ -5608,7 +5625,7 @@ lightbox: document.getElementById('lightbox'),
       }
 
       function shouldBlockMobileViewerSwipe() {
-        return (isMobileViewerMode() || isIPadPortraitViewerMode()) && (viewerIsZooming || mobilePinchJustEnded || viewerScale > 1.01);
+        return isTouchViewerBoundaryMode() && (viewerIsZooming || mobilePinchJustEnded || viewerScale > 1.01);
       }
 
       function clampViewerValue(value, min, max) {
@@ -5617,16 +5634,36 @@ lightbox: document.getElementById('lightbox'),
 
       function clampViewerToFrame() {
         if (!isTouchViewerBoundaryMode() || !els.lightboxStage || !els.lightboxImage) return;
+        if (viewerScale <= 1) { viewerX = 0; viewerY = 0; return; }
+
         const frame = els.lightboxStage.getBoundingClientRect();
         if (!frame || !frame.width || !frame.height) return;
 
-        const scaledWidth = (els.lightboxImage.offsetWidth || frame.width) * viewerScale;
-        const scaledHeight = (els.lightboxImage.offsetHeight || frame.height) * viewerScale;
-        const maxX = Math.max(0, (scaledWidth - frame.width) / 2);
-        const maxY = Math.max(0, (scaledHeight - frame.height) / 2);
+        /* Visible window = the image element's own box (the Viewer image area).
+           On mobile the <img> is width/height:100%, so this equals the stage
+           content box; on the desktop-style layout it equals the contained
+           image. Either way pan is bounded to this rectangle. */
+        const boxW = els.lightboxImage.offsetWidth || frame.width;
+        const boxH = els.lightboxImage.offsetHeight || frame.height;
 
-        viewerX = clampViewerValue(viewerX, -maxX, maxX);
-        viewerY = clampViewerValue(viewerY, -maxY, maxY);
+        /* Actual rendered content size AFTER object-fit:contain, so letterboxed
+           (portrait/landscape) images get correct limits instead of the full box. */
+        const natW = els.lightboxImage.naturalWidth || boxW;
+        const natH = els.lightboxImage.naturalHeight || boxH;
+        const fitScale = Math.min(boxW / natW, boxH / natH) || 1;
+        const renderedW = natW * fitScale;
+        const renderedH = natH * fitScale;
+
+        const scaledW = renderedW * viewerScale;
+        const scaledH = renderedH * viewerScale;
+
+        /* Move only when the scaled content is larger than the visible box;
+           otherwise that axis stays centred at 0. */
+        const maxX = Math.max(0, (scaledW - boxW) / 2);
+        const maxY = Math.max(0, (scaledH - boxH) / 2);
+
+        viewerX = maxX > 0 ? clampViewerValue(viewerX, -maxX, maxX) : 0;
+        viewerY = maxY > 0 ? clampViewerValue(viewerY, -maxY, maxY) : 0;
       }
 
       function applyViewerTransform() {

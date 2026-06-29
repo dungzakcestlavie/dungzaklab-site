@@ -6629,6 +6629,27 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         }
       }
 
+      /* ARCHIVE PRO THUMBNAIL AUTO-RECOVERY (GitHub Raw intermittent fail fix)
+         A network-level fetch of raw.githubusercontent.com occasionally fails
+         once and succeeds immediately on a plain refetch. Instead of asking
+         the user to refresh, retry the SAME thumbnail exactly once, after a
+         short delay, with a fresh cache-busting param. No infinite loop:
+         each <img> is retried at most once via data-thumb-retried. */
+      function retryThumbOnce(img, src, onGiveUp) {
+        if (!img || !src || img.dataset.thumbRetried === 'true') return false;
+        img.dataset.thumbRetried = 'true';
+        const delay = 300 + Math.floor(Math.random() * 200);
+        setTimeout(() => {
+          if (!img || !document.body.contains(img)) return;
+          const sep = src.indexOf('?') === -1 ? '?' : '&';
+          img.onerror = () => {
+            if (typeof onGiveUp === 'function') onGiveUp();
+          };
+          img.src = src + sep + '_retry=' + Date.now();
+        }, delay);
+        return true;
+      }
+
       function loadLazyImage(img) {
         if (!img || img.dataset.loaded === 'true') return;
 
@@ -6648,11 +6669,16 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           img.removeAttribute('data-src');
         };
 
-        img.onerror = () => {
+        const giveUpOnThumb = () => {
           img.classList.add('is-error', 'is-loaded');
           img.dataset.loaded = 'true';
           img.removeAttribute('data-src');
           img.src = SVG_PLACEHOLDER;
+        };
+
+        img.onerror = () => {
+          if (retryThumbOnce(img, src, giveUpOnThumb)) return;
+          giveUpOnThumb();
         };
 
         img.src = src;
@@ -6668,6 +6694,25 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         }
 
         images.forEach((img) => lazyImageObserver.observe(img));
+      }
+
+      function bindPriorityThumbRetry(root = els.grid) {
+        if (!root) return;
+        root.querySelectorAll('img.thumb.is-priority').forEach((img) => {
+          if (img.dataset.thumbRetryBound === 'true') return;
+          img.dataset.thumbRetryBound = 'true';
+          const originalSrc = img.getAttribute('src') || '';
+          if (!originalSrc || originalSrc === SVG_PLACEHOLDER) return;
+
+          img.onerror = () => {
+            if (retryThumbOnce(img, originalSrc, () => {
+              img.classList.add('is-error');
+              img.src = SVG_PLACEHOLDER;
+            })) return;
+            img.classList.add('is-error');
+            img.src = SVG_PLACEHOLDER;
+          };
+        });
       }
 
       function createThumb(primarySrc, alt) {
@@ -6793,6 +6838,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         els.grid.replaceChildren(fragment);
         syncDataLanguage(els.grid);
         observeLazyImages(els.grid);
+        bindPriorityThumbRetry(els.grid);
       }
 
       function appendCards(items, startIndex = 0) {
@@ -6808,6 +6854,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         els.grid.appendChild(fragment);
         syncDataLanguage(els.grid);
         observeLazyImages(els.grid);
+        bindPriorityThumbRetry(els.grid);
 
         return els.grid.querySelector('[data-render-index="' + startIndex + '"]') || firstNewCard || (els.grid.children ? els.grid.children[startIndex] : null);
       }

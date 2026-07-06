@@ -5173,7 +5173,7 @@ html.is-ipad [data-viewer-close]:hover {
       const INITIAL_RENDER_COUNT = 24;
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 220;
-      const ASSET_VERSION = 'ap-img';
+      const ASSET_VERSION = 'ap-img-' + Date.now();
       const PAGE_OFFLINE_CACHE_NAME = 'archive-pro-page-non-origins-v3';
 
       function isArchiveOfflineMode() {
@@ -7322,11 +7322,12 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
       }
       function buildWorksJsonUrls() {
         /*
-          SIMPLE OFFLINE:
-          Use only the canonical Archive Pro data source.
-          No /archivepro/works.json, no /archivepro/data/*, no generated JSON.
+          LIVE DATA SOURCE HARDENING:
+          Try the GitHub raw data first, then dungzak.art. Both requests are
+          cache-busted by fetchJsonNoStore(). This prevents the Archive Pro page
+          from staying on an older works.json when Origins is updated.
         */
-        return [DUNGZAK_ART_DATA_URL];
+        return Array.from(new Set([DATA_URL, DUNGZAK_ART_DATA_URL].filter(Boolean)));
       }
 
       function buildLiveJsonUrl(url) {
@@ -7398,6 +7399,49 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
       }
 
+      function makeOriginTailWork(n) {
+        const id = 'OR-' + String(n).padStart(4, '0');
+        return {
+          id: id,
+          section_id: 0,
+          section_kr: 'A 기원',
+          section_en: 'Origins',
+          title_kr: '',
+          title_en: '',
+          material_kr: '',
+          material_en: '',
+          size_kr: '',
+          size_en: '',
+          year: '',
+          image: 'https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/standard/' + id + '.jpg',
+          zoom: 'https://raw.githubusercontent.com/dungzakcestlavie/dungzaklab-images/main/archivepro/zoom/' + id + '.jpg',
+          _autoTailOrigin: true
+        };
+      }
+
+      function ensureOriginsTailWorks(list) {
+        /*
+          ORIGINS TAIL SAFETY PATCH:
+          If the newest six Origins image files exist but works.json has not yet
+          caught up, create safe records for OR-1892 through OR-1897.
+          Existing records are never overwritten.
+        */
+        const source = Array.isArray(list) ? list.slice() : [];
+        const ids = new Set(source.map(item => safeText(item && item.id).toUpperCase()).filter(Boolean));
+        const REQUIRED_ORIGIN_TAIL_START = 1892;
+        const REQUIRED_ORIGIN_TAIL_END = 1897;
+
+        for (let n = REQUIRED_ORIGIN_TAIL_START; n <= REQUIRED_ORIGIN_TAIL_END; n += 1) {
+          const id = 'OR-' + String(n).padStart(4, '0');
+          if (!ids.has(id)) {
+            source.push(makeOriginTailWork(n));
+            ids.add(id);
+          }
+        }
+
+        return source;
+      }
+
       async function loadArchiveData() {
         showArchiveShellImmediately();
         state.loadState = 'loading';
@@ -7423,9 +7467,11 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
             When Archive Pro is opened without Wi‑Fi, hide A Origins (section_id: 0)
             and show all remaining sections I–V only. Online mode keeps the full archive.
           */
-          const normalized = isArchiveOfflineMode() ? nonOriginsOnly(normalizedAll) : normalizedAll;
+          const completedAll = ensureOriginsTailWorks(normalizedAll);
+          const normalized = isArchiveOfflineMode() ? nonOriginsOnly(completedAll) : completedAll;
 
           state.all = normalized;
+          try { window.__ARCHIVE_PRO_WORKS__ = state.all; } catch (_) {}
           state.query = '';
           state.section = 'all';
           state.sort = FAST_ORDER;

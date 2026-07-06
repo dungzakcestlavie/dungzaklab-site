@@ -5168,6 +5168,7 @@ html.is-ipad [data-viewer-close]:hover {
       const FIRST_RENDER_COUNT = DESKTOP_FIRST_RENDER_COUNT;
       const FAST_ORDER = 'section-id-asc';
       const LOAD_MORE_COUNT = 40;
+      const AUTO_RENDER_ROOT_MARGIN = '900px 0px 1200px 0px';
       const INITIAL_VISIBLE = getInitialVisibleCount();
       const INITIAL_RENDER_COUNT = 24;
       const LOAD_STEP = LOAD_MORE_COUNT;
@@ -6822,6 +6823,24 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         return finalFilteredWorks.slice(0, visibleCount);
       }
 
+      function buildCardHTMLSafely(work, index) {
+        /*
+          Archive Pro Continuity Guard:
+          A single malformed work item must never stop the rest of Origins / archive rendering.
+          Return an empty string for the bad item and keep the batch moving.
+        */
+        try {
+          if (!work || typeof work !== 'object') return '';
+          if (!isSectionAllowedForRender(work)) return '';
+          return createCardHTML(work, index) || '';
+        } catch (error) {
+          try {
+            console.warn('[Archive Pro] skipped malformed work card', work && work.id ? work.id : index, error);
+          } catch (_) {}
+          return '';
+        }
+      }
+
       function renderCards(items) {
         if (!els.grid) return;
         if (lazyImageObserver) {
@@ -6830,9 +6849,9 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           });
         }
 
-        const safeItems = (Array.isArray(items) ? items : []).filter(isSectionAllowedForRender);
+        const safeItems = (Array.isArray(items) ? items : []);
         const template = document.createElement('template');
-        template.innerHTML = safeItems.map((work, index) => createCardHTML(work, index)).join('');
+        template.innerHTML = safeItems.map((work, index) => buildCardHTMLSafely(work, index)).join('');
         const fragment = template.content;
 
         els.grid.replaceChildren(fragment);
@@ -6844,10 +6863,12 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
       function appendCards(items, startIndex = 0) {
         if (!els.grid || !items || !items.length) return null;
 
-        const safeItems = (Array.isArray(items) ? items : []).filter(isSectionAllowedForRender);
-        if (!safeItems.length) return null;
+        const safeItems = (Array.isArray(items) ? items : []);
+        const html = safeItems.map((work, index) => buildCardHTMLSafely(work, startIndex + index)).join('');
+        if (!html) return null;
+
         const template = document.createElement('template');
-        template.innerHTML = safeItems.map((work, index) => createCardHTML(work, startIndex + index)).join('');
+        template.innerHTML = html;
         const fragment = template.content;
         const firstNewCard = fragment.firstElementChild;
 
@@ -6911,6 +6932,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         if (els.loadWrap) els.loadWrap.hidden = visible.length >= state.filtered.length;
         updateStats();
+        setupAutoBatchRendering();
       }
 
       function renderSectionOptions() {
@@ -7383,8 +7405,17 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         try {
           const works = await fetchWorksDirect();
-          const normalizedAll = works
-            .map(normalizeItem)
+          const normalizedAll = (Array.isArray(works) ? works : [])
+            .map(function(work, index) {
+              try {
+                return normalizeItem(work, index);
+              } catch (error) {
+                try {
+                  console.warn('[Archive Pro] skipped malformed work data', work && work.id ? work.id : index, error);
+                } catch (_) {}
+                return null;
+              }
+            })
             .filter(item => item && item.id);
 
           /*
@@ -7520,14 +7551,22 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         }, { passive:false });
       }
 
-      function loadMoreWorks() {
-        /* Load More id-desc Continuation Fix
-           Use only the current finalFilteredWorks/state.filtered array, which already has
-           section + search + sort applied. Never re-filter or re-sort during Load More. */
+      let autoBatchObserver = null;
+      let autoBatchTicking = false;
+
+      function hasMoreFilteredWorks() {
+        const list = Array.isArray(state.filtered) ? state.filtered : [];
+        return archiveEntered && list.length > 0 && state.visibleCount < list.length;
+      }
+
+      function loadMoreWorks(options = {}) {
+        /* Load More Continuation Fix
+           Use only the current state.filtered array, which already has section + search + sort applied.
+           Manual button clicks may jump to the new batch; automatic scroll loading must not move the viewport. */
         finalFilteredWorks = Array.isArray(state.filtered) ? state.filtered : [];
         CURRENT_LIST = finalFilteredWorks;
 
-        const previousVisibleCount = state.visibleCount;
+        const previousVisibleCount = Math.max(0, Number(state.visibleCount) || 0);
         const loadMoreStartIndex = previousVisibleCount;
         const nextVisibleCount = Math.min(
           previousVisibleCount + LOAD_MORE_COUNT,
@@ -7547,7 +7586,50 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         if (els.loadWrap) els.loadWrap.hidden = state.visibleCount >= finalFilteredWorks.length;
         updateStats();
-        scrollToNewLoadStart(newFirstCard);
+        setupAutoBatchRendering();
+
+        if (options && options.scrollToNewBatch) {
+          scrollToNewLoadStart(newFirstCard);
+        }
+      }
+
+      function autoLoadNextBatch() {
+        if (autoBatchTicking || !hasMoreFilteredWorks()) return;
+        autoBatchTicking = true;
+        requestAnimationFrame(() => {
+          try {
+            if (hasMoreFilteredWorks()) loadMoreWorks({ scrollToNewBatch: false });
+          } finally {
+            autoBatchTicking = false;
+          }
+        });
+      }
+
+      function setupAutoBatchRendering() {
+        if (!els.loadWrap) return;
+
+        if (!('IntersectionObserver' in window)) {
+          if (hasMoreFilteredWorks()) {
+            window.removeEventListener('scroll', autoLoadNextBatch);
+            window.addEventListener('scroll', autoLoadNextBatch, { passive: true });
+          } else {
+            window.removeEventListener('scroll', autoLoadNextBatch);
+          }
+          return;
+        }
+
+        if (!autoBatchObserver) {
+          autoBatchObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) autoLoadNextBatch();
+            });
+          }, { root: null, rootMargin: AUTO_RENDER_ROOT_MARGIN, threshold: 0.001 });
+        }
+
+        try { autoBatchObserver.unobserve(els.loadWrap); } catch (_) {}
+        if (hasMoreFilteredWorks()) {
+          try { autoBatchObserver.observe(els.loadWrap); } catch (_) {}
+        }
       }
 
       function bindEvents() {
@@ -7579,7 +7661,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         });
 
         els.loadMoreBtn.addEventListener('click', () => {
-          loadMoreWorks();
+          loadMoreWorks({ scrollToNewBatch: true });
         });
 
         if (els.grid) {

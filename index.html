@@ -513,6 +513,32 @@ body.menu-open{
   letter-spacing:0.3px;
 }
 
+/* ARCHIVE PRO ECOSYSTEM — site hub label, divider, per-site role tags */
+.ecosystem-label{
+  font-size:12px;
+  letter-spacing:2.4px;
+  text-transform:uppercase;
+  color:rgba(234,246,255,0.5);
+  margin-bottom:18px;
+  text-align:center;
+}
+
+.ecosystem-divider{
+  width:32px;
+  height:1px;
+  background:var(--line);
+  margin:2px auto 16px;
+}
+
+.site-role{
+  font-size:12px;
+  line-height:1.6;
+  letter-spacing:0.2px;
+  color:rgba(234,246,255,0.5);
+  margin-top:2px;
+  margin-bottom:8px;
+}
+
 .proposal-link{
   display:block;
   width:100%;
@@ -1091,10 +1117,39 @@ body.is-leaving-archive [data-archive-pro-link]{
   <div class="structure-wrap">
     <div class="top-fixed-block">
       <div class="top-fixed-inner">
-        <a class="top-fixed-link" href="https://dungzak.art" target="_blank" rel="noopener">dungzak.art</a>
-        <a class="top-fixed-link" href="https://jsgallery.art" target="_blank" rel="noopener">jsgallery.art</a>
-        <a class="top-fixed-link" href="http://www.iiaa.or.kr" target="_blank" rel="noopener">iiaa.or.kr</a>
-        <a class="top-fixed-link" href="https://kywoo.art" target="_blank" rel="noopener">kywoo.art</a>
+        <div class="ecosystem-label">ARCHIVE PRO ECOSYSTEM</div>
+
+        <a class="top-fixed-link" href="https://dungzak.art" target="_blank" rel="noopener">
+          dungzak.art
+          <div class="site-role lang-panel" data-panel="ko">공식 아카이브 · Archive Pro 발원지</div>
+          <div class="site-role lang-panel" data-panel="en">Official Archive · Origin of Archive Pro</div>
+        </a>
+
+        <div class="ecosystem-divider"></div>
+
+        <a class="top-fixed-link" href="https://kywoo.art" target="_blank" rel="noopener">
+          kywoo.art
+          <div class="site-role lang-panel" data-panel="ko">작가 적용형 아카이브 · DCAP-02</div>
+          <div class="site-role lang-panel" data-panel="en">Artist-oriented Archive · DCAP-02</div>
+        </a>
+
+        <a class="top-fixed-link" href="https://jsgallery.art" target="_blank" rel="noopener">
+          jsgallery.art
+          <div class="site-role lang-panel" data-panel="ko">갤러리형 아카이브 · DCAP-03</div>
+          <div class="site-role lang-panel" data-panel="en">Gallery-oriented Archive · DCAP-03</div>
+        </a>
+
+        <a class="top-fixed-link" href="http://www.iiaa.or.kr" target="_blank" rel="noopener">
+          iiaa.or.kr
+          <div class="site-role lang-panel" data-panel="ko">기관형 아카이브 · DCAP-04</div>
+          <div class="site-role lang-panel" data-panel="en">Institution-oriented Archive · DCAP-04</div>
+        </a>
+
+        <a class="top-fixed-link" href="https://jskim.art" target="_blank" rel="noopener">
+          jskim.art
+          <div class="site-role lang-panel" data-panel="ko">작가 아카이브 시스템 · DCAP-05</div>
+          <div class="site-role lang-panel" data-panel="en">Artist Archive System · DCAP-05</div>
+        </a>
 
         <div class="author lang-panel" data-panel="ko">
           등작 燈酌 DUNGZAK CESTLAVIE<br>
@@ -1104,7 +1159,6 @@ body.is-leaving-archive [data-archive-pro-link]{
         <div class="author en lang-panel" data-panel="en">
           DUNGZAK CESTLAVIE<br>
           Design · Structure · Design Construction
-          <div class="archive-site-note">Artist-oriented mobile archive structure</div>
         </div>
       </div>
     </div>
@@ -1351,6 +1405,17 @@ const fallbackDCAP = {
       summary_kr: "협회와 기관의 작가·작품·비전 데이터를\n공공적 미술 플랫폼 구조로 정리하는 시스템.",
       summary_en: "A system organizing artist, artwork,\nand institutional vision data\nwithin a public art platform structure.",
       md_path: "https://iiaa.or.kr"
+    },
+    {
+      id: "DCAP-05",
+      slug: "DCAP-05",
+      year: "2026",
+      category: "Archive Platform",
+      title_kr: "작가 아카이브 시스템",
+      title_en: "Artist Archive System",
+      summary_kr: "작품 데이터와 아카이브를 구조화하여\n웹사이트, 관리자 시스템, 다국어 서비스까지\n하나의 플랫폼으로 연결하는 시스템이다.",
+      summary_en: "Structures artwork data and archives\ninto a unified platform that powers\nwebsites, administration, and multilingual services.",
+      md_path: "https://jskim.art"
     }
   ]
 };
@@ -1393,6 +1458,17 @@ const additionalDCAPCases = [
     summary_kr: "협회와 기관의 작가·작품·비전 데이터를\n공공적 미술 플랫폼 구조로 정리하는 시스템.",
     summary_en: "A system organizing artist, artwork,\nand institutional vision data\nwithin a public art platform structure.",
     md_path: "https://iiaa.or.kr"
+  },
+  {
+    id: "DCAP-05",
+    slug: "DCAP-05",
+    year: "2026",
+    category: "Archive Platform",
+    title_kr: "작가 아카이브 시스템",
+    title_en: "Artist Archive System",
+    summary_kr: "작품 데이터와 아카이브를 구조화하여\n웹사이트, 관리자 시스템, 다국어 서비스까지\n하나의 플랫폼으로 연결하는 시스템이다.",
+    summary_en: "Structures artwork data and archives\ninto a unified platform that powers\nwebsites, administration, and multilingual services.",
+    md_path: "https://jskim.art"
   }
 ];
 
@@ -1563,7 +1639,7 @@ function renderList(items, type){
     const summary = currentLang === 'ko' ? item.summary_kr : item.summary_en;
 
     const a = document.createElement('a');
-    a.className = type === 'dcap' && ['DCAP-02','DCAP-03','DCAP-04'].includes(item.id) ? 'report-item dcap-card' : 'report-item';
+    a.className = type === 'dcap' && ['DCAP-02','DCAP-03','DCAP-04','DCAP-05'].includes(item.id) ? 'report-item dcap-card' : 'report-item';
     const href = item.md_path || '#';
     a.href = href;
     a.target = /^https?:\/\//.test(href) ? '_blank' : '_self';

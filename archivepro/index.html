@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- Archive Pro First-Load Speed Patch: earliest possible connection warm-up
+     to the data/image hosts, so DNS + TLS negotiation runs in the background
+     while the rest of the page is still parsing. No visual/design change. -->
+<link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
+<link rel="dns-prefetch" href="https://raw.githubusercontent.com">
+<link rel="preconnect" href="https://dungzak.art" crossorigin>
+<link rel="dns-prefetch" href="https://dungzak.art">
 <style>
 html, body {
     background:#070A14 !important;
@@ -7359,29 +7366,55 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
       async function fetchWorksDirect() {
         if (worksLoadPromise) return worksLoadPromise;
 
+        /*
+          FIRST-LOAD BACKGROUND FETCH SPEED PATCH:
+          Previously each candidate URL was tried one after another (await inside
+          a for-loop), so the fallback host only started once the primary host
+          had already finished (success or failure). Now every candidate URL is
+          requested at the same time in the background; whichever host answers
+          first with a valid works.json (>= MIN_EXPECTED_WORKS items) is used
+          immediately. Validation rules, the final data shape, and the error
+          message shown on total failure are unchanged. */
         worksLoadPromise = (async () => {
           const urls = buildWorksJsonUrls();
-          const failures = [];
+          const failures = new Array(urls.length);
 
-          for (const url of urls) {
-            try {
-              const json = await fetchJsonNoStore(url);
-              const works = parseWorksPayload(json);
-              const count = Array.isArray(works) ? works.length : 0;
-
-              if (count >= MIN_EXPECTED_WORKS) {
-                return works;
-              }
-
-              failures.push(`${url} → ${count} item(s), skipped`);
-
-            } catch (error) {
-              failures.push(`${url} → ${error && error.message ? error.message : error}`);
-
-            }
+          if (!urls.length) {
+            throw new Error('No valid works.json found. (no source url configured)');
           }
 
-          throw new Error('No valid works.json found. ' + failures.join(' | '));
+          return await new Promise((resolve, reject) => {
+            let pending = urls.length;
+            let settled = false;
+
+            urls.forEach((url, i) => {
+              (async () => {
+                try {
+                  const json = await fetchJsonNoStore(url);
+                  const works = parseWorksPayload(json);
+                  const count = Array.isArray(works) ? works.length : 0;
+
+                  if (count >= MIN_EXPECTED_WORKS) {
+                    if (!settled) {
+                      settled = true;
+                      resolve(works);
+                    }
+                    return;
+                  }
+
+                  failures[i] = `${url} → ${count} item(s), skipped`;
+                } catch (error) {
+                  failures[i] = `${url} → ${error && error.message ? error.message : error}`;
+                } finally {
+                  pending -= 1;
+                  if (!settled && pending === 0) {
+                    settled = true;
+                    reject(new Error('No valid works.json found. ' + failures.filter(Boolean).join(' | ')));
+                  }
+                }
+              })();
+            });
+          });
         })().catch((error) => {
           worksLoadPromise = null;
           throw error;
@@ -8027,10 +8060,20 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
         loadArchiveData();
       }
 
+      /*
+        FIRST-LOAD SPEED PATCH:
+        Every element startLoad()/bindEvents() touch (grid, loadingScreen,
+        resultsMeta, search/section/sort controls, viewer, entry button, etc.)
+        is already parsed above this <script> tag, so waiting for the entire
+        remaining document — including the PWA install script and the Service
+        Worker registration further below — to finish parsing before starting
+        the works.json fetch only delays the background data load for no
+        reason. startLoad() is idempotent (guarded by archiveLoadStarted), so
+        it is safe to call it immediately here; the DOMContentLoaded listener
+        stays only as a harmless safety net. */
+      startLoad();
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', startLoad, { once: true });
-      } else {
-        startLoad();
       }
     })();
 

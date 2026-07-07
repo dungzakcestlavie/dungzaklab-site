@@ -6219,69 +6219,90 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       }
 
 
-      /* FAST SEARCH CACHE — created once when works.json loads
-         SEARCH-ONLY SPEED FIX:
-         - No UI / section / sort / card rendering changes.
-         - Each work receives precomputed compact indexes once at load.
-         - Live search only compares prepared strings, so mobile stays fast. */
-      function buildFastAliasText(value) {
-        const base = normalizeSearchToken(value);
-        if (!base) return '';
-
-        const aliases = [base];
-        const compact = compactSearchToken(base);
-
-        const groups = SEARCH_ALIAS_GROUPS;
-
-        for (let i = 0; i < groups.length; i++) {
-          const group = groups[i];
-          let hit = false;
-          for (let j = 0; j < group.length; j++) {
-            const g = normalizeSearchToken(group[j]);
-            if (!g) continue;
-            if (base.includes(g) || compact.includes(compactSearchToken(g))) {
-              hit = true;
-              break;
-            }
-          }
-          if (hit) aliases.push(...group);
-        }
-
-        return aliases.join(' ');
+      /* SEARCH INDEX — built once per work (lazily, the first time a search
+         actually runs), then reused for every keystroke. Nothing here is
+         recomputed per keystroke, and nothing about loading, infinite
+         scroll, or caching elsewhere in the file is touched. */
+      function normalizeSearchText(text) {
+        return String(text == null ? '' : text)
+          .toLowerCase()
+          .replace(/[-_.,\/]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
       }
 
-      function buildFastSearchText(item) {
-        const sectionAliases = getSectionAliases(item.section_id).join(' ');
+      /* Bare initial consonants can reach this function in either of two
+         Unicode blocks that look identical to the eye but are different
+         code points:
+           - U+3131–U+314E  Hangul Compatibility Jamo (ㄱㄴㄷ...) — what a
+             real keyboard/IME produces when you type a consonant on its own.
+           - U+1100–U+1112  Hangul Choseong Jamo (ᄀᄂᄃ...) — the old-style
+             lead-consonant block, which text can arrive in after copy/paste
+             or NFD normalization elsewhere.
+         Both are canonicalized to the Compatibility Jamo form below, so a
+         query is matched correctly no matter which block it was typed or
+         pasted in. */
+      const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+      const CHOSEONG_JAMO_TO_COMPAT = {};
+      for (let i = 0; i < CHO.length; i += 1) {
+        CHOSEONG_JAMO_TO_COMPAT[String.fromCharCode(0x1100 + i)] = CHO[i];
+      }
+
+      function getKoreanInitials(text) {
+        const str = String(text == null ? '' : text);
+        let result = '';
+
+        for (let i = 0; i < str.length; i += 1) {
+          const ch = str[i];
+          const code = ch.charCodeAt(0) - 0xAC00;
+
+          if (code >= 0 && code <= 11171) {
+            /* Composed Hangul syllable (가–힣) → its leading consonant (초성). */
+            result += CHO[Math.floor(code / 588)];
+          } else if (CHOSEONG_JAMO_TO_COMPAT[ch]) {
+            /* Old-style Choseong jamo (ᄀᄂᄃ...) → canonical compatibility form. */
+            result += CHOSEONG_JAMO_TO_COMPAT[ch];
+          } else if (CHO.indexOf(ch) !== -1) {
+            /* Already a bare compatibility consonant (typed directly) → keep as-is. */
+            result += ch;
+          }
+          /* Everything else (spaces, latin letters, digits, punctuation) is dropped,
+             so "존재의 회복" → "ㅈㅈㅇㅎㅂ" with no leftover space. */
+        }
+
+        return result;
+      }
+
+      function buildWorkSearchIndex(item) {
         const sourceText = [
           item.id,
           item.title_kr,
           item.title_en,
-          item.material_kr,
-          item.material_en,
-          item.size_kr,
-          item.size_en,
-          item.year,
+          item.artist_kr,
+          item.artist_en,
           item.section_kr,
           item.section_en,
           getSectionPlainById(item.section_id, 'kr'),
           getSectionPlainById(item.section_id, 'en'),
-          sectionAliases,
-          item.status
+          item.material_kr,
+          item.material_en,
+          item.size_kr,
+          item.size_en,
+          item.year
         ].map(safeText).join(' ');
 
-        const aliasText = buildFastAliasText(sourceText);
-        const full = sourceText + ' ' + aliasText + ' ' + hangulInitials(sourceText);
-
-        return compactSearchToken(full);
+        return {
+          text: normalizeSearchText(sourceText),
+          initials: normalizeSearchText(getKoreanInitials(sourceText))
+        };
       }
 
       function prepareFastSearchCache(item) {
         if (!item) return item;
-        if (item._fastSearchReady) return item;
-        item._fastSearch = buildFastSearchText(item);
+        if (item.__searchIndex) return item;
+        item.__searchIndex = buildWorkSearchIndex(item);
         item._yearEndNumber = parseYearEndNumber(item.year) || 0;
         item._yearStartNumber = parseYearNumber(item.year) || 0;
-        item._fastSearchReady = true;
         return item;
       }
 
@@ -6295,55 +6316,18 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         return;
       }
 
-      function getQueryTokens(rawQuery) {
-        const compact = compactSearchToken(rawQuery);
-        if (!compact) return [];
-        const aliasText = buildFastAliasText(rawQuery);
-        const expanded = compactSearchToken([rawQuery, aliasText, hangulInitials(rawQuery)].join(' '));
-        return Array.from(new Set([compact, expanded].filter(Boolean)));
-      }
-
-      function matchIdQuery(item, rawQuery) {
-        const compact = compactSearchToken(rawQuery);
-        if (!compact) return false;
-
-        const itemId = safeText(item.id);
-        const idCompact = compactSearchToken(itemId);
-        const idNumber = parseIdNumber(itemId);
-        const idPrefix = parseIdPrefix(itemId);
-        const numberMatch = compact.match(/(\d+)$/);
-        const queryNumber = numberMatch ? Number(numberMatch[1]) : null;
-        const queryPrefix = compact.replace(/\d+$/g, '');
-
-        if (compact === idCompact) return true;
-        if (queryNumber !== null && Number.isFinite(queryNumber) && queryPrefix) {
-          if (idPrefix && compactSearchToken(idPrefix) === compactSearchToken(queryPrefix) && idNumber === queryNumber) return true;
-        }
-        if (/^\d+$/.test(compact) && Number(compact) === idNumber) return true;
-        return false;
-      }
-
       function matchesSearch(item, rawQuery) {
-        const compact = compactSearchToken(rawQuery);
-        if (!compact) return true;
+        const normalizedQuery = normalizeSearchText(rawQuery);
+        if (!normalizedQuery) return true;
 
-        /* Keep one-character search from repainting everything. */
-        if (compact.length < 2) return true;
+        const index = item && item.__searchIndex;
+        if (!index) return false;
 
-        if (matchIdQuery(item, rawQuery)) return true;
+        if (index.text.includes(normalizedQuery)) return true;
+        if (index.initials.includes(normalizedQuery)) return true;
 
-        const haystack = item._fastSearch || '';
-        if (haystack.includes(compact)) return true;
-
-        const tokens = getQueryTokens(rawQuery);
-        for (let i = 0; i < tokens.length; i++) {
-          const token = tokens[i];
-          if (token && haystack.includes(token)) return true;
-        }
-
-        if (/^\d{4}$/.test(compact)) {
-          return String(item._yearStartNumber || '') === compact || String(item._yearEndNumber || '') === compact;
-        }
+        const queryInitials = normalizeSearchText(getKoreanInitials(rawQuery));
+        if (queryInitials && index.initials.includes(queryInitials)) return true;
 
         return false;
       }
@@ -7187,7 +7171,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         }
 
         const queryValue = safeText(state.query);
-        if (queryValue && compactSearchToken(queryValue).length >= 2) {
+        if (queryValue && normalizeSearchText(queryValue)) {
           if (!state._searchPrepared) {
             for (let i = 0; i < state.all.length; i += 1) {
               prepareFastSearchCache(state.all[i]);

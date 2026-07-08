@@ -6920,6 +6920,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         const visible = getVisibleItems();
         renderCards(visible);
+        try { console.log('[Archive Pro] rendered:', visible.length, '/ filtered:', state.filtered.length, '/ allWorks:', state.all.length); } catch (_) {}
 
         if (els.loadWrap) els.loadWrap.hidden = visible.length >= state.filtered.length;
         updateStats();
@@ -7351,54 +7352,50 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         if (worksLoadPromise) return worksLoadPromise;
 
         /*
-          FIRST-LOAD BACKGROUND FETCH SPEED PATCH:
-          Previously each candidate URL was tried one after another (await inside
-          a for-loop), so the fallback host only started once the primary host
-          had already finished (success or failure). Now every candidate URL is
-          requested at the same time in the background; whichever host answers
-          first with a valid works.json (>= MIN_EXPECTED_WORKS items) is used
-          immediately. Validation rules, the final data shape, and the error
-          message shown on total failure are unchanged. */
+          FULL-COVERAGE DATA SOURCE FIX (works.json 누락 방지):
+          이전에는 후보 URL을 동시에 요청하되, 그중 어느 하나라도
+          MIN_EXPECTED_WORKS(100) 이상만 되면 "가장 먼저 응답한" 결과로 즉시
+          확정했다. MIN_EXPECTED_WORKS는 실제 데이터 규모(2,000점 이상)에 비해
+          매우 낮은 문턱값이므로, 최근 작품이 아직 반영되지 않은 오래된 미러
+          (raw.githubusercontent.com)가 더 빨리 응답하면 그 "오래되었지만
+          유효해 보이는" 배열이 그대로 채택되어, dungzak.art에는 있지만
+          Archive Pro에는 없는 누락이 발생할 수 있었다.
+          이제는 모든 후보 URL의 응답을 끝까지 기다린 뒤, 유효한 후보들 중
+          "작품 개수가 가장 많은" 배열을 선택한다. 어떤 소스도 다른 소스보다
+          적은 작품 수로 확정되지 않으므로 works.json에 있는 작품이 화면에서
+          누락되는 상황을 원천적으로 방지한다. 최종 데이터 형태와 실패 시
+          에러 메시지 형식은 기존과 동일하게 유지한다. */
         worksLoadPromise = (async () => {
           const urls = buildWorksJsonUrls();
-          const failures = new Array(urls.length);
 
           if (!urls.length) {
             throw new Error('No valid works.json found. (no source url configured)');
           }
 
-          return await new Promise((resolve, reject) => {
-            let pending = urls.length;
-            let settled = false;
+          const results = await Promise.all(urls.map(async (url) => {
+            try {
+              const json = await fetchJsonNoStore(url);
+              const works = parseWorksPayload(json);
+              const count = Array.isArray(works) ? works.length : 0;
+              try { console.log('[Archive Pro] works.json candidate:', url, '→', count, 'item(s)'); } catch (_) {}
+              return { url, works, count, ok: count >= MIN_EXPECTED_WORKS };
+            } catch (error) {
+              try { console.warn('[Archive Pro] works.json candidate failed:', url, error && error.message ? error.message : error); } catch (_) {}
+              return { url, works: [], count: 0, ok: false, error };
+            }
+          }));
 
-            urls.forEach((url, i) => {
-              (async () => {
-                try {
-                  const json = await fetchJsonNoStore(url);
-                  const works = parseWorksPayload(json);
-                  const count = Array.isArray(works) ? works.length : 0;
+          const valid = results.filter((r) => r.ok);
 
-                  if (count >= MIN_EXPECTED_WORKS) {
-                    if (!settled) {
-                      settled = true;
-                      resolve(works);
-                    }
-                    return;
-                  }
+          if (!valid.length) {
+            const failures = results.map((r) => `${r.url} → ${r.error ? (r.error.message || r.error) : r.count + ' item(s), skipped'}`);
+            throw new Error('No valid works.json found. ' + failures.join(' | '));
+          }
 
-                  failures[i] = `${url} → ${count} item(s), skipped`;
-                } catch (error) {
-                  failures[i] = `${url} → ${error && error.message ? error.message : error}`;
-                } finally {
-                  pending -= 1;
-                  if (!settled && pending === 0) {
-                    settled = true;
-                    reject(new Error('No valid works.json found. ' + failures.filter(Boolean).join(' | ')));
-                  }
-                }
-              })();
-            });
-          });
+          const best = valid.reduce((a, b) => (b.count > a.count ? b : a));
+          try { console.log('[Archive Pro] works.json source selected:', best.url, '(', best.count, 'item(s) )'); } catch (_) {}
+
+          return best.works;
         })().catch((error) => {
           worksLoadPromise = null;
           throw error;
@@ -7489,6 +7486,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
           state.all = normalized;
           try { window.__ARCHIVE_PRO_WORKS__ = state.all; } catch (_) {}
+          try { console.log('[Archive Pro] normalized works total (allWorks):', state.all.length, '/ raw fetched:', works.length); } catch (_) {}
           state.query = '';
           state.section = 'all';
           state.sort = FAST_ORDER;

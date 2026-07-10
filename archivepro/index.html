@@ -5603,6 +5603,12 @@ lightbox: document.getElementById('lightbox'),
       let mobilePinchJustEnded = false;
       let mobilePinchEndTimer = null;
 
+      /* PERF PATCH 2026-07-11: viewer frame-rect cache (avoids getBoundingClientRect
+         on every touchmove) + a load token so a background zoom-image swap never
+         lands on top of a viewer the user has already navigated away from. */
+      let viewerFrameCache = null;
+      let viewerLoadToken = 0;
+
       function isViewerOpen() {
         return els.lightbox && els.lightbox.classList.contains('open') && document.body.classList.contains('viewer-open');
       }
@@ -5673,35 +5679,51 @@ lightbox: document.getElementById('lightbox'),
         return Math.min(Math.max(value, min), max);
       }
 
+      function invalidateViewerFrameCache() {
+        viewerFrameCache = null;
+      }
+
       function clampViewerToFrame() {
         if (!isTouchViewerBoundaryMode() || !els.lightboxStage || !els.lightboxImage) return;
         if (viewerScale <= 1) { viewerX = 0; viewerY = 0; return; }
 
-        const frame = els.lightboxStage.getBoundingClientRect();
-        if (!frame || !frame.width || !frame.height) return;
+        /* PERF PATCH 2026-07-11: getBoundingClientRect()/offsetWidth/offsetHeight
+           are layout reads. During a pinch/pan gesture this function runs on every
+           touchmove (up to ~60-120x/sec), so re-reading layout each time is the
+           actual jank source on iPhone Safari. Frame/box/natural size never change
+           mid-gesture (only viewerScale/X/Y do), so compute once per gesture and
+           reuse until invalidateViewerFrameCache() is called (new artwork, zoom
+           image swap, resize/orientation change, new touch gesture start). */
+        if (!viewerFrameCache) {
+          const frame = els.lightboxStage.getBoundingClientRect();
+          if (!frame || !frame.width || !frame.height) return;
 
-        /* Visible window = the image element's own box (the Viewer image area).
-           On mobile the <img> is width/height:100%, so this equals the stage
-           content box; on the desktop-style layout it equals the contained
-           image. Either way pan is bounded to this rectangle. */
-        const boxW = els.lightboxImage.offsetWidth || frame.width;
-        const boxH = els.lightboxImage.offsetHeight || frame.height;
+          /* Visible window = the image element's own box (the Viewer image area).
+             On mobile the <img> is width/height:100%, so this equals the stage
+             content box; on the desktop-style layout it equals the contained
+             image. Either way pan is bounded to this rectangle. */
+          const boxW = els.lightboxImage.offsetWidth || frame.width;
+          const boxH = els.lightboxImage.offsetHeight || frame.height;
 
-        /* Actual rendered content size AFTER object-fit:contain, so letterboxed
-           (portrait/landscape) images get correct limits instead of the full box. */
-        const natW = els.lightboxImage.naturalWidth || boxW;
-        const natH = els.lightboxImage.naturalHeight || boxH;
-        const fitScale = Math.min(boxW / natW, boxH / natH) || 1;
-        const renderedW = natW * fitScale;
-        const renderedH = natH * fitScale;
+          /* Actual rendered content size AFTER object-fit:contain, so letterboxed
+             (portrait/landscape) images get correct limits instead of the full box. */
+          const natW = els.lightboxImage.naturalWidth || boxW;
+          const natH = els.lightboxImage.naturalHeight || boxH;
+          const fitScale = Math.min(boxW / natW, boxH / natH) || 1;
+          const renderedW = natW * fitScale;
+          const renderedH = natH * fitScale;
 
-        const scaledW = renderedW * viewerScale;
-        const scaledH = renderedH * viewerScale;
+          viewerFrameCache = { boxW: boxW, boxH: boxH, renderedW: renderedW, renderedH: renderedH };
+        }
+
+        const cache = viewerFrameCache;
+        const scaledW = cache.renderedW * viewerScale;
+        const scaledH = cache.renderedH * viewerScale;
 
         /* Move only when the scaled content is larger than the visible box;
            otherwise that axis stays centred at 0. */
-        const maxX = Math.max(0, (scaledW - boxW) / 2);
-        const maxY = Math.max(0, (scaledH - boxH) / 2);
+        const maxX = Math.max(0, (scaledW - cache.boxW) / 2);
+        const maxY = Math.max(0, (scaledH - cache.boxH) / 2);
 
         viewerX = maxX > 0 ? clampViewerValue(viewerX, -maxX, maxX) : 0;
         viewerY = maxY > 0 ? clampViewerValue(viewerY, -maxY, maxY) : 0;
@@ -5728,6 +5750,7 @@ lightbox: document.getElementById('lightbox'),
         viewerMouseDragging = false;
         viewerStartScale = 1;
         viewerInitialDistance = 0;
+        invalidateViewerFrameCache();
         clearMobilePinchEndGuard();
         if (els.lightboxStage) els.lightboxStage.classList.remove('is-dragging', 'is-zoomed');
         if (els.lightboxImage) {
@@ -6994,6 +7017,45 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         });
       }
 
+      /* NEIGHBOR PRELOAD PATCH 2026-07-11: warm the browser cache for the
+         standard image of the next/previous artwork while the browser is
+         idle, so stepping through the Viewer feels instant. Conservative by
+         design — only the standard image, never zoom, and never while
+         Origins offline mode is on, so it cannot conflict with the existing
+         offline cache policy. */
+      function preloadImageQuiet(url) {
+        if (!url) return;
+        try {
+          const img = new Image();
+          img.decoding = 'async';
+          img.src = url;
+        } catch (_) {}
+      }
+
+      function scheduleNeighborPreload(item) {
+        if (!item || isArchiveOfflineMode()) return;
+        const list = Array.isArray(state.filtered) && state.filtered.length ? state.filtered : state.all;
+        if (!Array.isArray(list) || list.length < 2) return;
+        const idx = list.findIndex((work) => work === item || work.id === item.id);
+        if (idx < 0) return;
+
+        const run = () => {
+          const nextItem = list[(idx + 1) % list.length];
+          const prevItem = list[(idx - 1 + list.length) % list.length];
+          [nextItem, prevItem].forEach((neighbor) => {
+            if (neighbor && neighbor.image) {
+              preloadImageQuiet(withCacheBust(toAbsoluteUrl(neighbor.image)));
+            }
+          });
+        };
+
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(run, { timeout: 1500 });
+        } else {
+          window.setTimeout(run, 300);
+        }
+      }
+
       function openLightbox(item) {
         archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
         state.lightboxItem = item;
@@ -7007,7 +7069,17 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         const offlineMode = isArchiveOfflineMode();
         const imageUrl = item.image ? withCacheBust(toAbsoluteUrl(item.image)) : '';
         const zoomUrl = (!offlineMode && item.zoom) ? withCacheBust(toAbsoluteUrl(item.zoom)) : '';
-        const displayUrl = (offlineMode ? imageUrl : (zoomUrl || imageUrl)) || SVG_PLACEHOLDER;
+        /* PROGRESSIVE VIEWER IMAGE PATCH 2026-07-11:
+           Show the standard image first — it is usually already warm in the
+           browser cache from the grid thumbnail (same `image` field), so the
+           Viewer can paint almost instantly. The zoom image loads in the
+           background and swaps in once ready (perf brief section 6). Falls
+           back to the previous zoom-first behaviour when there is no standard
+           image, and offline mode is completely unchanged. */
+        const displayUrl = (offlineMode ? imageUrl : (imageUrl || zoomUrl)) || SVG_PLACEHOLDER;
+        const pendingZoomUrl = (!offlineMode && zoomUrl && zoomUrl !== displayUrl) ? zoomUrl : '';
+        viewerLoadToken += 1;
+        const thisViewerLoadToken = viewerLoadToken;
 
         els.lbId.textContent = item.id;
         setViewerTitle(item, title, isOrigin);
@@ -7070,6 +7142,23 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           }
           els.lightboxImage.classList.remove('is-loading');
           els.lightboxImage.classList.add('is-ready');
+
+          if (pendingZoomUrl) {
+            const zoomPreload = new Image();
+            zoomPreload.onload = () => {
+              if (thisViewerLoadToken !== viewerLoadToken || !els.lightboxImage) return;
+              /* Swap without resetting pan/zoom — the user may already be
+                 zoomed into the standard image by the time the zoom image
+                 finishes loading in the background. */
+              els.lightboxImage.onload = () => {
+                els.lightboxImage.classList.remove('is-loading');
+                els.lightboxImage.classList.add('is-ready');
+              };
+              invalidateViewerFrameCache();
+              els.lightboxImage.src = pendingZoomUrl;
+            };
+            zoomPreload.src = pendingZoomUrl;
+          }
         };
 
         els.lightboxImage.onerror = () => {
@@ -7095,6 +7184,8 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         document.documentElement.classList.add('viewer-open');
         document.body.classList.add('viewer-open');
         document.body.style.overflow = 'hidden';
+
+        scheduleNeighborPreload(item);
       }
 
       function armCloseNavigationShield() {
@@ -7850,6 +7941,11 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
           });
         }
 
+        /* PERF PATCH 2026-07-11: keep the cached viewer frame rect correct across
+           a resize/orientation change without re-reading layout on every touchmove. */
+        window.addEventListener('resize', invalidateViewerFrameCache, { passive: true });
+        window.addEventListener('orientationchange', invalidateViewerFrameCache, { passive: true });
+
         els.lightbox.addEventListener('click', (e) => {
           if (e.target === els.lightbox) closeLightbox();
         });
@@ -7869,6 +7965,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
           if (e.target && e.target.closest && e.target.closest('.viewer-close, .lightbox-close, .modal-close, .close-btn, #viewerCloseBtn, #lightboxClose')) return;
           e.preventDefault();
           e.stopPropagation();
+          invalidateViewerFrameCache();
 
           if (e.touches.length >= 2) {
             viewerIsZooming = true;

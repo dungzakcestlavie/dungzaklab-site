@@ -1,6 +1,99 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<script id="ap-tablet-ux-detect">
+(function(){
+  try {
+    var ua = (navigator.userAgent || '');
+    var isIPadDevice = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    var isAndroidTabletDevice = /Android/.test(ua) && !/Mobile/.test(ua);
+    if (!(isIPadDevice || isAndroidTabletDevice)) return;
+    var root = document.documentElement;
+    root.classList.add('ap-tablet-ui');
+    var collapsed = false;
+    try { collapsed = window.localStorage.getItem('apArchiveProTabletFilterCollapsed') === '1'; } catch(_e){}
+    if (collapsed) root.classList.add('ap-tablet-filter-collapsed');
+  } catch(_e){}
+})();
+</script>
+<style id="ap-tablet-ux-style">
+/* ===================================================================
+   Archive Pro — Tablet-only UX Enhancement (iPad / Android Tablet)
+   Scope: html.ap-tablet-ui only, set exclusively by JS device detection
+   (touch + user-agent) in the script above. iPhone, Android phone, and
+   Desktop are never matched by this class and are therefore completely
+   unaffected — no rule below can ever apply to them.
+   No changes to dark theme, gold color, card design, thumbnail size,
+   typography, or spacing system — layout/UX behavior only.
+   =================================================================== */
+
+html.ap-tablet-ui .ap-filter-toggle{
+  display:none;
+  width:100%;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:44px;
+  margin:0 0 12px;
+  padding:0 20px;
+  border-radius:999px;
+  border:1px solid rgba(212,180,109,.34);
+  background:rgba(212,180,109,.045);
+  color:#d4b46d;
+  font-family:inherit;
+  font-size:14px;
+  font-weight:650;
+  letter-spacing:.06em;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:opacity .2s ease, border-color .2s ease, background-color .2s ease;
+}
+html.ap-tablet-ui body.archive-entered .ap-filter-toggle{
+  display:flex;
+  order:4;
+}
+html.ap-tablet-ui body:not(.archive-entered) .ap-filter-toggle{
+  display:none !important;
+}
+html.ap-tablet-ui .ap-filter-toggle:hover,
+html.ap-tablet-ui .ap-filter-toggle:focus-visible{
+  opacity:.92;
+  border-color:rgba(212,180,109,.56);
+  background:rgba(212,180,109,.08);
+  outline:none;
+}
+html.ap-tablet-ui .ap-filter-toggle-arrow{
+  display:inline-block;
+  font-size:11px;
+  line-height:1;
+}
+
+/* Collapsed state — hides only the Section / Sort / Search panel.
+   Hero (KR/EN + stats) and the results grid are left untouched, so
+   they simply move up and more artwork cards become visible. */
+html.ap-tablet-ui.ap-tablet-filter-collapsed body.archive-entered #searchArea{
+  display:none !important;
+}
+
+/* Search icon inside the search input (placeholder text is untouched) */
+html.ap-tablet-ui .ap-search-input-wrap{
+  position:relative;
+  display:block;
+}
+html.ap-tablet-ui .ap-search-input-wrap .ap-search-icon{
+  position:absolute;
+  left:16px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:15px;
+  line-height:1;
+  opacity:.6;
+  pointer-events:none;
+}
+html.ap-tablet-ui #searchArea .ap-search-input-wrap .input[type="search"]{
+  padding-left:42px !important;
+}
+</style>
 <!-- Archive Pro First-Load Speed Patch: earliest possible connection warm-up
      to the data/image hosts, so DNS + TLS negotiation runs in the background
      while the rest of the page is still parsing. No visual/design change. -->
@@ -8407,5 +8500,142 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
 </script>
 
 
+<!-- Archive Pro — Tablet-only UX Enhancement (iPad / Android Tablet)
+     Adds: a collapsible Section/Sort/Search panel, auto-collapse after a
+     search is run, a search icon inside the search field, and a relabeled
+     search button — for tablets only.
+     Guarded entirely by html.ap-tablet-ui (JS device detection, see <head>);
+     this script is a no-op on iPhone, Android phone, and Desktop. -->
+<script id="ap-tablet-ux-script">
+(function(){
+  'use strict';
+
+  function isTabletUI(){
+    return document.documentElement.classList.contains('ap-tablet-ui');
+  }
+
+  if (!isTabletUI()) return;
+
+  var STORAGE_KEY = 'apArchiveProTabletFilterCollapsed';
+  var AUTO_COLLAPSE_DEBOUNCE_MS = 550;
+
+  function ready(fn){
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn);
+    } else {
+      fn();
+    }
+  }
+
+  ready(function(){
+    var searchArea = document.getElementById('searchArea');
+    var searchInput = document.getElementById('searchInput');
+    var focusBtn = document.getElementById('focusSearchBtn');
+    if (!searchArea) return;
+
+    /* ---- 1. Filter collapse / expand toggle bar ---- */
+    var toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.id = 'apFilterToggle';
+    toggleBtn.className = 'ap-filter-toggle';
+    toggleBtn.setAttribute('aria-controls', 'searchArea');
+    toggleBtn.innerHTML =
+      '<span class="ap-filter-toggle-label">Filter</span>' +
+      '<span class="ap-filter-toggle-arrow" aria-hidden="true">\u25BC</span>';
+    searchArea.parentNode.insertBefore(toggleBtn, searchArea);
+
+    function isCollapsed(){
+      return document.documentElement.classList.contains('ap-tablet-filter-collapsed');
+    }
+
+    function applyToggleUI(collapsed){
+      toggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      var arrowEl = toggleBtn.querySelector('.ap-filter-toggle-arrow');
+      if (arrowEl) arrowEl.textContent = collapsed ? '\u25BC' : '\u25B2';
+    }
+
+    function setCollapsed(collapsed){
+      document.documentElement.classList.toggle('ap-tablet-filter-collapsed', collapsed);
+      applyToggleUI(collapsed);
+      try { window.localStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0'); } catch(_e){}
+    }
+
+    // Sync the button/arrow with whatever state the <head> script already
+    // applied from storage, so there is no flash of the wrong label.
+    applyToggleUI(isCollapsed());
+
+    toggleBtn.addEventListener('click', function(){
+      setCollapsed(!isCollapsed());
+    });
+
+    /* ---- 2. Auto-collapse once a search is actually run ---- */
+    function maybeAutoCollapse(){
+      var val = searchInput ? searchInput.value.trim() : '';
+      if (val.length > 0 && !isCollapsed()) setCollapsed(true);
+    }
+
+    var autoCollapseTimer = null;
+    function scheduleAutoCollapse(){
+      if (autoCollapseTimer) clearTimeout(autoCollapseTimer);
+      autoCollapseTimer = setTimeout(maybeAutoCollapse, AUTO_COLLAPSE_DEBOUNCE_MS);
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', scheduleAutoCollapse);
+      searchInput.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') {
+          if (autoCollapseTimer) clearTimeout(autoCollapseTimer);
+          maybeAutoCollapse();
+          searchInput.blur();
+        }
+      });
+    }
+
+    if (focusBtn) {
+      focusBtn.addEventListener('click', function(){
+        if (autoCollapseTimer) clearTimeout(autoCollapseTimer);
+        maybeAutoCollapse();
+      });
+    }
+
+    /* ---- 3. Search icon inside the search input (placeholder untouched) ---- */
+    if (searchInput && searchInput.parentNode && !searchInput.closest('.ap-search-input-wrap')) {
+      var wrap = document.createElement('span');
+      wrap.className = 'ap-search-input-wrap';
+      searchInput.parentNode.insertBefore(wrap, searchInput);
+      var icon = document.createElement('span');
+      icon.className = 'ap-search-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = '\uD83D\uDD0D';
+      wrap.appendChild(icon);
+      wrap.appendChild(searchInput);
+    }
+
+    /* ---- 4. Relabel the search button ("검색 집중" -> "검색") ---- */
+    function currentLang(){
+      var active = document.querySelector('.lang-tab.active');
+      return active && active.dataset ? (active.dataset.lang || 'kr') : 'kr';
+    }
+
+    function focusBtnLabel(lang){
+      if (lang === 'en') return 'Search';
+      if (lang === 'both') return '검색 / Search';
+      return '검색';
+    }
+
+    function updateFocusBtnLabel(){
+      if (!focusBtn) return;
+      focusBtn.textContent = focusBtnLabel(currentLang());
+    }
+
+    updateFocusBtnLabel();
+    document.querySelectorAll('.lang-tab').forEach(function(tab){
+      tab.addEventListener('click', function(){
+        requestAnimationFrame(updateFocusBtnLabel);
+      });
+    });
+  });
+})();
+</script>
 </body>
 </html>

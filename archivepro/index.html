@@ -4,27 +4,52 @@
 <script id="ap-tablet-ux-detect">
 (function(){
   try {
-    var ua = (navigator.userAgent || '');
-    var isIPadDevice = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-    var isAndroidTabletDevice = /Android/.test(ua) && !/Mobile/.test(ua);
-    if (!(isIPadDevice || isAndroidTabletDevice)) return;
     var root = document.documentElement;
-    root.classList.add('ap-tablet-ui');
-    var collapsed = false;
-    try { collapsed = window.localStorage.getItem('apArchiveProTabletFilterCollapsed') === '1'; } catch(_e){}
-    if (collapsed) root.classList.add('ap-tablet-filter-collapsed');
+
+    /* Unified Tablet Layout detection — width + input-type only.
+       No iPad/Android user-agent branching: any device (regardless of
+       OS or browser) that is both (a) 768px or wider and (b) touch/coarse
+       pointer primary (i.e. not a mouse-driven desktop/laptop) gets the
+       exact same Tablet Layout. Re-evaluated live so rotation, Split View,
+       and external-display changes are picked up without a reload. */
+    var mqWidth = window.matchMedia('(min-width:768px)');
+    var mqCoarse = window.matchMedia('(hover:none) and (pointer:coarse)');
+
+    function applyTabletClass(){
+      root.classList.toggle('ap-tablet-ui', mqWidth.matches && mqCoarse.matches);
+    }
+    applyTabletClass();
+
+    if (mqWidth.addEventListener) {
+      mqWidth.addEventListener('change', applyTabletClass);
+      mqCoarse.addEventListener('change', applyTabletClass);
+    } else if (mqWidth.addListener) {
+      mqWidth.addListener(applyTabletClass);
+      mqCoarse.addListener(applyTabletClass);
+    }
+
+    /* Filter panel default state: always COLLAPSED on first visit so
+       artwork is what a person sees first. If someone has explicitly
+       expanded it before (stored '0'), that choice is remembered;
+       any other stored value (or none at all) stays collapsed. */
+    var collapsed = true;
+    try {
+      var stored = window.localStorage.getItem('apArchiveProTabletFilterCollapsed');
+      if (stored === '0') collapsed = false;
+    } catch(_e){}
+    root.classList.toggle('ap-tablet-filter-collapsed', collapsed);
   } catch(_e){}
 })();
 </script>
 <style id="ap-tablet-ux-style">
 /* ===================================================================
-   Archive Pro — Tablet-only UX Enhancement (iPad / Android Tablet)
-   Scope: html.ap-tablet-ui only, set exclusively by JS device detection
-   (touch + user-agent) in the script above. iPhone, Android phone, and
-   Desktop are never matched by this class and are therefore completely
-   unaffected — no rule below can ever apply to them.
+   Archive Pro — Tablet Layout (final optimization pass)
+   Scope: html.ap-tablet-ui only, set exclusively by the width+pointer
+   media-query check above (768px+ AND coarse/touch pointer). Desktop
+   and phones are never matched by this class and are therefore
+   completely unaffected — no rule below can ever apply to them.
    No changes to dark theme, gold color, card design, thumbnail size,
-   typography, or spacing system — layout/UX behavior only.
+   typography, or spacing system on non-tablet layouts.
    =================================================================== */
 
 html.ap-tablet-ui .ap-filter-toggle{
@@ -68,11 +93,24 @@ html.ap-tablet-ui .ap-filter-toggle-arrow{
   line-height:1;
 }
 
-/* Collapsed state — hides only the Section / Sort / Search panel.
+/* Collapsed / expanded Filter panel — animated with a CSS-only
+   max-height + opacity transition (0.22s) instead of a hard
+   display:none toggle, per the 0.2–0.25s Filter-animation spec.
    Hero (KR/EN + stats) and the results grid are left untouched, so
    they simply move up and more artwork cards become visible. */
+html.ap-tablet-ui body.archive-entered #searchArea{
+  overflow:hidden;
+  max-height:560px;
+  opacity:1;
+  transition:max-height .22s ease, opacity .2s ease, padding .22s ease, margin .22s ease;
+}
 html.ap-tablet-ui.ap-tablet-filter-collapsed body.archive-entered #searchArea{
-  display:none !important;
+  max-height:0;
+  opacity:0;
+  padding-top:0;
+  padding-bottom:0;
+  margin-top:0;
+  pointer-events:none;
 }
 
 /* Search icon inside the search input (placeholder text is untouched) */
@@ -93,6 +131,48 @@ html.ap-tablet-ui .ap-search-input-wrap .ap-search-icon{
 html.ap-tablet-ui #searchArea .ap-search-input-wrap .input[type="search"]{
   padding-left:42px !important;
 }
+
+/* ---- Column rules: 768px→3 / 1100px→4 / 1600px→5, tablet-scoped ---- */
+@media (min-width:768px) and (max-width:1099.98px){
+  html.ap-tablet-ui .grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important}
+}
+@media (min-width:1100px) and (max-width:1599.98px){
+  html.ap-tablet-ui .grid{grid-template-columns:repeat(4,minmax(0,1fr)) !important}
+}
+@media (min-width:1600px){
+  html.ap-tablet-ui .grid{grid-template-columns:repeat(5,minmax(0,1fr)) !important}
+}
+
+/* ---- Card height trimmed ~7% (image aspect-ratio untouched) so one
+   extra row fits on the first screen ---- */
+html.ap-tablet-ui .grid{gap:11px}
+html.ap-tablet-ui .card-body{padding:8px 10px 9px}
+html.ap-tablet-ui .card-top{margin-bottom:5px}
+html.ap-tablet-ui .title{margin-bottom:4px}
+
+/* ---- LAB button ~12% smaller ---- */
+html.ap-tablet-ui .lab-link-btn,
+html.ap-tablet-ui .lab-external-open,
+html.ap-tablet-ui #labExternalOpen{
+  min-width:47px;
+  height:33px;
+  padding:0 11px;
+  font-size:12px;
+}
+
+/* ---- Top stats: "Works · Sections" before a search, "Results" only
+   once a search/filter is active — no redundant text either way ---- */
+.ap-stats-tablet{display:none}
+html.ap-tablet-ui .stats-inline{display:none}
+html.ap-tablet-ui .ap-stats-tablet{
+  display:block;
+  color:var(--muted);
+  font-size:13px;
+  letter-spacing:.02em;
+}
+html.ap-tablet-ui .ap-stats-tablet .ap-stats-tablet-results{display:none}
+html.ap-tablet-ui .ap-stats-tablet.ap-has-results .ap-stats-tablet-default{display:none}
+html.ap-tablet-ui .ap-stats-tablet.ap-has-results .ap-stats-tablet-results{display:inline}
 </style>
 <!-- Archive Pro First-Load Speed Patch: earliest possible connection warm-up
      to the data/image hosts, so DNS + TLS negotiation runs in the background
@@ -5083,6 +5163,15 @@ html.is-ipad [data-viewer-close]:hover {
         <span id="statDescFiltered" class="visually-hidden">현재 검색 결과</span>
         <span id="statDescSections" class="visually-hidden">섹션 수</span>
       </aside>
+
+      <aside class="ap-stats-tablet" aria-label="아카이브 통계">
+        <span class="ap-stats-tablet-default">
+          <span id="apStatTotalTablet">—</span> Works · <span id="apStatSectionsTablet">—</span> Sections
+        </span>
+        <span class="ap-stats-tablet-results">
+          <span id="apStatFilteredTablet">—</span> Results
+        </span>
+      </aside>
     </section>
 
     <section class="panel entry-layer archive-entry-wrap" aria-label="Archive entry">
@@ -5623,6 +5712,10 @@ untitled: '무제 / Untitled',
         statDescTotal: document.getElementById('statDescTotal'),
         statDescFiltered: document.getElementById('statDescFiltered'),
         statDescSections: document.getElementById('statDescSections'),
+        apStatsTablet: document.querySelector('.ap-stats-tablet'),
+        apStatTotalTablet: document.getElementById('apStatTotalTablet'),
+        apStatFilteredTablet: document.getElementById('apStatFilteredTablet'),
+        apStatSectionsTablet: document.getElementById('apStatSectionsTablet'),
         heroModeLine: document.getElementById('heroModeLine'),
         searchInput: document.getElementById('searchInput'),
         sectionSelect: document.getElementById('sectionSelect'),
@@ -6758,6 +6851,18 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         updateActiveFilterDataset();
 
         const hasActiveSearchOrFilter = Boolean(state.query) || state.section !== 'all';
+
+        /* Tablet Layout top stats: "N Works · N Sections" before a
+           search/filter is active, "N Results" only once one is —
+           never both at once. No-op on desktop/mobile (element is
+           display:none there, so this write is cheap and harmless). */
+        if (els.apStatsTablet) {
+          if (els.apStatTotalTablet) els.apStatTotalTablet.textContent = numberFormat.format(total);
+          if (els.apStatSectionsTablet) els.apStatSectionsTablet.textContent = numberFormat.format(sections);
+          if (els.apStatFilteredTablet) els.apStatFilteredTablet.textContent = numberFormat.format(filtered);
+          els.apStatsTablet.classList.toggle('ap-has-results', hasActiveSearchOrFilter);
+        }
+
         if (hasActiveSearchOrFilter) {
           els.resultText.textContent = `${numberFormat.format(filtered)} results · ${numberFormat.format(total)} works`;
           els.renderedText.textContent = `${t('renderedPrefix')}${numberFormat.format(visibleNow)}${t('renderedSuffix')}`;
@@ -8500,12 +8605,14 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
 </script>
 
 
-<!-- Archive Pro — Tablet-only UX Enhancement (iPad / Android Tablet)
-     Adds: a collapsible Section/Sort/Search panel, auto-collapse after a
-     search is run, a search icon inside the search field, and a relabeled
-     search button — for tablets only.
-     Guarded entirely by html.ap-tablet-ui (JS device detection, see <head>);
-     this script is a no-op on iPhone, Android phone, and Desktop. -->
+<!-- Archive Pro — Unified Tablet Layout (iPad + Android Tablet, one codepath)
+     Adds: a collapsible Section/Sort/Search panel (collapsed by default),
+     auto-collapse after a search is run, a search icon inside the search
+     field, and a relabeled search button.
+     Guarded entirely by html.ap-tablet-ui — set in <head> from a pure
+     width (768px+) + input-type (coarse/touch pointer) media-query check,
+     not user-agent sniffing, so iPad and Android tablets share the exact
+     same code path. No-op on desktop (mouse/trackpad) and phones. -->
 <script id="ap-tablet-ux-script">
 (function(){
   'use strict';

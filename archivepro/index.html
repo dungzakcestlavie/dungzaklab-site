@@ -28,31 +28,40 @@
       mqCoarse.addListener(applyTabletClass);
     }
 
-    /* Filter panel default state: always COLLAPSED on first visit so
-       artwork is what a person sees first. If someone has explicitly
-       expanded it before (stored '0'), that choice is remembered;
-       any other stored value (or none at all) stays collapsed. */
+    /* Filter panel default state — applies to ALL devices (iPhone, iPad,
+       Desktop alike), independent of the ap-tablet-ui check above.
+       Always COLLAPSED on first visit so artwork is what a person sees
+       first. If someone has explicitly expanded it before (stored '0'),
+       that choice is remembered; any other stored value (or none at all)
+       stays collapsed. */
     var collapsed = true;
     try {
-      var stored = window.localStorage.getItem('apArchiveProTabletFilterCollapsed');
+      var stored = window.localStorage.getItem('apArchiveProFilterCollapsed');
       if (stored === '0') collapsed = false;
     } catch(_e){}
-    root.classList.toggle('ap-tablet-filter-collapsed', collapsed);
+    root.classList.toggle('ap-filter-collapsed', collapsed);
   } catch(_e){}
 })();
 </script>
 <style id="ap-tablet-ux-style">
 /* ===================================================================
-   Archive Pro — Tablet Layout (final optimization pass)
-   Scope: html.ap-tablet-ui only, set exclusively by the width+pointer
-   media-query check above (768px+ AND coarse/touch pointer). Desktop
-   and phones are never matched by this class and are therefore
-   completely unaffected — no rule below can ever apply to them.
-   No changes to dark theme, gold color, card design, thumbnail size,
-   typography, or spacing system on non-tablet layouts.
+   Archive Pro — Filter UI (universal) + Tablet Layout (final pass)
+   Two independent scopes in this one block:
+
+   1) FILTER TOGGLE / COLLAPSE — plain, unscoped selectors below.
+      Applies identically on iPhone, iPad, and Desktop: a single
+      Filter ▼/▲ button shows/hides the Section/Sort/Search panel.
+      Selected Section, Sort, search text, and language are untouched
+      by collapsing — only #searchArea's own box is animated.
+
+   2) TABLET-ONLY COSMETICS — every rule prefixed html.ap-tablet-ui
+      (set in <head> from a 768px+ AND coarse/touch-pointer check).
+      Grid column counts, card sizing, the LAB button, and the top
+      stats format stay tablet-exclusive; Desktop and phone keep their
+      existing look for these specific properties.
    =================================================================== */
 
-html.ap-tablet-ui .ap-filter-toggle{
+.ap-filter-toggle{
   display:none;
   width:100%;
   align-items:center;
@@ -73,38 +82,38 @@ html.ap-tablet-ui .ap-filter-toggle{
   -webkit-tap-highlight-color:transparent;
   transition:opacity .2s ease, border-color .2s ease, background-color .2s ease;
 }
-html.ap-tablet-ui body.archive-entered .ap-filter-toggle{
+body.archive-entered .ap-filter-toggle{
   display:flex;
   order:4;
 }
-html.ap-tablet-ui body:not(.archive-entered) .ap-filter-toggle{
+body:not(.archive-entered) .ap-filter-toggle{
   display:none !important;
 }
-html.ap-tablet-ui .ap-filter-toggle:hover,
-html.ap-tablet-ui .ap-filter-toggle:focus-visible{
+.ap-filter-toggle:hover,
+.ap-filter-toggle:focus-visible{
   opacity:.92;
   border-color:rgba(212,180,109,.56);
   background:rgba(212,180,109,.08);
   outline:none;
 }
-html.ap-tablet-ui .ap-filter-toggle-arrow{
+.ap-filter-toggle-arrow{
   display:inline-block;
   font-size:11px;
   line-height:1;
 }
 
 /* Collapsed / expanded Filter panel — animated with a CSS-only
-   max-height + opacity transition (0.22s) instead of a hard
-   display:none toggle, per the 0.2–0.25s Filter-animation spec.
-   Hero (KR/EN + stats) and the results grid are left untouched, so
-   they simply move up and more artwork cards become visible. */
-html.ap-tablet-ui body.archive-entered #searchArea{
+   max-height + opacity transition (~0.22s, within the 0.2–0.25s spec)
+   instead of a hard display:none toggle. Hero (KR/EN + stats) and the
+   results grid are left untouched, so they simply move up and more
+   artwork cards become visible. */
+body.archive-entered #searchArea{
   overflow:hidden;
   max-height:560px;
   opacity:1;
   transition:max-height .22s ease, opacity .2s ease, padding .22s ease, margin .22s ease;
 }
-html.ap-tablet-ui.ap-tablet-filter-collapsed body.archive-entered #searchArea{
+.ap-filter-collapsed body.archive-entered #searchArea{
   max-height:0;
   opacity:0;
   padding-top:0;
@@ -114,11 +123,11 @@ html.ap-tablet-ui.ap-tablet-filter-collapsed body.archive-entered #searchArea{
 }
 
 /* Search icon inside the search input (placeholder text is untouched) */
-html.ap-tablet-ui .ap-search-input-wrap{
+.ap-search-input-wrap{
   position:relative;
   display:block;
 }
-html.ap-tablet-ui .ap-search-input-wrap .ap-search-icon{
+.ap-search-input-wrap .ap-search-icon{
   position:absolute;
   left:16px;
   top:50%;
@@ -128,7 +137,7 @@ html.ap-tablet-ui .ap-search-input-wrap .ap-search-icon{
   opacity:.6;
   pointer-events:none;
 }
-html.ap-tablet-ui #searchArea .ap-search-input-wrap .input[type="search"]{
+#searchArea .ap-search-input-wrap .input[type="search"]{
   padding-left:42px !important;
 }
 
@@ -8605,25 +8614,20 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
 </script>
 
 
-<!-- Archive Pro — Unified Tablet Layout (iPad + Android Tablet, one codepath)
-     Adds: a collapsible Section/Sort/Search panel (collapsed by default),
-     auto-collapse after a search is run, a search icon inside the search
-     field, and a relabeled search button.
-     Guarded entirely by html.ap-tablet-ui — set in <head> from a pure
-     width (768px+) + input-type (coarse/touch pointer) media-query check,
-     not user-agent sniffing, so iPad and Android tablets share the exact
-     same code path. No-op on desktop (mouse/trackpad) and phones. -->
+<!-- Archive Pro — Unified Filter UI (iPhone + iPad + Desktop, one codepath)
+     Adds: a collapsible Section/Sort/Search panel (collapsed by default
+     everywhere), auto-collapse after a search is run, a search icon
+     inside the search field, and a relabeled search button.
+     Runs on every device — no width or pointer-type gate — so iPhone
+     behaves exactly like iPad and Desktop. Only the Filter panel's
+     open/closed box (via CSS max-height/opacity) is touched; existing
+     search logic, works.json, language switching, Viewer, artwork
+     loading, and performance behavior are untouched. -->
 <script id="ap-tablet-ux-script">
 (function(){
   'use strict';
 
-  function isTabletUI(){
-    return document.documentElement.classList.contains('ap-tablet-ui');
-  }
-
-  if (!isTabletUI()) return;
-
-  var STORAGE_KEY = 'apArchiveProTabletFilterCollapsed';
+  var STORAGE_KEY = 'apArchiveProFilterCollapsed';
   var AUTO_COLLAPSE_DEBOUNCE_MS = 550;
 
   function ready(fn){
@@ -8652,7 +8656,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
     searchArea.parentNode.insertBefore(toggleBtn, searchArea);
 
     function isCollapsed(){
-      return document.documentElement.classList.contains('ap-tablet-filter-collapsed');
+      return document.documentElement.classList.contains('ap-filter-collapsed');
     }
 
     function applyToggleUI(collapsed){
@@ -8662,7 +8666,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
     }
 
     function setCollapsed(collapsed){
-      document.documentElement.classList.toggle('ap-tablet-filter-collapsed', collapsed);
+      document.documentElement.classList.toggle('ap-filter-collapsed', collapsed);
       applyToggleUI(collapsed);
       try { window.localStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0'); } catch(_e){}
     }

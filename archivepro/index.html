@@ -5323,6 +5323,37 @@ html.is-ipad [data-viewer-close]:hover {
       if (window.__ARCHIVE_PRO_BOOTED__) return;
       window.__ARCHIVE_PRO_BOOTED__ = true;
 
+      /* REOPEN SPEED PATCH 2026-07-13 — Console Timing:
+         Marks the checkpoints from the speed spec (shell / first cards /
+         interactive) so they can be measured on a real iPhone via Safari
+         Web Inspector > Console. No UI, no layout cost, safe to keep. */
+      const AP_BOOT_T0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      function apLogTiming(label) {
+        try {
+          const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+          console.log('[Archive Pro][timing]', label, '+' + Math.round(now - AP_BOOT_T0) + 'ms');
+        } catch (_) {}
+      }
+      apLogTiming('script start (app shell already parsed)');
+
+      /* REOPEN SPEED PATCH 2026-07-13 — Background Resume Timing:
+         When the app resumes from the background without a full reload,
+         this script never re-executes, so there is no "shell / first card"
+         moment to log — that absence IS the fast path (nothing had to be
+         rebuilt). These two listeners only log that a resume happened, for
+         the "C. 백그라운드 복귀" measurement in the speed spec; they do not
+         change any behavior. */
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          try { apLogTiming('resumed from background (no reload — page state preserved)'); } catch (_) {}
+        }
+      });
+      window.addEventListener('pageshow', (e) => {
+        if (e.persisted) {
+          try { apLogTiming('restored from bfcache (no reload)'); } catch (_) {}
+        }
+      });
+
       /* PAGE ZOOM LOCK — keep whole Archive Pro viewport fixed.
          Lightbox image zoom still works through the existing custom viewerScale engine. */
       const preventBrowserZoom = (e) => {
@@ -5371,11 +5402,163 @@ html.is-ipad [data-viewer-close]:hover {
       const INITIAL_RENDER_COUNT = 24;
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 220;
-      const ASSET_VERSION = 'ap-img-' + Date.now();
+      /* REOPEN SPEED PATCH 2026-07-13 — Stable Image Cache Key:
+         ASSET_VERSION used to be 'ap-img-' + Date.now(), a brand new value
+         every single time the app opened. Every thumbnail/zoom URL is built
+         with this value (withCacheBust()), so a fresh Date.now() meant every
+         image — including the first-screen priority thumbnails — was forced
+         to re-download from the network on every reopen, even seconds after
+         the previous visit. That was a primary cause of the 2–3s reopen delay.
+         Fix: keep the SAME version value for the whole calendar day (persisted
+         in localStorage). Repeated opens on the same day now reuse the exact
+         same image URLs, so the browser/Service Worker cache serves them with
+         no network request. Any real image update still reaches users within
+         at most one day, unchanged from the original safety intent. Image
+         paths and works.json structure are untouched — only how often the
+         cache-busting value changes. */
+      function getStableAssetVersion() {
+        const fallback = 'ap-img-' + Date.now();
+        try {
+          if (typeof window === 'undefined' || !window.localStorage) return fallback;
+          const KEY = 'apAssetVersionV1';
+          const today = new Date().toISOString().slice(0, 10);
+          const stored = window.localStorage.getItem(KEY);
+          if (stored) {
+            const sep = stored.indexOf('|');
+            const storedDay = sep === -1 ? '' : stored.slice(0, sep);
+            const storedValue = sep === -1 ? '' : stored.slice(sep + 1);
+            if (storedDay === today && storedValue) return storedValue;
+          }
+          const value = 'ap-img-' + today;
+          try { window.localStorage.setItem(KEY, today + '|' + value); } catch (_e) {}
+          return value;
+        } catch (_e) {
+          return fallback;
+        }
+      }
+      const ASSET_VERSION = getStableAssetVersion();
       const PAGE_OFFLINE_CACHE_NAME = 'archive-pro-page-non-origins-v3';
 
       function isArchiveOfflineMode() {
         return typeof navigator !== 'undefined' && navigator.onLine === false;
+      }
+
+      /* REOPEN SPEED PATCH 2026-07-13 — Local works.json Cache (IndexedDB):
+         Minimal key/value wrapper around IndexedDB, used only to remember the
+         last known-good works.json so a reopen can paint real cards instantly
+         instead of waiting on a network round trip. No work item fields, no
+         image paths, no data structure are touched — this only stores a copy
+         of the exact same array fetchWorksDirect() already produces today. */
+      const AP_CACHE_DB_NAME = 'archive-pro-cache';
+      const AP_CACHE_DB_VERSION = 1;
+      const AP_CACHE_STORE = 'kv';
+      const AP_WORKS_CACHE_KEY = 'worksPayloadV1';
+
+      function apOpenCacheDB() {
+        return new Promise((resolve) => {
+          try {
+            if (!('indexedDB' in window)) { resolve(null); return; }
+            const req = indexedDB.open(AP_CACHE_DB_NAME, AP_CACHE_DB_VERSION);
+            req.onupgradeneeded = () => {
+              try {
+                if (!req.result.objectStoreNames.contains(AP_CACHE_STORE)) {
+                  req.result.createObjectStore(AP_CACHE_STORE);
+                }
+              } catch (_) {}
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => resolve(null);
+          } catch (_) {
+            resolve(null);
+          }
+        });
+      }
+
+      async function apCacheGet(key) {
+        try {
+          const db = await apOpenCacheDB();
+          if (!db) return null;
+          return await new Promise((resolve) => {
+            try {
+              const tx = db.transaction(AP_CACHE_STORE, 'readonly');
+              const req = tx.objectStore(AP_CACHE_STORE).get(key);
+              req.onsuccess = () => resolve(req.result || null);
+              req.onerror = () => resolve(null);
+            } catch (_) { resolve(null); }
+          });
+        } catch (_) { return null; }
+      }
+
+      async function apCacheSet(key, value) {
+        try {
+          const db = await apOpenCacheDB();
+          if (!db) return false;
+          return await new Promise((resolve) => {
+            try {
+              const tx = db.transaction(AP_CACHE_STORE, 'readwrite');
+              const req = tx.objectStore(AP_CACHE_STORE).put(value, key);
+              req.onsuccess = () => resolve(true);
+              req.onerror = () => resolve(false);
+            } catch (_) { resolve(false); }
+          });
+        } catch (_) { return false; }
+      }
+
+      /* REOPEN SPEED PATCH 2026-07-13 — Last UI State (language / filter):
+         Remembers language, section, sort, and search query across a full
+         app close+reopen so the person returns to what they were looking at.
+         Restoring this never blocks or delays the first render — it is only
+         ever read once, synchronously, before the first paint decision. */
+      const AP_UI_STATE_KEY = 'apArchiveProUiStateV1';
+
+      function loadSavedUiState() {
+        try {
+          if (!window.localStorage) return null;
+          const raw = window.localStorage.getItem(AP_UI_STATE_KEY);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          return (parsed && typeof parsed === 'object') ? parsed : null;
+        } catch (_) { return null; }
+      }
+
+      function saveUiState() {
+        try {
+          if (!window.localStorage) return;
+          window.localStorage.setItem(AP_UI_STATE_KEY, JSON.stringify({
+            lang: state.lang,
+            section: state.section,
+            sort: state.sort,
+            query: state.query,
+            ts: Date.now()
+          }));
+        } catch (_) {}
+      }
+
+      /* REOPEN SPEED PATCH 2026-07-13 — Last Scroll Position:
+         Best-effort only. Saves window.scrollY at most once every 300ms
+         (no scroll-jank risk) and restores it once after the first grid
+         render. If the saved position is deeper than what is rendered yet,
+         the browser simply clamps the scroll — it never forces extra cards
+         to render early, so it can't work against the "don't build all
+         2,000 cards up front" goal. */
+      const AP_SCROLL_KEY = 'apArchiveProScrollYV1';
+      let apLastScrollSaveAt = 0;
+
+      function saveScrollYThrottled() {
+        const now = Date.now();
+        if (now - apLastScrollSaveAt < 300) return;
+        apLastScrollSaveAt = now;
+        try {
+          window.localStorage.setItem(AP_SCROLL_KEY, String(window.scrollY || 0));
+        } catch (_) {}
+      }
+
+      function restoreScrollYOnce() {
+        try {
+          const raw = window.localStorage.getItem(AP_SCROLL_KEY);
+          const y = raw ? parseInt(raw, 10) : 0;
+          if (y > 0) window.scrollTo(0, y);
+        } catch (_) {}
       }
 
       function nonOriginsOnly(list) {
@@ -7220,7 +7403,12 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         firstGridRenderScheduled = true;
         requestAnimationFrame(() => {
           renderGrid();
+          try { apLogTiming('first work cards rendered'); } catch (_) {}
           scheduleFullSearchIndex();
+          /* REOPEN SPEED PATCH 2026-07-13: best-effort scroll restore, after
+             the first batch of cards exists. See restoreScrollYOnce() above
+             for why this never forces early rendering of extra cards. */
+          try { restoreScrollYOnce(); } catch (_) {}
         });
       }
 
@@ -7532,6 +7720,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         visibleCount = state.visibleCount;
 
         renderAll();
+        try { saveUiState(); } catch (_) {}
       }
 
       function resetSortToFastOrder() {
@@ -7786,72 +7975,175 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         return source;
       }
 
+      let apDataAppliedOnce = false;
+
+      function apRestoreUiStateIfFirstRun() {
+        /* Only ever applied once per page load, before the very first
+           cards paint. A later background refresh must never reset
+           filters the person may already be actively using. */
+        const saved = loadSavedUiState();
+        if (!saved) return;
+        if (saved.lang === 'kr' || saved.lang === 'en' || saved.lang === 'both') {
+          state.lang = saved.lang;
+          els.langTabs.forEach((tab) => {
+            const active = tab.dataset.lang === state.lang;
+            tab.classList.toggle('active', active);
+            tab.setAttribute('aria-pressed', active ? 'true' : 'false');
+          });
+        }
+        if (typeof saved.section === 'string' && saved.section) state.section = saved.section;
+        if (typeof saved.sort === 'string' && saved.sort) state.sort = saved.sort;
+        if (typeof saved.query === 'string') state.query = saved.query;
+      }
+
+      function applyWorksToState(rawWorks) {
+        /*
+          REOPEN SPEED PATCH 2026-07-13 — shared apply+render pipeline.
+          Used by both the instant local-cache path and the background
+          works.json refresh path in loadArchiveData(), so the two can
+          never drift out of sync, and so a background refresh re-renders
+          the grid directly instead of relying on the one-time first-paint
+          scheduler. Field names, normalizeItem(), ensureOriginsTailWorks(),
+          and the Offline Display Rule below are unchanged from before.
+        */
+        const normalizedAll = (Array.isArray(rawWorks) ? rawWorks : [])
+          .map(function(work, index) {
+            try {
+              return normalizeItem(work, index);
+            } catch (error) {
+              try {
+                console.warn('[Archive Pro] skipped malformed work data', work && work.id ? work.id : index, error);
+              } catch (_) {}
+              return null;
+            }
+          })
+          .filter(item => item && item.id);
+
+        /*
+          Offline Display Rule:
+          When Archive Pro is opened without Wi‑Fi, hide A Origins (section_id: 0)
+          and show all remaining sections I–V only. Online mode keeps the full archive.
+        */
+        const completedAll = ensureOriginsTailWorks(normalizedAll);
+        const normalized = isArchiveOfflineMode() ? nonOriginsOnly(completedAll) : completedAll;
+
+        state.all = normalized;
+        try { window.__ARCHIVE_PRO_WORKS__ = state.all; } catch (_) {}
+        try { console.log('[Archive Pro] normalized works total (allWorks):', state.all.length, '/ raw fetched:', (Array.isArray(rawWorks) ? rawWorks.length : 0)); } catch (_) {}
+
+        if (!apDataAppliedOnce) {
+          state.query = '';
+          state.section = 'all';
+          state.sort = FAST_ORDER;
+          state.visibleCount = getInitialVisibleCount();
+          apRestoreUiStateIfFirstRun();
+          apDataAppliedOnce = true;
+        }
+
+        state._searchPrepared = false;
+        state._sectionCount = new Set(
+          state.all
+            .map(item => Number(item.section_id))
+            .filter(n => Number.isFinite(n))
+        ).size;
+        state.loadState = 'loaded';
+        state.isLoaded = true;
+
+        WORKS_READY = true;
+        WORKS_DATA = state.all;
+        visibleCount = state.visibleCount;
+
+        if (els.searchInput) els.searchInput.value = state.query;
+        if (els.sortSelect) els.sortSelect.value = state.sort;
+        /* els.sectionSelect.value is set inside populateSections() (called
+           via renderSectionOptions() below), which validates state.section
+           against the options it just rebuilt and falls back to 'all' if
+           the saved section no longer exists. */
+
+        state.filtered = applyFilterSort(state.all);
+        CURRENT_LIST = state.filtered;
+        finalFilteredWorks = state.filtered;
+
+        rebuildStaticTexts();
+        renderSectionOptions();
+        renderSectionButtons();
+        updateStats();
+        updateMeta();
+
+        if (archiveEntered) {
+          if (firstGridRenderScheduled) {
+            /* Already painted once this session (from cache) — a
+               background refresh applies directly, no rAF/search-index
+               bookkeeping needed a second time. */
+            renderGrid();
+          } else {
+            scheduleFirstGridRender();
+          }
+        }
+
+        return state.all.length;
+      }
+
+      function worksSignature(rawWorks) {
+        /* Cheap fingerprint used only to skip a needless re-render when
+           the background refresh confirms nothing actually changed. */
+        const list = Array.isArray(rawWorks) ? rawWorks : [];
+        const last = list.length ? safeText(list[list.length - 1] && list[list.length - 1].id) : '';
+        return list.length + '::' + last;
+      }
+
       async function loadArchiveData() {
         showArchiveShellImmediately();
         state.loadState = 'loading';
         setStatusByState();
 
+        let renderedFromCache = false;
+        let cachedSignature = '';
+
+        /*
+          STEP 1 — instant paint from the last known-good local cache, if
+          any. This is what makes a normal reopen feel instant: no network
+          round trip sits on the critical path to the first screen of cards.
+        */
+        try {
+          const cached = await apCacheGet(AP_WORKS_CACHE_KEY);
+          if (cached && Array.isArray(cached.works) && cached.works.length) {
+            applyWorksToState(cached.works);
+            renderedFromCache = true;
+            cachedSignature = worksSignature(cached.works);
+            try { apLogTiming('rendered from local cache (' + cached.works.length + ' items)'); } catch (_) {}
+          }
+        } catch (_) {}
+
+        /*
+          STEP 2 — always confirm against the live works.json in the
+          background. If STEP 1 found nothing (first-ever run, or cache
+          unavailable), this becomes the normal foreground load exactly
+          as before.
+        */
         try {
           const works = await fetchWorksDirect();
-          const normalizedAll = (Array.isArray(works) ? works : [])
-            .map(function(work, index) {
-              try {
-                return normalizeItem(work, index);
-              } catch (error) {
-                try {
-                  console.warn('[Archive Pro] skipped malformed work data', work && work.id ? work.id : index, error);
-                } catch (_) {}
-                return null;
-              }
-            })
-            .filter(item => item && item.id);
+          const freshSignature = worksSignature(works);
 
-          /*
-            Offline Display Rule:
-            When Archive Pro is opened without Wi‑Fi, hide A Origins (section_id: 0)
-            and show all remaining sections I–V only. Online mode keeps the full archive.
-          */
-          const completedAll = ensureOriginsTailWorks(normalizedAll);
-          const normalized = isArchiveOfflineMode() ? nonOriginsOnly(completedAll) : completedAll;
+          if (!renderedFromCache || freshSignature !== cachedSignature) {
+            applyWorksToState(works);
+            try { console.log('[Archive Pro] applied live works.json:', Array.isArray(works) ? works.length : 0, 'item(s)'); } catch (_) {}
+          }
 
-          state.all = normalized;
-          try { window.__ARCHIVE_PRO_WORKS__ = state.all; } catch (_) {}
-          try { console.log('[Archive Pro] normalized works total (allWorks):', state.all.length, '/ raw fetched:', works.length); } catch (_) {}
-          state.query = '';
-          state.section = 'all';
-          state.sort = FAST_ORDER;
-          state.visibleCount = getInitialVisibleCount();
-          state._searchPrepared = false;
-          state._sectionCount = new Set(
-            state.all
-              .map(item => Number(item.section_id))
-              .filter(n => Number.isFinite(n))
-          ).size;
-          state.filtered = state.all;
-          state.loadState = 'loaded';
-          state.isLoaded = true;
-
-          WORKS_READY = true;
-          WORKS_DATA = state.all;
-          CURRENT_LIST = state.filtered;
-          finalFilteredWorks = state.filtered;
-          visibleCount = state.visibleCount;
+          try { await apCacheSet(AP_WORKS_CACHE_KEY, { works: works, ts: Date.now() }); } catch (_) {}
 
           if (!isArchiveOfflineMode()) {
             requestServiceWorkerNonOriginsCache();
           }
-
-          if (els.searchInput) els.searchInput.value = '';
-          if (els.sectionSelect) els.sectionSelect.value = 'all';
-          if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
-
-          rebuildStaticTexts();
-          renderSectionOptions();
-          renderSectionButtons();
-          updateStats();
-          updateMeta();
-          if (archiveEntered) scheduleFirstGridRender();
         } catch (error) {
+          if (renderedFromCache) {
+            /* Cached content is already correctly on screen; a failed
+               background refresh should stay silent rather than replace
+               good data with an error state. */
+            try { console.warn('[Archive Pro] background works.json refresh failed, keeping cached view', error); } catch (_) {}
+            return;
+          }
+
           state.loadState = 'failed';
           state.isLoaded = false;
           WORKS_READY = false;
@@ -8027,6 +8319,10 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         if (bindEvents._bound) return;
         bindEvents._bound = true;
         els.searchInput.addEventListener('input', debouncedSearch);
+
+        /* REOPEN SPEED PATCH 2026-07-13: remember scroll position, throttled
+           and passive so it can't cost a scroll-jank frame. */
+        window.addEventListener('scroll', saveScrollYThrottled, { passive: true });
 
         els.sectionSelect.addEventListener('change', () => {
           state.section = els.sectionSelect.value;
@@ -8359,6 +8655,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
       }
 
       bindEvents();
+      try { apLogTiming('events bound (app shell interactive)'); } catch (_) {}
 
       let archiveLoadStarted = false;
 

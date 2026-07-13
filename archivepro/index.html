@@ -5192,7 +5192,7 @@ html.is-ipad [data-viewer-close]:hover {
 
     <section id="installPanel" class="install-panel install-appstore" aria-label="Archive Pro app installation" hidden>
       <div class="install-icon-wrap" aria-hidden="true">
-        <img class="install-icon" src="/archivepro-icon-192-v2.png?v=2" alt="" loading="eager" decoding="async">
+        <img class="install-icon" src="/archivepro-icon-192-v2.png?v=2" alt="" loading="lazy" decoding="async">
       </div>
 
       <div class="install-text">
@@ -5399,7 +5399,27 @@ html.is-ipad [data-viewer-close]:hover {
       const LOAD_MORE_COUNT = 40;
       const AUTO_RENDER_ROOT_MARGIN = '900px 0px 1200px 0px';
       const INITIAL_VISIBLE = getInitialVisibleCount();
-      const INITIAL_RENDER_COUNT = 24;
+      /*
+        MOBILE PERFORMANCE ONLY FIX 2026-07-13 — LCP Priority Count:
+        This gated how many of the first-batch cards get eager loading +
+        fetchpriority="high" real <img src> (createCardHTML() below). It was
+        24 — the same number as the DOM card batch size (getInitialVisibleCount)
+        — so every card in the first render, not just the ones actually
+        visible without scrolling, competed for "high priority" bandwidth at
+        once. Under Lighthouse's throttled mobile network simulation, 24
+        simultaneous high-priority image requests can starve each other badly
+        enough that the last one to finish — still a valid LCP candidate —
+        finishes tens of seconds late, which matches the reported 33.9s LCP
+        despite genuinely fast real-device perceived speed. Narrowing this to
+        a true above-the-fold count (roughly 2 columns × 3 rows on mobile)
+        concentrates bandwidth on the images that actually determine LCP.
+        Cards 7–24 already still render immediately in the DOM (unchanged)
+        and still get picked up almost instantly by the existing
+        IntersectionObserver lazy path (AUTO_RENDER_ROOT_MARGIN is generous),
+        so real perceived speed and design/behavior are unaffected — only
+        which images get "eager + high" HTTP priority changes.
+      */
+      const INITIAL_RENDER_COUNT = 6;
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 220;
       /* REOPEN SPEED PATCH 2026-07-13 — Stable Image Cache Key:
@@ -7835,31 +7855,39 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         /*
           LIVE DATA SOURCE HARDENING:
           Try the GitHub raw data first, then dungzak.art. Both requests are
-          cache-busted by fetchJsonNoStore(). This prevents the Archive Pro page
-          from staying on an older works.json when Origins is updated.
+          revalidated on every load by fetchJsonNoStore() (cache:'no-cache').
+          This prevents the Archive Pro page from staying on an older
+          works.json when Origins is updated.
         */
         return Array.from(new Set([DATA_URL, DUNGZAK_ART_DATA_URL].filter(Boolean)));
       }
 
       function buildLiveJsonUrl(url) {
         /*
-          Live Data Fix:
-          When online, works.json / dcao.json / dcap.json must bypass browser
-          and Service Worker cache so newly uploaded works and counts appear
-          immediately in Chrome, Safari, and installed PWA mode.
-          When offline, keep the original URL so cached fallbacks can still match.
+          MOBILE PERFORMANCE ONLY FIX 2026-07-13:
+          This used to append '&v=' + Date.now() and fetch with
+          cache:'no-store', a genuinely new URL + a hard cache bypass on
+          every single load. That guaranteed freshness, but it also meant
+          PageSpeed (and every real reopen) paid for a full, uncachable
+          works.json download every time, with no way for the browser or
+          any CDN in front of GitHub raw / dungzak.art to ever serve a
+          conditional (304) response. The IndexedDB cache-first pipeline in
+          loadArchiveData() already re-checks the live file on every load
+          and only re-renders when the data actually changed, so the
+          network layer no longer needs to force a bypass to stay correct.
+          Returning the plain, stable URL here (paired with cache:'no-cache'
+          in fetchJsonNoStore below) keeps the "always re-check" guarantee
+          while letting the browser/CDN reuse a cached body via a normal
+          conditional revalidation when nothing changed.
+          Offline mode is unaffected — it already returned the plain URL.
         */
-        const clean = String(url || '');
-        if (!clean) return clean;
-        if (isArchiveOfflineMode()) return clean;
-        const joiner = clean.indexOf('?') === -1 ? '?' : '&';
-        return clean + joiner + 'v=' + Date.now();
+        return String(url || '');
       }
 
       async function fetchJsonNoStore(url) {
         const liveUrl = buildLiveJsonUrl(url);
         const res = await fetch(liveUrl, {
-          cache: 'no-store',
+          cache: 'no-cache',
           mode: 'cors',
           credentials: 'omit'
         });

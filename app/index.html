@@ -73,10 +73,12 @@
   <header class="site-header">
     <div class="header-inner">
       <div class="brand-wrap">
-        <p class="eyebrow">DUNGZAK CESTLAVIE LAB</p>
         <div class="brand-row">
           <a href="/app/index.html" id="ap-reset-trigger" class="brand-home-link" aria-label="Archive Pro reset">
-            <h1>ARCHIVE PRO</h1>
+            <div class="brand-title-group">
+              <h1>ARCHIVE PRO</h1>
+              <p class="brand-subtitle">Artist Edition</p>
+            </div>
           </a>
         </div>
       </div>
@@ -97,9 +99,9 @@
       </article>
 
       <aside class="stats-inline" aria-label="아카이브 통계">
-        <span id="statTotal">—</span> works ·
-        <span id="statFiltered">—</span> results ·
-        <span id="statSections">—</span> sections
+        <span id="statTotal">0</span> works ·
+        <span id="statFiltered">0</span> results ·
+        <span id="statSections">0</span> sections
         <span id="statDescTotal" class="visually-hidden">전체 작품 수</span>
         <span id="statDescFiltered" class="visually-hidden">현재 검색 결과</span>
         <span id="statDescSections" class="visually-hidden">섹션 수</span>
@@ -107,10 +109,10 @@
 
       <aside class="ap-stats-tablet" aria-label="아카이브 통계">
         <span class="ap-stats-tablet-default">
-          <span id="apStatTotalTablet">—</span> Works · <span id="apStatSectionsTablet">—</span> Sections
+          <span id="apStatTotalTablet">0</span> Works · <span id="apStatSectionsTablet">0</span> Sections
         </span>
         <span class="ap-stats-tablet-results">
-          <span id="apStatFilteredTablet">—</span> Results
+          <span id="apStatFilteredTablet">0</span> Results
         </span>
       </aside>
     </section>
@@ -210,7 +212,8 @@
       </div>
 
       <div id="emptyState" class="empty-state" hidden>
-        조건에 맞는 작품이 없습니다.
+        <p class="empty-state-line" data-lang-line="kr">등록된 작품이 없습니다.</p>
+        <p class="empty-state-line" data-lang-line="en">No works have been added yet.</p>
       </div>
 
     </main>

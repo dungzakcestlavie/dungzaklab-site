@@ -456,7 +456,7 @@ html, body {
       display:grid;
       grid-template-columns:1fr auto;
       gap:14px;
-      align-items:center;
+      align-items:flex-start;
       padding:10px 0;
     }
 
@@ -506,7 +506,7 @@ html, body {
     }
 
     .brand-subtitle{
-      margin:7px 0 24px;
+      margin:5px 0 24px;
       font-family:Georgia,"Times New Roman","Noto Serif KR",serif;
       font-size:clamp(15px,2.4vw,24px);
       line-height:1;
@@ -566,6 +566,10 @@ html, body {
       justify-content: center;
 
       box-shadow: none;
+    }
+
+    #labLink{
+      margin-top:-2px;
     }
 
     .lab-link-btn:active,
@@ -644,7 +648,7 @@ html, body {
     }
 
     .lang-tab{
-      min-height:42px;
+      min-height:37px;
       padding:0 14px;
       border-radius:999px;
       border:1px solid rgba(255,255,255,.08);
@@ -1458,7 +1462,8 @@ html, body {
       .meta-row{font-size:13px}
       .back-link{min-height:42px;padding:0 12px}
       .hero-card{min-height:auto;padding:16px}
-      .lang-tab,.hero-home-link{min-height:40px;padding:0 12px}
+      .lang-tab{min-height:35px;padding:0 12px}
+      .hero-home-link{min-height:40px;padding:0 12px}
       .hero-mode-line{font-size:13px}
       .lightbox-side .lb-title{font-size:20px}
       .lb-row{grid-template-columns:72px minmax(0,1fr)}

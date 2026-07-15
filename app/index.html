@@ -1,51 +1,260 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Archive Pro App</title>
+<script id="ap-tablet-ux-detect">
+(function(){
+  try {
+    var root = document.documentElement;
 
-<style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
+    /* Unified Tablet Layout detection — width + input-type only.
+       No iPad/Android user-agent branching: any device (regardless of
+       OS or browser) that is both (a) 768px or wider and (b) touch/coarse
+       pointer primary (i.e. not a mouse-driven desktop/laptop) gets the
+       exact same Tablet Layout. Re-evaluated live so rotation, Split View,
+       and external-display changes are picked up without a reload. */
+    var mqWidth = window.matchMedia('(min-width:768px)');
+    var mqCoarse = window.matchMedia('(hover:none) and (pointer:coarse)');
 
-body{
-    background:#0b0f18;
-    color:#d8c08a;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-}
+    function applyTabletClass(){
+      root.classList.toggle('ap-tablet-ui', mqWidth.matches && mqCoarse.matches);
+    }
+    applyTabletClass();
 
-.container{
-    text-align:center;
-}
+    if (mqWidth.addEventListener) {
+      mqWidth.addEventListener('change', applyTabletClass);
+      mqCoarse.addEventListener('change', applyTabletClass);
+    } else if (mqWidth.addListener) {
+      mqWidth.addListener(applyTabletClass);
+      mqCoarse.addListener(applyTabletClass);
+    }
 
-h1{
-    font-size:48px;
-    letter-spacing:2px;
-    margin-bottom:20px;
-}
+    /* Filter panel default state — applies to ALL devices (iPhone, iPad,
+       Desktop alike), independent of the ap-tablet-ui check above.
+       Always COLLAPSED on first visit so artwork is what a person sees
+       first. If someone has explicitly expanded it before (stored '0'),
+       that choice is remembered; any other stored value (or none at all)
+       stays collapsed. */
+    var collapsed = true;
+    try {
+      var stored = window.localStorage.getItem('appArchiveProFilterCollapsed');
+      if (stored === '0') collapsed = false;
+    } catch(_e){}
+    root.classList.toggle('ap-filter-collapsed', collapsed);
+  } catch(_e){}
+})();
+</script>
 
-p{
-    color:#888;
-    margin:8px 0;
-}
-</style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0f14" />
+<meta name="color-scheme" content="dark" />
+<meta name="format-detection" content="telephone=no,address=no,email=no" />
+
+<title>Archive Pro App — DUNGZAK CESTLAVIE</title>
+<meta name="description" content="Archive Pro App — artwork archive engine for search, filter, and zoom view. (works.json empty template)" />
+
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Archive Pro App" />
+
+<link rel="manifest" href="/app/manifest.json" />
+<link rel="apple-touch-icon" href="/app/assets/icons/icon-512.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/app/assets/icons/icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="/app/assets/icons/icon-512.png" />
+
+<link rel="stylesheet" href="/app/css/style.css" />
+<link rel="stylesheet" href="/app/css/viewer.css" />
 </head>
 
-<body>
+<body class="archive-entered archive-filter-open">
+  <div class="site-bg" aria-hidden="true"></div>
 
-<div class="container">
-    <h1>Archive Pro App</h1>
-    <p>Developer Studio</p>
-    <p>Under Development</p>
-</div>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-wrap">
+        <p class="eyebrow">DUNGZAK CESTLAVIE LAB</p>
+        <div class="brand-row">
+          <a href="/app/index.html" id="ap-reset-trigger" class="brand-home-link" aria-label="Archive Pro reset">
+            <h1>ARCHIVE PRO</h1>
+          </a>
+        </div>
+      </div>
+      <a id="labLink" class="lab-link-btn" href="https://dungzaklab.art/" rel="noopener">LAB</a>
+    </div>
+  </header>
 
+  <div class="site-shell">
+<section class="hero hero-compressed" aria-label="Archive controls summary">
+      <article class="lang-inline" aria-label="Language mode and site link">
+        <div class="lang-tabs" role="tablist" aria-label="Language mode">
+          <button class="lang-tab active" type="button" data-lang="kr" aria-pressed="true">KR</button>
+          <button class="lang-tab" type="button" data-lang="en" aria-pressed="false">EN</button>
+          <button class="lang-tab" type="button" data-lang="both" aria-pressed="false">KR+EN</button>
+        </div>
+        <a class="hero-home-link" href="https://dungzak.art/" target="_blank" rel="noopener noreferrer">dungzak.art</a>
+        <p class="hero-mode-line" id="heroModeLine">한국어 기준</p>
+      </article>
+
+      <aside class="stats-inline" aria-label="아카이브 통계">
+        <span id="statTotal">—</span> works ·
+        <span id="statFiltered">—</span> results ·
+        <span id="statSections">—</span> sections
+        <span id="statDescTotal" class="visually-hidden">전체 작품 수</span>
+        <span id="statDescFiltered" class="visually-hidden">현재 검색 결과</span>
+        <span id="statDescSections" class="visually-hidden">섹션 수</span>
+      </aside>
+
+      <aside class="ap-stats-tablet" aria-label="아카이브 통계">
+        <span class="ap-stats-tablet-default">
+          <span id="apStatTotalTablet">—</span> Works · <span id="apStatSectionsTablet">—</span> Sections
+        </span>
+        <span class="ap-stats-tablet-results">
+          <span id="apStatFilteredTablet">—</span> Results
+        </span>
+      </aside>
+    </section>
+
+    <section class="panel entry-layer archive-entry-wrap" aria-label="Archive entry">
+      <div class="entry-panel">
+        <a id="enterArchivePro" class="critical-entry-btn" href="#archiveWorks" data-kr="아카이브 입장 →" data-en="Enter Archive →">아카이브 입장 →</a>
+      </div>
+    </section>
+
+
+    <section id="installPanel" class="install-panel install-appstore" aria-label="Archive Pro app installation" hidden>
+      <div class="install-icon-wrap" aria-hidden="true">
+        <img class="install-icon" src="/app/assets/icons/icon-192.png" alt="" loading="lazy" decoding="async">
+      </div>
+
+      <div class="install-text">
+        <span id="installTitle" class="install-title">Archive Pro</span>
+        <span id="installDesc" class="install-desc">홈 화면에 설치하면 Archive Pro가 앱처럼 전체 화면으로 열립니다.</span>
+        <span id="installGuide" class="install-guide" hidden>설치 창이 뜨지 않으면 Chrome 메뉴(⋮)에서 “앱 설치”를 선택하세요.</span>
+
+        <div id="iosInstallGuide" class="ios-install-guide" hidden>
+          <span class="ios-guide-title">iPhone 설치 방법</span>
+          <span class="ios-guide-step">1. Safari에서 이 페이지를 여세요.</span>
+          <span class="ios-guide-step">2. 하단 공유 버튼(□↑)을 누르세요.</span>
+          <span class="ios-guide-step">3. “홈 화면에 추가”를 선택하세요.</span>
+        </div>
+      </div>
+
+      <div class="install-actions">
+        <button id="installAppBtn" class="install-btn" type="button">받기</button>
+      </div>
+    </section>
+
+    <section id="searchArea" class="panel controls" aria-label="아카이브 검색 및 필터">
+      <div class="field">
+        <label for="sectionSelect" id="labelSection">Section</label>
+        <select id="sectionSelect" class="select" aria-label="섹션 선택">
+          <option value="all">전체 섹션</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="sortSelect" id="labelSort">Sort</label>
+        <select id="sortSelect" class="select" aria-label="정렬 선택">
+          <option value="section-id-asc" selected>기본순</option>
+          <option value="id-desc">번호 늦은순</option>
+          <option value="year-desc">최신순</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="searchInput" id="labelSearch">Search</label>
+        <input
+          id="searchInput"
+          class="input"
+          type="search"
+          placeholder="ID · 제목 · 재료 · 연도 · 섹션"
+          autocomplete="off"
+          spellcheck="false"
+          data-kr="ID · 제목 · 재료 · 연도 · 섹션"
+          data-en="Search ID, title, material, year, section"
+        />
+      </div>
+
+      <div class="control-actions">
+        <button id="resetBtn" class="btn secondary" type="button">초기화</button>
+        <button id="focusSearchBtn" class="btn" type="button">검색 집중</button>
+      </div>
+    </section>
+
+
+    <span id="archiveWorks" aria-hidden="true"></span>
+    <main id="archiveMain" aria-live="polite">
+      <div id="loadingScreen" class="panel loading-screen" hidden></div>
+
+      <div id="resultsMeta" class="meta-row" style="display:flex;">
+        <div class="meta-left">
+          <strong id="resultText">—</strong>
+          <span class="meta-pill" id="renderedText">표시 0점</span>
+        </div>
+        <div class="meta-right">
+          <span
+            class="meta-pill"
+            id="activeFilterText"
+            data-kr=""
+            data-en=""
+            style="display:none;">
+          </span>
+        </div>
+      </div>
+
+      <section id="grid" class="grid" aria-label="작품 그리드"></section>
+
+      <div id="loadWrap" class="load-wrap" hidden>
+        <button id="loadMoreBtn" class="btn" type="button">더 보기 / Load more</button>
+      </div>
+
+      <div id="emptyState" class="empty-state" hidden>
+        조건에 맞는 작품이 없습니다.
+      </div>
+
+    </main>
+
+  </div>
+
+  <div id="lightbox" class="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="작품 확대 보기">
+    <button id="viewerCloseBtn" class="lightbox-close viewer-close" type="button" aria-label="닫기">×</button>
+    <button id="lightboxPrev" class="lightbox-nav lightbox-prev" type="button" aria-label="Previous artwork">‹</button>
+    <button id="lightboxNext" class="lightbox-nav lightbox-next" type="button" aria-label="Next artwork">›</button>
+
+    <div class="lightbox-inner">
+      <div class="lightbox-stage">
+        <img id="lightboxImage" alt="" />
+      </div>
+
+      <aside class="lightbox-side">
+        <p class="lb-id" id="lbId">—</p>
+        <h3 class="lb-title" id="lbTitle">—</h3>
+        <p class="lb-section" id="lbSection">—</p>
+
+        <div class="lb-meta">
+          <div class="lb-row"><div class="lb-key" id="lbKeyMaterial">재료</div><div class="lb-val" id="lbMaterial">—</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeySize">크기</div><div class="lb-val" id="lbSize">—</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyYear">연도</div><div class="lb-val" id="lbYear">—</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyImage">이미지</div><div class="lb-val" id="lbImagePath">—</div></div>
+          <div class="lb-row"><div class="lb-key" id="lbKeyZoom">줌</div><div class="lb-val" id="lbZoomPath">—</div></div>
+        </div>
+
+        <div class="lb-actions mobile-hide-fullview-wrap">
+          <a id="lbOpenImage" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">이미지 열기</a>
+          <a id="lbOpenZoom" class="lb-link mobile-hide-fullview" href="#" target="_blank" rel="noopener noreferrer">줌 열기</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+<!-- ARCHIVE PRO APP — build step 2 of 10 (App Shell only).
+     Loaded now: style.css, viewer.css, manifest.json, app.js.
+     Not yet moved in (per agreed step order): config.js, api.js, ui.js,
+     viewer.js, search.js, filter.js, cache.js, sw.js registration.
+     Until those steps land, the grid/search/viewer above are static
+     markup only — no rendering or interaction logic runs yet. This is
+     expected at this stage, not a bug. -->
+<script src="/app/js/app.js"></script>
 </body>
 </html>

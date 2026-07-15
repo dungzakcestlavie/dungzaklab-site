@@ -1,0 +1,17 @@
+[
+  {
+    "id": "I-0001",
+    "section_id": 2,
+    "section_kr": "Ⅰ 기도",
+    "section_en": "Pray for Us",
+    "title_kr": "작품 제목",
+    "title_en": "Work Title",
+    "material_kr": "종이에 수묵, 색연필",
+    "material_en": "Ink and colored pencil on paper",
+    "size_kr": "78×108cm",
+    "size_en": "78x108cm",
+    "year": "2026",
+    "image": "/app/assets/images/standard/I-0001.jpg",
+    "zoom": "/app/assets/images/zoom/I-0001.jpg"
+  }
+]

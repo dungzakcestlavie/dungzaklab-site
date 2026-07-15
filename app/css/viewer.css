@@ -1,1 +1,18 @@
-/* Archive Pro — Viewer Styles */
+/* Archive Pro App — viewer.css
+   ------------------------------------------------------------------
+   Intentionally near-empty for now.
+
+   In the original Archive Pro (archivepro/index.html), lightbox/viewer
+   rules (.lightbox, .lightbox-inner, .lightbox-stage, .lb-*) are
+   interleaved with grid/controls rules inside the SAME @media blocks
+   (e.g. the 1180px breakpoint resizes .grid AND .lightbox-inner
+   together). Pulling viewer rules out into this file would break that
+   shared responsive behavior, so — to avoid introducing bugs — all
+   current viewer/lightbox CSS stays in style.css for now.
+
+   This file is reserved for viewer-only additions going forward
+   (new viewer features, zoom UI tweaks, etc.) that don't need to
+   share a breakpoint with the grid/controls layout. Load order:
+   style.css first, then viewer.css, so rules here can override
+   style.css if ever needed.
+   ------------------------------------------------------------------ */

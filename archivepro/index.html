@@ -5420,6 +5420,11 @@ html.is-ipad [data-viewer-close]:hover {
         which images get "eager + high" HTTP priority changes.
       */
       const INITIAL_RENDER_COUNT = 6;
+      /* SKIP-REDUNDANT-RECHECK PATCH 2026-07-18: see loadArchiveData() STEP 3.
+         3 minutes — long enough to skip pointless back-to-back reloads
+         within the same visit/session, short enough that any real
+         works.json update still reaches the app almost immediately. */
+      const AP_COMPLETENESS_RECHECK_MIN_INTERVAL_MS = 3 * 60 * 1000;
       const LOAD_STEP = LOAD_MORE_COUNT;
       const SEARCH_DEBOUNCE_MS = 220;
       /* REOPEN SPEED PATCH 2026-07-13 — Stable Image Cache Key:
@@ -8208,6 +8213,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         let renderedFromCache = false;
         let renderedFromNetwork = false;
         let appliedSignature = '';
+        let cachedRecently = false;
 
         /*
           STEP 1 — instant paint from the last known-good local cache, if
@@ -8221,8 +8227,29 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
             renderedFromCache = true;
             appliedSignature = worksSignature(cached.works);
             try { apLogTiming('rendered from local cache (' + cached.works.length + ' items)'); } catch (_) {}
+            /*
+              SKIP-REDUNDANT-RECHECK PATCH 2026-07-18:
+              cached.ts is the timestamp this same payload was last written
+              by STEP 3 (apCacheSet in the block below). If it was written
+              very recently, works.json cannot realistically have changed
+              since — re-fetching + re-normalizing all ~2,000 items again
+              right now is pure wasted network + main-thread work with zero
+              visible benefit. Only skips the background re-check; STEP 1's
+              instant paint and STEP 2's cold-start race are untouched, and
+              a normal reopen after the window still re-checks exactly as
+              before, so the "always confirm completeness" guarantee is
+              unchanged for any realistically-timed use.
+            */
+            if (typeof cached.ts === 'number' && (Date.now() - cached.ts) < AP_COMPLETENESS_RECHECK_MIN_INTERVAL_MS) {
+              cachedRecently = true;
+            }
           }
         } catch (_) {}
+
+        if (cachedRecently) {
+          try { apLogTiming('completeness check skipped (cache is fresh)'); } catch (_) {}
+          return;
+        }
 
         /*
           STEP 2 — COLD START ONLY (no local cache yet, e.g. very first

@@ -7424,6 +7424,21 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         requestAnimationFrame(() => {
           renderGrid();
           try { apLogTiming('first work cards rendered'); } catch (_) {}
+          try {
+            /* Measurement only — logs when the first eager/high-priority
+               thumbnail actually finishes downloading, as a proxy for LCP.
+               Does not change what loads or when. */
+            const firstImg = els.grid ? els.grid.querySelector('img.thumb.is-priority') : null;
+            if (firstImg) {
+              if (firstImg.complete) {
+                apLogTiming('first priority thumbnail already loaded');
+              } else {
+                firstImg.addEventListener('load', () => {
+                  try { apLogTiming('first priority thumbnail loaded'); } catch (_) {}
+                }, { once: true });
+              }
+            }
+          } catch (_) {}
           scheduleFullSearchIndex();
           /* REOPEN SPEED PATCH 2026-07-13: best-effort scroll restore, after
              the first batch of cards exists. See restoreScrollYOnce() above
@@ -7886,69 +7901,129 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
       async function fetchJsonNoStore(url) {
         const liveUrl = buildLiveJsonUrl(url);
+        const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const res = await fetch(liveUrl, {
           cache: 'no-cache',
           mode: 'cors',
           credentials: 'omit'
         });
+        const t1 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+        const json = await res.json();
+        const t2 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        try {
+          apLogTiming('works.json fetch: ' + url + ' — network ' + Math.round(t1 - t0) + 'ms, parse ' + Math.round(t2 - t1) + 'ms');
+        } catch (_) {}
+        return json;
+      }
+
+      /*
+        COLD-START SPEED PATCH 2026-07-17:
+        Each candidate URL is now wrapped exactly once in a shared "task"
+        promise (createWorksFetchTask). Both the completeness check
+        (fetchWorksDirect, unchanged behavior — waits for every candidate)
+        and the new first-paint race (fetchWorksFirstReady) read from the
+        SAME underlying task promises, so this never issues a duplicate
+        network request. It only changes how early the app is allowed to
+        start painting with whichever answer arrives first.
+      */
+      function createWorksFetchTask(url) {
+        const startedAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        return (async () => {
+          try {
+            const json = await fetchJsonNoStore(url);
+            const works = parseWorksPayload(json);
+            const count = Array.isArray(works) ? works.length : 0;
+            const elapsed = Math.round(((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - startedAt);
+            try { console.log('[Archive Pro] works.json candidate:', url, '→', count, 'item(s), ' + elapsed + 'ms total'); } catch (_) {}
+            return { url, works, count, ok: count >= MIN_EXPECTED_WORKS };
+          } catch (error) {
+            try { console.warn('[Archive Pro] works.json candidate failed:', url, error && error.message ? error.message : error); } catch (_) {}
+            return { url, works: [], count: 0, ok: false, error };
+          }
+        })();
+      }
+
+      let worksFirstReadyPromise = null;
+
+      function ensureWorksFetchTasks() {
+        if (!worksLoadPromise) {
+          const urls = buildWorksJsonUrls();
+          const tasks = urls.map(createWorksFetchTask);
+
+          /*
+            FULL-COVERAGE DATA SOURCE FIX (works.json 누락 방지) — unchanged:
+            waits for every candidate URL, then picks whichever valid
+            candidate has the highest item count, so a stale-but-plausible
+            mirror can never quietly win over a more complete source. This
+            promise is what the local cache gets written from, and what the
+            background completeness check in loadArchiveData() awaits.
+          */
+          worksLoadPromise = (async () => {
+            if (!tasks.length) {
+              throw new Error('No valid works.json found. (no source url configured)');
+            }
+
+            const results = await Promise.all(tasks);
+            const valid = results.filter((r) => r.ok);
+
+            if (!valid.length) {
+              const failures = results.map((r) => `${r.url} → ${r.error ? (r.error.message || r.error) : r.count + ' item(s), skipped'}`);
+              throw new Error('No valid works.json found. ' + failures.join(' | '));
+            }
+
+            const best = valid.reduce((a, b) => (b.count > a.count ? b : a));
+            try { console.log('[Archive Pro] works.json source selected:', best.url, '(', best.count, 'item(s) )'); } catch (_) {}
+
+            return best.works;
+          })().catch((error) => {
+            worksLoadPromise = null;
+            worksFirstReadyPromise = null;
+            throw error;
+          });
+
+          /*
+            First-paint race: resolves with the FIRST candidate that turns
+            out valid (count >= MIN_EXPECTED_WORKS), whichever URL that is.
+            On a cold start (no local cache yet) this is what lets the
+            first screen of cards appear as soon as the faster of the two
+            sources answers, instead of always waiting for the slower one.
+            The completeness check above still runs to completion in the
+            background and silently corrects the view if the slower source
+            turns out to have more items.
+          */
+          worksFirstReadyPromise = new Promise((resolve, reject) => {
+            let settledCount = 0;
+            let bestSoFar = null;
+            tasks.forEach((taskPromise) => {
+              taskPromise.then((result) => {
+                settledCount += 1;
+                if (result.ok && (!bestSoFar || result.count > bestSoFar.count)) {
+                  bestSoFar = result;
+                  resolve(result);
+                }
+                if (settledCount === tasks.length && !bestSoFar) {
+                  reject(new Error('No valid works.json found among ' + tasks.length + ' candidate(s).'));
+                }
+              }).catch(() => {
+                settledCount += 1;
+                if (settledCount === tasks.length && !bestSoFar) {
+                  reject(new Error('No valid works.json found among ' + tasks.length + ' candidate(s).'));
+                }
+              });
+            });
+          });
+        }
+
+        return { fullPromise: worksLoadPromise, firstReadyPromise: worksFirstReadyPromise };
       }
 
       async function fetchWorksDirect() {
-        if (worksLoadPromise) return worksLoadPromise;
+        return ensureWorksFetchTasks().fullPromise;
+      }
 
-        /*
-          FULL-COVERAGE DATA SOURCE FIX (works.json 누락 방지):
-          이전에는 후보 URL을 동시에 요청하되, 그중 어느 하나라도
-          MIN_EXPECTED_WORKS(100) 이상만 되면 "가장 먼저 응답한" 결과로 즉시
-          확정했다. MIN_EXPECTED_WORKS는 실제 데이터 규모(2,000점 이상)에 비해
-          매우 낮은 문턱값이므로, 최근 작품이 아직 반영되지 않은 오래된 미러
-          (raw.githubusercontent.com)가 더 빨리 응답하면 그 "오래되었지만
-          유효해 보이는" 배열이 그대로 채택되어, dungzak.art에는 있지만
-          Archive Pro에는 없는 누락이 발생할 수 있었다.
-          이제는 모든 후보 URL의 응답을 끝까지 기다린 뒤, 유효한 후보들 중
-          "작품 개수가 가장 많은" 배열을 선택한다. 어떤 소스도 다른 소스보다
-          적은 작품 수로 확정되지 않으므로 works.json에 있는 작품이 화면에서
-          누락되는 상황을 원천적으로 방지한다. 최종 데이터 형태와 실패 시
-          에러 메시지 형식은 기존과 동일하게 유지한다. */
-        worksLoadPromise = (async () => {
-          const urls = buildWorksJsonUrls();
-
-          if (!urls.length) {
-            throw new Error('No valid works.json found. (no source url configured)');
-          }
-
-          const results = await Promise.all(urls.map(async (url) => {
-            try {
-              const json = await fetchJsonNoStore(url);
-              const works = parseWorksPayload(json);
-              const count = Array.isArray(works) ? works.length : 0;
-              try { console.log('[Archive Pro] works.json candidate:', url, '→', count, 'item(s)'); } catch (_) {}
-              return { url, works, count, ok: count >= MIN_EXPECTED_WORKS };
-            } catch (error) {
-              try { console.warn('[Archive Pro] works.json candidate failed:', url, error && error.message ? error.message : error); } catch (_) {}
-              return { url, works: [], count: 0, ok: false, error };
-            }
-          }));
-
-          const valid = results.filter((r) => r.ok);
-
-          if (!valid.length) {
-            const failures = results.map((r) => `${r.url} → ${r.error ? (r.error.message || r.error) : r.count + ' item(s), skipped'}`);
-            throw new Error('No valid works.json found. ' + failures.join(' | '));
-          }
-
-          const best = valid.reduce((a, b) => (b.count > a.count ? b : a));
-          try { console.log('[Archive Pro] works.json source selected:', best.url, '(', best.count, 'item(s) )'); } catch (_) {}
-
-          return best.works;
-        })().catch((error) => {
-          worksLoadPromise = null;
-          throw error;
-        });
-
-        return worksLoadPromise;
+      async function fetchWorksFirstReady() {
+        return ensureWorksFetchTasks().firstReadyPromise;
       }
 
       function showArchiveShellImmediately() {
@@ -8034,6 +8109,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           scheduler. Field names, normalizeItem(), ensureOriginsTailWorks(),
           and the Offline Display Rule below are unchanged from before.
         */
+        const __apNormalizeT0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const normalizedAll = (Array.isArray(rawWorks) ? rawWorks : [])
           .map(function(work, index) {
             try {
@@ -8058,6 +8134,10 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         state.all = normalized;
         try { window.__ARCHIVE_PRO_WORKS__ = state.all; } catch (_) {}
         try { console.log('[Archive Pro] normalized works total (allWorks):', state.all.length, '/ raw fetched:', (Array.isArray(rawWorks) ? rawWorks.length : 0)); } catch (_) {}
+        try {
+          const __apNormalizeT1 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+          apLogTiming('normalize/apply took ' + Math.round(__apNormalizeT1 - __apNormalizeT0) + 'ms (' + state.all.length + ' items)');
+        } catch (_) {}
 
         if (!apDataAppliedOnce) {
           state.query = '';
@@ -8126,7 +8206,8 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         setStatusByState();
 
         let renderedFromCache = false;
-        let cachedSignature = '';
+        let renderedFromNetwork = false;
+        let appliedSignature = '';
 
         /*
           STEP 1 — instant paint from the last known-good local cache, if
@@ -8138,23 +8219,48 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           if (cached && Array.isArray(cached.works) && cached.works.length) {
             applyWorksToState(cached.works);
             renderedFromCache = true;
-            cachedSignature = worksSignature(cached.works);
+            appliedSignature = worksSignature(cached.works);
             try { apLogTiming('rendered from local cache (' + cached.works.length + ' items)'); } catch (_) {}
           }
         } catch (_) {}
 
         /*
-          STEP 2 — always confirm against the live works.json in the
-          background. If STEP 1 found nothing (first-ever run, or cache
-          unavailable), this becomes the normal foreground load exactly
-          as before.
+          STEP 2 — COLD START ONLY (no local cache yet, e.g. very first
+          open on a device): paint as soon as whichever candidate URL
+          answers first, instead of waiting for the slower of the two.
+          This is the change that actually shortens the first-ever launch;
+          every later open already gets its instant paint from STEP 1.
+        */
+        if (!renderedFromCache) {
+          try {
+            const firstReady = await fetchWorksFirstReady();
+            applyWorksToState(firstReady.works);
+            renderedFromNetwork = true;
+            appliedSignature = worksSignature(firstReady.works);
+            try { apLogTiming('rendered from first-available source: ' + firstReady.url + ' (' + firstReady.count + ' items)'); } catch (_) {}
+          } catch (_) {
+            /* Every candidate failed the race (rare — usually means every
+               source is genuinely unreachable). Fall through to STEP 3,
+               which still surfaces the same error state as before if
+               nothing at all can be loaded. */
+          }
+        }
+
+        /*
+          STEP 3 — always confirm completeness against every candidate in
+          the background. On a warm reopen this is the original "revalidate
+          against live works.json" check. On a cold start it additionally
+          catches the case where the source used in STEP 2 turned out to be
+          the less-complete one; the more complete data silently replaces it
+          with no extra spinner or flicker of the empty state.
         */
         try {
           const works = await fetchWorksDirect();
           const freshSignature = worksSignature(works);
 
-          if (!renderedFromCache || freshSignature !== cachedSignature) {
+          if (!(renderedFromCache || renderedFromNetwork) || freshSignature !== appliedSignature) {
             applyWorksToState(works);
+            try { apLogTiming('completeness check applied final works.json (' + (Array.isArray(works) ? works.length : 0) + ' items)'); } catch (_) {}
             try { console.log('[Archive Pro] applied live works.json:', Array.isArray(works) ? works.length : 0, 'item(s)'); } catch (_) {}
           }
 
@@ -8164,11 +8270,11 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
             requestServiceWorkerNonOriginsCache();
           }
         } catch (error) {
-          if (renderedFromCache) {
-            /* Cached content is already correctly on screen; a failed
-               background refresh should stay silent rather than replace
-               good data with an error state. */
-            try { console.warn('[Archive Pro] background works.json refresh failed, keeping cached view', error); } catch (_) {}
+          if (renderedFromCache || renderedFromNetwork) {
+            /* Something is already correctly on screen; a failed
+               background completeness check should stay silent rather
+               than replace good data with an error state. */
+            try { console.warn('[Archive Pro] background works.json refresh failed, keeping current view', error); } catch (_) {}
             return;
           }
 

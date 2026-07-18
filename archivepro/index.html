@@ -7402,7 +7402,19 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         if (els.loadingScreen) { els.loadingScreen.hidden = true; els.loadingScreen.style.display = 'none'; }
         if (els.resultsMeta) els.resultsMeta.style.display = 'flex';
-        if (els.emptyState) els.emptyState.hidden = state.filtered.length !== 0;
+        if (els.emptyState) {
+          /*
+            VI 빛의 파도 / Waves of Light (section_id 6) — EMPTY STATE EXCEPTION
+            This section has no works registered yet, so it can never
+            produce a non-empty result. Per request, the generic
+            "조건에 맞는 작품이 없습니다 / No artworks match the current
+            filters." box should not appear for this section — just an
+            empty grid area. Every other section/search-empty case keeps
+            showing the existing message exactly as before.
+          */
+          const isEmptyWaveSection = String(state.section) === '6' && state.filtered.length === 0;
+          els.emptyState.hidden = state.filtered.length !== 0 || isEmptyWaveSection;
+        }
 
         if (!state.filtered.length) {
           els.grid.innerHTML = '';

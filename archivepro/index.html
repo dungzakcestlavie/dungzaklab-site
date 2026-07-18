@@ -5696,7 +5696,8 @@ html.is-ipad [data-viewer-close]:hover {
         2: { kr: 'II 인간', en: 'Human Being' },
         3: { kr: 'III 정신의 재탄생', en: 'Rebirth of Mind' },
         4: { kr: 'IV 존재의 회복', en: 'Restoration of Being' },
-        5: { kr: 'V 빛의 초의식', en: 'Metaconsciousness of Light' }
+        5: { kr: 'V 빛의 초의식', en: 'Metaconsciousness of Light' },
+        6: { kr: 'VI 빛의 파도', en: 'VI Waves of Light', enCombined: 'Waves of Light' }
       };
 
       /* SECTION EXCLUDE LIST — 2026-07-08 works.json 실데이터 확인 완료:
@@ -6272,7 +6273,7 @@ lightbox: document.getElementById('lightbox'),
         const sec = SECTION_MAP[sectionId];
         if (!sec) return state.lang === 'en' ? 'Unsorted' : (state.lang === 'both' ? '미분류 / Unsorted' : '미분류');
         if (state.lang === 'en') return sec.en;
-        if (state.lang === 'both') return `${sec.kr} / ${sec.en}`;
+        if (state.lang === 'both') return `${sec.kr} / ${sec.enCombined || sec.en}`;
         return sec.kr;
       }
 
@@ -6432,7 +6433,7 @@ lightbox: document.getElementById('lightbox'),
            - All other works use JSON section_id only.
            - No title/section text guessing, so sections never overlap by inference. */
         if (/^or[-_]?\d+/i.test(id)) return 0;
-        if (Number.isFinite(sid) && sid >= 0 && sid <= 5) return sid;
+        if (Number.isFinite(sid) && sid >= 0 && sid <= 6) return sid;
         return 9999;
       }
 
@@ -6607,7 +6608,8 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           2: ['2', 'ii', 'human', 'human being', 'people', '인간', '사람', 'ㅇㄱ'],
           3: ['3', 'iii', 'rebirth', 'rebirth of mind', 'mind', 'spirit', '정신의 재탄생', '정신', '재탄생', 'ㅈㅅㅇㅈㅌㅅ', 'ㅈㅅ'],
           4: ['4', 'iv', 'restoration', 'restoration of being', 'being', 'existence', '존재의 회복', '존재', '회복', 'ㅈㅈㅇㅎㅂ', 'ㅈㅈ'],
-          5: ['5', 'v', 'metaconsciousness', 'meta consciousness', 'metaconsciousness of light', 'light', '빛의 초의식', '빛', '초의식', 'ㅂㅇㅊㅇㅅ', 'ㅂㅊㅇㅅ', 'ㅂ']
+          5: ['5', 'v', 'metaconsciousness', 'meta consciousness', 'metaconsciousness of light', 'light', '빛의 초의식', '빛', '초의식', 'ㅂㅇㅊㅇㅅ', 'ㅂㅊㅇㅅ', 'ㅂ'],
+          6: ['6', 'vi', 'waves of light', 'wave of light', 'waves', 'wave', '빛의 파도', '파도', 'ㅂㅇㅍㄷ', 'ㅍㄷ']
         };
         return map[Number(sectionId)] || [];
       }
@@ -6909,6 +6911,14 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         setStatusByState();
       }
 
+      /* ALWAYS-VISIBLE SECTIONS
+         Some sections (e.g. VI 빛의 파도 / Waves of Light, section_id 6) are
+         defined ahead of any actual works being registered. These must still
+         appear in the SECTION dropdown with a normal, empty (0-result) filter
+         state — never hidden just because sectionIdsWithWorks doesn't have
+         them yet. */
+      const ALWAYS_VISIBLE_SECTION_IDS = new Set([6]);
+
       function populateSections() {
         const prev = state.section;
         els.sectionSelect.textContent = '';
@@ -6929,7 +6939,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           .map(Number)
           .sort((a, b) => a - b)
           .forEach((sectionId) => {
-            if (!sectionIdsWithWorks.has(sectionId)) return;
+            if (!sectionIdsWithWorks.has(sectionId) && !ALWAYS_VISIBLE_SECTION_IDS.has(sectionId)) return;
 
             const opt = document.createElement('option');
             opt.value = String(sectionId);
@@ -8154,11 +8164,12 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         }
 
         state._searchPrepared = false;
-        state._sectionCount = new Set(
-          state.all
-            .map(item => Number(item.section_id))
-            .filter(n => Number.isFinite(n))
-        ).size;
+        /* SECTION COUNT — reflects the number of defined sections in
+           SECTION_MAP (structure), not just the section_ids that happen to
+           have works today. This is what makes "6 Sections" become
+           "7 Sections" the moment VI 빛의 파도 / Waves of Light is defined,
+           even before any work with section_id 6 exists. */
+        state._sectionCount = Object.keys(SECTION_MAP).length;
         state.loadState = 'loaded';
         state.isLoaded = true;
 

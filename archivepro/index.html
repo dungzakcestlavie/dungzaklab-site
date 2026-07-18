@@ -5691,12 +5691,12 @@ html.is-ipad [data-viewer-close]:hover {
 
 
       const SECTION_MAP = {
-        0: { kr: 'A 기원', en: 'Origins' },
-        1: { kr: 'I 우리를 위해 기도해 주세요', en: 'Pray for Us' },
-        2: { kr: 'II 인간', en: 'Human Being' },
-        3: { kr: 'III 정신의 재탄생', en: 'Rebirth of Mind' },
-        4: { kr: 'IV 존재의 회복', en: 'Restoration of Being' },
-        5: { kr: 'V 빛의 초의식', en: 'Metaconsciousness of Light' },
+        0: { kr: 'A 기원', en: 'A Origins', enCombined: 'Origins', enLegacy: 'Origins' },
+        1: { kr: 'I 우리를 위해 기도해 주세요', en: 'I Pray for Us', enCombined: 'Pray for Us', enLegacy: 'Pray for Us' },
+        2: { kr: 'II 인간', en: 'II Human Being', enCombined: 'Human Being', enLegacy: 'Human Being' },
+        3: { kr: 'III 정신의 재탄생', en: 'III Rebirth of Mind', enCombined: 'Rebirth of Mind', enLegacy: 'Rebirth of Mind' },
+        4: { kr: 'IV 존재의 회복', en: 'IV Restoration of Being', enCombined: 'Restoration of Being', enLegacy: 'Restoration of Being' },
+        5: { kr: 'V 빛의 초의식', en: 'V Metaconsciousness of Light', enCombined: 'Metaconsciousness of Light', enLegacy: 'Metaconsciousness of Light' },
         6: { kr: 'VI 빛의 파도', en: 'VI Waves of Light', enCombined: 'Waves of Light' }
       };
 
@@ -5742,7 +5742,7 @@ html.is-ipad [data-viewer-close]:hover {
         const itemKr = normalizeSearchToken(item.section_kr);
         const itemEn = normalizeSearchToken(item.section_en);
         const targetKr = normalizeSearchToken(target.kr);
-        const targetEn = normalizeSearchToken(target.en);
+        const targetEn = normalizeSearchToken(target.enLegacy || target.en);
 
         return !!((itemKr && itemKr === targetKr) || (itemEn && itemEn === targetEn));
       }
@@ -6277,10 +6277,23 @@ lightbox: document.getElementById('lightbox'),
         return sec.kr;
       }
 
+      /* LEGACY EN DISPLAY — used only outside the SECTION dropdown/select box
+         (work card section-tag, Viewer section label). The dropdown fix
+         (roman numerals in EN mode for all sections) is scoped to the
+         dropdown/select display only; every other existing surface keeps
+         showing section names exactly as it did before that fix. */
+      function getSectionTextByIdLegacyEN(sectionId) {
+        const sec = SECTION_MAP[sectionId];
+        if (!sec) return state.lang === 'en' ? 'Unsorted' : (state.lang === 'both' ? '미분류 / Unsorted' : '미분류');
+        if (state.lang === 'en') return sec.enLegacy || sec.en;
+        if (state.lang === 'both') return `${sec.kr} / ${sec.enCombined || sec.en}`;
+        return sec.kr;
+      }
+
       function getSectionPlainById(sectionId, lang) {
         const sec = SECTION_MAP[sectionId];
         if (!sec) return lang === 'en' ? 'Unsorted' : '미분류';
-        return lang === 'en' ? sec.en : sec.kr;
+        return lang === 'en' ? (sec.enLegacy || sec.en) : sec.kr;
       }
 
       function getTitle(item) {
@@ -7262,7 +7275,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
             '<div class="card-body">',
               '<div class="card-top">',
                 '<div class="work-id">', escapeHTML(work.id), '</div>',
-                '<div class="section-tag">', escapeHTML(getSectionTextById(work.section_id)), '</div>',
+                '<div class="section-tag">', escapeHTML(getSectionTextByIdLegacyEN(work.section_id)), '</div>',
               '</div>',
               '<p class="title', title ? '' : ' empty', '">', escapeHTML(title || t('untitled')), '</p>',
               isOrigin ? '' : '<p class="caption">' + escapeHTML(infoLine || t('noInfo')) + '</p>',
@@ -7528,7 +7541,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         els.lbId.textContent = item.id;
         setViewerTitle(item, title, isOrigin);
-        els.lbSection.textContent = getSectionTextById(item.section_id);
+        els.lbSection.textContent = getSectionTextByIdLegacyEN(item.section_id);
         els.lbMaterialVal.textContent = material;
         els.lbSizeVal.textContent = size;
         els.lbYearVal.textContent = year;

@@ -1,6 +1,10 @@
 /* ARCHIVE PRO APP — app.js
-   Bootstrap only: init order, data loading, language tabs, install prompt,
-   service worker registration. All real logic lives in the other modules. */
+   Bootstrap + the ONE render() entry point (per Lumera's architecture
+   review, principle 3). Every state mutation anywhere in the app ends
+   with a call to window.APP_RENDER() — this is the only place that
+   fans out into renderHeader() -> renderFilters() -> renderGrid() ->
+   renderViewer(). No other module calls another module's render function
+   directly; they only mutate filter.js's shared state and call render(). */
 (function () {
   'use strict';
 
@@ -19,15 +23,15 @@
       var kr = node.getAttribute('data-kr') || '';
       var en = node.getAttribute('data-en') || '';
       var text = lang === 'en' ? en : (lang === 'both' ? (kr + '\n' + en) : kr);
-      if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
-        node.placeholder = text;
-      } else {
-        node.textContent = text;
-      }
+      if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') node.placeholder = text;
+      else node.textContent = text;
     });
   }
 
-  function setLanguage(lang) {
+  // ---- The single render entry ----
+  // render() -> renderHeader() -> renderFilters() -> renderGrid() -> renderViewer()
+  function renderHeader() {
+    var lang = filterMod.state.lang;
     document.querySelectorAll('.lang-tab').forEach(function (btn) {
       var active = btn.dataset.lang === lang;
       btn.classList.toggle('active', active);
@@ -36,13 +40,23 @@
     syncDataLanguage(lang);
     var heroModeLine = $('#heroModeLine');
     if (heroModeLine) heroModeLine.textContent = HERO_MODE_LABEL[lang] || HERO_MODE_LABEL.kr;
-    filterMod.setLang(lang === 'both' ? 'both' : lang);
-    search.populateSectionSelect(filterMod.state.sections);
   }
+
+  function render() {
+    renderHeader();
+    ui.renderFilters();
+    ui.renderGrid();
+    ui.updateStats();
+    viewer.renderViewer();
+  }
+  window.APP_RENDER = render;
 
   function initLanguageTabs() {
     document.querySelectorAll('.lang-tab').forEach(function (btn) {
-      btn.addEventListener('click', function () { setLanguage(btn.dataset.lang); });
+      btn.addEventListener('click', function () {
+        filterMod.setLang(btn.dataset.lang);
+        search.populateSectionSelect(filterMod.state.sections);
+      });
     });
   }
 
@@ -60,8 +74,6 @@
     var trigger = $('#ap-reset-trigger');
     if (!trigger) return;
     trigger.addEventListener('click', function (e) {
-      // Soft reset: clear filters and scroll home without a full page
-      // reload, matching the single-file Archive Pro's brand-click behavior.
       e.preventDefault();
       var resetBtn = $('#resetBtn');
       if (resetBtn) resetBtn.click();
@@ -91,8 +103,6 @@
       });
     }
 
-    // iOS Safari never fires beforeinstallprompt — show the manual guide
-    // instead when running in Safari on iOS and not already installed.
     var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     if (isIOS && !isStandalone) {
@@ -102,6 +112,11 @@
     }
   }
 
+  // NOTE for Lumera / next pass: cache-name versioning + old-cache cleanup
+  // (principle 9) lives in sw.js itself, which I have not seen the
+  // contents of — only registering it here. Needs a follow-up check that
+  // sw.js actually bumps its cache name per APP_CONFIG.VERSION and purges
+  // stale caches on activate; not verified in this pass.
   function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
     window.addEventListener('load', function () {
@@ -118,7 +133,6 @@
     api.loadSections().then(function (sections) {
       filterMod.setSections(sections);
       search.populateSectionSelect(sections);
-      ui.updateStats();
     });
 
     api.loadWorksProgressive(
@@ -133,7 +147,11 @@
     );
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
+  var bootstrapped = false;
+  function bootstrap() {
+    if (bootstrapped) return; // idempotency guard — init sequence runs exactly once
+    bootstrapped = true;
+
     try { ui.init(); } catch (e) { console.error(e); }
     try { viewer.init(); } catch (e) { console.error(e); }
     try { search.init(); } catch (e) { console.error(e); }
@@ -143,5 +161,7 @@
     try { initInstallPrompt(); } catch (e) { console.error(e); }
     try { registerServiceWorker(); } catch (e) { console.error(e); }
     try { loadData(); } catch (e) { console.error(e); }
-  });
+  }
+
+  document.addEventListener('DOMContentLoaded', bootstrap);
 })();

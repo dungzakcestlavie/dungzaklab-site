@@ -1,12 +1,13 @@
 /* ARCHIVE PRO APP — viewer.js
-   Same engine as the single-file Archive Pro's lightbox, built here with
-   the fixes already learned there from day one:
-   - clamp runs on every device (mouse AND touch), not touch-only, so
-     drag-to-pan while zoomed can never render outside the window.
-   - image sizing is max-width/max-height:100% of the (already padded)
-     stage box — no separate vw/vh calc that double-shrinks the image.
-   - closing the viewer always scrolls back to the last-viewed card,
-     rendering it first via ui.js if it wasn't paginated into the DOM yet.
+   Per Lumera's review: viewer no longer owns its own scale/pan/index
+   state — those live in filter.js's shared state object. This module:
+   1) mutates state.scale/panX/panY/currentIndex/viewerOpen in response
+      to gestures (wheel, drag, pinch, swipe, double-tap, keyboard), then
+   2) calls window.APP_RENDER() — the single render entry — every time,
+      never painting the DOM itself outside of renderViewer().
+   Ephemeral gesture bookkeeping (isDragging, touch start coordinates,
+   tap timing, etc.) stays local here — those aren't "state" in the
+   product sense, just interaction plumbing, and don't need to be shared.
 */
 window.APP_VIEWER = (function () {
   'use strict';
@@ -15,11 +16,11 @@ window.APP_VIEWER = (function () {
   var $ = function (sel) { return document.querySelector(sel); };
 
   var els = {};
-  var items = [];
-  var index = 0;
   var loadToken = 0;
+  var lastRenderedIndex = -1;
+  var frameCache = null;
 
-  var scale = 1, x = 0, y = 0;
+  // Ephemeral gesture state only — NOT part of the shared app state.
   var startX = 0, startY = 0, lastX = 0, lastY = 0;
   var startTX = 0, startTY = 0;
   var isDragging = false, isZooming = false, touchMoved = false;
@@ -28,13 +29,13 @@ window.APP_VIEWER = (function () {
   var swipeDX = 0, swipeDY = 0, swipeLocked = false;
   var busy = false, lastSwipeTime = 0;
   var mouseDragging = false, mouseLastX = 0, mouseLastY = 0;
-  var frameCache = null;
 
   var SWIPE_THRESHOLD = 45;
   var SWIPE_VERTICAL_LIMIT = 70;
   var SWIPE_COOLDOWN = 45;
 
-  function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
+  function state() { return filterMod.state; }
+  function clampNum(v, min, max) { return Math.min(Math.max(v, min), max); }
   function getTouchDistance(t1, t2) { return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY); }
 
   function markBusy() {
@@ -45,9 +46,11 @@ window.APP_VIEWER = (function () {
 
   function invalidateFrameCache() { frameCache = null; }
 
-  function clampToFrame() {
+  // Runs unconditionally regardless of input device (mouse, touch, pen) —
+  // per principle "Clamp는 항상 적용", no touch-only / mobile-only gate.
+  function clampToFrame(s) {
     if (!els.stage || !els.image) return;
-    if (scale <= 1) { x = 0; y = 0; return; }
+    if (s.scale <= 1) { s.panX = 0; s.panY = 0; return; }
 
     if (!frameCache) {
       var frame = els.stage.getBoundingClientRect();
@@ -60,46 +63,61 @@ window.APP_VIEWER = (function () {
       frameCache = { boxW: boxW, boxH: boxH, renderedW: natW * fit, renderedH: natH * fit };
     }
 
-    var scaledW = frameCache.renderedW * scale;
-    var scaledH = frameCache.renderedH * scale;
+    var scaledW = frameCache.renderedW * s.scale;
+    var scaledH = frameCache.renderedH * s.scale;
     var maxX = Math.max(0, (scaledW - frameCache.boxW) / 2);
     var maxY = Math.max(0, (scaledH - frameCache.boxH) / 2);
-    x = maxX > 0 ? clamp(x, -maxX, maxX) : 0;
-    y = maxY > 0 ? clamp(y, -maxY, maxY) : 0;
+    s.panX = maxX > 0 ? clampNum(s.panX, -maxX, maxX) : 0;
+    s.panY = maxY > 0 ? clampNum(s.panY, -maxY, maxY) : 0;
   }
 
+  // applyTransform() -> clamp() -> updateCursor(), per Lumera's required
+  // order. Reads/writes state.scale/panX/panY directly — this is the
+  // ONE place transform math happens.
   function applyTransform() {
-    if (!els.image) return;
-    if (scale <= 1.02) { scale = 1; x = 0; y = 0; }
-    clampToFrame();
-    els.image.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0) scale(' + scale + ')';
-    if (els.stage) els.stage.classList.toggle('is-zoomed', scale > 1.02);
+    var s = state();
+    if (s.scale <= 1.02) { s.scale = 1; s.panX = 0; s.panY = 0; }
+    clampToFrame(s);
+    if (els.image) {
+      els.image.style.transform = 'translate3d(' + s.panX + 'px, ' + s.panY + 'px, 0) scale(' + s.scale + ')';
+    }
+    updateCursor();
+  }
+
+  function updateCursor() {
+    if (!els.stage) return;
+    els.stage.classList.toggle('is-zoomed', state().scale > 1.02);
   }
 
   function resetTransform() {
-    scale = 1; x = 0; y = 0;
+    var s = state();
+    s.scale = 1; s.panX = 0; s.panY = 0;
     isDragging = false; isZooming = false; mouseDragging = false;
     startScale = 1; initialDistance = 0; touchMoved = false;
     invalidateFrameCache();
     if (els.stage) els.stage.classList.remove('is-dragging', 'is-zoomed');
     if (els.image) {
-      els.image.style.transition = 'none';
+      els.image.classList.add('no-transition');
       els.image.style.transform = 'translate3d(0px, 0px, 0) scale(1)';
       requestAnimationFrame(function () {
-        if (els.image) els.image.style.transition = '';
+        if (els.image) els.image.classList.remove('no-transition');
       });
     }
   }
 
-  function toggleZoom() {
-    scale = scale > 1 ? 1 : 2;
-    x = 0; y = 0;
+  function toggleZoomAndRender() {
+    var s = state();
+    s.scale = s.scale > 1 ? 1 : 2;
+    s.panX = 0; s.panY = 0;
     applyTransform();
+    rerender();
   }
 
   function preloadNeighbors() {
+    var s = state();
+    var items = s.filtered;
     if (items.length < 2) return;
-    [items[index + 1], items[index - 1]].forEach(function (item) {
+    [items[s.currentIndex + 1], items[s.currentIndex - 1]].forEach(function (item) {
       if (!item) return;
       var url = item.zoom || item.image;
       if (!url) return;
@@ -111,15 +129,13 @@ window.APP_VIEWER = (function () {
 
   function isOrigin(item) { return Number(item.section_id) === 0; }
 
-  function setSlide(newIndex) {
-    if (!items[newIndex]) return;
-    markBusy();
-    index = newIndex;
-    var item = items[index];
+  // Loads captions + progressive image for the current slide. Only runs
+  // when currentIndex actually changed since the last renderViewer() call
+  // — repeated renderViewer() calls during a zoom/pan gesture must NOT
+  // reload the image.
+  function loadSlide(item) {
     loadToken += 1;
     var thisToken = loadToken;
-
-    resetTransform();
 
     var title = isOrigin(item) ? '무제' : (filterMod.getTitle(item) || '무제');
     var material = isOrigin(item) ? '—' : (filterMod.getMaterial(item) || '—');
@@ -143,9 +159,6 @@ window.APP_VIEWER = (function () {
       els.image.alt = title;
       els.image.classList.remove('is-ready');
       els.image.classList.add('is-loading');
-      // Progressive load: show the standard image first (usually already
-      // warm from the grid thumbnail), swap to the zoom image once it's
-      // decoded in the background.
       els.image.src = imageUrl || zoomUrl || '';
       els.image.onload = function () {
         if (thisToken !== loadToken) return;
@@ -167,41 +180,75 @@ window.APP_VIEWER = (function () {
     preloadNeighbors();
   }
 
-  function changeSlideSafely(target) {
-    if (!items.length || target === index) return;
-    setSlide(target);
+  // The single paint function for the viewer, called every time
+  // window.APP_RENDER() runs. Cheap to call repeatedly: only reloads the
+  // slide image when currentIndex changed, otherwise just re-applies the
+  // transform (so it's safe to call on every wheel/drag tick too).
+  function renderViewer() {
+    var s = state();
+
+    if (els.lightbox) {
+      els.lightbox.classList.toggle('open', s.viewerOpen);
+      els.lightbox.setAttribute('aria-hidden', String(!s.viewerOpen));
+    }
+    document.documentElement.classList.toggle('viewer-open', s.viewerOpen);
+    document.body.classList.toggle('viewer-open', s.viewerOpen);
+    document.documentElement.style.overflow = s.viewerOpen ? 'hidden' : '';
+    document.body.style.overflow = s.viewerOpen ? 'hidden' : '';
+
+    if (!s.viewerOpen) {
+      if (lastRenderedIndex !== -1 && els.image) {
+        els.image.removeAttribute('src');
+        els.image.alt = '';
+      }
+      lastRenderedIndex = -1;
+      return;
+    }
+
+    var item = s.filtered[s.currentIndex];
+    if (!item) return;
+
+    if (s.currentIndex !== lastRenderedIndex) {
+      lastRenderedIndex = s.currentIndex;
+      resetTransform();
+      loadSlide(item);
+    }
+
+    applyTransform();
+  }
+
+  function rerender() {
+    if (typeof window.APP_RENDER === 'function') window.APP_RENDER();
+    else renderViewer();
   }
 
   function next() {
-    if (isZooming || scale > 1.02) return;
-    if (!items.length) return;
-    changeSlideSafely(Math.min(index + 1, items.length - 1));
+    var s = state();
+    if (isZooming || s.scale > 1.02) return;
+    if (!s.filtered.length) return;
+    var target = Math.min(s.currentIndex + 1, s.filtered.length - 1);
+    if (target === s.currentIndex) return;
+    s.currentIndex = target;
+    rerender();
   }
+
   function prev() {
-    if (isZooming || scale > 1.02) return;
-    if (!items.length) return;
-    changeSlideSafely(Math.max(index - 1, 0));
+    var s = state();
+    if (isZooming || s.scale > 1.02) return;
+    if (!s.filtered.length) return;
+    var target = Math.max(s.currentIndex - 1, 0);
+    if (target === s.currentIndex) return;
+    s.currentIndex = target;
+    rerender();
   }
 
-  function isOpen() {
-    return !!(els.lightbox && els.lightbox.classList.contains('open') && document.body.classList.contains('viewer-open'));
-  }
-
-  function open(clickedIndex) {
-    items = filterMod.state.filtered;
-    if (!items.length) return;
-    var startAt = clamp(clickedIndex, 0, items.length - 1);
-
-    if (els.lightbox) {
-      els.lightbox.classList.add('open');
-      els.lightbox.setAttribute('aria-hidden', 'false');
-    }
-    document.documentElement.classList.add('viewer-open');
-    document.body.classList.add('viewer-open');
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-
-    setSlide(startAt);
+  function open(index) {
+    var s = state();
+    if (!s.filtered.length) return;
+    s.currentIndex = clampNum(index, 0, s.filtered.length - 1);
+    s.viewerOpen = true;
+    s.scale = 1; s.panX = 0; s.panY = 0;
+    rerender();
   }
 
   function returnToLastViewed(returnIndex) {
@@ -216,26 +263,16 @@ window.APP_VIEWER = (function () {
   }
 
   function close() {
-    var returnIndex = index;
-    if (els.lightbox) {
-      els.lightbox.classList.remove('open');
-      els.lightbox.setAttribute('aria-hidden', 'true');
-    }
-    document.documentElement.classList.remove('viewer-open');
-    document.body.classList.remove('viewer-open');
-    document.documentElement.style.overflow = '';
-    document.body.style.overflow = '';
-    if (els.image) {
-      els.image.removeAttribute('src');
-      els.image.alt = '';
-    }
-    loadToken += 1;
+    var s = state();
+    var returnIndex = s.currentIndex;
+    s.viewerOpen = false;
+    s.scale = 1; s.panX = 0; s.panY = 0;
     resetTransform();
-    items = [];
-    index = 0;
+    rerender();
     returnToLastViewed(returnIndex);
   }
 
+  function isOpen() { return !!state().viewerOpen; }
   function isCloseTarget(e) {
     return !!(e && e.target && e.target.closest && e.target.closest('.lightbox-close, .viewer-close'));
   }
@@ -254,23 +291,26 @@ window.APP_VIEWER = (function () {
     els.lightbox.addEventListener('dblclick', function (e) {
       if (!isOpen()) return;
       e.preventDefault();
-      toggleZoom();
+      toggleZoomAndRender();
     });
 
     // Mouse wheel / trackpad zoom.
     els.lightbox.addEventListener('wheel', function (e) {
       if (!isOpen()) return;
       e.preventDefault();
+      var s = state();
       var delta = -e.deltaY * 0.0015;
-      scale = clamp(scale + delta * scale, 1, 4);
+      s.scale = clampNum(s.scale + delta * s.scale, 1, 4);
       applyTransform();
+      rerender();
       markBusy();
     }, { passive: false });
 
-    // Mouse drag-to-pan when zoomed. Cursor becomes a hand via the
-    // .is-zoomed/.is-dragging classes toggled in applyTransform()/here.
+    // Mouse drag-to-pan when zoomed. Same clamp/cursor path as touch —
+    // no device-specific branch beyond "which event fired".
     els.lightbox.addEventListener('mousedown', function (e) {
-      if (!isOpen() || scale <= 1.02 || e.button !== 0) return;
+      var s = state();
+      if (!isOpen() || s.scale <= 1.02 || e.button !== 0) return;
       e.preventDefault();
       mouseDragging = true;
       mouseLastX = e.clientX;
@@ -278,12 +318,14 @@ window.APP_VIEWER = (function () {
       if (els.stage) els.stage.classList.add('is-dragging');
     });
     document.addEventListener('mousemove', function (e) {
-      if (!mouseDragging || scale <= 1.02) return;
-      x += e.clientX - mouseLastX;
-      y += e.clientY - mouseLastY;
+      var s = state();
+      if (!mouseDragging || s.scale <= 1.02) return;
+      s.panX += e.clientX - mouseLastX;
+      s.panY += e.clientY - mouseLastY;
       mouseLastX = e.clientX;
       mouseLastY = e.clientY;
       applyTransform();
+      rerender();
     });
     document.addEventListener('mouseup', function () {
       mouseDragging = false;
@@ -293,13 +335,14 @@ window.APP_VIEWER = (function () {
     // Touch: pinch zoom, swipe navigation, double-tap zoom, pan when zoomed.
     els.lightbox.addEventListener('touchstart', function (e) {
       if (isCloseTarget(e) || !isOpen()) return;
+      var s = state();
 
       if (e.touches.length === 2) {
         e.preventDefault();
         isZooming = true; isDragging = false; touchMoved = false;
         swipeLocked = false; swipeDX = 0; swipeDY = 0;
         initialDistance = getTouchDistance(e.touches[0], e.touches[1]);
-        startScale = scale; startTX = x; startTY = y;
+        startScale = s.scale; startTX = s.panX; startTY = s.panY;
         return;
       }
       if (e.touches.length !== 1) return;
@@ -309,10 +352,10 @@ window.APP_VIEWER = (function () {
       lastX = startX; lastY = startY;
       swipeDX = 0; swipeDY = 0; swipeLocked = false; touchMoved = false;
 
-      if (scale > 1.02) {
+      if (s.scale > 1.02) {
         e.preventDefault();
         isDragging = true;
-        startTX = x; startTY = y;
+        startTX = s.panX; startTY = s.panY;
         return;
       }
       isDragging = true;
@@ -320,14 +363,16 @@ window.APP_VIEWER = (function () {
 
     els.lightbox.addEventListener('touchmove', function (e) {
       if (isCloseTarget(e) || !isOpen()) return;
+      var s = state();
 
       if (isZooming && e.touches.length === 2) {
         e.preventDefault();
         var newDist = getTouchDistance(e.touches[0], e.touches[1]);
         if (!initialDistance) initialDistance = newDist;
-        scale = clamp(startScale * (newDist / initialDistance), 1, 4);
-        if (scale <= 1.02) { x = 0; y = 0; } else { x = startTX; y = startTY; }
+        s.scale = clampNum(startScale * (newDist / initialDistance), 1, 4);
+        if (s.scale <= 1.02) { s.panX = 0; s.panY = 0; } else { s.panX = startTX; s.panY = startTY; }
         applyTransform();
+        rerender();
         markBusy();
         return;
       }
@@ -340,11 +385,12 @@ window.APP_VIEWER = (function () {
       var moveY = nowY - startY;
       if (Math.abs(moveX) > 4 || Math.abs(moveY) > 4) touchMoved = true;
 
-      if (scale > 1.02) {
+      if (s.scale > 1.02) {
         e.preventDefault();
-        x = startTX + moveX;
-        y = startTY + moveY;
+        s.panX = startTX + moveX;
+        s.panY = startTY + moveY;
         applyTransform();
+        rerender();
         markBusy();
         return;
       }
@@ -359,16 +405,17 @@ window.APP_VIEWER = (function () {
 
     els.lightbox.addEventListener('touchend', function (e) {
       if (isCloseTarget(e) || !isOpen()) return;
+      var s = state();
 
       if (isZooming && e.touches.length < 2) {
         e.preventDefault();
-        isZooming = false; initialDistance = 0; startScale = scale;
-        if (scale <= 1.02) { x = 0; y = 0; applyTransform(); }
+        isZooming = false; initialDistance = 0; startScale = s.scale;
+        if (s.scale <= 1.02) { s.panX = 0; s.panY = 0; applyTransform(); rerender(); }
         return;
       }
       if (!isDragging) return;
 
-      if (scale > 1.02) {
+      if (s.scale > 1.02) {
         isDragging = false; touchMoved = false; swipeLocked = false;
         swipeDX = 0; swipeDY = 0;
         return;
@@ -388,7 +435,7 @@ window.APP_VIEWER = (function () {
         var tapNow = Date.now();
         if (tapNow - lastTap < 300) {
           e.preventDefault();
-          toggleZoom();
+          toggleZoomAndRender();
           lastTap = 0;
         } else {
           lastTap = tapNow;
@@ -400,8 +447,9 @@ window.APP_VIEWER = (function () {
     }, { passive: false });
 
     els.lightbox.addEventListener('touchcancel', function () {
+      var s = state();
       isDragging = false; isZooming = false; initialDistance = 0;
-      startScale = scale; startTX = x; startTY = y;
+      startScale = s.scale; startTX = s.panX; startTY = s.panY;
       touchMoved = false; swipeLocked = false; swipeDX = 0; swipeDY = 0;
     }, { passive: false });
 
@@ -416,7 +464,11 @@ window.APP_VIEWER = (function () {
     window.addEventListener('orientationchange', invalidateFrameCache, { passive: true });
   }
 
+  var bound = false;
   function init() {
+    if (bound) return; // idempotency guard
+    bound = true;
+
     els.lightbox = $('#lightbox');
     els.closeBtn = $('#viewerCloseBtn');
     els.prevBtn = $('#lightboxPrev');
@@ -436,5 +488,5 @@ window.APP_VIEWER = (function () {
     bindEvents();
   }
 
-  return { init: init, open: open, close: close, next: next, prev: prev };
+  return { init: init, open: open, close: close, next: next, prev: prev, renderViewer: renderViewer };
 })();

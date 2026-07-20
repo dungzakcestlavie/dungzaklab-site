@@ -251,13 +251,18 @@
     </div>
   </div>
 
-<!-- ARCHIVE PRO APP — build step 2 of 10 (App Shell only).
-     Loaded now: style.css, viewer.css, manifest.json, app.js.
-     Not yet moved in (per agreed step order): config.js, api.js, ui.js,
-     viewer.js, search.js, filter.js, cache.js, sw.js registration.
-     Until those steps land, the grid/search/viewer above are static
-     markup only — no rendering or interaction logic runs yet. This is
-     expected at this stage, not a bug. -->
+<!-- ARCHIVE PRO APP — build step: full completion (skipping the original
+     10-step phase-in per DUNGZAK's direct request). All modules below are
+     now in place: config → cache → api → filter → search → ui → viewer →
+     app (bootstrap). Load order matters — each later file assumes the
+     earlier ones already ran. -->
+<script src="/app/js/config.js"></script>
+<script src="/app/js/cache.js"></script>
+<script src="/app/js/api.js"></script>
+<script src="/app/js/filter.js"></script>
+<script src="/app/js/search.js"></script>
+<script src="/app/js/ui.js"></script>
+<script src="/app/js/viewer.js"></script>
 <script src="/app/js/app.js"></script>
 </body>
 </html>

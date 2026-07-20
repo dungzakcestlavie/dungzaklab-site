@@ -8659,6 +8659,21 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
           applyViewerTransform();
         });
 
+        // Mouse wheel / trackpad zoom (desktop) — matches dungzak.art / jskim.art.
+        // Existing pinch (touch), double-click, and mouse-drag pan are unaffected.
+        els.lightbox.addEventListener('wheel', (e) => {
+          if (!isViewerOpen()) return;
+          e.preventDefault();
+          const delta = -e.deltaY * 0.0015;
+          viewerScale = Math.min(Math.max(1, viewerScale + delta * viewerScale), 4);
+          if (viewerScale <= 1.02) {
+            viewerScale = 1;
+            viewerX = 0;
+            viewerY = 0;
+          }
+          applyViewerTransform();
+        }, { passive: false });
+
         const viewerTouchTarget = els.lightboxStage || els.lightbox;
         viewerTouchTarget.addEventListener('touchstart', (e) => {
           if (!isViewerOpen()) return;

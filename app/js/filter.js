@@ -1,24 +1,40 @@
 /* ARCHIVE PRO APP — filter.js
-   Holds the single shared state object (allWorks, sections, filtered,
-   current section/search/sort) and the pure filtering/sorting logic.
-   ui.js reads state.filtered to render; search.js and the section/sort
-   selects call setSectionFilter/setSearchQuery/setSortMode, which always
-   go through applyFilters() so state.filtered is never stale. */
+   Single shared state object for the WHOLE app (per Lumera's architecture
+   review): language, section, search, filtered, currentIndex, viewerOpen,
+   scale, panX, panY all live here — not scattered across modules. Every
+   setter mutates state then calls window.APP_RENDER() (defined in app.js),
+   the one render entry point. No module calls another module's render
+   function directly. */
 window.APP_FILTER = (function () {
   'use strict';
 
   var cfg = window.APP_CONFIG;
 
   var state = {
+    // data
     allWorks: [],
     sections: [],
     filtered: [],
+    visibleCount: cfg.INITIAL_VISIBLE,
+
+    // filter/search/lang
     sectionFilter: 'all',
     searchQuery: '',
     sortMode: 'section-id-asc',
-    lang: 'kr', // 'kr' | 'en' | 'both' — kept in sync with ui.js's language tabs
-    visibleCount: cfg.INITIAL_VISIBLE
+    lang: 'kr',
+
+    // viewer (single source of truth — viewer.js reads/writes these,
+    // it does not keep its own separate copies)
+    viewerOpen: false,
+    currentIndex: 0,
+    scale: 1,
+    panX: 0,
+    panY: 0
   };
+
+  function render() {
+    if (typeof window.APP_RENDER === 'function') window.APP_RENDER();
+  }
 
   function safeText(v) {
     return (v === null || v === undefined) ? '' : String(v);
@@ -61,11 +77,7 @@ window.APP_FILTER = (function () {
     var q = state.searchQuery.trim().toLowerCase();
     if (!q) return true;
     var haystack = [
-      item.id,
-      getTitle(item),
-      getMaterial(item),
-      getYear(item),
-      sectionTextFor(item)
+      item.id, getTitle(item), getMaterial(item), getYear(item), sectionTextFor(item)
     ].join(' ').toLowerCase();
     return haystack.indexOf(q) !== -1;
   }
@@ -89,19 +101,19 @@ window.APP_FILTER = (function () {
     }
   };
 
-  function applyFilters() {
+  function recomputeFiltered() {
     var list = state.allWorks.filter(function (item) {
       return matchesSection(item) && matchesSearch(item);
     });
     var sorter = SORTERS[state.sortMode] || SORTERS['section-id-asc'];
     list.sort(sorter);
     state.filtered = list;
-    if (window.APP_UI && typeof window.APP_UI.renderGrid === 'function') {
-      window.APP_UI.renderGrid();
-    }
-    if (window.APP_UI && typeof window.APP_UI.updateStats === 'function') {
-      window.APP_UI.updateStats();
-    }
+    if (state.currentIndex >= list.length) state.currentIndex = Math.max(0, list.length - 1);
+  }
+
+  function applyFilters() {
+    recomputeFiltered();
+    render();
   }
 
   function setAllWorks(works) {
@@ -111,6 +123,7 @@ window.APP_FILTER = (function () {
 
   function setSections(sections) {
     state.sections = Array.isArray(sections) ? sections : [];
+    render();
   }
 
   function setSectionFilter(sectionId) {
@@ -135,6 +148,11 @@ window.APP_FILTER = (function () {
     applyFilters();
   }
 
+  function loadMore() {
+    state.visibleCount += cfg.LOAD_STEP;
+    render();
+  }
+
   return {
     state: state,
     applyFilters: applyFilters,
@@ -144,6 +162,7 @@ window.APP_FILTER = (function () {
     setSearchQuery: setSearchQuery,
     setSortMode: setSortMode,
     setLang: setLang,
+    loadMore: loadMore,
     getTitle: getTitle,
     getMaterial: getMaterial,
     getSize: getSize,

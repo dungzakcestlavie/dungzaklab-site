@@ -1,7 +1,9 @@
 /* ARCHIVE PRO APP — ui.js
-   Renders #grid from filter.js's state.filtered, keeps #resultsMeta stats
-   in sync, and handles the "Load more" pagination + lazy image loading.
-   Card click delegates straight to viewer.js's openViewer(). */
+   Renders the grid + stats + filter controls from state (filter.js owns
+   the state object; this module only reads it and paints DOM). Card
+   clicks mutate state and call window.APP_RENDER() — they do not call
+   viewer.js directly, per the "state drives render, not imperative calls
+   between modules" principle. */
 window.APP_UI = (function () {
   'use strict';
 
@@ -11,6 +13,7 @@ window.APP_UI = (function () {
 
   var SVG_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="4" height="5"></svg>';
   var lazyObserver = null;
+  var bound = false;
 
   function escapeHTML(v) {
     return String(v == null ? '' : v)
@@ -20,9 +23,7 @@ window.APP_UI = (function () {
   function buildAltText(work) {
     var title = filterMod.getTitle(work);
     var year = work.year ? String(work.year) : '';
-    return title
-      ? (title + (year ? ', ' + year : ''))
-      : ('무제' + (year ? ', ' + year : ''));
+    return title ? (title + (year ? ', ' + year : '')) : ('무제' + (year ? ', ' + year : ''));
   }
 
   function buildCardHTML(work, index) {
@@ -77,12 +78,17 @@ window.APP_UI = (function () {
   function observeLazyImages(root) {
     var observer = ensureLazyObserver();
     var imgs = root.querySelectorAll('img.thumb[data-src]');
-    if (observer) {
-      imgs.forEach(function (img) { observer.observe(img); });
-    } else {
-      imgs.forEach(loadLazyImage);
-    }
+    if (observer) imgs.forEach(function (img) { observer.observe(img); });
+    else imgs.forEach(loadLazyImage);
   }
+
+  // Renders only the parts of #grid that actually need new markup: if the
+  // filtered list + visibleCount haven't changed since the last render,
+  // skips the (relatively expensive) innerHTML rebuild. This keeps
+  // render() cheap to call after every state change, per Lumera's "single
+  // render entry" principle — callers don't need to reason about whether
+  // a grid rebuild is "necessary", renderGrid() decides that itself.
+  var lastGridSignature = '';
 
   function renderGrid() {
     var grid = $('#grid');
@@ -90,6 +96,10 @@ window.APP_UI = (function () {
     var loadWrap = $('#loadWrap');
     var state = filterMod.state;
     if (!grid) return;
+
+    var signature = state.filtered.length + ':' + state.visibleCount + ':' + state.lang;
+    if (signature === lastGridSignature) return;
+    lastGridSignature = signature;
 
     if (!state.filtered.length) {
       grid.innerHTML = '';
@@ -109,6 +119,18 @@ window.APP_UI = (function () {
     if (loadWrap) loadWrap.hidden = visible.length >= state.filtered.length;
   }
 
+  function renderFilters() {
+    var state = filterMod.state;
+    var sectionSelect = $('#sectionSelect');
+    var sortSelect = $('#sortSelect');
+    var searchInput = $('#searchInput');
+    if (sectionSelect && sectionSelect.value !== state.sectionFilter) sectionSelect.value = state.sectionFilter;
+    if (sortSelect && sortSelect.value !== state.sortMode) sortSelect.value = state.sortMode;
+    if (searchInput && document.activeElement !== searchInput && searchInput.value !== state.searchQuery) {
+      searchInput.value = state.searchQuery;
+    }
+  }
+
   function updateStats() {
     var state = filterMod.state;
     var statTotal = $('#statTotal'), statFiltered = $('#statFiltered'), statSections = $('#statSections');
@@ -126,40 +148,43 @@ window.APP_UI = (function () {
     if (renderedText) renderedText.textContent = '표시 ' + Math.min(state.visibleCount, state.filtered.length) + '점';
   }
 
-  function loadMore() {
-    var state = filterMod.state;
-    state.visibleCount += cfg.LOAD_STEP;
-    renderGrid();
-    updateStats();
-  }
-
   function bindGridClicks() {
     var grid = $('#grid');
     if (!grid) return;
     grid.addEventListener('click', function (e) {
       var card = e.target.closest('.card');
       if (!card) return;
-      var index = Number(card.dataset.index);
-      if (window.APP_VIEWER && Number.isFinite(index)) {
-        window.APP_VIEWER.open(index);
-      }
+      var idx = Number(card.dataset.index);
+      if (!Number.isFinite(idx)) return;
+      var state = filterMod.state;
+      // State-driven open: set currentIndex + viewerOpen, then let the
+      // single render() entry paint the viewer. ui.js never calls
+      // viewer.js's functions directly.
+      state.currentIndex = idx;
+      state.viewerOpen = true;
+      state.scale = 1; state.panX = 0; state.panY = 0;
+      if (typeof window.APP_RENDER === 'function') window.APP_RENDER();
     });
   }
 
   function init() {
+    if (bound) return; // idempotency guard — init() must only ever bind once
+    bound = true;
     bindGridClicks();
     var loadMoreBtn = $('#loadMoreBtn');
-    if (loadMoreBtn) loadMoreBtn.addEventListener('click', loadMore);
+    if (loadMoreBtn) loadMoreBtn.addEventListener('click', filterMod.loadMore);
   }
 
   return {
     init: init,
     renderGrid: renderGrid,
+    renderFilters: renderFilters,
     updateStats: updateStats,
     ensureCardRenderedForIndex: function (index) {
       var state = filterMod.state;
       if (index >= state.visibleCount) {
         state.visibleCount = index + 1;
+        lastGridSignature = ''; // force rebuild since visibleCount changed
         renderGrid();
         updateStats();
       }

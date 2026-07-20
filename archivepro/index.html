@@ -2159,7 +2159,7 @@ html, body {
         display:block !important;
         width:auto !important;
         height:auto !important;
-        max-width:min(calc(100vw - 380px - 260px), 880px) !important;
+        max-width:calc(100vw - 380px - 260px) !important;
         max-height:calc(100vh - 160px) !important;
         object-fit:contain !important;
         transform-origin:center center !important;
@@ -2231,7 +2231,7 @@ html, body {
 
       .lightbox-stage img,
       #lightboxImage{
-        max-width:min(calc(100vw - 340px - 230px), 760px) !important;
+        max-width:calc(100vw - 340px - 230px) !important;
         max-height:calc(100vh - 160px) !important;
       }
 
@@ -6086,7 +6086,7 @@ lightbox: document.getElementById('lightbox'),
       }
 
       function clampViewerToFrame() {
-        if (!isTouchViewerBoundaryMode() || !els.lightboxStage || !els.lightboxImage) return;
+        if (!els.lightboxStage || !els.lightboxImage) return;
         if (viewerScale <= 1) { viewerX = 0; viewerY = 0; return; }
 
         /* PERF PATCH 2026-07-11: getBoundingClientRect()/offsetWidth/offsetHeight

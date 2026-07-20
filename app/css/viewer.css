@@ -1,18 +1,225 @@
-/* Archive Pro App — viewer.css
-   ------------------------------------------------------------------
-   Intentionally near-empty for now.
+/* ARCHIVE PRO APP — viewer.css
+   Grid/card/control layout + the lightbox viewer. Assumes style.css already
+   sets up color variables (--bg, --text, --gold, --card-bg, --card-border
+   etc.) and the header/hero. If any of these variables aren't defined yet
+   there, the fallbacks below (var(--x, #fallback)) keep this file usable
+   standalone. */
 
-   In the original Archive Pro (archivepro/index.html), lightbox/viewer
-   rules (.lightbox, .lightbox-inner, .lightbox-stage, .lb-*) are
-   interleaved with grid/controls rules inside the SAME @media blocks
-   (e.g. the 1180px breakpoint resizes .grid AND .lightbox-inner
-   together). Pulling viewer rules out into this file would break that
-   shared responsive behavior, so — to avoid introducing bugs — all
-   current viewer/lightbox CSS stays in style.css for now.
+:root {
+  --ap-bg: var(--bg, #0b0f14);
+  --ap-text: var(--text, #f2ead8);
+  --ap-text-dim: var(--text-dim, rgba(242,234,216,.62));
+  --ap-gold: var(--gold, #d4b46d);
+  --ap-gold-bright: var(--gold-bright, #e9d59b);
+  --ap-card-bg: var(--card-bg, rgba(255,255,255,.03));
+  --ap-card-border: var(--card-border, rgba(212,180,109,.18));
+}
 
-   This file is reserved for viewer-only additions going forward
-   (new viewer features, zoom UI tweaks, etc.) that don't need to
-   share a breakpoint with the grid/controls layout. Load order:
-   style.css first, then viewer.css, so rules here can override
-   style.css if ever needed.
-   ------------------------------------------------------------------ */
+/* ---- Grid ---- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+}
+@media (min-width: 640px) and (max-width: 899px) {
+  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+}
+@media (min-width: 900px) {
+  .grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
+}
+
+.card {
+  background: var(--ap-card-bg);
+  border: 1px solid var(--ap-card-border);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .18s ease, border-color .18s ease;
+}
+.card:hover { transform: translateY(-3px); border-color: var(--ap-gold); }
+
+.thumb-wrap {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background: #060a0e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.thumb-wrap .thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+.thumb-wrap .thumb.is-loaded { opacity: 1; }
+
+.card .meta { padding: 9px 11px 13px; }
+.card .meta .t { font-size: 13px; color: var(--ap-text); }
+.card .meta .s { font-size: 11px; color: var(--ap-text-dim); margin-top: 3px; }
+
+/* ---- Empty state ---- */
+.empty-state {
+  width: 100%;
+  min-height: clamp(240px, 36vh, 480px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--ap-text-dim);
+  padding: 40px 20px;
+}
+
+/* ---- Load more ---- */
+.load-wrap { text-align: center; margin-top: 26px; }
+.load-wrap .btn {
+  background: none;
+  border: 1px solid var(--ap-card-border);
+  color: var(--ap-text-dim);
+  border-radius: 999px;
+  padding: 9px 22px;
+  font: inherit;
+  cursor: pointer;
+}
+.load-wrap .btn:hover { color: var(--ap-gold-bright); border-color: var(--ap-gold); }
+
+/* ==================================================================
+   LIGHTBOX VIEWER
+   ================================================================== */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: none;
+  background: rgba(6, 10, 14, .99);
+  overflow: hidden;
+  isolation: isolate;
+}
+.lightbox.open { display: block; }
+
+.lightbox-close {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 20;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.4);
+  color: var(--ap-text);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 15;
+  width: 48px;
+  height: 68px;
+  border-radius: 999px;
+  border: 1px solid rgba(212,180,109,.28);
+  background: rgba(7,10,20,.5);
+  color: var(--ap-gold);
+  font-size: 30px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: .82;
+  transition: opacity .16s ease, border-color .16s ease, background .16s ease;
+}
+.lightbox-nav:hover { opacity: 1; border-color: rgba(212,180,109,.5); background: rgba(7,10,20,.72); }
+.lightbox-prev { left: max(16px, env(safe-area-inset-left)); }
+.lightbox-next { right: max(16px, env(safe-area-inset-right)); }
+
+.lightbox-inner {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.lightbox-stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 20px 16px;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+.lightbox-stage.is-zoomed { cursor: grab; }
+.lightbox-stage.is-zoomed.is-dragging { cursor: grabbing; }
+
+#lightboxImage {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #091018;
+  transform-origin: center center;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-drag: none;
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+#lightboxImage.is-ready { opacity: 1; }
+
+.lightbox-side {
+  padding: 16px 20px calc(20px + env(safe-area-inset-bottom));
+  max-height: 40vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.lb-id { font-size: 11px; letter-spacing: .08em; color: var(--ap-gold); margin: 0 0 4px; }
+.lb-title { font-size: 19px; color: var(--ap-text); margin: 0 0 4px; }
+.lb-section { font-size: 12px; color: var(--ap-text-dim); margin: 0 0 14px; }
+.lb-meta { display: flex; flex-direction: column; gap: 8px; }
+.lb-row { display: flex; gap: 14px; font-size: 13px; }
+.lb-key { min-width: 48px; color: var(--ap-text-dim); }
+.lb-val { color: var(--ap-text); word-break: break-all; }
+.lb-actions { display: flex; gap: 14px; margin-top: 16px; }
+.lb-link { font-size: 12.5px; color: var(--ap-gold); text-decoration: none; border-bottom: 1px solid rgba(212,180,109,.4); }
+.lb-link:hover { color: var(--ap-gold-bright); }
+
+/* Desktop wide layout: image stage + fixed sidebar, side by side. */
+@media (min-width: 881px) {
+  .lightbox-inner {
+    grid-template-rows: none;
+    grid-template-columns: minmax(0, 1fr) 380px;
+  }
+
+  .lightbox-stage {
+    height: 100vh;
+    padding: 32px 100px;
+  }
+
+  .lightbox-next { right: calc(380px + 20px + env(safe-area-inset-right, 0px)); }
+
+  .lightbox-side {
+    max-height: 100vh;
+    height: 100vh;
+    border-top: none;
+    border-left: 1px solid rgba(255,255,255,.08);
+    padding: 90px 28px 28px;
+  }
+}

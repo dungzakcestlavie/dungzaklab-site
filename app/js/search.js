@@ -1,12 +1,14 @@
 /* ARCHIVE PRO APP — search.js
    DOM wiring only: search input (debounced), section <select>, sort
-   <select>, and the reset/focus-search buttons. All actual filtering
-   logic lives in filter.js — this module just calls its setters. */
+   <select>, reset/focus-search buttons. Every handler calls a filter.js
+   setter, which mutates state and calls window.APP_RENDER() itself —
+   search.js never renders anything directly. */
 window.APP_SEARCH = (function () {
   'use strict';
 
   var $ = function (sel) { return document.querySelector(sel); };
   var searchTimer = null;
+  var bound = false;
 
   function debounce(fn, delay) {
     return function () {
@@ -34,6 +36,9 @@ window.APP_SEARCH = (function () {
   }
 
   function init() {
+    if (bound) return; // idempotency guard
+    bound = true;
+
     var searchInput = $('#searchInput');
     var sectionSelect = $('#sectionSelect');
     var sortSelect = $('#sortSelect');
@@ -60,12 +65,11 @@ window.APP_SEARCH = (function () {
 
     if (resetBtn) {
       resetBtn.addEventListener('click', function () {
-        if (searchInput) searchInput.value = '';
-        if (sectionSelect) sectionSelect.value = 'all';
-        if (sortSelect) sortSelect.value = 'section-id-asc';
         window.APP_FILTER.setSectionFilter('all');
         window.APP_FILTER.setSortMode('section-id-asc');
         window.APP_FILTER.setSearchQuery('');
+        // Select/input values are synced from state by ui.js's
+        // renderFilters() — no manual DOM writes needed here.
       });
     }
 

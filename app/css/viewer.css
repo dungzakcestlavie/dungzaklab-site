@@ -182,6 +182,7 @@
   transition: opacity .25s ease;
 }
 #lightboxImage.is-ready { opacity: 1; }
+#lightboxImage.no-transition { transition: none !important; }
 
 .lightbox-side {
   padding: 16px 20px calc(20px + env(safe-area-inset-bottom));

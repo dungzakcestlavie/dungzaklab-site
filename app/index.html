@@ -5189,6 +5189,35 @@ html.is-ipad [data-viewer-close]:hover {
   .ap-auth-msg-error{ color:#e07a7a; }
   .ap-auth-account .ap-auth-email{ margin:0 0 2px; color:var(--text); font-size:13px; word-break:break-all; }
   .ap-auth-account .ap-auth-role{ margin:0 0 4px; color:var(--muted); font-size:12px; }
+
+  .ap-auth-check{
+    display:flex; align-items:center; gap:7px;
+    font-size:12px; color:var(--muted); cursor:pointer;
+  }
+  .ap-auth-menu{ display:flex; flex-direction:column; gap:4px; }
+  .ap-auth-menu-item{
+    background:none; border:none; text-align:left;
+    color:var(--text); font-size:13px; padding:8px 6px;
+    border-radius:6px; cursor:pointer; min-height:36px;
+  }
+  .ap-auth-menu-item:hover{ background:rgba(212,180,109,.08); }
+  .ap-auth-menu-stub{ color:var(--soft); }
+  .ap-auth-soon{ font-size:10px; color:var(--soft); border:1px solid var(--line); border-radius:999px; padding:1px 6px; margin-left:4px; }
+  .ap-auth-note{ font-size:11px; color:var(--soft); margin:0; line-height:1.5; }
+  .ap-auth-preview{ display:flex; flex-direction:column; gap:2px; font-size:12px; color:var(--muted); }
+  .ap-auth-preview b{ color:var(--gold); font-weight:500; }
+
+  /* Header id button: fixed min-width like LAB, grows with content,
+     capped so ARCHIVE PRO title never wraps/pushes off screen */
+  #labLink{
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (max-width: 480px){
+    #labLink{ max-width: 120px; }
+  }
 </style>
 </head>
 <body class="archive-entered archive-filter-open">
@@ -9318,12 +9347,21 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
 </script>
 
 <!-- ============================================================
-     Archive Pro — Artist Login System (added 2026-07-22)
+     Archive Pro — Artist Login System (Phase 1, updated 2026-07-22)
      Self-contained addition. Reads only .lang-tab.active and
      #labLink / #apAuthPanel (both new elements). Touches no
      existing function, variable, or selector in this file.
      Safe to remove this block + the matching header markup and
      <style id="ap-auth-styles"> without affecting anything else.
+
+     SCOPE OF THIS PHASE: Firebase Authentication + artistProfiles
+     (Firestore) + header display + account menu shell only.
+     Artwork upload / image pipeline / works.json sync (spec
+     sections 7–19 of the 2026-07-22 CMS request) are NOT included
+     here — they require a live Firebase project on Blaze billing,
+     Cloud Functions deployment, and GitHub Actions secrets that
+     only DUNGZAK can provision. See the chat report for the full
+     phased plan.
      ============================================================ -->
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
@@ -9345,7 +9383,8 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
     appId: "REPLACE_WITH_APP_ID"
   };
   var CONFIG_READY = FIREBASE_CONFIG.apiKey.indexOf('REPLACE_WITH') === -1;
-  var USERS_COLLECTION = 'archiveProUsers';
+  var PROFILES_COLLECTION = 'artistProfiles';
+  var PERSIST_PREF_KEY = 'archiveProAuth_keepSignedIn'; // '1' | '0', UI preference only
 
   var auth = null, db = null;
   if (CONFIG_READY && window.firebase) {
@@ -9353,7 +9392,6 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
       firebase.initializeApp(FIREBASE_CONFIG);
       auth = firebase.auth();
       db = firebase.firestore();
-      auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
     } catch (e) {
       console.warn('[Archive Pro Auth] Firebase init failed', e);
     }
@@ -9363,45 +9401,70 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
 
   // ---- 1. State -------------------------------------------------------
   var currentUser = null;    // firebase.User | null
-  var currentProfile = null; // { artistIdKr, artistIdEn, artistIdKrEn, role, email } | null
+  var currentProfile = null; // { artistIdKr, artistIdEn, role, status, email } | null
 
   function getCurrentLang(){
     var active = document.querySelector('.lang-tab.active');
-    return (active && active.dataset && active.dataset.lang) || 'kr';
+    var raw = (active && active.dataset && active.dataset.lang) || 'kr';
+    // 이 파일의 실제 언어 상태값: 'kr' | 'en' | 'both' (KR+EN)
+    if (raw === 'both') return 'kr+en';
+    return raw;
   }
 
-  // ---- 2. Display-id priority resolver (스펙 6번 표시 우선순위) ----------
-  function pickId(lang, profile){
-    if (!profile) return null;
-    var order;
-    if (lang === 'en') order = ['artistIdEn', 'artistIdKr', 'artistIdKrEn'];
-    else if (lang === 'both') order = ['artistIdKrEn', 'artistIdKr', 'artistIdEn'];
-    else order = ['artistIdKr', 'artistIdEn', 'artistIdKrEn'];
-    for (var i = 0; i < order.length; i++){
-      var v = profile[order[i]];
-      if (v && String(v).trim()) return String(v).trim();
+  // ---- 2. Canonical display-id resolver ---------------------------------
+  // 스펙에서 제공한 getArtistDisplayId()를 그대로 사용 (동작 100% 동일).
+  function getArtistDisplayId(profile, languageMode, authUser) {
+    var normalize = function (value) {
+      return typeof value === 'string' ? value.trim() : '';
+    };
+
+    var krId = normalize(profile && profile.artistIdKr);
+    var enId = normalize(profile && profile.artistIdEn);
+    var mode = String(languageMode || '').toLowerCase();
+
+    if (mode === 'kr') {
+      if (krId) return krId;
+      if (enId) return enId;
     }
-    return null;
+
+    if (mode === 'en') {
+      if (enId) return enId;
+      if (krId) return krId;
+    }
+
+    if (mode === 'kr+en' || mode === 'kren' || mode === 'both') {
+      if (krId && enId) return krId + ' ' + enId;
+      if (krId) return krId;
+      if (enId) return enId;
+    }
+
+    var firebaseName = normalize(authUser && authUser.displayName);
+    if (firebaseName) return firebaseName;
+
+    var emailPrefix = (authUser && typeof authUser.email === 'string')
+      ? normalize(authUser.email.split('@')[0])
+      : '';
+
+    return emailPrefix || 'LAB';
   }
 
   function headerLabel(lang){
     if (!currentUser) return 'LAB';
-    var id = pickId(lang, currentProfile);
-    if (id) return id;
-    if (currentUser.displayName) return currentUser.displayName;
-    if (currentUser.email) return currentUser.email.split('@')[0];
-    return 'LAB';
+    return getArtistDisplayId(currentProfile, lang, currentUser);
   }
 
   window.ArchiveProAuth = window.ArchiveProAuth || {};
-  window.ArchiveProAuth._pickId = pickId; // exposed for the test harness only
+  window.ArchiveProAuth.getArtistDisplayId = getArtistDisplayId; // exposed for test harness
 
-  // ---- 3. Header label update (스펙 1, 7번) ------------------------------
+  // ---- 3. Header label update (새로고침 없이 즉시 반영) --------------------
   var labLink = document.getElementById('labLink');
 
   function refreshHeaderLabel(){
     if (!labLink) return;
-    labLink.textContent = headerLabel(getCurrentLang());
+    var label = headerLabel(getCurrentLang());
+    labLink.textContent = label;
+    labLink.setAttribute('title', label === 'LAB' ? 'LAB' : label);
+    labLink.setAttribute('aria-label', label === 'LAB' ? 'LAB' : ('작가: ' + label));
   }
 
   document.querySelectorAll('.lang-tab').forEach(function(tab){
@@ -9411,10 +9474,10 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
     });
   });
 
-  // ---- 4. Dropdown panel (로그인 / 회원가입 / 계정) ------------------------
+  // ---- 4. Dropdown panel ------------------------------------------------
   var panel = document.getElementById('apAuthPanel');
   var panelOpen = false;
-  var panelView = 'login'; // 'login' | 'signup'
+  var panelView = 'login'; // 'login' | 'signup' | 'menu' | 'profile'
 
   function setPanelOpen(open){
     panelOpen = open;
@@ -9425,7 +9488,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
   if (labLink){
     labLink.addEventListener('click', function(e){
       e.preventDefault();
-      panelView = 'login';
+      panelView = currentUser ? 'menu' : 'login';
       setPanelOpen(!panelOpen);
       if (panelOpen) renderPanel();
     });
@@ -9435,6 +9498,10 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
     if (!panelOpen) return;
     var wrap = document.getElementById('apAuthWrap');
     if (wrap && !wrap.contains(e.target)) setPanelOpen(false);
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (panelOpen && e.key === 'Escape') setPanelOpen(false);
   });
 
   function escapeHtml(s){
@@ -9448,6 +9515,24 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
     if (!el) return;
     el.textContent = text || '';
     el.classList.toggle('ap-auth-msg-error', !!isError);
+    el.setAttribute('aria-live', 'polite');
+  }
+
+  function isArtistOrAdmin(){
+    var role = currentProfile && currentProfile.role;
+    return role === 'artist' || role === 'admin';
+  }
+  function isAdmin(){
+    return currentProfile && currentProfile.role === 'admin';
+  }
+
+  // 팝업 로그인이 막히는 환경(iOS Safari, 홈 화면 PWA 등) 감지 —
+  // 이 경우 signInWithRedirect를 사용한다 (스펙 3장).
+  function shouldUseRedirect(){
+    var ua = navigator.userAgent || '';
+    var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    return isIOS || isStandalone;
   }
 
   function renderPanel(){
@@ -9460,73 +9545,204 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
       return;
     }
 
-    if (currentUser){
-      var roleLabel = (currentProfile && currentProfile.role) ? currentProfile.role : 'viewer';
-      panel.innerHTML =
-        '<div class="ap-auth-account">' +
-          '<p class="ap-auth-email">' + escapeHtml(currentUser.email || '') + '</p>' +
-          '<p class="ap-auth-role">권한: ' + escapeHtml(roleLabel) + '</p>' +
-        '</div>' +
-        '<button type="button" class="ap-auth-btn ap-auth-logout">로그아웃</button>' +
-        '<a class="ap-auth-lab-link" href="https://dungzaklab.art/" rel="noopener">dungzaklab.art 방문 ↗</a>' +
-        '<p class="ap-auth-msg"></p>';
-      panel.querySelector('.ap-auth-logout').addEventListener('click', function(){ auth.signOut(); });
-      return;
-    }
+    if (currentUser && panelView === 'profile'){ renderProfileForm(); return; }
+    if (currentUser){ renderAccountMenu(); return; }
+    if (panelView === 'signup'){ renderSignup(); return; }
+    renderLogin();
+  }
 
-    if (panelView === 'signup'){
-      panel.innerHTML =
-        '<form class="ap-auth-form ap-auth-signup">' +
-          '<input type="email" name="email" placeholder="이메일" autocomplete="email" required>' +
-          '<input type="password" name="password" placeholder="비밀번호 (6자 이상)" autocomplete="new-password" required minlength="6">' +
-          '<hr class="ap-auth-sep">' +
-          '<input type="text" name="artistIdKr" placeholder="한국어 아이디 (선택)">' +
-          '<input type="text" name="artistIdEn" placeholder="영문 아이디 (선택)">' +
-          '<input type="text" name="artistIdKrEn" placeholder="KR+EN 아이디 (선택)">' +
-          '<button type="submit" class="ap-auth-btn">가입하기</button>' +
-        '</form>' +
-        '<button type="button" class="ap-auth-link-btn ap-auth-back">← 로그인으로</button>' +
-        '<p class="ap-auth-msg"></p>';
-      panel.querySelector('.ap-auth-signup').addEventListener('submit', onSignupSubmit);
-      panel.querySelector('.ap-auth-back').addEventListener('click', function(){ panelView = 'login'; renderPanel(); });
-      return;
-    }
-
+  function renderLogin(){
     panel.innerHTML =
-      '<button type="button" class="ap-auth-btn ap-auth-google">Google로 로그인</button>' +
+      '<button type="button" class="ap-auth-btn ap-auth-google">Google로 계속하기</button>' +
       '<hr class="ap-auth-sep">' +
       '<form class="ap-auth-form ap-auth-login">' +
         '<input type="email" name="email" placeholder="이메일" autocomplete="email" required>' +
         '<input type="password" name="password" placeholder="비밀번호" autocomplete="current-password" required>' +
+        '<label class="ap-auth-check">' +
+          '<input type="checkbox" name="keepSignedIn" checked> 이 기기에서 로그인 유지' +
+        '</label>' +
         '<button type="submit" class="ap-auth-btn">이메일로 로그인</button>' +
       '</form>' +
       '<button type="button" class="ap-auth-link-btn ap-auth-reset">비밀번호를 잊으셨나요?</button>' +
       '<button type="button" class="ap-auth-link-btn ap-auth-signup-link">계정이 없으신가요? 회원가입</button>' +
       '<a class="ap-auth-lab-link" href="https://dungzaklab.art/" rel="noopener">dungzaklab.art 방문 ↗</a>' +
-      '<p class="ap-auth-msg"></p>';
-    panel.querySelector('.ap-auth-google').addEventListener('click', onGoogleLogin);
-    panel.querySelector('.ap-auth-login').addEventListener('submit', onLoginSubmit);
+      '<p class="ap-auth-msg" role="status"></p>';
+
+    var googleBtn = panel.querySelector('.ap-auth-google');
+    googleBtn.addEventListener('click', function(){ onGoogleLogin(googleBtn); });
+
+    var loginForm = panel.querySelector('.ap-auth-login');
+    loginForm.addEventListener('submit', function(e){ onLoginSubmit(e, loginForm); });
+
     panel.querySelector('.ap-auth-reset').addEventListener('click', onResetPassword);
     panel.querySelector('.ap-auth-signup-link').addEventListener('click', function(){ panelView = 'signup'; renderPanel(); });
   }
 
-  // ---- 5. Auth actions (스펙 8, 9번) -------------------------------------
-  function onGoogleLogin(){
-    panelMsg('로그인 중...');
+  function renderSignup(){
+    panel.innerHTML =
+      '<form class="ap-auth-form ap-auth-signup">' +
+        '<input type="email" name="email" placeholder="이메일" autocomplete="email" required>' +
+        '<input type="password" name="password" placeholder="비밀번호 (6자 이상)" autocomplete="new-password" required minlength="6">' +
+        '<button type="submit" class="ap-auth-btn">가입하기</button>' +
+      '</form>' +
+      '<p class="ap-auth-note">가입 직후 권한은 <b>viewer</b>입니다. 작품 등록 권한(artist)은 등작이 관리자 화면에서 별도로 승인합니다.</p>' +
+      '<button type="button" class="ap-auth-link-btn ap-auth-back">← 로그인으로</button>' +
+      '<p class="ap-auth-msg" role="status"></p>';
+
+    var form = panel.querySelector('.ap-auth-signup');
+    form.addEventListener('submit', function(e){ onSignupSubmit(e, form); });
+    panel.querySelector('.ap-auth-back').addEventListener('click', function(){ panelView = 'login'; renderPanel(); });
+  }
+
+  function renderAccountMenu(){
+    var roleLabel = (currentProfile && currentProfile.role) || 'viewer';
+    var items = [];
+    items.push({ label: '프로필 수정', action: function(){ panelView = 'profile'; renderPanel(); } });
+    items.push({ label: '계정 정보', action: function(){ panelMsg(currentUser.email + ' · 권한: ' + roleLabel); } });
+
+    if (isArtistOrAdmin()){
+      items.push({ label: '작품 등록', stub: true });
+      items.push({ label: '내 작품 관리', stub: true });
+      items.push({ label: '업로드 진행 상황', stub: true });
+    }
+    if (isAdmin()){
+      items.push({ label: '전체 작품 관리', stub: true });
+      items.push({ label: '작가 승인 관리', stub: true });
+      items.push({ label: '실패 작업 관리', stub: true });
+    }
+
+    var html = '<div class="ap-auth-account">' +
+      '<p class="ap-auth-email">' + escapeHtml(currentUser.email || '') + '</p>' +
+      '<p class="ap-auth-role">권한: ' + escapeHtml(roleLabel) + '</p>' +
+      '</div>' +
+      '<div class="ap-auth-menu">' +
+      items.map(function(it, i){
+        return '<button type="button" class="ap-auth-menu-item' + (it.stub ? ' ap-auth-menu-stub' : '') + '" data-idx="' + i + '">' +
+          escapeHtml(it.label) + (it.stub ? ' <span class="ap-auth-soon">준비 중</span>' : '') + '</button>';
+      }).join('') +
+      '</div>' +
+      '<button type="button" class="ap-auth-btn ap-auth-logout">로그아웃</button>' +
+      '<a class="ap-auth-lab-link" href="https://dungzaklab.art/" rel="noopener">dungzaklab.art 방문 ↗</a>' +
+      '<p class="ap-auth-msg" role="status"></p>';
+
+    panel.innerHTML = html;
+    panel.querySelectorAll('.ap-auth-menu-item').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var it = items[Number(btn.dataset.idx)];
+        if (it.stub){
+          panelMsg('업로드/작품관리 시스템은 다음 단계(Cloud Functions 배포 이후)에 연결됩니다.');
+          return;
+        }
+        it.action();
+      });
+    });
+    panel.querySelector('.ap-auth-logout').addEventListener('click', function(){ auth.signOut(); });
+  }
+
+  function renderProfileForm(){
+    var p = currentProfile || {};
+    panel.innerHTML =
+      '<form class="ap-auth-form ap-auth-profile">' +
+        '<input type="text" name="artistIdKr" placeholder="한글 아이디" value="' + escapeHtml(p.artistIdKr || '') + '">' +
+        '<input type="text" name="artistIdEn" placeholder="English ID" value="' + escapeHtml(p.artistIdEn || '') + '">' +
+        '<p class="ap-auth-note">한글/영문 중 최소 하나는 입력해야 합니다.</p>' +
+        '<div class="ap-auth-preview">' +
+          '<span>KR: <b class="ap-preview-kr"></b></span>' +
+          '<span>EN: <b class="ap-preview-en"></b></span>' +
+          '<span>KR+EN: <b class="ap-preview-both"></b></span>' +
+        '</div>' +
+        '<button type="submit" class="ap-auth-btn">저장</button>' +
+      '</form>' +
+      '<button type="button" class="ap-auth-link-btn ap-auth-back">← 계정 메뉴로</button>' +
+      '<p class="ap-auth-msg" role="status"></p>';
+
+    var form = panel.querySelector('.ap-auth-profile');
+    var krInput = form.artistIdKr, enInput = form.artistIdEn;
+    function updatePreview(){
+      var draft = { artistIdKr: krInput.value, artistIdEn: enInput.value };
+      panel.querySelector('.ap-preview-kr').textContent = getArtistDisplayId(draft, 'kr', currentUser);
+      panel.querySelector('.ap-preview-en').textContent = getArtistDisplayId(draft, 'en', currentUser);
+      panel.querySelector('.ap-preview-both').textContent = getArtistDisplayId(draft, 'kr+en', currentUser);
+    }
+    krInput.addEventListener('input', updatePreview);
+    enInput.addEventListener('input', updatePreview);
+    updatePreview();
+
+    form.addEventListener('submit', function(e){ onProfileSave(e, form); });
+    panel.querySelector('.ap-auth-back').addEventListener('click', function(){ panelView = 'menu'; renderPanel(); });
+  }
+
+  // ---- 5. Auth actions ---------------------------------------------------
+  function applyPersistence(keepSignedIn){
+    var mode = keepSignedIn ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION;
+    try { localStorage.setItem(PERSIST_PREF_KEY, keepSignedIn ? '1' : '0'); } catch (_) {}
+    return auth.setPersistence(mode);
+  }
+
+  function setBusy(btn, busy, busyLabel){
+    if (!btn) return;
+    if (busy){
+      btn.dataset.originalLabel = btn.textContent;
+      btn.textContent = busyLabel || '처리 중...';
+      btn.disabled = true;
+    } else {
+      btn.textContent = btn.dataset.originalLabel || btn.textContent;
+      btn.disabled = false;
+    }
+  }
+
+  function friendlyAuthError(err){
+    var code = err && err.code || '';
+    var map = {
+      'auth/wrong-password': '이메일 또는 비밀번호가 올바르지 않습니다.',
+      'auth/user-not-found': '이메일 또는 비밀번호가 올바르지 않습니다.',
+      'auth/invalid-email': '올바른 이메일 형식이 아닙니다.',
+      'auth/email-already-in-use': '이미 가입된 이메일입니다.',
+      'auth/weak-password': '비밀번호는 6자 이상이어야 합니다.',
+      'auth/popup-closed-by-user': '로그인 창이 닫혔습니다.',
+      'auth/cancelled-popup-request': '로그인 창이 닫혔습니다.',
+      'auth/network-request-failed': '네트워크 연결을 확인해주세요.',
+      'auth/too-many-requests': '잠시 후 다시 시도해주세요.'
+    };
+    return map[code] || '처리 중 문제가 발생했습니다.';
+  }
+
+  function onGoogleLogin(btn){
+    panelMsg('');
+    setBusy(btn, true, '연결 중...');
     var provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(function(err){
-      panelMsg(err.message || '로그인에 실패했습니다.', true);
+    var keepSignedIn = true; // 구글 로그인은 기본값(로그인 유지) 사용
+    applyPersistence(keepSignedIn).then(function(){
+      if (shouldUseRedirect()){
+        return auth.signInWithRedirect(provider);
+      }
+      return auth.signInWithPopup(provider).catch(function(err){
+        // 팝업이 막힌 환경이면 리다이렉트로 폴백
+        if (err && (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment')){
+          return auth.signInWithRedirect(provider);
+        }
+        throw err;
+      });
+    }).catch(function(err){
+      setBusy(btn, false);
+      panelMsg(friendlyAuthError(err), true);
     });
   }
 
-  function onLoginSubmit(e){
+  function onLoginSubmit(e, form){
     e.preventDefault();
-    var email = e.target.email.value.trim();
-    var password = e.target.password.value;
-    panelMsg('로그인 중...');
-    auth.signInWithEmailAndPassword(email, password).catch(function(err){
-      panelMsg(err.message || '로그인에 실패했습니다.', true);
-    });
+    var btn = form.querySelector('button[type="submit"]');
+    var email = form.email.value.trim();
+    var password = form.password.value;
+    var keepSignedIn = form.keepSignedIn.checked;
+    panelMsg('');
+    setBusy(btn, true, '로그인 중...');
+    applyPersistence(keepSignedIn)
+      .then(function(){ return auth.signInWithEmailAndPassword(email, password); })
+      .catch(function(err){
+        setBusy(btn, false);
+        panelMsg(friendlyAuthError(err), true);
+      });
   }
 
   function onResetPassword(){
@@ -9535,42 +9751,76 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
     auth.sendPasswordResetEmail(email.trim()).then(function(){
       panelMsg('재설정 메일을 보냈습니다.');
     }).catch(function(err){
-      panelMsg(err.message || '재설정 메일 전송에 실패했습니다.', true);
+      panelMsg(friendlyAuthError(err), true);
     });
   }
 
-  function onSignupSubmit(e){
+  function onSignupSubmit(e, form){
     e.preventDefault();
-    var f = e.target;
-    var email = f.email.value.trim();
-    var password = f.password.value;
-    var artistIdKr = f.artistIdKr.value.trim();
-    var artistIdEn = f.artistIdEn.value.trim();
-    var artistIdKrEn = f.artistIdKrEn.value.trim();
-
-    panelMsg('가입 처리 중...');
-    auth.createUserWithEmailAndPassword(email, password).then(function(cred){
-      return db.collection(USERS_COLLECTION).doc(cred.user.uid).set({
-        email: email,
-        artistIdKr: artistIdKr,
-        artistIdEn: artistIdEn,
-        artistIdKrEn: artistIdKrEn,
-        role: 'viewer', // admin/artist 승격은 Firestore 콘솔에서 수동으로 진행
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    var btn = form.querySelector('button[type="submit"]');
+    var email = form.email.value.trim();
+    var password = form.password.value;
+    panelMsg('');
+    setBusy(btn, true, '가입 중...');
+    applyPersistence(true)
+      .then(function(){ return auth.createUserWithEmailAndPassword(email, password); })
+      .then(function(cred){
+        return db.collection(PROFILES_COLLECTION).doc(cred.user.uid).set({
+          uid: cred.user.uid,
+          email: email,
+          artistIdKr: '',
+          artistIdEn: '',
+          displayName: '',
+          role: 'viewer',   // 신규 가입자는 자동으로 artist가 되지 않음
+          status: 'active',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      })
+      .catch(function(err){
+        setBusy(btn, false);
+        panelMsg(friendlyAuthError(err), true);
       });
+  }
+
+  function onProfileSave(e, form){
+    e.preventDefault();
+    var btn = form.querySelector('button[type="submit"]');
+    var artistIdKr = form.artistIdKr.value.trim();
+    var artistIdEn = form.artistIdEn.value.trim();
+    if (!artistIdKr && !artistIdEn){
+      panelMsg('한글/영문 아이디 중 최소 하나는 입력해야 합니다.', true);
+      return;
+    }
+    setBusy(btn, true, '저장 중...');
+    db.collection(PROFILES_COLLECTION).doc(currentUser.uid).set({
+      artistIdKr: artistIdKr,
+      artistIdEn: artistIdEn,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).then(function(){
+      currentProfile = Object.assign({}, currentProfile, { artistIdKr: artistIdKr, artistIdEn: artistIdEn });
+      refreshHeaderLabel();
+      panelView = 'menu';
+      renderPanel();
     }).catch(function(err){
-      panelMsg(err.message || '가입에 실패했습니다.', true);
+      setBusy(btn, false);
+      panelMsg(friendlyAuthError(err), true);
     });
   }
 
-  // ---- 6. Profile load + auth-state listener ----------------------------
+  // ---- 6. Profile load + auth-state + redirect-result --------------------
   function loadProfile(uid){
-    return db.collection(USERS_COLLECTION).doc(uid).get().then(function(doc){
+    return db.collection(PROFILES_COLLECTION).doc(uid).get().then(function(doc){
       return doc.exists ? doc.data() : null;
     }).catch(function(){ return null; });
   }
 
   if (auth){
+    // 앱 시작 시 리다이렉트 로그인 결과 처리 (iOS Safari / PWA)
+    auth.getRedirectResult().catch(function(err){
+      if (err) console.warn('[Archive Pro Auth] redirect result error', err);
+    });
+
     auth.onAuthStateChanged(function(user){
       currentUser = user;
       setPanelOpen(false);
@@ -9580,20 +9830,28 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
         return;
       }
       loadProfile(user.uid).then(function(profile){
+        if (!profile){
+          // Google 로그인 등으로 첫 접속 시 프로필 문서가 없을 수 있음 — 생성
+          profile = {
+            uid: user.uid, email: user.email || '',
+            artistIdKr: '', artistIdEn: '', displayName: user.displayName || '',
+            role: 'viewer', status: 'active'
+          };
+          db.collection(PROFILES_COLLECTION).doc(user.uid).set(Object.assign({}, profile, {
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }), { merge: true }).catch(function(){});
+        }
         currentProfile = profile;
         refreshHeaderLabel();
       });
     });
   }
 
-  // ---- 7. Permission helper (스펙 10번) -----------------------------------
-  window.ArchiveProAuth.canEdit = function(){
-    var role = currentProfile && currentProfile.role;
-    return role === 'artist' || role === 'admin';
-  };
-  window.ArchiveProAuth.getRole = function(){
-    return (currentProfile && currentProfile.role) || (currentUser ? 'viewer' : null);
-  };
+  // ---- 7. Soft permission helpers (UI 힌트 전용 — 실제 보안 경계 아님) --------
+  // 실제 권한 판정은 Cloud Functions 배포 이후 Custom Claims 기준으로 전환 예정.
+  window.ArchiveProAuth.canEdit = function(){ return isArtistOrAdmin(); };
+  window.ArchiveProAuth.getRole = function(){ return (currentProfile && currentProfile.role) || (currentUser ? 'viewer' : null); };
   window.ArchiveProAuth.refreshHeaderLabel = refreshHeaderLabel;
 
   refreshHeaderLabel();

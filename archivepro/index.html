@@ -5645,30 +5645,29 @@ html.is-ipad [data-viewer-close]:hover {
         const value = safeText(status).toLowerCase();
         if (!value) return '';
         if (['available', 'available for collection', '소장가능', '소장 가능'].includes(value)) return 'available';
-        if (['reserved', '예약', '예약중'].includes(value)) return 'reserved';
-        if (['collected', 'sold', '소장', '소장완료', '소장 완료', '판매완료', '판매 완료'].includes(value)) return 'collected';
+        if (['collected', 'sold', '소장', '소장됨', '소장완료', '소장 완료', '판매완료', '판매 완료'].includes(value)) return 'collected';
+        if (['reserved', '예약', '예약중', '예약 중'].includes(value)) return 'reserved';
+        if (['not_for_sale', 'not for sale', '비매품'].includes(value)) return 'not_for_sale';
+        if (['private', '비공개'].includes(value)) return 'private';
         return value;
       }
 
       function getStatusLabel(status) {
         const normalized = normalizeStatus(status);
-        if (normalized === 'available') {
-          if (state.lang === 'en') return 'available for collection';
-          if (state.lang === 'both') return '소장 가능 / available for collection';
-          return '소장 가능';
-        }
-        if (normalized === 'reserved') {
-          if (state.lang === 'en') return 'reserved';
-          if (state.lang === 'both') return '예약 / reserved';
-          return '예약';
-        }
-        if (normalized === 'collected') {
-          if (state.lang === 'en') return 'collected';
-          if (state.lang === 'both') return '소장됨 / collected';
-          return '소장됨';
-        }
-        return '';
+        const labels = {
+          available: { kr: '소장 가능', en: 'Available' },
+          collected: { kr: '소장됨', en: 'Collected' },
+          reserved: { kr: '예약 중', en: 'Reserved' },
+          not_for_sale: { kr: '비매품', en: 'Not for Sale' },
+          private: { kr: '비공개', en: 'Private' }
+        };
+        const label = labels[normalized];
+        if (!label) return '';
+        if (state.lang === 'en') return label.en;
+        if (state.lang === 'both') return label.kr + ' / ' + label.en;
+        return label.kr;
       }
+
 
       function getInquiryText() {
         if (state.lang === 'en') return 'inquiry via email →';

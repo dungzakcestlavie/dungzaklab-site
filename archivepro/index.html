@@ -2171,7 +2171,7 @@ html, body {
         max-height:100% !important;
         object-fit:contain !important;
         transform-origin:center center !important;
-        transition:opacity .22s ease, transform .05s linear !important;
+        transition:opacity .25s ease, transform .05s linear !important;
       }
 
       #lightboxImage.is-loading{
@@ -7556,11 +7556,17 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           });
         };
 
-        if ('requestIdleCallback' in window) {
-          window.requestIdleCallback(run, { timeout: 1500 });
-        } else {
-          window.setTimeout(run, 300);
-        }
+        /* FLASH-ON-PAGE FIX 2026-08-21: this used to wait for requestIdleCallback
+           (up to 1500ms) or a 300ms timeout before warming the neighbor images.
+           Under quick, repeated left/right clicks the preload for image N+2
+           routinely hadn't started yet by the time the user reached it, so the
+           opacity fade (see #lightboxImage.is-loading/.is-ready above) had
+           nothing to fade FROM but blank stage for a real network round-trip —
+           still reading as a flash even with the transition in place. Firing
+           the preload immediately (same as the reference app's viewer.js
+           preloadNeighbors(), which has no delay at all) keeps neighbors warm
+           enough that the fade is the only thing the eye sees. */
+        run();
       }
 
       function openLightbox(item) {

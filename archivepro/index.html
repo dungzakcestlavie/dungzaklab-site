@@ -2165,8 +2165,19 @@ html, body {
       .lightbox-stage img,
       #lightboxImage{
         display:block !important;
-        width:auto !important;
-        height:auto !important;
+        /* FLICKER-ON-NAV FIX (desktop fullscreen, prev/next in viewer) 2026-08-25:
+           width/height:auto sized the <img> box to its own intrinsic content, so the
+           moment openLightbox() cleared src for the next artwork, naturalWidth/Height
+           dropped to 0 and the box collapsed to nothing INSTANTLY (box size is not
+           part of the opacity/transform transition below) — a full-screen flash/pop
+           on every arrow-key or lightbox-nav click. Mobile already avoids this via
+           width:100%/height:100% (see the max-width:880px block) so the img box is
+           always the size of its container regardless of whether it currently has an
+           image loaded; object-fit:contain still scales the actual picture to the
+           same visible size/position as before. Mirroring that here for desktop
+           removes the collapse without changing how any image looks. */
+        width:100% !important;
+        height:100% !important;
         max-width:100% !important;
         max-height:100% !important;
         object-fit:contain !important;

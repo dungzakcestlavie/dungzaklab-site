@@ -2173,14 +2173,23 @@ html, body {
            on every arrow-key or lightbox-nav click. Mobile already avoids this via
            width:100%/height:100% (see the max-width:880px block) so the img box is
            always the size of its container regardless of whether it currently has an
-           image loaded; object-fit:contain still scales the actual picture to the
-           same visible size/position as before. Mirroring that here for desktop
-           removes the collapse without changing how any image looks. */
+           image loaded.
+           IMPORTANT follow-up 2026-08-25: switching to width/height:100% here also
+           means the box is now bigger than the CONTENT for any artwork whose real
+           (natural) resolution is smaller than the viewer frame — with plain
+           object-fit:contain, the browser scales that content UP to fill the box,
+           so a lower-resolution scan that used to display at its true, smaller pixel
+           size (old width:auto/height:auto never enlarged past natural size) suddenly
+           renders blown up/blurry. object-fit:scale-down fixes that: it behaves like
+           contain when the artwork is bigger than the frame (scales down, same as
+           before) but behaves like the old auto-sizing when the artwork is smaller
+           than the frame (shows it at true 1:1 size, never enlarges it). That keeps
+           both fixes intact — no collapse-flash AND no upscaling. */
         width:100% !important;
         height:100% !important;
         max-width:100% !important;
         max-height:100% !important;
-        object-fit:contain !important;
+        object-fit:scale-down !important;
         transform-origin:center center !important;
         transition:opacity .25s ease, transform .05s linear !important;
       }

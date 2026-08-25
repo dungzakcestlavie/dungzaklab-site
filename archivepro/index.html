@@ -8764,6 +8764,39 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
 
         els.lightbox.addEventListener('dblclick', (e) => {
           if (!isViewerOpen()) return;
+          /* PC/NOTEBOOK FULLSCREEN "INTERMITTENT OVER-ZOOM ON NEXT" ROOT-CAUSE FIX
+             2026-08-25:
+             Root cause (confirmed in code + reproduced with Playwright, not guessed):
+             this listener is bound on the whole `.lightbox` container and had no
+             check on e.target, so it treated ANY double-click anywhere inside the
+             lightbox — including two fast clicks landing on the Next/Prev arrow
+             buttons, which is exactly what happens when a person clicks Next
+             quickly and repeatedly — as "double-click the artwork to zoom in".
+             A browser fires a native `dblclick` after any two clicks close enough
+             in time/position, regardless of which element they were aimed at, and
+             that event still bubbles up to `.lightbox` even though the two
+             underlying `click` events were separately consumed by the Next/Prev
+             button handlers (stopPropagation on `click` does not stop the
+             independently-dispatched `dblclick`).
+             This set viewerScale to 2 on whatever artwork the second click had
+             just navigated to. Whether that stuck was itself a race: the very
+             next artwork's image is usually not preloaded yet, so its own
+             onload -> resetViewerTransform() would normally overwrite the zoom a
+             moment later — except when the image happened to already be warm in
+             the browser cache (a very common case, since neighbor images are
+             preloaded proactively), in which case nothing ran afterward to reset
+             it, and the artwork was left rendered at 2x scale, overflowing the
+             frame exactly as reported: "정상적으로 contain되어야 할 작품이 간헐적으로
+             과도하게 확대되어 나타난다." That race is why it was intermittent rather
+             than constant.
+             Fix: only treat a double-click as "zoom the artwork" when it actually
+             lands on the image/stage itself, not on the nav arrows, close button,
+             or the info side panel. This is scoped to this one PC-only,
+             mouse-driven handler — the separate touch double-tap-to-zoom gesture
+             (touchend, elsewhere) and all iPad/mobile/tablet code are untouched. */
+          if (e.target && e.target.closest && e.target.closest(
+            '.lightbox-nav, .lightbox-prev, .lightbox-next, .lightbox-close, .viewer-close, .close-viewer, #lightboxClose, #viewerCloseBtn, .lightbox-side, .lb-actions'
+          )) return;
           e.preventDefault();
           viewerScale = viewerScale > 1 ? 1 : 2;
           viewerX = 0;

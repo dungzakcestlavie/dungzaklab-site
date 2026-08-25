@@ -6137,6 +6137,15 @@ lightbox: document.getElementById('lightbox'),
       let searchTimer = null;
       let worksLoadPromise = null;
       let archiveScrollY = 0;
+      /* IPAD FULLSCREEN TOUCH-SCROLL-LOCK FIX 2026-08-25:
+         Separate from archiveScrollY above (which is left completely untouched — it
+         still drives where the gallery scrolls back to on close, unchanged). This pair
+         only tracks whether the new body position:fixed scroll lock is currently
+         applied, so it can be engaged exactly once per lightbox-open session (not
+         reapplied on every Next/Prev step, which would otherwise stomp the saved
+         position with 0 on the second navigation) and safely released on close. */
+      let bodyScrollLockActive = false;
+      let bodyScrollLockY = 0;
       let closeClickBlockUntil = 0;
 
       let viewerScale = 1;
@@ -7725,6 +7734,31 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
       function openLightbox(item) {
         archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        /* IPAD FULLSCREEN TOUCH-SCROLL-LOCK FIX 2026-08-25:
+           Root cause of "swipe up/down in the iPad fullscreen viewer shifts the whole
+           screen": the only scroll lock in place was `document.body.style.overflow =
+           'hidden'` (further down in this function, unchanged). That alone is a
+           well-known-unreliable lock on iOS Safari specifically — Safari can still let
+           a touch-driven page scroll/rubber-band happen even with body/html set to
+           overflow:hidden, because the page's real scroll position is not the same
+           thing CSS overflow governs there. The standard, reliable fix (used broadly
+           across the web for exactly this iOS quirk) is to additionally pin body with
+           position:fixed at its current scroll offset while the overlay is open, then
+           release it and jump back to that offset on close — which is what this block
+           does, using the SAME already-open check as the rest of this function so it
+           only engages on the initial open, never again on every Next/Prev call (this
+           function runs on every navigation, not just the first open). archiveScrollY
+           and restoreArchiveScroll() above/below are completely unchanged and still own
+           restoring the actual gallery scroll position on close. */
+        if (!isViewerOpen() && !bodyScrollLockActive) {
+          bodyScrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
+          bodyScrollLockActive = true;
+          document.body.style.position = 'fixed';
+          document.body.style.top = '-' + bodyScrollLockY + 'px';
+          document.body.style.left = '0';
+          document.body.style.right = '0';
+          document.body.style.width = '100%';
+        }
         state.lightboxItem = item;
         resetViewerTransform();
 
@@ -7921,6 +7955,23 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         }, 0);
       }
 
+      /* IPAD FULLSCREEN TOUCH-SCROLL-LOCK FIX 2026-08-25:
+         Releases the position:fixed body lock applied in openLightbox() above. Must run
+         BEFORE restoreArchiveScroll() (both call sites below already do this) — while
+         body is still position:fixed, window.scrollTo()/scrollIntoView() have no real
+         document to scroll, so the lock has to come off first for that existing restore
+         logic to actually land back on the right spot. No-ops harmlessly if the lock was
+         never engaged. */
+      function releaseBodyScrollLock() {
+        if (!bodyScrollLockActive) return;
+        bodyScrollLockActive = false;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+      }
+
       function closeLightbox() {
         armCloseNavigationShield();
         state.lastClosedLightboxItem = state.lightboxItem || null;
@@ -7936,6 +7987,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         document.documentElement.classList.remove('viewer-open');
         document.body.classList.remove('viewer-open');
         document.body.style.overflow = '';
+        releaseBodyScrollLock();
         restoreArchiveScroll();
       }
 
@@ -7958,6 +8010,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         document.documentElement.classList.remove('viewer-open');
         document.body.classList.remove('viewer-open');
         document.body.style.overflow = '';
+        releaseBodyScrollLock();
         restoreArchiveScroll();
       }
 
@@ -8823,6 +8876,28 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
         ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach((type) => {
           document.addEventListener(type, blockGhostNavigation, { capture:true, passive:false });
         });
+
+        /* IPAD FULLSCREEN TOUCH-SCROLL-LOCK FIX 2026-08-25 — safety net:
+           The body position:fixed lock above (openLightbox/releaseBodyScrollLock) and
+           the existing CSS (html.viewer-open/body.viewer-open: overflow:hidden,
+           touch-action:none, overscroll-behavior:none — unchanged) are the primary
+           fix. iOS Safari has a well-documented history of still letting a touch
+           gesture bounce/scroll the page in some cases even with all of that in place,
+           so this adds one more layer: while the viewer is open, block the DEFAULT
+           action of any touchmove that isn't inside the one area that must keep
+           scrolling on purpose — the caption/info side panel (.lightbox-side), which
+           already has its own overflow-y:auto for long captions and is left exactly as
+           it works today. Registered on the capture phase so it runs before, and
+           without interfering with, the existing pan/zoom touchmove handler on
+           .lightbox-stage (that handler calls preventDefault() itself already; calling
+           it again here from a different listener for the same event is harmless).
+           When the viewer isn't open this does nothing at all, so ordinary gallery
+           scrolling is completely unaffected. */
+        document.addEventListener('touchmove', (e) => {
+          if (!isViewerOpen()) return;
+          if (e.target && e.target.closest && e.target.closest('.lightbox-side')) return;
+          if (e.cancelable) e.preventDefault();
+        }, { capture:true, passive:false });
 
         if (els.lightboxClose) {
           els.lightboxClose.addEventListener('pointerdown', consumeCloseTouch, { passive:false });

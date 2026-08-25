@@ -4168,6 +4168,44 @@ body.archive-entered .hero{
     }
 
     @media (max-width:880px){
+      /* IPAD PORTRAIT "INTERMITTENT IMAGE HEIGHT OVERFLOW" ROOT-CAUSE FIX 2026-08-25:
+         Root cause (found by reading the cascade, not guessed): the base `.lightbox`
+         rule (near the top of this stylesheet) only sets `position:fixed; inset:0;`
+         with no explicit `height`. For a `position:fixed` element, unitless `inset:0`
+         sizes against the browser's "large" viewport (the size assuming any
+         address-bar/toolbar chrome is fully collapsed) unless something overrides it —
+         and only the max-width:768px branch further down explicitly pins
+         `.lightbox`/`#lightbox` to `height:100dvh`. That left a real gap: iPad models
+         whose PORTRAIT width falls between 769px and 880px (iPad Air 820px, iPad Pro
+         11" 834px) match this max-width:880px branch but NOT the max-width:768px one,
+         so `.lightbox` on those devices was never pinned to the dynamic viewport at
+         all — it sized itself against the large/chrome-collapsed viewport.
+         In real iPadOS Safari the address bar shows and hides as you scroll/interact,
+         and while it's showing, the actual visible height is smaller than that large
+         viewport. Since the image/caption split below (`dvh`-based grid rows) is
+         computed against the CURRENT dynamic viewport correctly, but the outer
+         `.lightbox` box itself was sized against the LARGER, chrome-collapsed
+         viewport, the two could disagree by exactly the toolbar's height whenever the
+         toolbar happened to be visible at that moment — the artwork image then reads
+         as rendered taller than the actually-visible screen. This is exactly why it
+         was intermittent (depends on live toolbar show/hide state, not a fixed
+         breakpoint) and iPad-Landscape-safe (all landscape iPad widths are >=1024px,
+         already covered by the separate min-width:881px branch's own dvh fix) and
+         PC-safe (desktop browsers in real fullscreen have no collapsible chrome, and
+         this rule only fires under max-width:880px).
+         Fix: explicitly pin `.lightbox`/`#lightbox` (and `.viewer`/`#viewer`) to the
+         dynamic viewport height here too, closing the 769-880px gap, using the same
+         vh-fallback-then-dvh pattern already used throughout this file. No device
+         hardcoding — this is a width-range breakpoint identical in kind to the
+         existing ones, not a specific-model check. */
+      .viewer,
+      .lightbox,
+      #viewer,
+      #lightbox{
+        height:100vh !important;
+        height:100dvh !important;
+      }
+
       .viewer-inner,
       .lightbox-inner{
         grid-template-rows:minmax(0,70dvh) minmax(0,30dvh) !important;
@@ -4236,6 +4274,23 @@ body.archive-entered .hero{
         height:48px !important;
         min-width:48px !important;
         min-height:48px !important;
+      }
+    }
+
+    /* IPAD PORTRAIT "INTERMITTENT IMAGE HEIGHT OVERFLOW" FIX — visualViewport consumer
+       2026-08-25. Scoped to touch + coarse-pointer + portrait + <=880px only, so it can
+       never affect iPad Landscape (orientation:landscape fails this query), PC (hover:
+       hover/pointer:fine fails it), or iPhone/Android beyond what the existing dvh rule
+       above already handles safely — this only takes over from `100dvh` when the JS
+       safety net has actually measured a real visualViewport height. Falls back to the
+       plain `100dvh` from the rule above (unchanged) when the variable is unset (JS
+       disabled, or visualViewport unsupported), so nothing regresses without it. */
+    @media (max-width:880px) and (orientation:portrait) and (hover:none) and (pointer:coarse){
+      .viewer,
+      .lightbox,
+      #viewer,
+      #lightbox{
+        height:var(--ap-portrait-vvh, 100dvh) !important;
       }
     }
 
@@ -6152,6 +6207,47 @@ lightbox: document.getElementById('lightbox'),
       ) {
         document.documentElement.classList.add('is-ipad');
       }
+
+      /* IPAD PORTRAIT "INTERMITTENT IMAGE HEIGHT OVERFLOW" FIX — SAFETY NET 2026-08-25:
+         The CSS fix above (max-width:880px branch now pins .lightbox/#lightbox to
+         100dvh, closing the 769-880px width gap that had no explicit dvh height at
+         all) addresses the confirmed, code-verified root cause. This is an additional,
+         purely-additive hardening layer for the narrower failure window `dvh` itself
+         can still have on some iPadOS Safari versions: `dvh` is defined to track the
+         CURRENT dynamic viewport, but while the address bar/toolbar is actively
+         animating open or closed, a couple of versions of Safari have been observed to
+         report a transiently stale value for a frame or two before settling. Per the
+         "가능하면 visualViewport.height를 우선 고려하라" guidance, this reads
+         window.visualViewport.height (the API specifically designed to reflect the
+         actual currently-visible area, independent of layout-viewport/toolbar quirks)
+         when available, and writes it to a CSS custom property that ONLY the portrait
+         + touch + <=880px branch consumes (see the `--ap-portrait-vvh` rule below) — it
+         has no effect on iPad Landscape, PC, or any other already-working environment.
+         Recomputed on resize/orientationchange/visualViewport resize+scroll, coalesced
+         to one requestAnimationFrame per burst so a flurry of events (all three commonly
+         fire together on iPad) can never apply a stale value after a newer one — only
+         the LAST scheduled read before the next paint ever gets written. */
+      (function setupPortraitViewportHeightGuard() {
+        var vvhRaf = null;
+        function applyUsableHeight() {
+          vvhRaf = null;
+          var usable = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+          if (usable) {
+            document.documentElement.style.setProperty('--ap-portrait-vvh', usable + 'px');
+          }
+        }
+        function scheduleUsableHeight() {
+          if (vvhRaf) return;
+          vvhRaf = requestAnimationFrame(applyUsableHeight);
+        }
+        scheduleUsableHeight();
+        window.addEventListener('resize', scheduleUsableHeight, { passive: true });
+        window.addEventListener('orientationchange', scheduleUsableHeight, { passive: true });
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', scheduleUsableHeight, { passive: true });
+          window.visualViewport.addEventListener('scroll', scheduleUsableHeight, { passive: true });
+        }
+      })();
 
       function armMobilePinchEndGuard() {
         mobilePinchJustEnded = true;

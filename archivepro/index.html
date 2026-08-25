@@ -7641,31 +7641,38 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         }
 
         els.lightboxImage.alt = title;
-        els.lightboxImage.classList.remove('is-ready');
-        els.lightboxImage.classList.add('is-loading');
-        resetViewerTransform();
-        els.lightboxImage.removeAttribute('src');
-        els.lightboxImage.loading = 'eager';
-        els.lightboxImage.decoding = 'async';
-        els.lightboxImage.fetchPriority = 'high';
+        els.lightboxImage.onload = null;
+        els.lightboxImage.onerror = null;
 
-        if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
-          els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
-          els.lightboxImage.style.width = 'auto';
-          els.lightboxImage.style.height = 'auto';
-          els.lightboxImage.style.maxWidth = '';
-          els.lightboxImage.style.maxHeight = '';
-        }
-
-        els.lightboxImage.onload = () => {
+        /* FLICKER-ON-NAV FIX PART 2 (desktop fullscreen, prev/next in viewer) 2026-08-25:
+           Part 1 (see the width/height:100% comment above) stopped the <img> BOX from
+           collapsing to 0x0, but the visible flash the user still saw came from a
+           second, separate bug: this function used to call
+           els.lightboxImage.removeAttribute('src') immediately, which blanks the
+           on-screen image the instant you click, and only *afterwards* went to fetch
+           the next artwork — so for however long that took (real network time on a
+           cache miss, but even a cached image still needs a queued decode/paint
+           before onload fires), the on-screen box had nothing in it while the
+           .is-loading opacity transition was still close to fully opaque. That empty,
+           opaque box was the flash.
+           Fix: load the next artwork into a detached Image() first (exactly the
+           pattern already used below for the high-res zoom swap) and only touch the
+           on-screen #lightboxImage — via applyDisplayImage() — once that copy has
+           fully decoded. The current artwork now stays on screen, unchanged, right up
+           until the moment the next one is ready to replace it outright, so there is
+           no longer any instant where the visible image is blank. */
+        let displayApplied = false;
+        const applyDisplayImage = () => {
+          if (displayApplied || thisViewerLoadToken !== viewerLoadToken || !els.lightboxImage) return;
+          displayApplied = true;
+          invalidateViewerFrameCache();
+          els.lightboxImage.src = displayUrl;
+          els.lightboxImage.classList.remove('is-loading');
+          els.lightboxImage.classList.add('is-ready');
           resetViewerTransform();
           if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
             els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
-            els.lightboxImage.style.width = 'auto';
-            els.lightboxImage.style.height = 'auto';
           }
-          els.lightboxImage.classList.remove('is-loading');
-          els.lightboxImage.classList.add('is-ready');
 
           if (pendingZoomUrl) {
             const zoomPreload = new Image();
@@ -7674,10 +7681,6 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
               /* Swap without resetting pan/zoom — the user may already be
                  zoomed into the standard image by the time the zoom image
                  finishes loading in the background. */
-              els.lightboxImage.onload = () => {
-                els.lightboxImage.classList.remove('is-loading');
-                els.lightboxImage.classList.add('is-ready');
-              };
               invalidateViewerFrameCache();
               els.lightboxImage.src = pendingZoomUrl;
             };
@@ -7685,20 +7688,28 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           }
         };
 
-        els.lightboxImage.onerror = () => {
+        const preload = new Image();
+        preload.loading = 'eager';
+        preload.decoding = 'async';
+        preload.fetchPriority = 'high';
+        preload.onload = applyDisplayImage;
+        preload.onerror = () => {
+          if (thisViewerLoadToken !== viewerLoadToken || !els.lightboxImage) return;
+          displayApplied = true;
           els.lightboxImage.src = SVG_PLACEHOLDER;
           els.lightboxImage.classList.remove('is-loading');
           els.lightboxImage.classList.add('is-ready');
         };
+        preload.src = displayUrl;
 
-        requestAnimationFrame(() => {
-          els.lightboxImage.src = displayUrl;
-        });
-
-        if (window.matchMedia && window.matchMedia('(min-width: 881px)').matches) {
-          els.lightboxImage.style.transform = 'translate3d(0,0,0) scale(1)';
-          els.lightboxImage.style.width = 'auto';
-          els.lightboxImage.style.height = 'auto';
+        /* Already warm in the browser cache (the common case — see
+           scheduleNeighborPreload below)? .complete is true synchronously in that
+           case, so apply right away instead of waiting an extra task for onload. */
+        if (preload.complete && preload.naturalWidth > 0) {
+          applyDisplayImage();
+        } else {
+          els.lightboxImage.classList.remove('is-ready');
+          els.lightboxImage.classList.add('is-loading');
         }
 
         els.lightbox.classList.add('open');

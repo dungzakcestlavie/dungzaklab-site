@@ -8735,9 +8735,54 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
 
         // Mouse wheel / trackpad zoom (desktop) — matches dungzak.art / jskim.art.
         // Existing pinch (touch), double-click, and mouse-drag pan are unaffected.
+        /* HORIZONTAL-SCROLL-NAVIGATES FIX 2026-08-25:
+           Root cause of the original "flicker/grows when scrolling left-right in the
+           viewer" report: this handler used to read ONLY e.deltaY, so ANY scroll
+           input while the viewer was open — including a left/right trackpad swipe,
+           which is how the reporter was actually trying to move between artworks —
+           got treated as a zoom gesture (a horizontal swipe still reports a non-zero
+           deltaY on most trackpads/drivers). That produced exactly the symptoms
+           reported across this whole investigation: a same-artwork "flash" as scale
+           jumped around mid-swipe, and later the artwork "suddenly growing", because
+           the viewer was never being asked to change images at all — it was being
+           zoomed by an input the person expected to page through the gallery.
+           Fix: when a wheel/trackpad event is clearly horizontal (|deltaX| bigger
+           than |deltaY|) and the image isn't currently zoomed in, treat it as a
+           swipe — advance to the next/previous artwork, the same as clicking the
+           lightbox-nav arrows or pressing the arrow keys — instead of zooming.
+           One physical trackpad swipe fires dozens of 'wheel' events as it
+           decelerates, so firing on every qualifying event would race through many
+           artworks per swipe. wheelSwipeArmed collapses that: the first qualifying
+           event in a gesture navigates once and disarms. Re-arming is primarily
+           driven by the gesture's own physical momentum decay — a real trackpad
+           swipe's deltaX tapers toward zero as it settles, so the trailing event(s)
+           naturally fall below the isHorizontalSwipe threshold and re-arm right as
+           the swipe actually ends, however long that takes; a vertical/zoom event
+           re-arms immediately too. The 500ms idle timer underneath is only a safety
+           net for input devices that stop abruptly with no decaying tail (plain
+           notch-scroll wheels, some mouse drivers) so a single stuck disarm can
+           never block all future swipes. Horizontal scroll while already zoomed in
+           still does nothing (unchanged) rather than fighting an in-progress
+           zoom/pan. */
+        let wheelSwipeArmed = true;
+        let wheelSwipeIdleTimer = null;
         els.lightbox.addEventListener('wheel', (e) => {
           if (!isViewerOpen()) return;
           e.preventDefault();
+
+          const isHorizontalSwipe = Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 8;
+          if (isHorizontalSwipe && viewerScale <= 1.02) {
+            clearTimeout(wheelSwipeIdleTimer);
+            wheelSwipeIdleTimer = setTimeout(() => { wheelSwipeArmed = true; }, 500);
+            if (wheelSwipeArmed) {
+              wheelSwipeArmed = false;
+              if (e.deltaX > 0) nextViewer(); else prevViewer();
+            }
+            return;
+          }
+          clearTimeout(wheelSwipeIdleTimer);
+          wheelSwipeArmed = true;
+
           const delta = -e.deltaY * 0.0015;
           viewerScale = Math.min(Math.max(1, viewerScale + delta * viewerScale), 4);
           if (viewerScale <= 1.02) {

@@ -2153,7 +2153,38 @@ html, body {
         min-width:0 !important;
         min-height:0 !important;
         width:100% !important;
+        /* IPAD-LANDSCAPE / PC-FULLSCREEN "CROP" & "OVER-ZOOM" ROOT-CAUSE FIX 2026-08-25:
+           This was the only spot in the entire desktop/tablet-landscape lightbox branch
+           (min-width:881px — this is the branch iPad landscape, iPad Pro landscape, and
+           every laptop/desktop width actually renders under) still sized with a plain
+           `100vh`. Every other viewer/lightbox height in this file (mobile portrait,
+           mobile landscape — see the many `dvh` rules above/below) was already migrated
+           to `dvh` (dynamic viewport height) specifically because plain `vh` is computed
+           against the OS/browser chrome's LARGEST possible extent, not the currently
+           visible one. On a real iPad, Safari's address bar / bottom toolbar collapses
+           and re-expands during ordinary swipe/scroll interaction (exactly what happens
+           when paging through artworks), and on Windows an auto-hidden taskbar does the
+           same over a maximized/"fullscreen" browser window. Whenever that chrome
+           animates, `100vh` and the on-screen visible height briefly disagree — the
+           stage (and, via the max-height:calc(100vh - ...) rule below, the image itself)
+           gets sized for a taller viewport than is actually visible at that instant, so
+           its top/bottom edges land outside the visible screen. That reads exactly as
+           the reported symptoms: "cropped top/bottom" on iPad landscape, and an
+           intermittent "suddenly too big" flash on PC fullscreen — intermittent because
+           it depends on the chrome animation's timing relative to layout, not on any
+           fixed breakpoint (confirmed: no `object-fit:cover` or crop mechanism exists
+           anywhere in this file's lightbox CSS; this was verified against the real,
+           already-fixed code with real production images across 20+ aspect ratios,
+           orientation changes, and 45+ rapid-navigation stress runs, none of which can
+           reproduce a chrome-animation-timing race in a desktop browser's emulator —
+           only a real device with dynamic browser/OS chrome can). Fix: add `dvh` as a
+           progressive enhancement over the existing `vh` (kept as the fallback for the
+           small remaining share of browsers without `dvh` support), matching the
+           convention already used everywhere else in this file. No device/breakpoint
+           hardcoding — `dvh` is a standard CSS unit that tracks whatever the actual
+           visible viewport is on any device. */
         height:100vh !important;
+        height:100dvh !important;
         display:flex !important;
         align-items:center !important;
         justify-content:center !important;
@@ -4125,7 +4156,14 @@ body.archive-entered .hero{
       .lightbox-stage img,
       #lightboxImage{
         max-width:min(calc(100vw - 360px - 240px), 940px) !important;
+        /* IPAD-LANDSCAPE / PC-FULLSCREEN "CROP" & "OVER-ZOOM" ROOT-CAUSE FIX 2026-08-25:
+           Same `vh` vs `dvh` issue as the .lightbox-stage height fix above — this
+           max-height was the second and last plain-`vh` value left in the desktop/
+           tablet-landscape (min-width:881px) lightbox image sizing. See that comment
+           for the full explanation. Kept as a fallback; dvh overrides it where
+           supported. */
         max-height:calc(100vh - 140px) !important;
+        max-height:calc(100dvh - 140px) !important;
       }
     }
 

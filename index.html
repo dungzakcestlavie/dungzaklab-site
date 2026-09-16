@@ -1211,6 +1211,12 @@ body.is-leaving-archive [data-archive-pro-link]{
           <div class="site-role lang-panel" data-panel="en">Artist Archive System · DCAP-05</div>
         </a>
 
+        <a class="top-fixed-link" href="https://kyungah.art" target="_blank" rel="noopener">
+          kyungah.art
+          <div class="site-role lang-panel" data-panel="ko">작가 아카이브 시스템 · DCAP-06</div>
+          <div class="site-role lang-panel" data-panel="en">Artist Archive System · DCAP-06</div>
+        </a>
+
         <div class="author lang-panel" data-panel="ko">
           등작 燈酌 DUNGZAK CESTLAVIE<br>
           설계 · 구조 · 디자인 구축
@@ -1508,6 +1514,17 @@ const fallbackDCAP = {
       summary_kr: "작품 데이터와 아카이브를 구조화하여\n웹사이트, 관리자 시스템, 다국어 서비스까지\n하나의 플랫폼으로 연결하는 시스템이다.",
       summary_en: "Structures artwork data and archives\ninto a unified platform that powers\nwebsites, administration, and multilingual services.",
       md_path: "https://jskim.art"
+    },
+    {
+      id: "DCAP-06",
+      slug: "DCAP-06",
+      year: "2026",
+      category: "Archive Platform",
+      title_kr: "작가 아카이브 시스템",
+      title_en: "Artist Archive System",
+      summary_kr: "작가 작품과 기록을 웹 기반 아카이브 구조로 연결하는 시스템.",
+      summary_en: "A web-based archive system connecting an artist’s works and records.",
+      md_path: "https://kyungah.art"
     }
   ]
 };
@@ -1561,6 +1578,17 @@ const additionalDCAPCases = [
     summary_kr: "작품 데이터와 아카이브를 구조화하여\n웹사이트, 관리자 시스템, 다국어 서비스까지\n하나의 플랫폼으로 연결하는 시스템이다.",
     summary_en: "Structures artwork data and archives\ninto a unified platform that powers\nwebsites, administration, and multilingual services.",
     md_path: "https://jskim.art"
+  },
+  {
+    id: "DCAP-06",
+    slug: "DCAP-06",
+    year: "2026",
+    category: "Archive Platform",
+    title_kr: "작가 아카이브 시스템",
+    title_en: "Artist Archive System",
+    summary_kr: "작가 작품과 기록을 웹 기반 아카이브 구조로 연결하는 시스템.",
+    summary_en: "A web-based archive system connecting an artist’s works and records.",
+    md_path: "https://kyungah.art"
   }
 ];
 
@@ -1731,7 +1759,7 @@ function renderList(items, type){
     const summary = currentLang === 'ko' ? item.summary_kr : item.summary_en;
 
     const a = document.createElement('a');
-    a.className = type === 'dcap' && ['DCAP-02','DCAP-03','DCAP-04','DCAP-05'].includes(item.id) ? 'report-item dcap-card' : 'report-item';
+    a.className = type === 'dcap' && ['DCAP-02','DCAP-03','DCAP-04','DCAP-05','DCAP-06'].includes(item.id) ? 'report-item dcap-card' : 'report-item';
     const href = item.md_path || '#';
     a.href = href;
     a.target = /^https?:\/\//.test(href) ? '_blank' : '_self';

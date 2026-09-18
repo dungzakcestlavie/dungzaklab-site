@@ -360,6 +360,18 @@ svg{
   color:var(--gold);
 }
 
+/* 2026-09-20 추가 — COSMOS Network Gateway 진입 링크 전용 보조 문구.
+   기존 .menu a(15px/letter-spacing 1px/색상)는 전혀 건드리지 않고,
+   그 안에 중첩된 이 서브텍스트만 별도로 작게 스타일링한다. */
+.menu a .menu-cosmos-sub{
+  display:block;
+  font-size:10px;
+  letter-spacing:1.5px;
+  margin-top:3px;
+  color:var(--gold);
+  opacity:.72;
+}
+
 .menu-overlay{
   position:fixed;
   inset:0;
@@ -500,6 +512,16 @@ svg{
   line-height:1.7;
   box-shadow:var(--shadow);
   transition:transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+/* 2026-09-20 추가 — COSMOS 진입 카드 전용 보조 문구(위 .menu-cosmos-sub와
+   동일 목적). 기존 .selector-link 스타일은 전혀 바꾸지 않는다. */
+.selector-link .menu-cosmos-sub{
+  display:block;
+  font-size:11px;
+  letter-spacing:1.5px;
+  margin-top:2px;
+  opacity:.72;
 }
 
 .selector-link:hover{
@@ -1135,6 +1157,14 @@ body.is-leaving-archive [data-archive-pro-link]{
   <a href="/archivepro/index.html" data-archive-pro-link>ARCHIVE PRO</a>
   <a href="#" onclick="openBooks(); return false;">BOOKS</a>
   <a href="/app/">APP LAB</a>
+  <!-- 2026-09-20 추가 — ARCHIVE PRO COSMOS Network Gateway 진입점(요청 원문
+       §3: "APP LAB 바로 아래에 Network Entry를 추가"). 새 route를 만들지
+       않고 현재 실제 ARCHIVE PRO Public Discover route(/discover, 이
+       도메인이 매핑된 Firebase Hosting 프로젝트의 firebase.json rewrite로
+       이미 존재 — 위 APP LAB의 /app/ 링크와 동일한 실제 도메인 경로
+       원칙)를 그대로 재사용한다. 기존 메뉴 항목(순서·문구·onclick 라우팅)은
+       전혀 건드리지 않는다. -->
+  <a href="/discover">COSMOS<span class="menu-cosmos-sub">CONNECTED ART NETWORK</span></a>
   <a href="#" onclick="openAbout(); return false;">ABOUT</a>
   <a href="https://dungzak.art" target="_blank" rel="noopener" onclick="closeMenu()">DUNGZAK.ART</a>
 </div>
@@ -1157,6 +1187,7 @@ body.is-leaving-archive [data-archive-pro-link]{
       <a href="#" class="selector-link" onclick="openArchive(); return false;">ARCHIVE</a>
       <a href="#" class="selector-link" onclick="openBooks(); return false;">BOOKS</a>
       <a href="/app/" class="selector-link">APP LAB</a>
+      <a href="/discover" class="selector-link">COSMOS<span class="menu-cosmos-sub">CONNECTED ART NETWORK</span></a>
     </div>
   </div>
 </div>

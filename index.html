@@ -515,13 +515,28 @@ svg{
 }
 
 /* 2026-09-20 추가 — COSMOS 진입 카드 전용 보조 문구(위 .menu-cosmos-sub와
-   동일 목적). 기존 .selector-link 스타일은 전혀 바꾸지 않는다. */
+   동일 목적). 기존 .selector-link 스타일은 전혀 바꾸지 않는다.
+   2026-09-19 수정 (CESTLAVIE LAB PRODUCT IDENTITY FINAL PINPOINT — Part C
+   §18~§24) — "CONNECTED ART NETWORK"가 너무 작고 흐릿해 Network Gateway
+   정체성이 약하다는 문제 수정. 이 클래스는 이제 위 ARCHIVE PRO/ARTIST
+   EDITION 카드의 서브텍스트와도 공유되므로(§15/§29 "동일한 2-level 시각
+   로직"), 이 한 번의 변경으로 두 카드 모두 가독성이 함께 개선된다 —
+   card border/배경/정렬/애니메이션은 전혀 건드리지 않고 타이포그래피만
+   조정(§19 허용 범위: TYPOGRAPHY/CONTRAST/WEIGHT/SPACING/READABILITY).
+   - font-size 11px→14px(§21 "Desktop 최소 약 14px").
+   - font-weight 미지정(400 상속)→600(§21 "500~600").
+   - color를 상속에만 맡기지 않고 기존 --gold-strong(새 색상 아님,
+     §31 "새 Gold 생성 금지")을 명시.
+   - opacity .72→.92(§21 "0.9~1.0 수준").
+   - margin-top 2px→6px(§23 "6~10px, 두 줄이 하나의 Brand Block처럼"). */
 .selector-link .menu-cosmos-sub{
   display:block;
-  font-size:11px;
+  font-size:14px;
+  font-weight:600;
   letter-spacing:1.5px;
-  margin-top:2px;
-  opacity:.72;
+  margin-top:6px;
+  color:var(--gold-strong);
+  opacity:.92;
 }
 
 .selector-link:hover{
@@ -1013,6 +1028,16 @@ body.is-leaving-archive [data-archive-pro-link]{
     line-height:1.55;
   }
 
+  /* 2026-09-19 추가 (Part C §21 "Mobile 최소 약 12.5~13px 확보") — 데스크톱
+     14px는 실제 모바일 폭에서는 다소 크므로, 이 폭에서만 13px로 살짝
+     낮추되 여전히 기존 11px보다 뚜렷이 크고 밝게 유지한다. font-weight/
+     color/opacity/letter-spacing은 위 base 규칙을 그대로 상속(중복 정의
+     금지). */
+  .selector-link .menu-cosmos-sub{
+    font-size:13px;
+    margin-top:5px;
+  }
+
   .text{
     font-size:15px;
     line-height:1.88;
@@ -1156,7 +1181,14 @@ body.is-leaving-archive [data-archive-pro-link]{
   <a href="#" onclick="openArchive(); return false;">ARCHIVE</a>
   <a href="/archivepro/index.html" data-archive-pro-link>ARCHIVE PRO</a>
   <a href="#" onclick="openBooks(); return false;">BOOKS</a>
-  <a href="/app/">APP LAB</a>
+  <!-- 2026-09-19 수정 (COSMOS ARTIST ENTRY + CESTLAVIE LAB PRODUCT IDENTITY
+       FINAL PINPOINT — Part B §13/§17) — "APP LAB"이라는 개발/실험 단계
+       명칭을 실제 제품명 "ARCHIVE PRO / ARTIST EDITION" 2-level 표기로
+       교체한다. href="/app/"(기존 destination)는 완전히 그대로 유지 —
+       단순 브랜드 라벨 변경이며 새 route를 만들지 않는다. 서브텍스트는
+       바로 아래 COSMOS 항목이 이미 쓰던 .menu-cosmos-sub 클래스를 그대로
+       재사용해 두 항목이 동일한 2-level 시각 로직을 공유한다(§15/§29). -->
+  <a href="/app/">ARCHIVE PRO<span class="menu-cosmos-sub">ARTIST EDITION</span></a>
   <!-- 2026-09-20 추가 — ARCHIVE PRO COSMOS Network Gateway 진입점(요청 원문
        §3: "APP LAB 바로 아래에 Network Entry를 추가"). 새 route를 만들지
        않고 현재 실제 ARCHIVE PRO Public Discover route(/discover, 이
@@ -1186,7 +1218,11 @@ body.is-leaving-archive [data-archive-pro-link]{
       <a href="#" class="selector-link" onclick="openOcean(); return false;">OCEAN ENERGY</a>
       <a href="#" class="selector-link" onclick="openArchive(); return false;">ARCHIVE</a>
       <a href="#" class="selector-link" onclick="openBooks(); return false;">BOOKS</a>
-      <a href="/app/" class="selector-link">APP LAB</a>
+      <!-- 2026-09-19 수정 (Part B §13~§17) — 위 드롭다운 메뉴와 동일한
+           라벨 교체(APP LAB → ARCHIVE PRO / ARTIST EDITION), 동일한
+           href="/app/" 유지, 동일한 .menu-cosmos-sub 서브텍스트 클래스
+           재사용. -->
+      <a href="/app/" class="selector-link">ARCHIVE PRO<span class="menu-cosmos-sub">ARTIST EDITION</span></a>
       <a href="/discover" class="selector-link">COSMOS<span class="menu-cosmos-sub">CONNECTED ART NETWORK</span></a>
     </div>
   </div>

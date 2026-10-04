@@ -39,24 +39,24 @@
 </script>
 
 
-<meta property="og:title" content="ARCHIVE PRO — Artist Edition">
+<meta property="og:title" content="ARCHIVE PRO — Artist Edition | DUNGZAK CESTLAVIE LAB">
 <meta property="og:description" content="A digital art archive platform for artists — artworks, portfolios, PDF, QR public viewing, Discover and COSMOS.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://dungzaklab.art/">
 <meta property="og:site_name" content="DUNGZAK CESTLAVIE LAB">
 <meta property="og:locale" content="en_US">
 <meta property="og:locale:alternate" content="ko_KR">
-<meta property="og:image" content="https://dungzaklab.art/og/dungzaklab-share.jpg?v=20261005-0847">
-<meta property="og:image:secure_url" content="https://dungzaklab.art/og/dungzaklab-share.jpg?v=20261005-0847">
+<meta property="og:image" content="https://dungzaklab.art/og/dungzaklab-share.jpg?v=20261005">
+<meta property="og:image:secure_url" content="https://dungzaklab.art/og/dungzaklab-share.jpg?v=20261005">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="ARCHIVE PRO — Artist Edition by DUNGZAK CESTLAVIE LAB">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ARCHIVE PRO — Artist Edition">
+<meta name="twitter:title" content="ARCHIVE PRO — Artist Edition | DUNGZAK CESTLAVIE LAB">
 <meta name="twitter:description" content="A digital art archive platform for artists — artworks, portfolios, PDF, QR public viewing, Discover and COSMOS.">
-<meta name="twitter:image" content="https://dungzaklab.art/og/dungzaklab-share.jpg?v=20261005-0847">
+<meta name="twitter:image" content="https://dungzaklab.art/og/dungzaklab-share.jpg?v=20261005">
 <meta name="twitter:image:alt" content="ARCHIVE PRO — Artist Edition by DUNGZAK CESTLAVIE LAB">
 
 <script type="application/ld+json">
@@ -1786,6 +1786,21 @@ body.menu-open .header{
 .view-close:focus-visible .view-close-ring::before,
 .view-close:focus-visible .view-close-ring::after{
   opacity:1;
+}
+
+/* ==========================================================================
+   LAB QUIET DETAILS — 2026-10-10 (모바일만)
+   × 아이콘 0.70 → 0.61, BOOKS 카드 테두리 alpha 0.28 → 0.26. 그 외 값은 건드리지 않는다.
+   ========================================================================== */
+@media (max-width:640px){
+  .view-close-ring::before,
+  .view-close-ring::after{
+    opacity:0.61;
+  }
+
+  #books .report-item{
+    border-color:rgba(214,184,106,0.26);
+  }
 }
 
 </style>

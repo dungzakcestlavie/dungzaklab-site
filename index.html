@@ -1579,6 +1579,57 @@ body{
   }
 }
 
+
+/* ==========================================================================
+   LAB MENU UX — 2026-10-07
+   (1) 햄버거 ☰ → × 상태 버튼  (2) 메뉴 패널 내부 스크롤 + 마지막 위치 복원(JS)
+   (3) 현재 화면에 해당하는 메뉴 항목을 아주 조금 밝게
+   패널 폭 · 항목 순서 · 색 체계 · 글자 크기는 그대로.
+   ========================================================================== */
+
+/* 메뉴가 열려 있는 동안만 헤더를 패널/오버레이 위로 올린다 — 같은 자리의 같은 버튼이
+   × 가 되어 그대로 눌리도록(기존에는 패널이 버튼을 덮었다). */
+body.menu-open .header{
+  z-index:130;
+}
+
+.menu-btn span{
+  transition:transform .19s ease, opacity .14s ease;
+  transform-origin:50% 50%;
+}
+
+/* 세 줄의 간격(선 1.5px + 여백 5.5px = 7px)만큼 위·아래 줄을 가운데로 모아 45°로 교차 */
+.menu-btn.is-open span:nth-child(1){
+  transform:translateY(7px) rotate(45deg);
+}
+
+.menu-btn.is-open span:nth-child(2){
+  opacity:0;
+}
+
+.menu-btn.is-open span:nth-child(3){
+  transform:translateY(-7px) rotate(-45deg);
+}
+
+/* 패널 자체가 스크롤 컨테이너 — 화면이 낮아 항목이 다 들어가지 않을 때만 스크롤된다.
+   본문 스크롤과는 별개이고(overscroll-behavior:contain) 본문 위치를 건드리지 않는다. */
+.menu{
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* 현재 화면 표시 — 문구 · 밑줄 · 배경 없이 같은 계열에서 밝기만 조금 */
+.menu a.is-current{
+  color:#bfdcff;
+}
+
+@media (min-width:641px){
+  .menu a.is-current{
+    color:#cfe4fb;
+  }
+}
+
 </style>
 
 <script>
@@ -1624,7 +1675,7 @@ body{
 <body>
 
 <div class="header">
-  <div class="menu-btn" id="menuBtn" aria-label="menu" role="button" tabindex="0">
+  <div class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="menu" role="button" tabindex="0">
     <span></span>
     <span></span>
     <span></span>
@@ -1641,10 +1692,10 @@ body{
 </div>
 
 <div class="menu" id="menu" aria-hidden="true">
-  <a href="#" onclick="openOcean(); return false;">OCEAN ENERGY</a>
-  <a href="#" onclick="openArchive(); return false;">ARCHIVE</a>
+  <a href="#" data-menu-view="ocean" onclick="openOcean(); return false;">OCEAN ENERGY</a>
+  <a href="#" data-menu-view="archive" onclick="openArchive(); return false;">ARCHIVE</a>
   <a href="/archivepro/index.html" data-archive-pro-link>ARCHIVE PRO</a>
-  <a href="#" onclick="openBooks(); return false;">BOOKS</a>
+  <a href="#" data-menu-view="books" onclick="openBooks(); return false;">BOOKS</a>
   <!-- 2026-09-19 수정 (COSMOS ARTIST ENTRY + CESTLAVIE LAB PRODUCT IDENTITY
        FINAL PINPOINT — Part B §13/§17) — "APP LAB"이라는 개발/실험 단계
        명칭을 실제 제품명 "ARCHIVE PRO / ARTIST EDITION" 2-level 표기로
@@ -1661,7 +1712,7 @@ body{
        원칙)를 그대로 재사용한다. 기존 메뉴 항목(순서·문구·onclick 라우팅)은
        전혀 건드리지 않는다. -->
   <a href="/discover">COSMOS<span class="menu-cosmos-sub">CONNECTED ART NETWORK</span></a>
-  <a href="#" onclick="openAbout(); return false;">ABOUT</a>
+  <a href="#" data-menu-view="about" onclick="openAbout(); return false;">ABOUT</a>
   <a href="https://dungzak.art" target="_blank" rel="noopener" onclick="closeMenu()">DUNGZAK.ART</a>
 </div>
 
@@ -2151,19 +2202,95 @@ function unlockBodyScroll(){
   document.body.classList.remove('menu-open');
 }
 
+/* MENU UX (2026-10-07) — 버튼 상태(☰/×, aria), 현재 화면 표시, 메뉴 스크롤 위치 기억.
+   메뉴 패널은 페이지 안에서 다시 만들어지지 않으므로 화면 전환(OCEAN/ARCHIVE/BOOKS/ABOUT)
+   사이에는 스크롤 위치가 그대로 남는다. 다른 페이지(/archivepro, /app/, /discover 등)로
+   나갔다 돌아오는 경우를 위해서만 sessionStorage에 값 하나를 둔다(닫을 때 · 떠날 때 저장). */
+const MENU_SCROLL_KEY = 'dzlab_menu_scroll';
+
+let menuScrollWanted = 0; // 사용자가 마지막으로 보던 메뉴 위치(화면 크기와 무관하게 기억)
+
+/* 저장된 값은 항상 "지금 패널에서 실제로 스크롤 가능한 범위" 안으로 맞춘다
+   (화면 회전 · 창 크기 변경으로 범위가 줄어들 수 있다). 0 <= 값 <= scrollHeight - clientHeight */
+function clampMenuScroll(value){
+  const max = Math.max(0, (menu.scrollHeight || 0) - (menu.clientHeight || 0));
+  const n = Number(value);
+  if(!isFinite(n) || n <= 0) return 0;
+  return Math.min(Math.round(n), max);
+}
+
+function saveMenuScroll(){
+  const current = Math.max(0, Math.round(menu.scrollTop || 0));
+  const max = Math.max(0, (menu.scrollHeight || 0) - (menu.clientHeight || 0));
+  /* 화면이 바뀌어 범위가 줄어든 탓에 끝에 걸려 있는 것뿐이라면(사용자가 올린 게 아니라면)
+     기억해 둔 위치를 덮어쓰지 않는다 — 원래 방향으로 되돌리면 그 위치로 돌아간다. */
+  if(!(current >= max && menuScrollWanted > current)) menuScrollWanted = current;
+  try{ sessionStorage.setItem(MENU_SCROLL_KEY, String(menuScrollWanted)); }catch(e){}
+}
+
+function restoreMenuScroll(){
+  try{
+    const saved = parseInt(sessionStorage.getItem(MENU_SCROLL_KEY) || '0', 10);
+    if(isFinite(saved) && saved > 0) menuScrollWanted = saved;
+  }catch(e){}
+  menu.scrollTop = clampMenuScroll(menuScrollWanted);
+}
+
+function syncMenuButton(isOpen){
+  menuBtn.classList.toggle('is-open', isOpen);
+  menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  menuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+}
+
+function markCurrentMenuItem(){
+  const activeView = document.querySelector('.view.active');
+  const id = activeView ? activeView.id : '';
+  menu.querySelectorAll('a[data-menu-view]').forEach(link => {
+    const isCurrent = link.dataset.menuView === id;
+    link.classList.toggle('is-current', isCurrent);
+    if(isCurrent) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
+}
+
 function openMenu(){
+  markCurrentMenuItem();
+  menu.scrollTop = clampMenuScroll(menuScrollWanted);
   menu.classList.add('open');
   menuOverlay.classList.add('show');
   menu.setAttribute('aria-hidden', 'false');
+  syncMenuButton(true);
   lockBodyScroll();
 }
 
 function closeMenu(){
+  if(menu.classList.contains('open')) saveMenuScroll();
   menu.classList.remove('open');
   menuOverlay.classList.remove('show');
   menu.setAttribute('aria-hidden', 'true');
+  syncMenuButton(false);
   unlockBodyScroll();
 }
+
+restoreMenuScroll();
+window.addEventListener('pagehide', function(){
+  if(menu.classList.contains('open')) saveMenuScroll();
+});
+window.addEventListener('pageshow', function(e){
+  if(e.persisted) restoreMenuScroll();
+});
+
+/* 화면 회전 · 창 크기 변경: 메뉴 패널은 모든 폭에서 같은 구조라 열림/닫힘 · 현재 화면 표시는
+   그대로 유지된다. 스크롤 범위만 달라지므로, 닫혀 있을 때는 기억해 둔 위치를 새 범위에 맞춰
+   다시 적용하고, 열려 있을 때는 지금 보고 있는 위치를 범위 안으로만 맞춘다. */
+window.addEventListener('resize', function(){
+  if(menu.classList.contains('open')){
+    menu.scrollTop = clampMenuScroll(menu.scrollTop);
+  }else{
+    menu.scrollTop = clampMenuScroll(menuScrollWanted);
+  }
+  syncMenuButton(menu.classList.contains('open'));
+}, { passive:true });
 
 function toggleMenu(){
   if(menu.classList.contains('open')){
@@ -2413,6 +2540,10 @@ function goArchivePro(link){
 archiveProLinks.forEach(link => {
   link.addEventListener('pointerdown', function(e){
     if(e.pointerType === 'mouse' && e.button !== 0) return;
+    /* 2026-10-07 — 사이드 메뉴 안에서는 손가락 · 펜으로 이 항목을 잡고 메뉴를 스크롤할 수
+       있어야 한다. 터치/펜은 누르는 순간이 아니라 탭(click)으로 확정됐을 때만 이동한다.
+       마우스와 홈 화면의 ENTER ARCHIVE PRO 버튼은 기존 그대로다. */
+    if(e.pointerType !== 'mouse' && link.closest('#menu')) return;
     goArchivePro(link);
   }, { passive: true });
 

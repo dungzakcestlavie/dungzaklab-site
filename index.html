@@ -1111,6 +1111,341 @@ body.is-leaving-archive [data-archive-pro-link]{
   color:inherit;
 }
 
+
+/* ==========================================================================
+   LAB HOME REFINEMENT — 2026-10-05
+   현재 디자인(Deep Ocean Blue · Antique Gold · Noto Serif KR · 각진 카드)을 그대로 두고
+   간격 · 정렬 · 위계 · 선 · 터치 반응만 정리한다. 이 블록은 <style> 맨 끝에 있어 위
+   규칙을 덮어쓰며, 이 블록만 지우면 이전 모습으로 정확히 돌아간다.
+   범위: body 배경, 상단 헤더(전 화면 공통 셸), 홈(#home) 내부. 그 외 화면
+   (OCEAN / ARCHIVE / BOOKS / ABOUT)의 본문 규칙은 건드리지 않는다.
+   새 폰트 · 이미지 · JS 없음.
+   ========================================================================== */
+:root{
+  --lab-bg-deep:#031421;
+  --lab-bg-mid:#0a4f73;
+  --lab-gold:#d6b86a;
+  --lab-gold-bright:#f0d79c;
+  --lab-gold-muted:rgba(214,184,106,0.74);
+  --lab-border:rgba(214,184,106,0.28);
+  --lab-border-strong:rgba(214,184,106,0.58);
+  --lab-page-padding:clamp(20px, 5vw, 32px);
+  --lab-card-gap:16px;
+  --lab-card-shadow:0 8px 30px rgba(0,0,0,0.06);
+}
+
+/* BACKGROUND DEPTH — 기존 135° Ocean 그라데이션은 그대로. 그 위의 밝은 cyan 광원 3개를
+   낮은 채도의 Ocean Blue 광원 1개 + 위아래 가장자리를 아주 조금 가라앉히는 선형 1개로 정리. */
+body{
+  background:
+    linear-gradient(180deg, rgba(2,13,22,0.30) 0%, rgba(2,13,22,0) 22%, rgba(2,13,22,0) 74%, rgba(2,13,22,0.24) 100%),
+    radial-gradient(120% 70% at 50% 36%, rgba(40,150,205,0.24), rgba(40,150,205,0) 66%),
+    linear-gradient(135deg,#031421,#062c44,#0a4f73);
+}
+
+/* HEADER — masthead */
+.header{
+  background:rgba(3,20,33,0.56);
+  border-bottom-color:rgba(214,184,106,0.14);
+}
+
+.menu-btn{
+  left:var(--lab-page-padding);
+  border-color:rgba(214,184,106,0.32);
+  background:rgba(255,255,255,0.025);
+  transition:background-color .18s ease-out, border-color .18s ease-out;
+}
+
+.menu-btn span{
+  width:19px;
+  height:1.5px;
+  margin:2.75px 0;
+  border-radius:1px;
+}
+
+.logo{
+  letter-spacing:0.1em;
+  padding:0 0 0 0.1em; /* 마지막 글자 뒤 자간만큼 앞에도 두어 글자 덩어리를 정확히 가운데로 */
+}
+
+.lang-global{
+  right:var(--lab-page-padding);
+  gap:6px;
+}
+
+.lang-global button{
+  position:relative;
+  border-color:rgba(214,184,106,0.26);
+  background:transparent;
+  color:var(--lab-gold);
+  opacity:0.72;
+  letter-spacing:0.08em;
+  transition:background-color .18s ease-out, border-color .18s ease-out, opacity .18s ease-out, color .18s ease-out;
+}
+
+/* 보이는 크기는 그대로 두고 터치 영역만 44px 이상으로 */
+.lang-global button::after{
+  content:"";
+  position:absolute;
+  inset:-7px -3px;
+}
+
+.lang-global button.active{
+  background:rgba(214,184,106,0.10);
+  border-color:rgba(214,184,106,0.62);
+  color:var(--lab-gold-bright);
+  opacity:1;
+}
+
+.header .menu-btn:active,
+.header .menu-btn.is-pressing,
+.header .lang-global button:active,
+.header .lang-global button.is-pressing{
+  box-shadow:none;
+  background:rgba(214,184,106,0.12);
+}
+
+.header .menu-btn:focus-visible,
+.header .lang-global button:focus-visible,
+.header .logo:focus-visible{
+  outline:2px solid var(--lab-gold-bright);
+  outline-offset:2px;
+}
+
+/* HOME — 제목 두 줄(DUNGZAK / CESTLAVIE LAB). 넓은 화면에서는 기존처럼 한 줄. */
+.home-title-line{
+  display:inline;
+}
+
+.home-kicker{
+  color:var(--lab-gold-muted);
+  text-wrap:balance;
+}
+
+/* HOME — 메뉴 시스템 */
+.home .home-selector{
+  gap:var(--lab-card-gap);
+}
+
+.home .selector-link{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:80px;
+  padding:14px 18px;
+  border:1px solid var(--lab-border);
+  background:linear-gradient(180deg, rgba(255,255,255,0.032), rgba(255,255,255,0.012));
+  box-shadow:var(--lab-card-shadow);
+  color:var(--lab-gold-bright);
+  font-size:19px;
+  line-height:1.3;
+  letter-spacing:0.08em;
+  text-indent:0.08em; /* 자간 보정: 글자 덩어리를 박스 정중앙에 */
+  text-align:center;
+  transition:border-color .18s ease-out, background-color .18s ease-out, transform .18s ease-out;
+  will-change:auto;
+}
+
+.home .selector-link .menu-cosmos-sub{
+  margin-top:9px;
+  font-size:13.5px;
+  line-height:1.3;
+  letter-spacing:0.16em;
+  text-indent:0.16em;
+  color:var(--lab-gold);
+  opacity:0.9;
+}
+
+/* 두 줄 메뉴(ARCHIVE PRO / ARTIST EDITION, COSMOS / CONNECTED ART NETWORK)는 한 단계 높게 */
+.home .selector-link:has(.menu-cosmos-sub){
+  min-height:100px;
+}
+
+/* PRIMARY CTA — 같은 계열의 박스이되 한 단계 위 */
+.home #enterArchivePro{
+  min-height:88px;
+  border-color:var(--lab-border-strong);
+  background:linear-gradient(180deg, rgba(214,184,106,0.085), rgba(214,184,106,0.03));
+  font-size:22px;
+  letter-spacing:0.07em;
+  text-indent:0.07em;
+  flex-direction:row;
+}
+
+.selector-arrow{
+  display:inline-block;
+  margin-left:0.55em;
+  text-indent:0;
+}
+
+/* INTERACTION — 선 · 면의 밝기와 1px 이동만. 기존 glow / scale(1.01)은 홈 메뉴에서 끈다. */
+.home .selector-link:hover{
+  transform:none;
+  box-shadow:var(--lab-card-shadow);
+  border-color:rgba(214,184,106,0.46);
+  background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.022));
+}
+
+.home #enterArchivePro:hover{
+  border-color:rgba(214,184,106,0.78);
+  background:linear-gradient(180deg, rgba(214,184,106,0.12), rgba(214,184,106,0.05));
+}
+
+@media (hover:hover) and (pointer:fine){
+  .home .selector-link:hover{
+    transform:translateY(-1px);
+  }
+}
+
+.home .selector-link:active,
+.home .selector-link.is-pressing{
+  transform:scale(0.995);
+  box-shadow:var(--lab-card-shadow);
+  border-color:rgba(214,184,106,0.62);
+}
+
+.home #enterArchivePro:active,
+.home #enterArchivePro.is-pressing{
+  border-color:rgba(214,184,106,0.86);
+}
+
+/* 카드에 contain:paint가 걸려 있어 바깥쪽 outline은 잘린다 → 안쪽에 그린다 */
+.home .selector-link:focus-visible{
+  outline:2px solid var(--lab-gold-bright);
+  outline-offset:-5px;
+}
+
+/* MOBILE */
+@media (max-width:640px){
+  /* 헤더: 겹쳐 놓던 3요소를 한 줄 그리드로 → 사이트명이 KR/EN · 메뉴 버튼과 닿지 않는다 */
+  .header{
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr) auto;
+    align-items:center;
+    column-gap:8px;
+    padding-left:var(--lab-page-padding);
+    padding-right:var(--lab-page-padding);
+  }
+
+  .menu-btn,
+  .lang-global{
+    position:static;
+    transform:none;
+  }
+
+  .menu-btn{
+    width:44px;
+    height:44px;
+  }
+
+  .menu-btn:active,
+  .menu-btn.is-pressing,
+  .lang-global button:active,
+  .lang-global button.is-pressing{
+    transform:scale(0.98);
+  }
+
+  .logo{
+    justify-self:center;
+    max-width:100%;
+    font-size:clamp(9.75px, calc((100vw - 174px) / 15.3), 12.5px);
+    letter-spacing:0.06em;
+    padding-left:0.06em;
+  }
+
+  .lang-global{
+    gap:5px;
+  }
+
+  .lang-global button{
+    min-width:34px;
+    height:30px;
+    padding:0 7px;
+    font-size:10px;
+  }
+
+  /* 본문: 좌우 여백 통일, 헤더 → 여백 → 제목 → 부제 → 여백 → CTA */
+  .view.home{
+    padding-top:calc(var(--header-height) + clamp(56px, 9.5svh, 88px));
+    padding-left:var(--lab-page-padding);
+    padding-right:var(--lab-page-padding);
+  }
+
+  .home .home-hero{
+    min-height:0;
+    justify-content:flex-start;
+    padding:0 0 24px;
+  }
+
+  .home-title{
+    font-size:clamp(30px, 9.8vw, 46px);
+    letter-spacing:0.06em;
+    line-height:1.3;
+  }
+
+  .home-title-line{
+    display:block;
+    text-indent:0.06em;
+  }
+
+  .home-kicker{
+    margin-top:22px;
+    max-width:32em;
+    padding-left:0.1em;
+    font-size:11.5px;
+    letter-spacing:0.1em;
+    line-height:1.85;
+  }
+
+  .home .home-selector{
+    margin-top:clamp(48px, 7svh, 64px);
+  }
+
+  .home .selector-link{
+    min-height:90px;
+    padding:14px 14px;
+    font-size:clamp(17px, 4.9vw, 20px);
+  }
+
+  .home .selector-link .menu-cosmos-sub{
+    margin-top:9px;
+    font-size:13px;
+  }
+
+  .home .selector-link:has(.menu-cosmos-sub){
+    min-height:110px;
+  }
+
+  .home #enterArchivePro{
+    min-height:96px;
+    font-size:clamp(17.5px, 5.4vw, 22px);
+  }
+}
+
+/* 사이트명을 화면 정중앙에: 좌우 칸 폭을 같게 둘 수 있는 폭부터 */
+@media (min-width:390px) and (max-width:640px){
+  .header{
+    grid-template-columns:73px minmax(0,1fr) 73px;
+  }
+
+  .lang-global{
+    justify-self:end;
+  }
+
+  .logo{
+    font-size:clamp(11.5px, calc((100vw - 204px) / 15.7), 13px);
+    letter-spacing:0.08em;
+    padding-left:0.08em;
+  }
+}
+
+@media (min-width:641px){
+  .home-kicker{
+    padding-left:1.6px;
+  }
+}
+
 </style>
 
 <script>
@@ -1202,15 +1537,15 @@ body.is-leaving-archive [data-archive-pro-link]{
 <div class="view home active" id="home">
   <div class="home-hero">
     <div class="home-title">
-      DUNGZAK CESTLAVIE LAB
+      <span class="home-title-line">DUNGZAK</span> <span class="home-title-line">CESTLAVIE LAB</span>
     </div>
 
     <div class="home-kicker">
-      STRUCTURE · OCEAN ENERGY · ARCHIVE · ARCHIVE PRO
+      STRUCTURE&nbsp;· OCEAN&nbsp;ENERGY&nbsp;· ARCHIVE&nbsp;· ARCHIVE&nbsp;PRO
     </div>
 
     <div class="home-selector">
-      <a id="enterArchivePro" href="/archivepro/index.html" class="selector-link" data-archive-pro-link>ENTER ARCHIVE PRO →</a>
+      <a id="enterArchivePro" href="/archivepro/index.html" class="selector-link" data-archive-pro-link>ENTER ARCHIVE PRO <span class="selector-arrow" aria-hidden="true">→</span></a>
       <a href="#" class="selector-link" onclick="openOcean(); return false;">OCEAN ENERGY</a>
       <a href="#" class="selector-link" onclick="openArchive(); return false;">ARCHIVE</a>
       <a href="#" class="selector-link" onclick="openBooks(); return false;">BOOKS</a>

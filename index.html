@@ -1630,6 +1630,95 @@ body.menu-open .header{
   }
 }
 
+
+/* ==========================================================================
+   LAB VIEW CLOSE — 2026-10-08
+   홈에서 들어간 내부 화면(OCEAN ENERGY / ARCHIVE / BOOKS / ABOUT)의 닫기 버튼.
+   홈이 아닐 때만 CSS로 표시된다. .view 안이 아니라 형제로 두는 이유는 스크롤 힌트와 같다
+   (.view의 contain 때문에 그 안의 fixed는 화면 기준이 아니다).
+   ========================================================================== */
+.view-close{
+  display:none;
+}
+
+#home:not(.active) ~ .view-close{
+  display:flex;
+  position:fixed;
+  top:calc(var(--header-height) + 8px);
+  right:calc(var(--lab-page-padding) - 4px + env(safe-area-inset-right, 0px));
+  z-index:90;
+  width:44px;   /* 터치 영역 */
+  height:44px;
+  padding:0;
+  border:0;
+  background:transparent;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+
+.view-close-ring{
+  position:relative;
+  display:block;
+  width:36px;   /* 보이는 크기 */
+  height:36px;
+  border-radius:50%;
+  border:1px solid rgba(214,184,106,0.42);
+  background:rgba(4,24,39,0.72);
+  transition:border-color .18s ease-out, background-color .18s ease-out;
+}
+
+.view-close-ring::before,
+.view-close-ring::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:14px;
+  height:1.5px;
+  margin:-0.75px 0 0 -7px;
+  border-radius:1px;
+  background:var(--lab-gold);
+}
+
+.view-close-ring::before{ transform:rotate(45deg); }
+.view-close-ring::after{ transform:rotate(-45deg); }
+
+@media (hover:hover) and (pointer:fine){
+  .view-close:hover .view-close-ring{
+    border-color:rgba(214,184,106,0.74);
+    background:rgba(8,36,56,0.86);
+  }
+}
+
+.view-close:active,
+.view-close.is-pressing{
+  transform:none;
+  box-shadow:none;
+}
+
+.view-close:active .view-close-ring,
+.view-close.is-pressing .view-close-ring{
+  border-color:rgba(214,184,106,0.8);
+  background:rgba(214,184,106,0.14);
+}
+
+.view-close:focus-visible{
+  outline:none;
+}
+
+.view-close:focus-visible .view-close-ring{
+  outline:2px solid var(--lab-gold-bright);
+  outline-offset:2px;
+}
+
+/* 내부 화면의 첫 줄이 닫기 버튼과 겹치지 않도록 위 여백만 조금 늘린다 */
+.view:not(.home){
+  padding-top:calc(var(--header-height) + 60px);
+}
+
 </style>
 
 <script>
@@ -1749,6 +1838,10 @@ body.menu-open .header{
 <div class="scroll-hint" id="scrollHint">
   <button type="button" class="scroll-hint-btn" id="scrollHintBtn" aria-label="Scroll down"><span class="scroll-hint-chevron" aria-hidden="true"></span></button>
 </div>
+
+<!-- 2026-10-08 추가 — 내부 화면 닫기 버튼(홈이 아닐 때만 CSS로 표시). 브라우저 창을 닫는
+     것이 아니라, 들어오기 직전의 화면 · 스크롤 위치 · 메뉴 상태로 되돌아간다. -->
+<button type="button" class="view-close" id="viewClose" aria-label="Close"><span class="view-close-ring" aria-hidden="true"></span></button>
 
 <div class="view" id="ocean">
   <div class="structure-wrap">
@@ -2300,6 +2393,52 @@ function toggleMenu(){
   }
 }
 
+/* VIEW CLOSE (2026-10-08) — 내부 화면으로 들어가기 직전의 상태(화면 · 본문 스크롤 위치 ·
+   메뉴가 열려 있었는지)를 기억해 두었다가, 닫기(× / Esc)에서 그대로 되돌린다.
+   주소 · 히스토리는 건드리지 않고(이 화면들은 원래 주소가 없다) 다시 불러오지도 않는다.
+   기억이 없으면(예: 내부 화면으로 바로 시작한 경우) 홈으로 돌아간다. */
+const viewStack = [];
+let viewRestoring = false;
+
+function activeViewId(){
+  const active = document.querySelector('.view.active');
+  return active ? active.id : 'home';
+}
+
+function rememberView(nextId){
+  if(viewRestoring) return;
+  if(nextId === 'home'){ viewStack.length = 0; return; }
+  const current = activeViewId();
+  if(current === nextId) return;
+  viewStack.push({
+    view: current,
+    y: window.pageYOffset || document.documentElement.scrollTop || 0,
+    menuOpen: menu.classList.contains('open')
+  });
+  if(viewStack.length > 12) viewStack.shift();
+}
+
+function closeView(){
+  if(activeViewId() === 'home') return;
+  const prev = viewStack.pop() || { view: 'home', y: 0, menuOpen: false };
+  const openers = { home: openHome, ocean: openOcean, archive: openArchive, books: openBooks, about: openAbout };
+  viewRestoring = true;
+  try{ (openers[prev.view] || openHome)(); }finally{ viewRestoring = false; }
+  if(prev.view === 'home') viewStack.length = 0;
+  const restoreScroll = function(){
+    const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    const wanted = Number(prev.y);
+    const y = isFinite(wanted) && wanted > 0 ? Math.min(Math.round(wanted), max) : 0;
+    const root = document.documentElement, was = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'auto';   /* 복귀는 애니메이션 없이 즉시 */
+    window.scrollTo(0, y);
+    root.style.scrollBehavior = was;
+  };
+  restoreScroll();
+  if(window.requestAnimationFrame) window.requestAnimationFrame(restoreScroll);
+  if(prev.menuOpen) openMenu();
+}
+
 function clearViews(){
   home.classList.remove('active');
   ocean.classList.remove('active');
@@ -2310,12 +2449,14 @@ function clearViews(){
 }
 
 function openHome(){
+  rememberView('home');
   clearViews();
   home.classList.add('active');
   closeMenu();
 }
 
 function openOcean(){
+  rememberView('ocean');
   clearViews();
   ocean.classList.add('active');
   closeMenu();
@@ -2323,6 +2464,7 @@ function openOcean(){
 }
 
 function openArchive(){
+  rememberView('archive');
   clearViews();
   archive.classList.add('active');
   closeMenu();
@@ -2330,12 +2472,14 @@ function openArchive(){
 }
 
 function openBooks(){
+  rememberView('books');
   clearViews();
   books.classList.add('active');
   closeMenu();
 }
 
 function openAbout(){
+  rememberView('about');
   clearViews();
   about.classList.add('active');
   closeMenu();
@@ -2349,6 +2493,9 @@ window.openOcean = openOcean;
 window.openArchive = openArchive;
 window.openBooks = openBooks;
 window.openAbout = openAbout;
+window.closeView = closeView;
+
+document.getElementById('viewClose').addEventListener('click', closeView);
 
 function setLanguage(lang){
   currentLang = lang === 'en' ? 'en' : 'ko';
@@ -2498,6 +2645,8 @@ menuBtn.addEventListener('keydown', (e) => {
 document.addEventListener('keydown', (e) => {
   if(e.key === 'Escape' && menu.classList.contains('open')){
     closeMenu();
+  }else if(e.key === 'Escape' && activeViewId() !== 'home'){
+    closeView();
   }
 });
 

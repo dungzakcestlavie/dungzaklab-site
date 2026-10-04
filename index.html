@@ -46,8 +46,8 @@
 <meta property="og:site_name" content="DUNGZAK CESTLAVIE LAB">
 <meta property="og:locale" content="en_US">
 <meta property="og:locale:alternate" content="ko_KR">
-<meta property="og:image" content="https://dungzaklab.art/og/dungzaklab-share.jpg?v=20261005-0813">
-<meta property="og:image:secure_url" content="https://dungzaklab.art/og/dungzaklab-share.jpg?v=20261005-0813">
+<meta property="og:image" content="https://dungzaklab.art/og/dungzaklab-share.jpg?v=20261005">
+<meta property="og:image:secure_url" content="https://dungzaklab.art/og/dungzaklab-share.jpg?v=20261005">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -56,7 +56,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="ARCHIVE PRO — Artist Edition | DUNGZAK CESTLAVIE LAB">
 <meta name="twitter:description" content="A digital art archive platform for artists — artworks, portfolios, PDF, QR public viewing, Discover and COSMOS.">
-<meta name="twitter:image" content="https://dungzaklab.art/og/dungzaklab-share.jpg?v=20261005-0813">
+<meta name="twitter:image" content="https://dungzaklab.art/og/dungzaklab-share.jpg?v=20261005">
 <meta name="twitter:image:alt" content="ARCHIVE PRO — Artist Edition by DUNGZAK CESTLAVIE LAB">
 
 <script type="application/ld+json">
@@ -1717,6 +1717,75 @@ body.menu-open .header{
 /* 내부 화면의 첫 줄이 닫기 버튼과 겹치지 않도록 위 여백만 조금 늘린다 */
 .view:not(.home){
   padding-top:calc(var(--header-height) + 60px);
+}
+
+/* ==========================================================================
+   LAB CONTROL HIERARCHY — 2026-10-09
+   KR / EN(주요 컨트롤)은 조금 또렷하게, 닫기 ×(보조 컨트롤)는 조금 조용하게.
+   크기·선명도만 다룬다. 위치, 헤더 높이, 기능은 그대로. 이 블록만 지우면 이전 상태.
+   ========================================================================== */
+.lang-global button{
+  border-color:rgba(214,184,106,0.36);
+  opacity:0.84;
+}
+
+.lang-global button.active{
+  border-color:rgba(214,184,106,0.76);
+  opacity:1;
+}
+
+@media (max-width:640px){
+  .lang-global button{
+    height:32px;
+    font-size:10.5px;
+  }
+}
+
+/* 390px 미만에서는 폭을 늘리지 않는다(사이트명이 밀리지 않도록) */
+@media (min-width:390px) and (max-width:640px){
+  .lang-global button{
+    min-width:36px;
+  }
+}
+
+/* 터치 영역 44 → 48. 보이는 원의 중심은 그대로(-2px씩 보정). */
+#home:not(.active) ~ .view-close{
+  top:calc(var(--header-height) + 6px);
+  right:calc(var(--lab-page-padding) - 6px + env(safe-area-inset-right, 0px));
+  width:48px;
+  height:48px;
+}
+
+.view-close-ring{
+  width:32px;
+  height:32px;
+  border-color:rgba(214,184,106,0.30);
+}
+
+.view-close-ring::before,
+.view-close-ring::after{
+  width:12px;
+  height:1.25px;
+  margin:-0.625px 0 0 -6px;
+  opacity:0.7;
+  transition:opacity .18s ease-out;
+}
+
+@media (hover:hover) and (pointer:fine){
+  .view-close:hover .view-close-ring{
+    border-color:rgba(214,184,106,0.6);
+  }
+  .view-close:hover .view-close-ring::before,
+  .view-close:hover .view-close-ring::after{
+    opacity:1;
+  }
+}
+
+.view-close:active .view-close-ring::before,
+.view-close:active .view-close-ring::after,
+.view-close:focus-visible .view-close-ring::before,
+.view-close:focus-visible .view-close-ring::after{
+  opacity:1;
 }
 
 </style>

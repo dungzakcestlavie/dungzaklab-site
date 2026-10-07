@@ -5233,6 +5233,18 @@ html.is-ipad [data-viewer-close]:hover {
     #resultsMeta{ display:none !important; }
     body.archive-entered #resultsMeta{ display:none !important; }
 
+    /* 2026-10-07 — Viewer 작품 이미지 상자를 작품 비율에 맞춘다 (/app/ Viewer와 같은 방식).
+       지금까지는 <img> 상자가 표시 영역 전체 크기(고정 가로·세로)였고 그 안에 작품을 contain으로
+       넣어, 세로 작품은 좌우에 상자 배경(#091018, 남색)이 큰 판처럼 드러났다.
+       상자 크기만 auto로 바꾸면(최대 크기 제한은 화면 크기별 기존 값 그대로) 상자가 곧 작품 크기가 된다.
+       화면에 보이는 작품 크기와 위치는 이전과 같다.
+       작품 비율·crop 없음·확대/이동·이전/다음·정보 패널은 그대로다. 이 규칙만 지우면 원래대로 돌아간다. */
+    html body #lightbox .lightbox-stage img#lightboxImage{
+      width:auto !important;
+      height:auto !important;
+      object-fit:contain !important;
+    }
+
 </style>
 
   <meta charset="utf-8" />

@@ -5631,7 +5631,7 @@ html.is-ipad [data-viewer-close]:hover {
          works.json update still reaches the app almost immediately. */
       const AP_COMPLETENESS_RECHECK_MIN_INTERVAL_MS = 3 * 60 * 1000;
       const LOAD_STEP = LOAD_MORE_COUNT;
-      const SEARCH_DEBOUNCE_MS = 220;
+      const SEARCH_DEBOUNCE_MS = 150; /* 2026-10-14 (apsearch2) 앱 search.js와 같게 220→150 */
       /* REOPEN SPEED PATCH 2026-07-13 — Stable Image Cache Key:
          ASSET_VERSION used to be 'ap-img-' + Date.now(), a brand new value
          every single time the app opened. Every thumbnail/zoom URL is built
@@ -6768,6 +6768,7 @@ function normalizeImageUrl(url, kind, id, sectionId) {
           size_kr: String(item.size_kr || '').trim(),
           size_en: String(item.size_en || '').trim(),
           year: String(item.year || '').trim(),
+          keywords: item.keywords == null ? '' : item.keywords, /* 2026-10-14 (apsearch2) 앱 검색 대상과 같게 */
           image,
           zoom,
           status: String(item.status || '').trim()
@@ -7008,28 +7009,56 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         return result;
       }
 
+      /* 2026-10-14 (apsearch2) — 검색 판정을 ARCHIVE PRO 앱(app/js/filter.js)과 똑같이.
+         · 검색 대상(필드별): ID · 작품명 KR/EN · 재료 KR/EN · 크기 KR/EN · 연도 · 상태 · 키워드 · 섹션명
+         · 검색어 = 앞뒤 공백 제거 + 소문자. 각 필드(소문자)에 검색어가 포함되면 일치
+         · 검색어가 초성만(ㄱ~ㅎ)이면 각 필드의 초성 변환값에도 포함 여부 확인
+         색인은 작품마다 첫 검색 때 1번만 만들고 재사용(기존 지연 색인 방식 유지). */
+      const AP_APP_CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+
+      function apAppLower(value) {
+        return String(value == null ? '' : value).trim().toLowerCase();
+      }
+
+      function apAppToChosung(text) {
+        let out = '';
+        for (let i = 0; i < text.length; i += 1) {
+          const code = text.charCodeAt(i);
+          out += (code >= 44032 && code <= 55203) ? AP_APP_CHO[Math.floor((code - 44032) / 588)] : text[i];
+        }
+        return out;
+      }
+
+      function apAppIsChosungOnly(query) {
+        if (!query) return false;
+        for (let i = 0; i < query.length; i += 1) {
+          if (AP_APP_CHO.indexOf(query[i]) === -1) return false;
+        }
+        return true;
+      }
+
       function buildWorkSearchIndex(item) {
-        const sourceText = [
+        const sec = SECTION_MAP[item.section_id] || null;
+        const fields = [
           item.id,
           item.title_kr,
           item.title_en,
-          item.artist_kr,
-          item.artist_en,
-          item.section_kr,
-          item.section_en,
-          getSectionPlainById(item.section_id, 'kr'),
-          getSectionPlainById(item.section_id, 'en'),
           item.material_kr,
           item.material_en,
           item.size_kr,
           item.size_en,
-          item.year
-        ].map(safeText).join(' ');
-
-        return {
-          text: normalizeSearchText(sourceText),
-          initials: normalizeSearchText(getKoreanInitials(sourceText))
-        };
+          item.year,
+          item.status,
+          item.keywords,
+          item.section_kr,
+          item.section_en
+        ];
+        if (sec) {
+          fields.push(sec.kr, sec.en);
+          if (sec.enLegacy && sec.enLegacy !== sec.en) fields.push(sec.enLegacy);
+        }
+        const text = fields.map(apAppLower);
+        return { text, initials: text.map(apAppToChosung) };
       }
 
       function prepareFastSearchCache(item) {
@@ -7042,28 +7071,22 @@ function normalizeImageUrl(url, kind, id, sectionId) {
       }
 
       function scheduleFullSearchIndex() {
-        /*
-          CPU Blocking Time Reduction:
-          Do not pre-index the full archive during initial load. Search cache is built
-          lazily on the first real search, so the first screen does not spend CPU time
-          preparing all works.
-        */
+        /* 첫 화면 CPU 절약: 전체 색인은 첫 검색 때 만든다(기존 그대로). */
         return;
       }
 
       function matchesSearch(item, rawQuery) {
-        const normalizedQuery = normalizeSearchText(rawQuery);
-        if (!normalizedQuery) return true;
+        const query = apAppLower(rawQuery);
+        if (!query) return true;
 
         const index = item && item.__searchIndex;
         if (!index) return false;
 
-        if (index.text.includes(normalizedQuery)) return true;
-        if (index.initials.includes(normalizedQuery)) return true;
-
-        const queryInitials = normalizeSearchText(getKoreanInitials(rawQuery));
-        if (queryInitials && index.initials.includes(queryInitials)) return true;
-
+        const chosungOnly = apAppIsChosungOnly(query);
+        for (let i = 0; i < index.text.length; i += 1) {
+          if (index.text[i].indexOf(query) !== -1) return true;
+          if (chosungOnly && index.initials[i].indexOf(query) !== -1) return true;
+        }
         return false;
       }
 
@@ -8111,7 +8134,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         }
 
         const queryValue = safeText(state.query);
-        if (queryValue && normalizeSearchText(queryValue)) {
+        if (queryValue && queryValue.trim()) { /* 2026-10-14 (apsearch2) 앱과 같은 빈 검색어 판정 */
           if (!state._searchPrepared) {
             for (let i = 0; i < state.all.length; i += 1) {
               prepareFastSearchCache(state.all[i]);
@@ -8861,7 +8884,11 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
       function bindEvents() {
         if (bindEvents._bound) return;
         bindEvents._bound = true;
-        els.searchInput.addEventListener('input', debouncedSearch);
+        /* 2026-10-14 (apsearch2) 앱 search.js와 같게: 한글 조합 중에는 검색하지 않고, 조합이 끝나면 검색 */
+        let apSearchComposing = false;
+        els.searchInput.addEventListener('compositionstart', () => { apSearchComposing = true; });
+        els.searchInput.addEventListener('compositionend', () => { apSearchComposing = false; debouncedSearch(); });
+        els.searchInput.addEventListener('input', () => { if (!apSearchComposing) debouncedSearch(); });
 
         /* REOPEN SPEED PATCH 2026-07-13: remember scroll position, throttled
            and passive so it can't cost a scroll-jank frame. */

@@ -5288,6 +5288,40 @@ html.is-ipad [data-viewer-close]:hover {
   }
 }
 </style>
+<style id="ap-search-sync-20261013">
+/* 2026-10-13 (apsearch1) — 검색 영역을 ARCHIVE PRO Artist Edition(앱)과 같게.
+   ① 검색창: 앱의 .archive-search 규칙 그대로(아이콘 · 입력 · 지우기 × · 금색 검색 버튼이 한 칸 안에)
+   ② 검색 안내: 앱 srchhint1/srchcolor1 그대로(#B7AFA0, 15/16px, 휴대폰 검색창 아래 · 태블릿 한 줄 전체 · PC 검색 칸 아래)
+   ③ 글자: 앱 typo2 그대로(제목 #F1F3F7 600 · 선택값/입력 #F0F2F6 500 · 옵션 #E1E5EC · placeholder #C5CBD5 · 초기화 #D4B46D)
+   #searchArea 안에만 적용. 작품 카드·헤더·뷰어·데이터·검색 로직은 건드리지 않음. */
+.archive-search{display:flex;align-items:center;gap:6px;width:100%;min-width:0;background:rgba(255,255,255,.03);border:1px solid var(--line-strong,rgba(255,255,255,.12));border-radius:12px;padding:4px 6px 4px 12px;margin:0}
+.archive-search:focus-within{border-color:rgba(214,183,111,.55)}
+.archive-search__icon{flex:0 0 auto;opacity:.7;font-size:14px}
+.archive-search__input{flex:1 1 auto;min-width:0;background:transparent;border:0;outline:0;color:inherit;font:inherit;padding:8px 4px}
+.archive-search__input::-webkit-search-cancel-button{display:none}
+.archive-search__clear{flex:0 0 auto;width:28px;height:28px;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:inherit;font-size:16px;line-height:1;cursor:pointer}
+.archive-search__clear:hover{background:rgba(255,255,255,.16)}
+#searchArea .archive-search__input:placeholder-shown~.archive-search__clear{display:none}
+.archive-search__submit{flex:0 0 auto;border:1px solid rgba(214,183,111,.42);background:rgba(212,180,109,.06);color:#d6b76f;border-radius:999px;padding:7px 14px;font:inherit;font-size:15px;letter-spacing:.02em;cursor:pointer;white-space:nowrap}
+.archive-search__submit:active{opacity:.75}
+@media (max-width:640px){.archive-search{padding-left:10px}.archive-search__submit{padding:6px 11px;font-size:15px}}
+@media (max-width:767px){.archive-search{min-height:52px!important;border-radius:18px!important}.archive-search__input{min-height:44px!important}}
+.archive-search__input::placeholder{color:#C8CDD5;opacity:1}
+#searchArea .archive-search-hint{grid-column:auto;align-self:start;margin:-4px 2px 2px;padding:0;font-size:15px;line-height:22px;font-weight:500;letter-spacing:.01em;color:#B7AFA0;text-transform:none;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;min-width:0}
+@media (min-width:641px) and (max-width:1040px){#searchArea .archive-search-hint{grid-column:1/-1;font-size:16px;line-height:24px;margin-top:-6px}}
+@media (min-width:1041px){#searchArea .archive-search-hint{grid-column:3;grid-row:2;font-size:15px;margin-top:-6px}}
+#searchArea .field label,body.archive-entered.archive-filter-open #searchArea .field label{color:#F1F3F7!important;font-weight:600!important;opacity:1!important;letter-spacing:.01em!important;text-shadow:none}
+#searchArea .field label .ap-lbl-en{letter-spacing:.03em}
+#searchArea .field label,body.archive-entered.archive-filter-open #searchArea .field label{font-size:16px!important;line-height:16px!important}
+#searchArea .select,#searchArea .select option,body.archive-entered.archive-filter-open #searchArea .select{font-size:16px!important}
+@media (max-width:640px){#searchArea .control-actions .btn,body.archive-entered.archive-filter-open #searchArea .control-actions .btn{font-size:16px!important}}
+#searchArea .select,body.archive-entered.archive-filter-open #searchArea .select{color:#F0F2F6!important;font-weight:500}
+#searchArea .select option{color:#E1E5EC;font-weight:500}
+#searchArea .archive-search__input{color:#F0F2F6;font-weight:500}
+#searchArea .archive-search__input::placeholder{color:#C5CBD5;font-weight:500}
+#searchArea .archive-search__submit{font-weight:600}
+#searchArea .control-actions .btn,body.archive-entered.archive-filter-open #searchArea .control-actions .btn{color:#D4B46D!important}
+</style>
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>
@@ -5369,14 +5403,14 @@ html.is-ipad [data-viewer-close]:hover {
 
     <section id="searchArea" class="panel controls" aria-label="아카이브 검색 및 필터">
       <div class="field">
-        <label for="sectionSelect" id="labelSection">Section</label>
+        <label for="sectionSelect" id="labelSection">섹션</label>
         <select id="sectionSelect" class="select" aria-label="섹션 선택">
           <option value="all">전체 섹션</option>
         </select>
       </div>
 
       <div class="field">
-        <label for="sortSelect" id="labelSort">Sort</label>
+        <label for="sortSelect" id="labelSort">정렬</label>
         <select id="sortSelect" class="select" aria-label="정렬 선택">
           <option value="section-id-asc" selected>기본순</option>
           <option value="id-desc">번호 늦은순</option>
@@ -5384,23 +5418,31 @@ html.is-ipad [data-viewer-close]:hover {
         </select>
       </div>
 
-      <div class="field">
-        <label for="searchInput" id="labelSearch">Search</label>
-        <input
-          id="searchInput"
-          class="input"
-          type="search"
-          placeholder="ID · 제목 · 재료 · 연도 · 섹션"
-          autocomplete="off"
-          spellcheck="false"
-          data-kr="ID · 제목 · 재료 · 연도 · 섹션"
-          data-en="Search ID, title, material, year, section"
-        />
+      <div class="field field-search">
+        <label for="searchInput" id="labelSearch">검색</label>
+        <!-- 2026-10-13 (apsearch1) 앱(ARCHIVE PRO Artist Edition)과 같은 검색창: 아이콘 · 입력 · 지우기(×) · 검색 버튼 한 줄.
+             입력 id(searchInput)는 그대로 — 실시간 검색·초기화·언어 전환 코드는 기존 그대로 동작. 검색 버튼(focusSearchBtn)은 즉시 검색 -->
+        <form id="archiveSearchForm" class="archive-search" role="search" action="#" onsubmit="return false">
+          <span class="archive-search__icon" aria-hidden="true">🔍</span>
+          <input
+            id="searchInput"
+            class="archive-search__input"
+            type="search"
+            enterkeyhint="search"
+            placeholder="작품 검색"
+            autocomplete="off"
+            spellcheck="false"
+            aria-describedby="archiveSearchHint"
+          />
+          <button id="archiveSearchClear" class="archive-search__clear" type="button" aria-label="검색어 지우기">×</button>
+          <button id="focusSearchBtn" class="archive-search__submit" type="submit">검색</button>
+        </form>
       </div>
+      <!-- 2026-10-13 (apsearch1) 검색 가능 항목 안내 — 검색창 바로 아래. 문구는 rebuildStaticTexts가 언어별로 채움 -->
+      <p id="archiveSearchHint" class="archive-search-hint">작품명 · ID · 재료 · 연도</p>
 
       <div class="control-actions">
         <button id="resetBtn" class="btn secondary" type="button">초기화</button>
-        <button id="focusSearchBtn" class="btn" type="button">검색 집중</button>
       </div>
     </section>
 
@@ -5925,12 +5967,14 @@ html.is-ipad [data-viewer-close]:hover {
           statDescTotal: '전체 작품 수',
           statDescFiltered: '현재 검색 결과',
           statDescSections: '섹션 수',
-          labelSearch: 'Search',
-          labelSection: 'Section',
-          labelSort: 'Sort',
-          placeholderSearch: 'ID · 제목 · 재료 · 연도 · 섹션',
+          labelSearch: '검색',
+          labelSection: '섹션',
+          labelSort: '정렬',
+          placeholderSearch: '작품 검색',
+          searchHint: '작품명 · ID · 재료 · 연도',
+          searchClear: '검색어 지우기',
           resetBtn: '초기화',
-          focusSearchBtn: '검색 집중',
+          focusSearchBtn: '검색',
           filterToggleBtn: 'Filter / Search',
           statusIdle: '대기 중',
           statusLoading: '준비됨',
@@ -5970,12 +6014,14 @@ untitled: '무제 / 캡션 없음',
           statDescTotal: 'Total works',
           statDescFiltered: 'Current results',
           statDescSections: 'Section count',
-          labelSearch: 'Search',
-          labelSection: 'Section',
-          labelSort: 'Sort',
-          placeholderSearch: 'Search ID, title, material, year, section',
-          resetBtn: 'Reset',
-          focusSearchBtn: 'Focus',
+          labelSearch: 'SEARCH',
+          labelSection: 'SECTION',
+          labelSort: 'SORT',
+          placeholderSearch: 'Search works',
+          searchHint: 'Title · ID · Medium · Year',
+          searchClear: 'Clear search',
+          resetBtn: 'RESET',
+          focusSearchBtn: 'Search',
           filterToggleBtn: 'Filter / Search',
           statusIdle: 'Idle',
           statusLoading: 'Ready',
@@ -5994,7 +6040,7 @@ untitled: '무제 / 캡션 없음',
           loadMore: '더 보기 / Load more',
 untitled: 'Untitled / No Caption',
           noInfo: 'No information',
-          allSections: 'All sections',
+          allSections: 'All Sections',
           lbMaterial: 'Material',
           lbSize: 'Size',
           lbYear: 'Year',
@@ -6005,9 +6051,9 @@ untitled: 'Untitled / No Caption',
           offlineNotice: 'Origins section and zoom images\nare unavailable offline.',
           zoomOffline: 'Zoom images are unavailable offline.',
           sortOptions: [
-            'Default',
-            'Late ID',
-            'Newest'
+            'Default order',
+            'Latest ID first',
+            'Newest first'
           ]
         },
         both: {
@@ -6015,12 +6061,14 @@ untitled: 'Untitled / No Caption',
           statDescTotal: '전체 작품 수 / Total works',
           statDescFiltered: '현재 검색 결과 / Current results',
           statDescSections: '섹션 수 / Section count',
-          labelSearch: 'Search',
-          labelSection: 'Section',
-          labelSort: 'Sort',
-          placeholderSearch: 'ID, 제목, title, 재료, material, year, section',
-          resetBtn: '초기화 / Reset',
-          focusSearchBtn: '검색 / Focus',
+          labelSearch: '검색 · SEARCH',
+          labelSection: '섹션 · SECTION',
+          labelSort: '정렬 · SORT',
+          placeholderSearch: '검색 · Search',
+          searchHint: '작품명 Title · ID · 재료 Medium · 연도 Year',
+          searchClear: '검색어 지우기 · Clear',
+          resetBtn: '초기화 · RESET',
+          focusSearchBtn: '검색 · Search',
           filterToggleBtn: 'Filter / Search',
           statusIdle: '대기 / Idle',
           statusLoading: '준비됨 / Ready',
@@ -6039,7 +6087,7 @@ untitled: 'Untitled / No Caption',
           loadMore: '더 보기 / Load more',
 untitled: '무제 / Untitled',
           noInfo: '정보 없음 / No information',
-          allSections: '전체 섹션 / All sections',
+          allSections: '전체 섹션 · All Sections',
           lbMaterial: '재료 / Material',
           lbSize: '크기 / Size',
           lbYear: '연도 / Year',
@@ -6050,9 +6098,9 @@ untitled: '무제 / Untitled',
           offlineNotice: '오프라인에서는\nA 기원 섹션과 확대 이미지를\n제외했습니다.\nOrigins section and zoom images\nare unavailable offline.',
           zoomOffline: '오프라인에서는 확대 이미지를 사용할 수 없습니다.\nZoom images are unavailable offline.',
           sortOptions: [
-            '기본순 / Default',
-            '번호 늦은순 / Late ID',
-            '최신순 / Newest'
+            '기본순 · Default',
+            '번호 늦은순 · Latest ID',
+            '최신순 · Newest'
           ]
         }
       };
@@ -6483,9 +6531,10 @@ lightbox: document.getElementById('lightbox'),
 
       function getSectionTextById(sectionId) {
         const sec = SECTION_MAP[sectionId];
-        if (!sec) return state.lang === 'en' ? 'Unsorted' : (state.lang === 'both' ? '미분류 / Unsorted' : '미분류');
+        if (!sec) return state.lang === 'en' ? 'Unsorted' : (state.lang === 'both' ? '미분류 · Unsorted' : '미분류');
         if (state.lang === 'en') return sec.en;
-        if (state.lang === 'both') return `${sec.kr} / ${sec.enCombined || sec.en}`;
+        /* 2026-10-13 (apsearch1): 섹션 선택 상자의 KR+EN 표기를 앱과 같게 "한글 · 영문(로마숫자 포함)" */
+        if (state.lang === 'both') return `${sec.kr} · ${sec.en}`;
         return sec.kr;
       }
 
@@ -7103,18 +7152,42 @@ function normalizeImageUrl(url, kind, id, sectionId) {
         }
       }
 
+      function setFieldTitle(el, text) {
+        if (!el) return;
+        while (el.firstChild) el.removeChild(el.firstChild);
+        const part = (value, cls) => {
+          const sp = document.createElement('span');
+          sp.className = cls;
+          sp.textContent = value;
+          el.appendChild(sp);
+        };
+        const pieces = String(text || '').split(' · ');
+        if (pieces.length === 2) {
+          part(pieces[0], 'ap-lbl-ko');
+          el.appendChild(document.createTextNode(' · '));
+          part(pieces[1], 'ap-lbl-en');
+        } else {
+          part(String(text || ''), /[가-힣]/.test(String(text || '')) ? 'ap-lbl-ko' : 'ap-lbl-en');
+        }
+      }
+
       function rebuildStaticTexts() {
         syncEntryButtonLanguage();
         els.heroModeLine.textContent = t('heroModeLine');
         els.statDescTotal.textContent = t('statDescTotal');
         els.statDescFiltered.textContent = t('statDescFiltered');
         els.statDescSections.textContent = t('statDescSections');
-        els.labelSearch.textContent = t('labelSearch');
-        els.labelSection.textContent = t('labelSection');
-        els.labelSort.textContent = t('labelSort');
+        /* 2026-10-13 (apsearch1): 섹션·정렬·검색 제목은 한글/영문을 span으로 나눠 넣는다(영문 자간만 따로). 안내·지우기 문구도 언어별 */
+        setFieldTitle(els.labelSearch, t('labelSearch'));
+        setFieldTitle(els.labelSection, t('labelSection'));
+        setFieldTitle(els.labelSort, t('labelSort'));
         els.searchInput.placeholder = t('placeholderSearch');
         els.resetBtn.textContent = t('resetBtn');
         els.focusSearchBtn.textContent = t('focusSearchBtn');
+        const searchHintEl = document.getElementById('archiveSearchHint');
+        if (searchHintEl) searchHintEl.textContent = t('searchHint');
+        const searchClearEl = document.getElementById('archiveSearchClear');
+        if (searchClearEl) searchClearEl.setAttribute('aria-label', t('searchClear'));
         renderFilterToggleLabel();
         els.emptyState.textContent = t('emptyState');
         els.loadMoreBtn.textContent = t('loadMore');
@@ -8809,12 +8882,42 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         if (els.filterToggleBtn) els.filterToggleBtn.addEventListener('click', toggleFilterPanel);
         setupLabButtonAppOnlyReset();
 
-        els.focusSearchBtn.addEventListener('click', () => {
-          scrollToSearch();
-          requestAnimationFrame(() => {
-            els.searchInput.focus({ preventScroll: true });
-            els.searchInput.select();
+        /* 2026-10-13 (apsearch1): 검색 버튼 = 앱과 같이 지금 입력된 검색어로 바로 검색(기다림 없이).
+           Enter도 같은 경로(form submit). 실시간 검색(input → debouncedSearch)은 그대로 */
+        const runSearchNow = () => {
+          window.clearTimeout(searchTimer);
+          state.query = els.searchInput.value;
+          applyFilters(true);
+        };
+        const searchForm = document.getElementById('archiveSearchForm');
+        if (searchForm) {
+          searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            runSearchNow();
           });
+        } else {
+          els.focusSearchBtn.addEventListener('click', runSearchNow);
+        }
+        const searchClearBtn = document.getElementById('archiveSearchClear');
+        if (searchClearBtn) {
+          searchClearBtn.addEventListener('click', () => {
+            els.searchInput.value = '';
+            runSearchNow();
+            els.searchInput.focus({ preventScroll: true });
+          });
+        }
+        els.searchInput.addEventListener('keydown', (e) => {
+          /* Enter = 검색 버튼과 같음(한글 조합 중 Enter는 제외 — 조합이 끝나면 실시간 검색이 처리) */
+          if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+            e.preventDefault();
+            runSearchNow();
+            return;
+          }
+          if (e.key === 'Escape' && els.searchInput.value) {
+            e.preventDefault();
+            els.searchInput.value = '';
+            runSearchNow();
+          }
         });
 
         els.loadMoreBtn.addEventListener('click', () => {
@@ -9592,7 +9695,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
     }
 
     /* ---- 3. Search icon inside the search input (placeholder untouched) ---- */
-    if (searchInput && searchInput.parentNode && !searchInput.closest('.ap-search-input-wrap')) {
+    if (searchInput && searchInput.parentNode && !searchInput.closest('.ap-search-input-wrap') && !searchInput.closest('.archive-search')) {
       var wrap = document.createElement('span');
       wrap.className = 'ap-search-input-wrap';
       searchInput.parentNode.insertBefore(wrap, searchInput);
@@ -9617,7 +9720,8 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
     }
 
     function updateFocusBtnLabel(){
-      if (!focusBtn) return;
+      /* 2026-10-13 (apsearch1): 검색 버튼 문구는 rebuildStaticTexts(uiText.focusSearchBtn)가 관리 — 여기서 덮어쓰지 않음 */
+      if (!focusBtn || focusBtn.classList.contains('archive-search__submit')) return;
       focusBtn.textContent = focusBtnLabel(currentLang());
     }
 

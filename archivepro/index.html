@@ -9694,7 +9694,8 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
     /* ---- 2. Auto-collapse once a search is actually run ---- */
     function maybeAutoCollapse(){
       var val = searchInput ? searchInput.value.trim() : '';
-      if (val.length > 0 && !isCollapsed()) setCollapsed(true);
+      /* 2026-10-14 (filterkeep1) Filter는 사용자가 직접 닫을 때만 닫힌다 — 검색 후 자동 닫힘 해제 */
+      return;
     }
 
     var autoCollapseTimer = null;

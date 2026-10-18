@@ -5613,7 +5613,7 @@ html.is-ipad [data-viewer-close]:hover {
       const FIRST_RENDER_COUNT = DESKTOP_FIRST_RENDER_COUNT;
       const FAST_ORDER = 'section-id-asc';
       /* 2026-10-18 (apdefsec1) 아카이브 첫 화면 기본 섹션 = I 우리를 위해 기도해 주세요 (section_id 1).
-         새 진입·새로고침 때만 적용. 초기화 버튼(resetFilters/resetAllSections)은 기존대로 전체 섹션. */
+         새 진입·새로고침·상단 ARCHIVE PRO 로고 클릭·초기화 버튼에 적용. */
       const DEFAULT_ENTRY_SECTION = '1';
       const LOAD_MORE_COUNT = 40;
       const AUTO_RENDER_ROOT_MARGIN = '900px 0px 1200px 0px';
@@ -7433,7 +7433,8 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         els.sectionSelect.appendChild(fragment);
 
         const values = Array.from(els.sectionSelect.options).map(o => o.value);
-        state.section = values.includes(prev) ? prev : 'all';
+        /* 2026-10-18 (aplogo1) 존재하지 않는 섹션이면 기본 섹션(I)으로 복구, 그것도 없으면 전체 */
+        state.section = values.includes(prev) ? prev : (values.includes(DEFAULT_ENTRY_SECTION) ? DEFAULT_ENTRY_SECTION : 'all');
         els.sectionSelect.value = state.section;
 
         updateSectionButtonState();
@@ -8894,12 +8895,12 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
            초기화 버튼은 section / search / sort / visibleCount / internal state를
            모두 기본 상태로 되돌린 뒤 전체 작품을 다시 렌더링한다. */
         state.query = '';
-        state.section = 'all';
+        state.section = DEFAULT_ENTRY_SECTION; /* 2026-10-18 (apreset1) 초기화 = I 우리를 위해 기도해 주세요 */
         state.sort = FAST_ORDER;
         state.visibleCount = getInitialVisibleCount();
 
         if (els.searchInput) els.searchInput.value = '';
-        if (els.sectionSelect) els.sectionSelect.value = 'all';
+        if (els.sectionSelect) els.sectionSelect.value = state.section;
         if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
 
         state.filtered = applyFilterSort(state.all);
@@ -8912,11 +8913,11 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         if (shouldScrollTop) window.scrollTo({ top: 0, behavior: 'auto' });
       }
 
-      function resetAllSections() {
+      function resetAllSections(targetSection) {
         archiveEntered = true;
         filterPanelOpen = true;
         state.query = '';
-        state.section = 'all';
+        state.section = targetSection || 'all';
         state.sort = FAST_ORDER;
         state.visibleCount = getInitialVisibleCount();
         state.filtered = applyFilterSort(state.all);
@@ -8927,7 +8928,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         visibleCount = state.visibleCount;
 
         if (els.searchInput) els.searchInput.value = '';
-        if (els.sectionSelect) els.sectionSelect.value = 'all';
+        if (els.sectionSelect) els.sectionSelect.value = state.section;
         if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
 
         updateEntryUXClasses();
@@ -9516,7 +9517,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
               blockEvent(e);
               return;
             }
-            resetAllSections();
+            resetAllSections(DEFAULT_ENTRY_SECTION); /* 2026-10-18 (aplogo1) 로고 = I 우리를 위해 기도해 주세요 처음으로 */
           });
         }
 

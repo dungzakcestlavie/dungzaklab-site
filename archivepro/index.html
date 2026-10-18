@@ -5324,13 +5324,13 @@ html.is-ipad [data-viewer-close]:hover {
 </style>
 <style id="ap-inquiry-menu-20261018">
 /* 2026-10-18 (apinquiry1) PC 이메일 문의 작성 방법 안내 — 기존 블랙·골드 톤 */
-.ap-inquiry-menu{position:fixed;z-index:200;width:260px;max-width:calc(100vw - 16px);padding:14px 14px 12px;box-sizing:border-box;border-radius:14px;border:1px solid rgba(212,180,109,.42);background:linear-gradient(180deg,rgba(11,19,36,.98),rgba(7,10,20,.99));color:#F4F1EA;box-shadow:0 18px 40px rgba(0,0,0,.45);font-size:13px;line-height:1.4}
+.ap-inquiry-menu{position:fixed;z-index:200;width:260px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:14px 14px 12px;box-sizing:border-box;border-radius:14px;border:1px solid rgba(212,180,109,.42);background:linear-gradient(180deg,rgba(11,19,36,.98),rgba(7,10,20,.99));color:#F4F1EA;box-shadow:0 18px 40px rgba(0,0,0,.45);font-size:13px;line-height:1.4}
 .ap-inquiry-menu__title{margin:0 28px 10px 2px;color:#D4B46D;font-size:12px;letter-spacing:.04em}
 .ap-inquiry-menu__opt{display:flex;align-items:center;width:100%;min-height:38px;margin:0 0 6px;padding:0 12px;box-sizing:border-box;border-radius:10px;border:1px solid rgba(212,180,109,.26);background:rgba(212,180,109,.05);color:#E6C98A;font:inherit;font-size:13px;text-align:left;text-decoration:none;cursor:pointer}
 .ap-inquiry-menu__opt:hover,.ap-inquiry-menu__opt:focus-visible{border-color:rgba(212,180,109,.6);background:rgba(212,180,109,.1);color:#F4F1EA;outline:none}
 .ap-inquiry-menu__addr{margin:8px 2px 0;color:rgba(244,241,234,.62);font-size:12px;-webkit-user-select:all;user-select:all;word-break:break-all}
 .ap-inquiry-menu__msg{margin:4px 2px 0;min-height:16px;color:#D4B46D;font-size:12px}
-.ap-inquiry-menu__x{position:absolute;top:8px;right:8px;width:26px;height:26px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.06);color:#D4B46D;font-size:16px;line-height:26px;cursor:pointer}
+.ap-inquiry-menu__x{position:absolute;top:6px;right:6px;width:32px;height:32px;touch-action:manipulation;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.06);color:#D4B46D;font-size:16px;line-height:32px;cursor:pointer}
 .ap-inquiry-menu__x:hover,.ap-inquiry-menu__x:focus-visible{background:rgba(255,255,255,.14);outline:none}
 </style>
 </head>
@@ -5876,50 +5876,73 @@ html.is-ipad [data-viewer-close]:hover {
 
       /* 2026-10-18 (apinquiry2) 문의 메일 제목·본문을 ARCHIVE PRO 현재 언어(state.lang: kr / en / both)로 생성.
          OS 언어가 아닌 화면의 KR / EN / KR+EN 선택을 따른다. 수신 주소(ART_EMAIL)는 그대로. */
-      function getInquirySubject(workId) {
-        if (state.lang === 'en') return "Artwork Inquiry — " + workId;
-        if (state.lang === 'both') return "작품 문의 / Artwork Inquiry — " + workId;
-        return "작품 문의 — " + workId;
+      /* 2026-10-18 (apinquiry3) 작품 정보(작품명·재료·크기·연도)를 제목·본문에 포함. 같은 생성기를
+         메일 앱 · Gmail · 문의 내용 복사가 함께 쓴다. 비어 있는 항목은 줄을 넣지 않는다. */
+      function getInquiryInfo(work) {
+        if (!work || Number(work.section_id) === 0) return { title: '', material: '', size: '', year: '' };
+        return { title: getTitle(work), material: getMaterial(work), size: getSize(work), year: getYear(work) };
       }
 
-      function getInquiryBody(workId) {
-        if (state.lang === 'en') {
-          return "Hello,\n\nI would like to inquire about this artwork.\n\nArtwork ID: " + workId;
+      function getInquirySubject(workId, work) {
+        const info = getInquiryInfo(work);
+        const tail = workId + (info.title ? ' · ' + info.title : '');
+        if (state.lang === 'en') return "Artwork Inquiry — " + tail;
+        if (state.lang === 'both') return "작품 문의 / Artwork Inquiry — " + tail;
+        return "작품 문의 — " + tail;
+      }
+
+      function getInquiryBody(workId, work) {
+        const info = getInquiryInfo(work);
+        const lang = state.lang === 'en' ? 'en' : (state.lang === 'both' ? 'both' : 'kr');
+        const L = {
+          kr:   { id: '작품 ID', title: '작품명', material: '재료', size: '크기', year: '제작 연도' },
+          en:   { id: 'Artwork ID', title: 'Title', material: 'Medium', size: 'Size', year: 'Year' },
+          both: { id: '작품 ID / Artwork ID', title: '작품명 / Title', material: '재료 / Medium', size: '크기 / Size', year: '제작 연도 / Year' }
+        }[lang];
+        const lines = [L.id + ': ' + workId];
+        if (info.title) lines.push(L.title + ': ' + info.title);
+        if (info.material) lines.push(L.material + ': ' + info.material);
+        if (info.size) lines.push(L.size + ': ' + info.size);
+        if (info.year) lines.push(L.year + ': ' + info.year);
+        const details = lines.join('\n');
+        if (lang === 'en') {
+          return "Hello,\n\nI would like to inquire about this artwork.\n\n" + details;
         }
-        if (state.lang === 'both') {
-          return "안녕하세요. / Hello,\n\n해당 작품에 대해 문의드립니다.\n\nI would like to inquire about this artwork.\n\n작품 ID / Artwork ID: " + workId;
+        if (lang === 'both') {
+          return "안녕하세요. / Hello,\n\n해당 작품에 대해 문의드립니다.\n\nI would like to inquire about this artwork.\n\n" + details;
         }
-        return "안녕하세요,\n\n해당 작품에 대해 문의드립니다.\n\n작품 ID: " + workId;
+        return "안녕하세요,\n\n해당 작품에 대해 문의드립니다.\n\n" + details;
       }
 
-      function getInquiryPlainText(workId) {
-        return "To: " + ART_EMAIL + "\nSubject: " + getInquirySubject(workId) + "\n\n" + getInquiryBody(workId);
+      function getInquiryPlainText(workId, work) {
+        return "To: " + ART_EMAIL + "\nSubject: " + getInquirySubject(workId, work) + "\n\n" + getInquiryBody(workId, work);
       }
 
-      function getInquiryLink(workId) {
-        const subject = encodeURIComponent(getInquirySubject(workId));
-        const body = encodeURIComponent(getInquiryBody(workId));
+      function findInquiryWork(workId, workKey) {
+        const list = Array.isArray(state.all) ? state.all : [];
+        return (workKey && list.find((w) => String(w._key) === String(workKey))) ||
+          list.find((w) => String(w.id) === String(workId)) || null;
+      }
+
+      function getInquiryLink(workId, work) {
+        const subject = encodeURIComponent(getInquirySubject(workId, work));
+        const body = encodeURIComponent(getInquiryBody(workId, work));
         return "mailto:" + ART_EMAIL + "?subject=" + subject + "&body=" + body;
       }
 
       /* 2026-10-18 (apinquiry1) PC·노트북 이메일 문의 — 작성 방법 선택 안내.
-         마우스 기반 기기(hover:hover + pointer:fine)에서만 동작. 모바일·터치 기기는 기존 mailto 그대로.
-         ① 메일 앱(mailto) ② Gmail 웹 작성(새 탭, 사용자 클릭 링크) ③ 주소 복사. 발송은 방문자가 직접. */
-      function getGmailComposeLink(workId) {
+         2026-10-18 (apinquiry3) 모든 기기(PC·노트북·터치 노트북·iPhone·iPad·Android)에서 이 안내를 먼저 띄운다.
+         mailto는 안내의 "메일 앱에서 작성"을 직접 눌렀을 때만 실행.
+         ① 메일 앱(mailto) ② Gmail 웹 작성(새 탭, 사용자 클릭 링크) ③ 주소 복사 ④ 문의 내용 복사. 발송은 방문자가 직접. */
+      function getGmailComposeLink(workId, work) {
         return "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(ART_EMAIL) +
-          "&su=" + encodeURIComponent(getInquirySubject(workId)) +
-          "&body=" + encodeURIComponent(getInquiryBody(workId));
-      }
-
-      function isDesktopInquiryMode() {
-        try {
-          return !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
-        } catch (_) { return false; }
+          "&su=" + encodeURIComponent(getInquirySubject(workId, work)) +
+          "&body=" + encodeURIComponent(getInquiryBody(workId, work));
       }
 
       const INQUIRY_MENU_TEXT = {
         title: { kr: '이메일 문의 방법', en: 'Email inquiry', both: '이메일 문의 방법 / Email inquiry' },
-        app: { kr: '메일 앱으로 작성', en: 'Write in mail app', both: '메일 앱으로 작성 / Mail app' },
+        app: { kr: '메일 앱에서 작성', en: 'Write in mail app', both: '메일 앱에서 작성 / Mail app' },
         gmail: { kr: 'Gmail 웹에서 작성', en: 'Write in Gmail (web)', both: 'Gmail 웹에서 작성 / Gmail web' },
         copy: { kr: '이메일 주소 복사', en: 'Copy email address', both: '이메일 주소 복사 / Copy address' },
         copyContent: { kr: '문의 내용 복사', en: 'Copy inquiry text', both: '문의 내용 복사 / Copy inquiry text' },
@@ -5943,6 +5966,7 @@ html.is-ipad [data-viewer-close]:hover {
             ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0;';
             document.body.appendChild(ta);
             ta.select();
+            try { ta.setSelectionRange(0, text.length); } catch (_) {}
             const ok = document.execCommand('copy');
             ta.remove();
             if (ok) resolve(); else reject(new Error('copy failed'));
@@ -5968,13 +5992,12 @@ html.is-ipad [data-viewer-close]:hover {
         if (!inquiryMenuEl) return;
         inquiryMenuEl.remove();
         inquiryMenuEl = null;
-        document.removeEventListener('mousedown', onInquiryMenuOutside, true);
+        document.removeEventListener('pointerdown', onInquiryMenuOutside, true);
         document.removeEventListener('keydown', onInquiryMenuKey, true);
         window.removeEventListener('scroll', closeInquiryMenu);
-        window.removeEventListener('resize', closeInquiryMenu);
       }
 
-      function openInquiryMenu(anchor, workId) {
+      function openInquiryMenu(anchor, workId, work) {
         closeInquiryMenu();
         const menu = document.createElement('div');
         menu.className = 'ap-inquiry-menu';
@@ -5983,8 +6006,8 @@ html.is-ipad [data-viewer-close]:hover {
         menu.innerHTML = [
           '<button type="button" class="ap-inquiry-menu__x" aria-label="', escapeHTML(inquiryMenuText('close')), '">×</button>',
           '<p class="ap-inquiry-menu__title">', escapeHTML(inquiryMenuText('title')), ' · ', escapeHTML(workId), '</p>',
-          '<a class="ap-inquiry-menu__opt" data-act="app" href="', escapeHTML(getInquiryLink(workId)), '">', escapeHTML(inquiryMenuText('app')), '</a>',
-          '<a class="ap-inquiry-menu__opt" data-act="gmail" href="', escapeHTML(getGmailComposeLink(workId)), '" target="_blank" rel="noopener noreferrer">', escapeHTML(inquiryMenuText('gmail')), '</a>',
+          '<a class="ap-inquiry-menu__opt" data-act="app" href="', escapeHTML(getInquiryLink(workId, work)), '">', escapeHTML(inquiryMenuText('app')), '</a>',
+          '<a class="ap-inquiry-menu__opt" data-act="gmail" href="', escapeHTML(getGmailComposeLink(workId, work)), '" target="_blank" rel="noopener noreferrer">', escapeHTML(inquiryMenuText('gmail')), '</a>',
           '<button type="button" class="ap-inquiry-menu__opt" data-act="copy">', escapeHTML(inquiryMenuText('copy')), '</button>',
           '<button type="button" class="ap-inquiry-menu__opt" data-act="copy-content">', escapeHTML(inquiryMenuText('copyContent')), '</button>',
           '<p class="ap-inquiry-menu__addr">', escapeHTML(ART_EMAIL), '</p>',
@@ -6000,7 +6023,7 @@ html.is-ipad [data-viewer-close]:hover {
           if (act === 'copy' || act === 'copy-content') {
             const msg = menu.querySelector('.ap-inquiry-menu__msg');
             const isContent = act === 'copy-content';
-            copyTextToClipboard(isContent ? getInquiryPlainText(workId) : ART_EMAIL).then(() => {
+            copyTextToClipboard(isContent ? getInquiryPlainText(workId, work) : ART_EMAIL).then(() => {
               if (msg) msg.textContent = inquiryMenuText(isContent ? 'copiedContent' : 'copied');
             }).catch(() => {
               if (msg) msg.textContent = inquiryMenuText('copyFail');
@@ -6017,14 +6040,14 @@ html.is-ipad [data-viewer-close]:hover {
         const mh = menu.offsetHeight;
         const left = Math.min(Math.max(8, r.left), Math.max(8, window.innerWidth - mw - 8));
         let top = r.bottom + 8;
-        if (top + mh > window.innerHeight - 8) top = Math.max(8, r.top - mh - 8);
+        if (top + mh > window.innerHeight - 8) top = r.top - mh - 8;
+        top = Math.max(8, Math.min(top, window.innerHeight - mh - 8)); /* (apinquiry3) 작은 화면에서도 화면 안 */
         menu.style.left = left + 'px';
         menu.style.top = top + 'px';
 
-        document.addEventListener('mousedown', onInquiryMenuOutside, true);
+        document.addEventListener('pointerdown', onInquiryMenuOutside, true);
         document.addEventListener('keydown', onInquiryMenuKey, true);
         window.addEventListener('scroll', closeInquiryMenu, { passive: true });
-        window.addEventListener('resize', closeInquiryMenu, { passive: true });
 
         const first = menu.querySelector('.ap-inquiry-menu__opt');
         if (first) { try { first.focus({ preventScroll: true }); } catch (_) {} }
@@ -6041,7 +6064,7 @@ html.is-ipad [data-viewer-close]:hover {
           return [
             '<div class="work-status">',
             '<div class="status-label">' + label + '</div>',
-            '<a href="' + getInquiryLink(work.id) + '" class="status-inquiry">',
+            '<a href="' + getInquiryLink(work.id, work) + '" class="status-inquiry">',
             getInquiryText(),
             '</a>',
             '</div>'
@@ -9118,16 +9141,16 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           els.grid.addEventListener('click', (e) => {
             const inquiryLink = e.target && e.target.closest ? e.target.closest('.status-inquiry') : null;
             if (inquiryLink) {
-              /* 2026-10-18 (apinquiry1) PC·노트북만 작성 방법 안내. 모바일은 기존 mailto 그대로 */
+              /* 2026-10-18 (apinquiry3) 모든 기기에서 첫 클릭은 ARCHIVE PRO 문의창. mailto 직접 실행 안 함 */
               const inquiryCard = inquiryLink.closest('.card[data-id]');
               const inquiryWorkId = inquiryCard ? safeText(inquiryCard.dataset.id) : '';
-              /* 2026-10-18 (apinquiry2) 누르는 순간의 언어로 mailto 다시 생성 */
-              if (inquiryWorkId) inquiryLink.setAttribute('href', getInquiryLink(inquiryWorkId));
-              if (isDesktopInquiryMode()) {
-                if (inquiryWorkId) {
-                  e.preventDefault();
-                  openInquiryMenu(inquiryLink, inquiryWorkId);
-                }
+              if (inquiryWorkId) {
+                const inquiryWork = findInquiryWork(inquiryWorkId, inquiryCard.dataset.key);
+                /* 누르는 순간의 언어로 링크 갱신(문의창이 열리지 못하는 예외 상황의 대비) */
+                inquiryLink.setAttribute('href', getInquiryLink(inquiryWorkId, inquiryWork));
+                e.preventDefault();
+                e.stopPropagation();
+                openInquiryMenu(inquiryLink, inquiryWorkId, inquiryWork);
               }
               return;
             }

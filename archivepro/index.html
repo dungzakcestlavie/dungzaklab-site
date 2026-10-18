@@ -5329,7 +5329,7 @@ html.is-ipad [data-viewer-close]:hover {
 .ap-inquiry-menu__opt{display:flex;align-items:center;width:100%;min-height:38px;margin:0 0 6px;padding:0 12px;box-sizing:border-box;border-radius:10px;border:1px solid rgba(212,180,109,.26);background:rgba(212,180,109,.05);color:#E6C98A;font:inherit;font-size:13px;text-align:left;text-decoration:none;cursor:pointer}
 .ap-inquiry-menu__opt:hover,.ap-inquiry-menu__opt:focus-visible{border-color:rgba(212,180,109,.6);background:rgba(212,180,109,.1);color:#F4F1EA;outline:none}
 .ap-inquiry-menu__addr{margin:8px 2px 0;color:rgba(244,241,234,.62);font-size:12px;-webkit-user-select:all;user-select:all;word-break:break-all}
-.ap-inquiry-menu__msg{margin:4px 2px 0;min-height:16px;color:#D4B46D;font-size:12px}
+.ap-inquiry-menu__msg{margin:4px 2px 0;min-height:16px;color:#D4B46D;font-size:12px;line-height:1.45;white-space:pre-line;word-break:keep-all}
 .ap-inquiry-menu__x{position:absolute;top:6px;right:6px;width:32px;height:32px;touch-action:manipulation;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.06);color:#D4B46D;font-size:16px;line-height:32px;cursor:pointer}
 .ap-inquiry-menu__x:hover,.ap-inquiry-menu__x:focus-visible{background:rgba(255,255,255,.14);outline:none}
 </style>
@@ -5945,10 +5945,11 @@ html.is-ipad [data-viewer-close]:hover {
         app: { kr: '메일 앱에서 작성', en: 'Write in mail app', both: '메일 앱에서 작성 / Mail app' },
         gmail: { kr: 'Gmail 웹에서 작성', en: 'Write in Gmail (web)', both: 'Gmail 웹에서 작성 / Gmail web' },
         copy: { kr: '이메일 주소 복사', en: 'Copy email address', both: '이메일 주소 복사 / Copy address' },
+        appFail: { kr: '메일 앱이 열리지 않았다면 위의 Gmail 웹에서 작성하거나 문의 내용을 복사해 주세요.', en: 'If no mail app opened, use Gmail (web) above or copy the inquiry text.', both: '메일 앱이 열리지 않았다면 위의 Gmail 웹에서 작성하거나 문의 내용을 복사해 주세요.\nIf no mail app opened, use Gmail (web) above or copy the inquiry text.' },
         copyContent: { kr: '문의 내용 복사', en: 'Copy inquiry text', both: '문의 내용 복사 / Copy inquiry text' },
-        copiedContent: { kr: '수신 주소와 문의 내용을 복사했습니다.', en: 'Address and inquiry text copied.', both: '수신 주소와 문의 내용을 복사했습니다. / Address and inquiry text copied.' },
-        copied: { kr: '주소를 복사했습니다.', en: 'Address copied.', both: '주소를 복사했습니다. / Address copied.' },
-        copyFail: { kr: '복사하지 못했습니다. 아래 주소를 직접 선택해 주세요.', en: 'Could not copy. Please select the address below.', both: '복사하지 못했습니다. / Could not copy — please select the address below.' },
+        copiedContent: { kr: '수신 주소와 문의 내용을 복사했습니다.', en: 'Address and inquiry text copied.', both: '수신 주소와 문의 내용을 복사했습니다.\nAddress and inquiry text copied.' },
+        copied: { kr: '주소를 복사했습니다.', en: 'Address copied.', both: '주소를 복사했습니다.\nAddress copied.' },
+        copyFail: { kr: '복사하지 못했습니다. 아래 주소를 직접 선택해 주세요.', en: 'Could not copy. Please select the address below.', both: '복사하지 못했습니다. 아래 주소를 직접 선택해 주세요.\nCould not copy. Please select the address below.' },
         close: { kr: '닫기', en: 'Close', both: '닫기 / Close' }
       };
 
@@ -5979,6 +5980,29 @@ html.is-ipad [data-viewer-close]:hover {
       }
 
       let inquiryMenuEl = null;
+      let inquiryAppCheckTimer = null;
+
+      /* 2026-10-18 (apinquiry4) 메일 앱 실행 확인. 메일 앱(또는 Windows 앱 선택창)이 뜨면 브라우저가 포커스를 잃는다.
+         1.5초 안에 그런 변화가 없으면 이 컴퓨터에 연결된 메일 앱이 없는 것으로 보고 Gmail·복사 안내를 띄운다.
+         발송 성공 여부는 표시하지 않는다. */
+      function watchMailAppLaunch(menu) {
+        if (inquiryAppCheckTimer) { clearTimeout(inquiryAppCheckTimer); inquiryAppCheckTimer = null; }
+        let left = false;
+        const onBlur = () => { left = true; };
+        const onVis = () => { if (document.hidden) left = true; };
+        window.addEventListener('blur', onBlur);
+        document.addEventListener('visibilitychange', onVis);
+        inquiryAppCheckTimer = setTimeout(() => {
+          inquiryAppCheckTimer = null;
+          window.removeEventListener('blur', onBlur);
+          document.removeEventListener('visibilitychange', onVis);
+          if (left || inquiryMenuEl !== menu) return;
+          const msg = menu.querySelector('.ap-inquiry-menu__msg');
+          if (msg) msg.textContent = inquiryMenuText('appFail');
+          const gmailBtn = menu.querySelector('[data-act=gmail]');
+          if (gmailBtn) { try { gmailBtn.focus({ preventScroll: true }); } catch (_) {} }
+        }, 1500);
+      }
 
       function onInquiryMenuOutside(e) {
         if (inquiryMenuEl && !inquiryMenuEl.contains(e.target)) closeInquiryMenu();
@@ -5990,6 +6014,7 @@ html.is-ipad [data-viewer-close]:hover {
 
       function closeInquiryMenu() {
         if (!inquiryMenuEl) return;
+        if (inquiryAppCheckTimer) { clearTimeout(inquiryAppCheckTimer); inquiryAppCheckTimer = null; }
         inquiryMenuEl.remove();
         inquiryMenuEl = null;
         document.removeEventListener('pointerdown', onInquiryMenuOutside, true);
@@ -6006,8 +6031,9 @@ html.is-ipad [data-viewer-close]:hover {
         menu.innerHTML = [
           '<button type="button" class="ap-inquiry-menu__x" aria-label="', escapeHTML(inquiryMenuText('close')), '">×</button>',
           '<p class="ap-inquiry-menu__title">', escapeHTML(inquiryMenuText('title')), ' · ', escapeHTML(workId), '</p>',
-          '<a class="ap-inquiry-menu__opt" data-act="app" href="', escapeHTML(getInquiryLink(workId, work)), '">', escapeHTML(inquiryMenuText('app')), '</a>',
+          /* 2026-10-18 (apinquiry4) 어느 컴퓨터에서나 되는 Gmail을 첫 번째로 */
           '<a class="ap-inquiry-menu__opt" data-act="gmail" href="', escapeHTML(getGmailComposeLink(workId, work)), '" target="_blank" rel="noopener noreferrer">', escapeHTML(inquiryMenuText('gmail')), '</a>',
+          '<a class="ap-inquiry-menu__opt" data-act="app" href="', escapeHTML(getInquiryLink(workId, work)), '">', escapeHTML(inquiryMenuText('app')), '</a>',
           '<button type="button" class="ap-inquiry-menu__opt" data-act="copy">', escapeHTML(inquiryMenuText('copy')), '</button>',
           '<button type="button" class="ap-inquiry-menu__opt" data-act="copy-content">', escapeHTML(inquiryMenuText('copyContent')), '</button>',
           '<p class="ap-inquiry-menu__addr">', escapeHTML(ART_EMAIL), '</p>',
@@ -6029,7 +6055,12 @@ html.is-ipad [data-viewer-close]:hover {
               if (msg) msg.textContent = inquiryMenuText('copyFail');
             });
           }
-          /* act === 'app': mailto 기본 동작. 메일 앱이 없어 아무 일도 없을 수 있으므로 안내는 열어둔다 */
+          /* act === 'app': mailto 기본 동작. 메일 앱이 없어 아무 일도 없을 수 있으므로 안내는 열어두고 실행 여부를 확인한다 */
+          if (act === 'app') {
+            const msg = menu.querySelector('.ap-inquiry-menu__msg');
+            if (msg) msg.textContent = '';
+            watchMailAppLaunch(menu);
+          }
         });
 
         document.body.appendChild(menu);

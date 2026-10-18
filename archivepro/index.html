@@ -5946,6 +5946,7 @@ html.is-ipad [data-viewer-close]:hover {
         app: { kr: '메일 앱에서 작성', en: 'Write in mail app', both: '메일 앱에서 작성 / Mail app' },
         gmail: { kr: 'Gmail 웹에서 작성', en: 'Write in Gmail (web)', both: 'Gmail 웹에서 작성 / Gmail web' },
         copy: { kr: '이메일 주소 복사', en: 'Copy email address', both: '이메일 주소 복사 / Copy address' },
+        gmailFail: { kr: 'Gmail 앱이 열리지 않았다면 메일 앱에서 작성하거나, 문의 내용을 복사해 사용하시는 메일에 붙여 넣어 주세요.', en: 'If the Gmail app did not open, use your mail app, or copy the inquiry text and paste it into your own email.', both: 'Gmail 앱이 열리지 않았다면 메일 앱에서 작성하거나, 문의 내용을 복사해 사용하시는 메일에 붙여 넣어 주세요.\nIf the Gmail app did not open, use your mail app, or copy the inquiry text and paste it into your own email.' },
         appFail: { kr: '메일 앱이 열리지 않았다면 Gmail 웹에서 작성하거나 문의 내용을 복사해 주세요.', en: 'If no mail app opened, use Gmail (web) or copy the inquiry text.', both: '메일 앱이 열리지 않았다면 Gmail 웹에서 작성하거나 문의 내용을 복사해 주세요.\nIf no mail app opened, use Gmail (web) or copy the inquiry text.' },
         copyContent: { kr: '문의 내용 복사', en: 'Copy inquiry text', both: '문의 내용 복사 / Copy inquiry text' },
         copiedContent: { kr: '복사되었습니다', en: 'Copied', both: '복사되었습니다 / Copied' },
@@ -5982,6 +5983,35 @@ html.is-ipad [data-viewer-close]:hover {
 
       /* 2026-10-18 (apinquiry5) 휴대폰·태블릿 판별 — 운영체제 기준(터치스크린 노트북은 PC로 본다).
          iPadOS 13+는 Mac으로 보고하므로 MacIntel + 터치 지점으로 따로 확인. */
+      /* 2026-10-18 (apgmail1) 모바일 Gmail: 휴대폰·태블릿에서 Gmail 웹 작성 주소는 Google이 모바일 Gmail/앱으로
+         넘기면서 받는 사람·제목·본문을 버린다. 그래서 모바일은 Gmail 앱을 직접 연다.
+         iPhone·iPad: googlegmail:///co?to&subject&body (Gmail 앱 공식 작성 주소)
+         Android: intent(SENDTO mailto, Gmail 앱 지정). Gmail 앱이 없으면 Gmail 웹 작성 주소로 넘어간다. */
+      function getMobileMailOS() {
+        try {
+          const ua = navigator.userAgent || '';
+          if (/Android/i.test(ua)) return 'android';
+          if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+          if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return 'ios';
+        } catch (_) {}
+        return '';
+      }
+
+      function getGmailLinkForDevice(workId, work) {
+        const subject = encodeURIComponent(getInquirySubject(workId, work));
+        const body = encodeURIComponent(getInquiryBody(workId, work));
+        const os = getMobileMailOS();
+        if (os === 'ios') {
+          return "googlegmail:///co?to=" + encodeURIComponent(ART_EMAIL) + "&subject=" + subject + "&body=" + body;
+        }
+        if (os === 'android') {
+          return "intent:mailto:" + ART_EMAIL + "?subject=" + subject + "&body=" + body +
+            "#Intent;action=android.intent.action.SENDTO;package=com.google.android.gm;" +
+            "S.browser_fallback_url=" + encodeURIComponent(getGmailComposeLink(workId, work)) + ";end";
+        }
+        return getGmailComposeLink(workId, work);
+      }
+
       function isMobileMailDevice() {
         try {
           const ua = navigator.userAgent || '';
@@ -5996,7 +6026,7 @@ html.is-ipad [data-viewer-close]:hover {
       /* 2026-10-18 (apinquiry4) 메일 앱 실행 확인. 메일 앱(또는 Windows 앱 선택창)이 뜨면 브라우저가 포커스를 잃는다.
          1.5초 안에 그런 변화가 없으면 이 컴퓨터에 연결된 메일 앱이 없는 것으로 보고 Gmail·복사 안내를 띄운다.
          발송 성공 여부는 표시하지 않는다. */
-      function watchMailAppLaunch(menu) {
+      function watchMailAppLaunch(menu, failKey) {
         if (inquiryAppCheckTimer) { clearTimeout(inquiryAppCheckTimer); inquiryAppCheckTimer = null; }
         let left = false;
         const onBlur = () => { left = true; };
@@ -6009,9 +6039,9 @@ html.is-ipad [data-viewer-close]:hover {
           document.removeEventListener('visibilitychange', onVis);
           if (left || inquiryMenuEl !== menu) return;
           const msg = menu.querySelector('.ap-inquiry-menu__msg');
-          if (msg) msg.textContent = inquiryMenuText('appFail');
-          const gmailBtn = menu.querySelector('[data-act=gmail]');
-          if (gmailBtn) { try { gmailBtn.focus({ preventScroll: true }); } catch (_) {} }
+          if (msg) msg.textContent = inquiryMenuText(failKey || 'appFail');
+          const nextBtn = menu.querySelector(failKey === 'gmailFail' ? '[data-act=copy-content]' : '[data-act=gmail]');
+          if (nextBtn) { try { nextBtn.focus({ preventScroll: true }); } catch (_) {} }
         }, 1500);
       }
 
@@ -6040,7 +6070,8 @@ html.is-ipad [data-viewer-close]:hover {
         menu.setAttribute('role', 'dialog');
         menu.setAttribute('aria-label', inquiryMenuText('title'));
         const appOpt = '<a class="ap-inquiry-menu__opt" data-act="app" href="' + escapeHTML(getInquiryLink(workId, work)) + '">' + escapeHTML(inquiryMenuText('app')) + '</a>';
-        const gmailOpt = '<a class="ap-inquiry-menu__opt" data-act="gmail" href="' + escapeHTML(getGmailComposeLink(workId, work)) + '" target="_blank" rel="noopener noreferrer">' + escapeHTML(inquiryMenuText('gmail')) + '</a>';
+        const gmailIsApp = !!getMobileMailOS();
+        const gmailOpt = '<a class="ap-inquiry-menu__opt" data-act="gmail" href="' + escapeHTML(getGmailLinkForDevice(workId, work)) + '"' + (gmailIsApp ? '' : ' target="_blank" rel="noopener noreferrer"') + '>' + escapeHTML(inquiryMenuText('gmail')) + '</a>';
         menu.innerHTML = [
           '<button type="button" class="ap-inquiry-menu__x" aria-label="', escapeHTML(inquiryMenuText('close')), '">×</button>',
           '<p class="ap-inquiry-menu__title">', escapeHTML(inquiryMenuText('title')), ' · ', escapeHTML(workId), '</p>',
@@ -6057,7 +6088,17 @@ html.is-ipad [data-viewer-close]:hover {
           if (!target) return;
           if (target.classList.contains('ap-inquiry-menu__x')) { closeInquiryMenu(); return; }
           const act = target.dataset.act;
-          if (act === 'gmail') { window.setTimeout(closeInquiryMenu, 0); return; }
+          if (act === 'gmail') {
+            /* (apgmail1) 모바일은 Gmail 앱 실행 — 창을 열어두고 실행 여부를 확인. PC는 새 탭(기존) */
+            if (getMobileMailOS()) {
+              const msg = menu.querySelector('.ap-inquiry-menu__msg');
+              if (msg) msg.textContent = '';
+              watchMailAppLaunch(menu, 'gmailFail');
+              return;
+            }
+            window.setTimeout(closeInquiryMenu, 0);
+            return;
+          }
           if (act === 'copy' || act === 'copy-content') {
             const msg = menu.querySelector('.ap-inquiry-menu__msg');
             const isContent = act === 'copy-content';

@@ -5945,7 +5945,7 @@ html.is-ipad [data-viewer-close]:hover {
         app: { kr: '메일 앱에서 작성', en: 'Write in mail app', both: '메일 앱에서 작성 / Mail app' },
         gmail: { kr: 'Gmail 웹에서 작성', en: 'Write in Gmail (web)', both: 'Gmail 웹에서 작성 / Gmail web' },
         copy: { kr: '이메일 주소 복사', en: 'Copy email address', both: '이메일 주소 복사 / Copy address' },
-        appFail: { kr: '메일 앱이 열리지 않았다면 위의 Gmail 웹에서 작성하거나 문의 내용을 복사해 주세요.', en: 'If no mail app opened, use Gmail (web) above or copy the inquiry text.', both: '메일 앱이 열리지 않았다면 위의 Gmail 웹에서 작성하거나 문의 내용을 복사해 주세요.\nIf no mail app opened, use Gmail (web) above or copy the inquiry text.' },
+        appFail: { kr: '메일 앱이 열리지 않았다면 Gmail 웹에서 작성하거나 문의 내용을 복사해 주세요.', en: 'If no mail app opened, use Gmail (web) or copy the inquiry text.', both: '메일 앱이 열리지 않았다면 Gmail 웹에서 작성하거나 문의 내용을 복사해 주세요.\nIf no mail app opened, use Gmail (web) or copy the inquiry text.' },
         copyContent: { kr: '문의 내용 복사', en: 'Copy inquiry text', both: '문의 내용 복사 / Copy inquiry text' },
         copiedContent: { kr: '수신 주소와 문의 내용을 복사했습니다.', en: 'Address and inquiry text copied.', both: '수신 주소와 문의 내용을 복사했습니다.\nAddress and inquiry text copied.' },
         copied: { kr: '주소를 복사했습니다.', en: 'Address copied.', both: '주소를 복사했습니다.\nAddress copied.' },
@@ -5977,6 +5977,16 @@ html.is-ipad [data-viewer-close]:hover {
           return navigator.clipboard.writeText(text).catch(fallback);
         }
         return fallback();
+      }
+
+      /* 2026-10-18 (apinquiry5) 휴대폰·태블릿 판별 — 운영체제 기준(터치스크린 노트북은 PC로 본다).
+         iPadOS 13+는 Mac으로 보고하므로 MacIntel + 터치 지점으로 따로 확인. */
+      function isMobileMailDevice() {
+        try {
+          const ua = navigator.userAgent || '';
+          if (/iPhone|iPad|iPod|Android/i.test(ua)) return true;
+          return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+        } catch (_) { return false; }
       }
 
       let inquiryMenuEl = null;
@@ -6028,12 +6038,13 @@ html.is-ipad [data-viewer-close]:hover {
         menu.className = 'ap-inquiry-menu';
         menu.setAttribute('role', 'dialog');
         menu.setAttribute('aria-label', inquiryMenuText('title'));
+        const appOpt = '<a class="ap-inquiry-menu__opt" data-act="app" href="' + escapeHTML(getInquiryLink(workId, work)) + '">' + escapeHTML(inquiryMenuText('app')) + '</a>';
+        const gmailOpt = '<a class="ap-inquiry-menu__opt" data-act="gmail" href="' + escapeHTML(getGmailComposeLink(workId, work)) + '" target="_blank" rel="noopener noreferrer">' + escapeHTML(inquiryMenuText('gmail')) + '</a>';
         menu.innerHTML = [
           '<button type="button" class="ap-inquiry-menu__x" aria-label="', escapeHTML(inquiryMenuText('close')), '">×</button>',
           '<p class="ap-inquiry-menu__title">', escapeHTML(inquiryMenuText('title')), ' · ', escapeHTML(workId), '</p>',
-          /* 2026-10-18 (apinquiry4) 어느 컴퓨터에서나 되는 Gmail을 첫 번째로 */
-          '<a class="ap-inquiry-menu__opt" data-act="gmail" href="', escapeHTML(getGmailComposeLink(workId, work)), '" target="_blank" rel="noopener noreferrer">', escapeHTML(inquiryMenuText('gmail')), '</a>',
-          '<a class="ap-inquiry-menu__opt" data-act="app" href="', escapeHTML(getInquiryLink(workId, work)), '">', escapeHTML(inquiryMenuText('app')), '</a>',
+          /* 2026-10-18 (apinquiry5) 모바일(iPhone·iPad·Android)은 메일 앱 먼저, PC·노트북은 Gmail 먼저 */
+          isMobileMailDevice() ? appOpt + gmailOpt : gmailOpt + appOpt,
           '<button type="button" class="ap-inquiry-menu__opt" data-act="copy">', escapeHTML(inquiryMenuText('copy')), '</button>',
           '<button type="button" class="ap-inquiry-menu__opt" data-act="copy-content">', escapeHTML(inquiryMenuText('copyContent')), '</button>',
           '<p class="ap-inquiry-menu__addr">', escapeHTML(ART_EMAIL), '</p>',

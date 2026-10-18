@@ -5322,6 +5322,17 @@ html.is-ipad [data-viewer-close]:hover {
 #searchArea .archive-search__submit{font-weight:600}
 #searchArea .control-actions .btn,body.archive-entered.archive-filter-open #searchArea .control-actions .btn{color:#D4B46D!important}
 </style>
+<style id="ap-inquiry-menu-20261018">
+/* 2026-10-18 (apinquiry1) PC 이메일 문의 작성 방법 안내 — 기존 블랙·골드 톤 */
+.ap-inquiry-menu{position:fixed;z-index:200;width:260px;max-width:calc(100vw - 16px);padding:14px 14px 12px;box-sizing:border-box;border-radius:14px;border:1px solid rgba(212,180,109,.42);background:linear-gradient(180deg,rgba(11,19,36,.98),rgba(7,10,20,.99));color:#F4F1EA;box-shadow:0 18px 40px rgba(0,0,0,.45);font-size:13px;line-height:1.4}
+.ap-inquiry-menu__title{margin:0 28px 10px 2px;color:#D4B46D;font-size:12px;letter-spacing:.04em}
+.ap-inquiry-menu__opt{display:flex;align-items:center;width:100%;min-height:38px;margin:0 0 6px;padding:0 12px;box-sizing:border-box;border-radius:10px;border:1px solid rgba(212,180,109,.26);background:rgba(212,180,109,.05);color:#E6C98A;font:inherit;font-size:13px;text-align:left;text-decoration:none;cursor:pointer}
+.ap-inquiry-menu__opt:hover,.ap-inquiry-menu__opt:focus-visible{border-color:rgba(212,180,109,.6);background:rgba(212,180,109,.1);color:#F4F1EA;outline:none}
+.ap-inquiry-menu__addr{margin:8px 2px 0;color:rgba(244,241,234,.62);font-size:12px;-webkit-user-select:all;user-select:all;word-break:break-all}
+.ap-inquiry-menu__msg{margin:4px 2px 0;min-height:16px;color:#D4B46D;font-size:12px}
+.ap-inquiry-menu__x{position:absolute;top:8px;right:8px;width:26px;height:26px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.06);color:#D4B46D;font-size:16px;line-height:26px;cursor:pointer}
+.ap-inquiry-menu__x:hover,.ap-inquiry-menu__x:focus-visible{background:rgba(255,255,255,.14);outline:none}
+</style>
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>
@@ -5601,6 +5612,9 @@ html.is-ipad [data-viewer-close]:hover {
       const DESKTOP_FIRST_RENDER_COUNT = 24;
       const FIRST_RENDER_COUNT = DESKTOP_FIRST_RENDER_COUNT;
       const FAST_ORDER = 'section-id-asc';
+      /* 2026-10-18 (apdefsec1) 아카이브 첫 화면 기본 섹션 = I 우리를 위해 기도해 주세요 (section_id 1).
+         새 진입·새로고침 때만 적용. 초기화 버튼(resetFilters/resetAllSections)은 기존대로 전체 섹션. */
+      const DEFAULT_ENTRY_SECTION = '1';
       const LOAD_MORE_COUNT = 40;
       const AUTO_RENDER_ROOT_MARGIN = '900px 0px 1200px 0px';
       const INITIAL_VISIBLE = getInitialVisibleCount();
@@ -5860,12 +5874,142 @@ html.is-ipad [data-viewer-close]:hover {
         return '이메일 문의 →';
       }
 
+      function getInquirySubject(workId) {
+        return "Artwork Inquiry — " + workId;
+      }
+
+      function getInquiryBody(workId) {
+        return "Hello,\n\nI would like to inquire about this artwork.\n\nArtwork ID: " + workId;
+      }
+
       function getInquiryLink(workId) {
-        const subject = encodeURIComponent("Artwork Inquiry — " + workId);
-        const body = encodeURIComponent(
-          "Hello,\n\nI would like to inquire about this artwork.\n\nArtwork ID: " + workId
-        );
+        const subject = encodeURIComponent(getInquirySubject(workId));
+        const body = encodeURIComponent(getInquiryBody(workId));
         return "mailto:" + ART_EMAIL + "?subject=" + subject + "&body=" + body;
+      }
+
+      /* 2026-10-18 (apinquiry1) PC·노트북 이메일 문의 — 작성 방법 선택 안내.
+         마우스 기반 기기(hover:hover + pointer:fine)에서만 동작. 모바일·터치 기기는 기존 mailto 그대로.
+         ① 메일 앱(mailto) ② Gmail 웹 작성(새 탭, 사용자 클릭 링크) ③ 주소 복사. 발송은 방문자가 직접. */
+      function getGmailComposeLink(workId) {
+        return "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(ART_EMAIL) +
+          "&su=" + encodeURIComponent(getInquirySubject(workId)) +
+          "&body=" + encodeURIComponent(getInquiryBody(workId));
+      }
+
+      function isDesktopInquiryMode() {
+        try {
+          return !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+        } catch (_) { return false; }
+      }
+
+      const INQUIRY_MENU_TEXT = {
+        title: { kr: '이메일 문의 방법', en: 'Email inquiry', both: '이메일 문의 방법 / Email inquiry' },
+        app: { kr: '메일 앱으로 작성', en: 'Write in mail app', both: '메일 앱으로 작성 / Mail app' },
+        gmail: { kr: 'Gmail 웹에서 작성', en: 'Write in Gmail (web)', both: 'Gmail 웹에서 작성 / Gmail web' },
+        copy: { kr: '이메일 주소 복사', en: 'Copy email address', both: '이메일 주소 복사 / Copy address' },
+        copied: { kr: '주소를 복사했습니다.', en: 'Address copied.', both: '주소를 복사했습니다. / Address copied.' },
+        copyFail: { kr: '복사하지 못했습니다. 아래 주소를 직접 선택해 주세요.', en: 'Could not copy. Please select the address below.', both: '복사하지 못했습니다. / Could not copy — please select the address below.' },
+        close: { kr: '닫기', en: 'Close', both: '닫기 / Close' }
+      };
+
+      function inquiryMenuText(key) {
+        const v = INQUIRY_MENU_TEXT[key];
+        return v ? (v[state.lang] || v.kr) : '';
+      }
+
+      function copyTextToClipboard(text) {
+        const fallback = () => new Promise((resolve, reject) => {
+          try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0;';
+            document.body.appendChild(ta);
+            ta.select();
+            const ok = document.execCommand('copy');
+            ta.remove();
+            if (ok) resolve(); else reject(new Error('copy failed'));
+          } catch (err) { reject(err); }
+        });
+        if (navigator.clipboard && window.isSecureContext) {
+          return navigator.clipboard.writeText(text).catch(fallback);
+        }
+        return fallback();
+      }
+
+      let inquiryMenuEl = null;
+
+      function onInquiryMenuOutside(e) {
+        if (inquiryMenuEl && !inquiryMenuEl.contains(e.target)) closeInquiryMenu();
+      }
+
+      function onInquiryMenuKey(e) {
+        if (e.key === 'Escape') closeInquiryMenu();
+      }
+
+      function closeInquiryMenu() {
+        if (!inquiryMenuEl) return;
+        inquiryMenuEl.remove();
+        inquiryMenuEl = null;
+        document.removeEventListener('mousedown', onInquiryMenuOutside, true);
+        document.removeEventListener('keydown', onInquiryMenuKey, true);
+        window.removeEventListener('scroll', closeInquiryMenu);
+        window.removeEventListener('resize', closeInquiryMenu);
+      }
+
+      function openInquiryMenu(anchor, workId) {
+        closeInquiryMenu();
+        const menu = document.createElement('div');
+        menu.className = 'ap-inquiry-menu';
+        menu.setAttribute('role', 'dialog');
+        menu.setAttribute('aria-label', inquiryMenuText('title'));
+        menu.innerHTML = [
+          '<button type="button" class="ap-inquiry-menu__x" aria-label="', escapeHTML(inquiryMenuText('close')), '">×</button>',
+          '<p class="ap-inquiry-menu__title">', escapeHTML(inquiryMenuText('title')), ' · ', escapeHTML(workId), '</p>',
+          '<a class="ap-inquiry-menu__opt" data-act="app" href="', escapeHTML(getInquiryLink(workId)), '">', escapeHTML(inquiryMenuText('app')), '</a>',
+          '<a class="ap-inquiry-menu__opt" data-act="gmail" href="', escapeHTML(getGmailComposeLink(workId)), '" target="_blank" rel="noopener noreferrer">', escapeHTML(inquiryMenuText('gmail')), '</a>',
+          '<button type="button" class="ap-inquiry-menu__opt" data-act="copy">', escapeHTML(inquiryMenuText('copy')), '</button>',
+          '<p class="ap-inquiry-menu__addr">', escapeHTML(ART_EMAIL), '</p>',
+          '<p class="ap-inquiry-menu__msg" aria-live="polite"></p>'
+        ].join('');
+
+        menu.addEventListener('click', (ev) => {
+          const target = ev.target && ev.target.closest ? ev.target.closest('[data-act], .ap-inquiry-menu__x') : null;
+          if (!target) return;
+          if (target.classList.contains('ap-inquiry-menu__x')) { closeInquiryMenu(); return; }
+          const act = target.dataset.act;
+          if (act === 'gmail') { window.setTimeout(closeInquiryMenu, 0); return; }
+          if (act === 'copy') {
+            const msg = menu.querySelector('.ap-inquiry-menu__msg');
+            copyTextToClipboard(ART_EMAIL).then(() => {
+              if (msg) msg.textContent = inquiryMenuText('copied');
+            }).catch(() => {
+              if (msg) msg.textContent = inquiryMenuText('copyFail');
+            });
+          }
+          /* act === 'app': mailto 기본 동작. 메일 앱이 없어 아무 일도 없을 수 있으므로 안내는 열어둔다 */
+        });
+
+        document.body.appendChild(menu);
+        inquiryMenuEl = menu;
+
+        const r = anchor.getBoundingClientRect();
+        const mw = menu.offsetWidth;
+        const mh = menu.offsetHeight;
+        const left = Math.min(Math.max(8, r.left), Math.max(8, window.innerWidth - mw - 8));
+        let top = r.bottom + 8;
+        if (top + mh > window.innerHeight - 8) top = Math.max(8, r.top - mh - 8);
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+
+        document.addEventListener('mousedown', onInquiryMenuOutside, true);
+        document.addEventListener('keydown', onInquiryMenuKey, true);
+        window.addEventListener('scroll', closeInquiryMenu, { passive: true });
+        window.addEventListener('resize', closeInquiryMenu, { passive: true });
+
+        const first = menu.querySelector('.ap-inquiry-menu__opt');
+        if (first) { try { first.focus({ preventScroll: true }); } catch (_) {} }
       }
 
       function renderStatusUI(work) {
@@ -6115,7 +6259,7 @@ untitled: '무제 / Untitled',
         filtered: [],
         visibleCount: getInitialVisibleCount(),
         query: '',
-        section: 'all',
+        section: DEFAULT_ENTRY_SECTION,
         sort: 'section-id-asc',
         lightboxItem: null,
         lang: 'kr',
@@ -7344,13 +7488,13 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         archiveEntered = true;
         filterPanelOpen = true;
         state.query = '';
-        state.section = 'all';
+        state.section = DEFAULT_ENTRY_SECTION;
         state.sort = FAST_ORDER;
         state.visibleCount = getInitialVisibleCount();
         visibleCount = state.visibleCount;
 
         if (els.searchInput) els.searchInput.value = '';
-        if (els.sectionSelect) els.sectionSelect.value = 'all';
+        if (els.sectionSelect) els.sectionSelect.value = state.section;
         if (els.sortSelect) els.sortSelect.value = FAST_ORDER;
 
         updateEntryUXClasses();
@@ -8503,7 +8647,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
             tab.setAttribute('aria-pressed', active ? 'true' : 'false');
           });
         }
-        if (typeof saved.section === 'string' && saved.section) state.section = saved.section;
+        /* 2026-10-18 (apdefsec1) 섹션은 복원하지 않음 — 새 진입·새로고침은 항상 기본 섹션(I)으로 시작 */
         if (typeof saved.sort === 'string' && saved.sort) state.sort = saved.sort;
         if (typeof saved.query === 'string') state.query = saved.query;
       }
@@ -8550,7 +8694,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         if (!apDataAppliedOnce) {
           state.query = '';
-          state.section = 'all';
+          state.section = DEFAULT_ENTRY_SECTION;
           state.sort = FAST_ORDER;
           state.visibleCount = getInitialVisibleCount();
           apRestoreUiStateIfFirstRun();
@@ -8953,7 +9097,19 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
         if (els.grid) {
           els.grid.addEventListener('click', (e) => {
-            if (e.target && e.target.closest && e.target.closest('.status-inquiry')) return;
+            const inquiryLink = e.target && e.target.closest ? e.target.closest('.status-inquiry') : null;
+            if (inquiryLink) {
+              /* 2026-10-18 (apinquiry1) PC·노트북만 작성 방법 안내. 모바일은 기존 mailto 그대로 */
+              if (isDesktopInquiryMode()) {
+                const inquiryCard = inquiryLink.closest('.card[data-id]');
+                const inquiryWorkId = inquiryCard ? safeText(inquiryCard.dataset.id) : '';
+                if (inquiryWorkId) {
+                  e.preventDefault();
+                  openInquiryMenu(inquiryLink, inquiryWorkId);
+                }
+              }
+              return;
+            }
             const card = e.target && e.target.closest ? e.target.closest('.card[data-key]') : null;
             if (!card) return;
             const targetKey = safeText(card.dataset.key);
@@ -8965,6 +9121,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
 
           els.grid.addEventListener('keydown', (e) => {
             if (e.key !== 'Enter' && e.key !== ' ') return;
+            if (e.target && e.target.closest && e.target.closest('.status-inquiry')) return; /* 2026-10-18 (apinquiry1) 문의 링크의 Enter는 링크 자체 동작 */
             const card = e.target && e.target.closest ? e.target.closest('.card[data-key]') : null;
             if (!card) return;
             e.preventDefault();

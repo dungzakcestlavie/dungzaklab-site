@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<title>계정 삭제 · Account Deletion — ARCHIVE PRO</title>
+<meta name="description" content="ARCHIVE PRO — Artist Edition 계정 및 데이터 삭제 요청 / Account and data deletion. DUNGZAK CESTLAVIE.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://dungzaklab.art/delete-account/">
+<link rel="alternate" hreflang="ko" href="https://dungzaklab.art/delete-account/?lang=kr">
+<link rel="alternate" hreflang="en" href="https://dungzaklab.art/delete-account/?lang=en">
+<link rel="alternate" hreflang="x-default" href="https://dungzaklab.art/delete-account/">
+<meta name="theme-color" content="#031421">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<style>
+  :root {
+    --bg: #031421;
+    --panel: #071d2e;
+    --line: rgba(214, 184, 106, 0.28);
+    --gold: #d6b86a;
+    --gold-strong: #f0d79c;
+    --text: #e9eef3;
+    --muted: #a9b8c6;
+    --link: #f0d79c;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
+    font-size: 16px; line-height: 1.75; word-break: keep-all; overflow-wrap: anywhere;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: calc(24px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) calc(56px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  header.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+  .brand { color: var(--gold); letter-spacing: .14em; font-size: 13px; font-weight: 600; text-decoration: none; }
+  .langs { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .langs button { appearance: none; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px; padding: 6px 14px; cursor: pointer; min-height: 36px; }
+  .langs button[aria-pressed="true"] { background: var(--gold); color: #10202c; font-weight: 700; }
+  .langs button:focus-visible { outline: 2px solid var(--gold-strong); outline-offset: -2px; }
+  h1 { font-size: clamp(24px, 5vw, 32px); line-height: 1.35; margin: 28px 0 8px; color: #fff; font-weight: 700; }
+  h1 .sub { display: block; font-size: 15px; color: var(--gold); letter-spacing: .08em; font-weight: 600; margin-bottom: 6px; }
+  .meta { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
+  nav.toc { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin: 0 0 28px; }
+  nav.toc ol { margin: 0; padding-left: 22px; columns: 2 260px; column-gap: 28px; }
+  nav.toc li { break-inside: avoid; font-size: 14px; }
+  h2 { font-size: 19px; line-height: 1.45; color: var(--gold-strong); margin: 40px 0 12px; padding-top: 6px; scroll-margin-top: 16px; }
+  h3 { font-size: 16px; color: #fff; margin: 22px 0 8px; }
+  p, li { color: var(--text); }
+  ul, ol { padding-left: 22px; }
+  a { color: var(--link); text-underline-offset: 3px; }
+  .note { color: var(--muted); font-size: 14px; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin: 14px 0; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 12px 0; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; line-height: 1.6; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid rgba(214, 184, 106, 0.16); }
+  th { color: var(--gold); font-weight: 600; background: rgba(214, 184, 106, 0.06); }
+  tr:last-child td { border-bottom: 0; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+  /* 언어 표시: JS가 없으면 두 언어를 모두 보여준다(KR+EN). */
+  body.lang-kr [lang="en"] { display: none !important; }
+  body.lang-en [lang="ko"] { display: none !important; }
+  body.lang-both .bi > [lang="en"] { color: var(--muted); }
+  body.lang-both p.bi > [lang="en"], body.lang-both li.bi > [lang="en"] { display: block; margin-top: 2px; }
+  body.lang-both h2 > [lang="en"], body.lang-both h1 > [lang="en"] { display: block; font-size: .82em; font-weight: 600; }
+  body.lang-both td > [lang="en"], body.lang-both th > [lang="en"] { display: block; }
+  span[lang] { }
+  .cta { display:inline-block; margin:6px 0 4px; padding:12px 20px; border-radius:999px; background:var(--gold); color:#10202c; font-weight:700; text-decoration:none; }
+  .cta:focus-visible { outline:2px solid var(--gold-strong); outline-offset:3px; }
+</style>
+</head>
+<body class="lang-both">
+<div class="wrap">
+
+<header class="top">
+  <a class="brand" href="/">ARCHIVE PRO</a>
+  <div class="langs" role="group" aria-label="Language / 언어">
+    <button type="button" data-lang="kr" aria-pressed="false">KR</button>
+    <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    <button type="button" data-lang="both" aria-pressed="true">KR+EN</button>
+  </div>
+</header>
+
+<h1 class="bi"><span class="sub">ARCHIVE PRO — Artist Edition</span><span lang="ko">계정 및 데이터 삭제</span><span lang="en">Account and Data Deletion</span></h1>
+<p class="meta bi"><span lang="ko">개발자: 등작 DUNGZAK CESTLAVIE · 최종 수정일: 2026년 11월 12일</span><span lang="en">Developer: DUNGZAK CESTLAVIE · Last updated: November 12, 2026</span></p>
+<p class="bi"><span lang="ko">ARCHIVE PRO — Artist Edition 계정과 데이터는 앱을 설치하지 않아도 이 페이지의 방법으로 삭제를 요청할 수 있습니다.</span><span lang="en">You can request deletion of your ARCHIVE PRO — Artist Edition account and data using the methods on this page, even without installing the app.</span></p>
+
+<h2 id="web" class="bi"><span lang="ko">1. 웹에서 바로 삭제하기(권장)</span><span lang="en">1. Delete on the web (recommended)</span></h2>
+<div class="box">
+<ol>
+<li class="bi"><span lang="ko"><a href="https://dungzaklab.art/app/">https://dungzaklab.art/app/</a>을 열고 삭제할 계정으로 로그인합니다. 로그인으로 계정 소유자임이 확인됩니다.</span><span lang="en">Open <a href="https://dungzaklab.art/app/">https://dungzaklab.art/app/</a> and sign in to the account you want to delete. Signing in confirms that you own the account.</span></li>
+<li class="bi"><span lang="ko">화면 위쪽의 계정 메뉴에서 <b>설정 → 계정 삭제</b>를 엽니다. 작가 계정은 <b>관리 → 설정 → 계정 삭제</b>로도 열 수 있습니다.</span><span lang="en">Open <b>Settings → Delete Account</b> from the account menu at the top of the screen. Artist accounts can also use <b>Manage → Settings → Delete Account</b>.</span></li>
+<li class="bi"><span lang="ko">안내를 확인하고 입력 칸에 <b>DELETE</b>를 입력한 뒤 <b>계정 삭제</b>를 누릅니다.</span><span lang="en">Read the notice, type <b>DELETE</b> in the box, and press <b>Delete Account</b>.</span></li>
+</ol>
+<p><a class="cta" href="https://dungzaklab.art/app/"><span lang="ko">로그인하고 계정 삭제하기</span><span lang="en">Sign in to delete your account</span></a></p>
+<p class="bi"><span lang="ko">요청이 접수되면 즉시 로그아웃되고 이 계정으로는 더 이상 로그인할 수 없으며, 내 아카이브·공개 페이지·COSMOS 공개 항목이 비공개로 전환됩니다.</span><span lang="en">Once your request is received, you are signed out immediately, the account can no longer sign in, and your archive, public pages, and COSMOS entries become private.</span></p>
+</div>
+
+<h2 id="app" class="bi"><span lang="ko">2. 앱에서 삭제하기</span><span lang="en">2. Delete in the app</span></h2>
+<p class="bi"><span lang="ko">ARCHIVE PRO — Artist Edition 앱(iOS·Android)에서도 같은 순서로 삭제할 수 있습니다: 로그인 → 설정 → 계정 삭제 → DELETE 입력.</span><span lang="en">You can do the same in the ARCHIVE PRO — Artist Edition app (iOS and Android): sign in → Settings → Delete Account → type DELETE.</span></p>
+
+<h2 id="email" class="bi"><span lang="ko">3. 로그인할 수 없는 경우: 이메일로 요청</span><span lang="en">3. If you cannot sign in: request by email</span></h2>
+<div class="box">
+<p class="bi"><span lang="ko">먼저 로그인 화면의 비밀번호 재설정을 시도해 보세요. 그래도 로그인할 수 없다면, 가입한 이메일 주소로 <a href="mailto:dungzakcestlavie@gmail.com?subject=ARCHIVE%20PRO%20account%20deletion%20request">dungzakcestlavie@gmail.com</a>에 “계정 삭제 요청”이라는 제목으로 메일을 보내 주세요.</span><span lang="en">First, try resetting your password on the sign-in screen. If you still cannot sign in, send an email from your registered address to <a href="mailto:dungzakcestlavie@gmail.com?subject=ARCHIVE%20PRO%20account%20deletion%20request">dungzakcestlavie@gmail.com</a> with the subject “Account deletion request”.</span></p>
+<p class="bi"><span lang="ko">본인 확인을 위해 가입한 이메일 주소에서 보내 주셔야 하며, 필요한 경우 추가 확인을 요청할 수 있습니다. 확인 후 10일 이내에 처리하고 결과를 이메일로 알려드립니다.</span><span lang="en">To verify your identity, please send it from your registered email address; we may ask for additional confirmation. We will process the request within 10 days of verification and email you the result.</span></p>
+</div>
+
+<h2 id="data" class="bi"><span lang="ko">4. 삭제되는 데이터와 보관 기간</span><span lang="en">4. What is deleted and how long data is kept</span></h2>
+<ul>
+<li class="bi"><span lang="ko">삭제 대상: 계정(로그인 정보), 작가 프로필, Artist Bio, 작품 정보와 작품 이미지, 포트폴리오 PDF, COSMOS 공개 항목</span><span lang="en">Deleted: your account (sign-in information), artist profile, Artist Bio, artwork details and images, portfolio PDFs, and COSMOS entries</span></li>
+<li class="bi"><span lang="ko">요청 즉시: 로그인 차단, 공개 페이지·COSMOS 비공개 전환</span><span lang="en">Immediately on request: sign-in is blocked and public pages and COSMOS entries become private</span></li>
+<li class="bi"><span lang="ko">보관 기간: 실수로 인한 삭제 복구와 분쟁 대응을 위해 90일 동안 보관한 뒤 영구 삭제합니다. 90일 안에는 이메일로 복구를 요청할 수 있습니다.</span><span lang="en">Retention: data is kept for 90 days so that an accidental deletion can be restored and disputes can be handled, and is then permanently deleted. You can ask us by email to restore the account within those 90 days.</span></li>
+<li class="bi"><span lang="ko">법령상 보관 의무가 있는 정보: 웹 구독 결제가 있었던 경우 결제·계약 기록은 「전자상거래 등에서의 소비자보호에 관한 법률」에 따라 5년(분쟁 기록 3년) 보관됩니다.</span><span lang="en">Information we must keep by law: if you made a web subscription payment, payment and contract records are kept for 5 years (dispute records 3 years) under the Korean Act on Consumer Protection in Electronic Commerce.</span></li>
+</ul>
+
+<h2 id="partial" class="bi"><span lang="ko">5. 계정은 유지하고 일부 데이터만 삭제하기</span><span lang="en">5. Delete some data but keep your account</span></h2>
+<p class="bi"><span lang="ko">앱이나 웹의 관리 화면에서 작품을 개별 삭제하거나 Artist Bio를 수정·삭제할 수 있습니다. 그 밖의 데이터 삭제는 <a href="mailto:dungzakcestlavie@gmail.com?subject=ARCHIVE%20PRO%20account%20deletion%20request">dungzakcestlavie@gmail.com</a>로 요청해 주세요.</span><span lang="en">You can delete individual artworks or edit and remove your Artist Bio in the app or on the web. To delete other data, contact <a href="mailto:dungzakcestlavie@gmail.com?subject=ARCHIVE%20PRO%20account%20deletion%20request">dungzakcestlavie@gmail.com</a>.</span></p>
+
+<p class="bi"><span lang="ko">자세한 내용은 <a href="/privacy/">개인정보처리방침</a>을 참고하세요.</span><span lang="en">For details, see our <a href="/privacy/">Privacy Policy</a>.</span></p>
+
+<footer>
+  <p class="bi"><span lang="ko">© 등작 DUNGZAK CESTLAVIE · ARCHIVE PRO — Artist Edition</span><span lang="en">© DUNGZAK CESTLAVIE · ARCHIVE PRO — Artist Edition</span></p>
+</footer>
+</div>
+
+<script>
+(function () {
+  var KEY = 'dungzaklab_privacy_lang';
+  var MODES = { kr: 1, en: 1, both: 1 };
+  var body = document.body;
+  var btns = document.querySelectorAll('.langs button[data-lang]');
+  function pick() {
+    var q = null;
+    try { q = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+    if (q && MODES[q]) return q;
+    try { var s = localStorage.getItem(KEY); if (s && MODES[s]) return s; } catch (e) {}
+    var nl = (navigator.language || '').toLowerCase();
+    return nl.indexOf('ko') === 0 ? 'kr' : 'en';
+  }
+  function apply(mode, save) {
+    body.classList.remove('lang-kr', 'lang-en', 'lang-both');
+    body.classList.add('lang-' + mode);
+    document.documentElement.lang = mode === 'en' ? 'en' : 'ko';
+    for (var i = 0; i < btns.length; i++) btns[i].setAttribute('aria-pressed', btns[i].getAttribute('data-lang') === mode ? 'true' : 'false');
+    if (save) { try { localStorage.setItem(KEY, mode); } catch (e) {} }
+  }
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function () { apply(this.getAttribute('data-lang'), true); });
+  }
+  apply(pick(), false);
+})();
+</script>
+</body>
+</html>

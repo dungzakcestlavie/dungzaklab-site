@@ -5416,7 +5416,6 @@ html.is-ipad [data-viewer-close]:hover {
       <div class="field">
         <label for="sectionSelect" id="labelSection">섹션</label>
         <select id="sectionSelect" class="select" aria-label="섹션 선택">
-          <option value="all">전체 섹션</option>
         </select>
       </div>
 
@@ -7519,10 +7518,6 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         els.sectionSelect.textContent = '';
 
         const fragment = document.createDocumentFragment();
-        const allOpt = document.createElement('option');
-        allOpt.value = 'all';
-        allOpt.textContent = t('allSections');
-        fragment.appendChild(allOpt);
 
         const sectionIdsWithWorks = new Set(
           (Array.isArray(state.all) ? state.all : [])
@@ -7545,8 +7540,8 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         els.sectionSelect.appendChild(fragment);
 
         const values = Array.from(els.sectionSelect.options).map(o => o.value);
-        /* 2026-10-18 (aplogo1) 존재하지 않는 섹션이면 기본 섹션(I)으로 복구, 그것도 없으면 전체 */
-        state.section = values.includes(prev) ? prev : (values.includes(DEFAULT_ENTRY_SECTION) ? DEFAULT_ENTRY_SECTION : 'all');
+        /* A section must be selected: restore section I when the legacy 'all' value is loaded. */
+        state.section = values.includes(prev) ? prev : (values.includes(DEFAULT_ENTRY_SECTION) ? DEFAULT_ENTRY_SECTION : (values[0] || 'all'));
         els.sectionSelect.value = state.section;
 
         updateSectionButtonState();

@@ -1,5 +1,5 @@
 /*
- * ELSOL — GOLD CAPTION READER  (caption-reader.css)  build 20261117-cr4
+ * ELSOL — GOLD CAPTION READER  (caption-reader.css)  build 20261117-cr5
  * cr4: 리더 = 세로 flex(고정 상단 막대 + 독립 세로 스크롤 영역). 리더 자체는 스크롤하지 않음(sticky 의존 제거).
  *      위치·크기는 CSS inset:0, 보이는 화면과 어긋나면 caption-reader.js가 visualViewport 값으로 맞춤.
  * cr3: 목록 버튼 스타일 제거, 돋보기(+) 32px(폰)/36px(600px 이상)·선 2.75px·터치 48px, 설정 접기, 처음/마지막 표시, 듀얼스크린 힌지 회피
@@ -353,3 +353,45 @@
 .dzcr-viewerwrap-cosmos .dzcr-trigger.dzcr-trigger:hover { background: rgba(168, 134, 47, 0.14); border-color: #7D5F1A; }
 .dzcr-viewerwrap-cosmos .dzcr-trigger.dzcr-trigger:focus-visible { outline-color: #14161C; }
 .dzcr-viewerwrap-cosmos .dzcr-trigger .dzcr-icon { color: #7D5F1A; }
+
+/* cr5 — Collection inquiry lives inside the independently magnified caption.
+   At 100–400% all text reflows vertically; existing gallery CSS is unchanged. */
+#dzCaptionReader .dzcr-mail {
+  margin: 1.15em 0 0; padding: .8em 0 0;
+  min-width: 0; max-width: 100%;
+  border-top: 1px solid rgba(212,180,109,.45);
+}
+#dzCaptionReader .dzcr-mail[hidden],
+#dzCaptionReader .dzcr-mail-panel[hidden] { display: none !important; }
+#dzCaptionReader .dzcr-mail-trigger {
+  display: inline-flex; max-width: 100%; width: auto;
+  padding: .55em .8em; min-height: 44px;
+  border-radius: 999px; color: #F1D398;
+  font-size: 1em; line-height: 1.4;
+}
+#dzCaptionReader .dzcr-mail-panel {
+  display: flex; flex-direction: column; align-items: stretch;
+  gap: .32em; min-width: 0; max-width: 100%;
+  margin: .5em 0 0; padding: .4em 0;
+  font-size: 1em; line-height: 1.45;
+}
+#dzCaptionReader .dzcr-mail-option {
+  display: flex; align-items: center; justify-content: flex-start;
+  box-sizing: border-box; min-height: 44px;
+  min-width: 0; max-width: 100%; width: 100%;
+  margin: 0; padding: .45em .6em;
+  border: 1px solid rgba(212,180,109,.62);
+  border-radius: .35em; background: rgba(212,180,109,.055);
+  color: #F4EFE6; font: inherit; font-size: 1em; font-weight: 600;
+  line-height: 1.4; text-align: left; text-decoration: none;
+  white-space: normal; overflow-wrap: anywhere; word-break: normal;
+}
+#dzCaptionReader .dzcr-mail-option:hover { background: rgba(212,180,109,.14); }
+#dzCaptionReader .dzcr-mail-option:focus-visible {
+  outline: 3px solid #F4EFE6; outline-offset: 2px;
+}
+#dzCaptionReader .dzcr-mail-address {
+  margin: .25em 0 .4em; padding: 0; min-width: 0;
+  font-size: .82em; color: #D4B46D;
+  overflow-wrap: anywhere; word-break: break-word; user-select: text;
+}

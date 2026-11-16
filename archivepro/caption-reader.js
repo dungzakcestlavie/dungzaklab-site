@@ -1,6 +1,6 @@
 /*
  * ELSOL — GOLD CAPTION READER  (caption-reader.js)
- * build 20261117-cr1 · 2026-11-17
+ * build 20261117-cr2 · 2026-11-17 (cr2: 화면이 백그라운드여도 버튼이 늦게 붙지 않게 setTimeout 보조)
  *
  * 저시력 이용자용 캡션 리더 — 세 서비스 공통 모듈(같은 파일을 그대로 복사해 사용).
  *   A. Artist Edition       /app/, /app/{artistId}        (Firebase Hosting)
@@ -21,7 +21,7 @@
   "use strict";
   if (window.DZ_CAPTION_READER) return;
 
-  var BUILD = "20261117-cr1";
+  var BUILD = "20261117-cr2";
   var STORE_KEY = "dz.captionReader.v1";
   var SCALES = [100, 150, 200, 300, 400];
   var DEFAULT_SCALE = 300;
@@ -887,10 +887,16 @@
   function schedule() {
     if (scheduled) return;
     scheduled = true;
-    (window.requestAnimationFrame || setTimeout)(function () {
+    var done = false;
+    var run = function () {
+      if (done) return;
+      done = true;
       scheduled = false;
       try { adapter && adapter.ensure(); } catch (e) { /* 리더 버튼 실패는 페이지 기능에 영향 없음 */ }
-    });
+    };
+    // 다음 화면 그리기 직후 1회. 화면 그리기가 멈춘 상태(백그라운드 탭·숨은 WebView)에서도 붙도록 시간 보조.
+    if (window.requestAnimationFrame) window.requestAnimationFrame(run);
+    setTimeout(run, 250);
   }
 
   function init() {

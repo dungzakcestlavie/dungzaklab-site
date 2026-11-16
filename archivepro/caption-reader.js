@@ -27,7 +27,7 @@
   "use strict";
   if (window.DZ_CAPTION_READER) return;
 
-  var BUILD = "20261117-cr5";
+  var BUILD = "20261117-cr6-p0";
   var STORE_KEY = "dz.captionReader.v1";
   var SCALES = [100, 150, 200, 300, 400];
   var DEFAULT_SCALE = 300;
@@ -69,7 +69,7 @@
       firstItem: "첫 작품입니다.",
       lastItem: "마지막 작품입니다.",
       inquiry: "이메일 문의", mailApp: "메일 앱에서 작성", mailGmail: "Gmail 웹에서 작성",
-      mailCopy: "문의 내용 복사", mailAddress: "수신 이메일", mailCopied: "문의 내용이 복사되었습니다.", mailFailed: "복사할 수 없습니다. 메일 앱에서 작성해 주세요."
+      mailCopy: "문의 내용 복사", mailCopyAddress: "이메일 주소 복사", mailAddressCopied: "이메일 주소가 복사되었습니다.", mailAddress: "수신 이메일", mailCopied: "문의 내용이 복사되었습니다.", mailFailed: "복사할 수 없습니다. 메일 앱에서 작성해 주세요."
     },
     en: {
       workBtn: "Enlarge Caption",
@@ -104,7 +104,7 @@
       firstItem: "This is the first work.",
       lastItem: "This is the last work.",
       inquiry: "Email inquiry", mailApp: "Write in mail app", mailGmail: "Compose in Gmail",
-      mailCopy: "Copy inquiry details", mailAddress: "Recipient", mailCopied: "Inquiry details copied.", mailFailed: "Unable to copy. Use your mail app."
+      mailCopy: "Copy inquiry details", mailCopyAddress: "Copy email address", mailAddressCopied: "Email address copied.", mailAddress: "Recipient", mailCopied: "Inquiry details copied.", mailFailed: "Unable to copy. Use your mail app."
     }
   };
 
@@ -303,9 +303,10 @@
     var mailAddress = el("p", "dzcr-mail-address");
     var mailApp = el("a", "dzcr-mail-option", { target: "_self" });
     var mailGmail = el("a", "dzcr-mail-option", { target: "_blank", rel: "noopener noreferrer" });
+    var mailCopyAddress = el("button", "dzcr-btn dzcr-mail-option", { type: "button", "data-dzcr": "copy-address" });
     var mailCopy = el("button", "dzcr-btn dzcr-mail-option", { type: "button", "data-dzcr": "copy-inquiry" });
     mailPanel.appendChild(mailAddress);
-    mailPanel.appendChild(mailApp); mailPanel.appendChild(mailGmail); mailPanel.appendChild(mailCopy);
+    mailPanel.appendChild(mailApp); mailPanel.appendChild(mailGmail); mailPanel.appendChild(mailCopyAddress); mailPanel.appendChild(mailCopy);
     mailSection.appendChild(mailButton); mailSection.appendChild(mailPanel);
     caption.appendChild(mailSection);
     body.appendChild(caption);
@@ -333,7 +334,7 @@
       toggle: toggle, toggleText: tText, toggleMark: tMark, setBody: setBody,
       caption: caption, title: title, dl: dl, notes: notes, live: live,
       mailSection: mailSection, mailButton: mailButton, mailPanel: mailPanel,
-      mailAddress: mailAddress, mailApp: mailApp, mailGmail: mailGmail, mailCopy: mailCopy
+      mailAddress: mailAddress, mailApp: mailApp, mailGmail: mailGmail, mailCopyAddress: mailCopyAddress, mailCopy: mailCopy
     };
     return root;
   }
@@ -430,6 +431,7 @@
           putUi(E.mailApp, "mailApp", m);
           putUi(E.mailGmail, "mailGmail", m);
           putUi(E.mailCopy, "mailCopy", m);
+          putUi(E.mailCopyAddress, "mailCopyAddress", m);
           E.mailAddress.textContent = uiText("mailAddress", m) + ": " + info.address;
           E.mailApp.href = info.mailto;
           if (info.gmail) { E.mailGmail.hidden = false; E.mailGmail.href = info.gmail; }
@@ -683,12 +685,35 @@
       R.els.mailButton.setAttribute("aria-expanded", expand ? "true" : "false");
       if (expand) { R.els.scroll.scrollTop = R.els.scroll.scrollHeight; }
     }
-    else if (a === "copy-inquiry") {
-      if (!R.inquiryInfo || !R.inquiryInfo.text) return;
-      var cp = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(R.inquiryInfo.text) : Promise.reject(new Error("Clipboard unavailable"));
-      cp.then(function () { announce(uiText("mailCopied", R.mode)); })
-        .catch(function () { announce(uiText("mailFailed", R.mode)); });
+    else if (a === "copy-inquiry" || a === "copy-address") {
+      if (!R.inquiryInfo) return;
+      var addressOnly = a === "copy-address";
+      var value = addressOnly ? R.inquiryInfo.address : R.inquiryInfo.text;
+      if (!value) return;
+      copyReaderText(String(value)).then(function () {
+        announce(uiText(addressOnly ? "mailAddressCopied" : "mailCopied", R.mode));
+      }).catch(function () { announce(uiText("mailFailed", R.mode)); });
     }
+  }
+
+  function copyReaderText(text) {
+    function fallback() {
+      return new Promise(function (resolve, reject) {
+        var field = document.createElement("textarea");
+        try {
+          field.value = text; field.readOnly = true;
+          field.style.cssText = "position:fixed;top:-9999px;left:0;opacity:0";
+          document.body.appendChild(field); field.select();
+          var ok = document.execCommand("copy");
+          if (ok) resolve(); else reject(new Error("Copy unavailable"));
+        } catch (e) { reject(e); }
+        finally { if (field.parentNode) field.parentNode.removeChild(field); }
+      });
+    }
+    if (navigator.clipboard && window.isSecureContext && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(fallback);
+    }
+    return fallback();
   }
 
   function onKeyCapture(e) {
@@ -818,6 +843,30 @@
   }
 
   // ------------------------------------------------------------------
+  // Firebase page contract: only a VERIFIED PUBLIC representative or Artist Bio
+  // address may be used. No signed-in account email and no cross-artist fallback.
+  function statusPair(value) {
+    var labels = { "available":["소장 가능","Available"], "collected":["소장됨","Collected"],
+      "reserved":["예약 중","Reserved"], "not_for_sale":["비매품","Not for Sale"],
+      "private":["비공개","Private"] };
+    var pair = labels[str(value).toLowerCase()];
+    return { kr: pair ? pair[0] : "", en: pair ? pair[1] : "" };
+  }
+  function publicInquiry(service, work, mode) {
+    var bridge = window.DZ_PUBLIC_INQUIRY;
+    if (!bridge || typeof bridge.resolve !== "function") return null;
+    try {
+      var info = bridge.resolve({ service:service, work:work, lang:normLang(mode) });
+      if (!info || info.public !== true || (info.source !== "artist-bio" && info.source !== "representative-public")) return null;
+      if (str(info.status).toLowerCase() !== "available") return null;
+      var address = str(info.address);
+      if (!/^[^\\s@<>]+@[^\\s@<>]+\\.[^\\s@<>]+$/.test(address)) return null;
+      var mailto = str(info.mailto), gmail = str(info.gmail);
+      if (mailto.indexOf("mailto:") !== 0 || !str(info.text)) return null;
+      return { address:address, mailto:mailto, gmail:/^https:\/\/mail\.google\.com\/mail\//.test(gmail) ? gmail : "", text:str(info.text) };
+    } catch (e) { return null; }
+  }
+
   // A. Artist Edition (/app/) 어댑터 — APP_FILTER(state.filtered, lang, sections) 읽기 전용
   //    탐색 범위 = 지금 화면의 검색·섹션·정렬 결과(state.filtered)와 같은 순서
   // ------------------------------------------------------------------
@@ -837,8 +886,8 @@
       var origin = Number(w.section_id) === 0;
       var sec = sectionOf(w);
       var S = window.APP_STATUS_LABELS;
-      var sk = !origin && S ? S.renderStatusLabel(w.status, "kr") : "";
-      var se = !origin && S ? S.renderStatusLabel(w.status, "en") : "";
+      var sk = !origin && str(w.status) && S ? S.renderStatusLabel(w.status, "kr") : "";
+      var se = !origin && str(w.status) && S ? S.renderStatusLabel(w.status, "en") : "";
       return {
         code: str(w.artworkCode) || str(w.id),
         sectionKr: sec.kr, sectionEn: sec.en,
@@ -857,6 +906,7 @@
       var provider = sliceProvider(st.filtered, norm);
       return open({
         provider: provider, index: st.currentIndex || 0, lang: lang(), trigger: trigger,
+        inquiry: function (work, mode) { return publicInquiry("artist", work, mode); },
         fallbackFocus: function () { return document.querySelector("#dzcrViewerWrap .dzcr-trigger"); },
         onReturn: function (i) {
           var key = workKey(provider.raw(i));
@@ -938,7 +988,9 @@
         materialKr: c.material_kr, materialEn: c.material_en,
         sizeKr: c.size_kr, sizeEn: c.size_en,
         year: c.year,
-        seriesKr: c.seriesKr, seriesEn: c.seriesEn
+        seriesKr: c.seriesKr, seriesEn: c.seriesEn,
+        code: str(c.workId) || str(id),
+        statusKr: statusPair(c.status).kr, statusEn: statusPair(c.status).en
       };
     }
     function openDetail(trigger) {
@@ -950,11 +1002,12 @@
       var provider = sliceProvider(ids, norm);
       return open({
         provider: provider, index: at, lang: lang(), trigger: trigger,
+        inquiry: function (id, mode) { return publicInquiry("cosmos", id, mode); },
         fallbackFocus: function () { return root.querySelector(".dzcr-trigger-work") || root; },
         onReturn: function (i) {
           var id = provider.raw(i), now = D.getRoute ? D.getRoute() : null;
           if (!id || !now || now.work === id) return;
-          D.navigate({ work: id, q: null });
+          D.navigate(Object.assign({}, now, { work: id }));
         }
       });
     }

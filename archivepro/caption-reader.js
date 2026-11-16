@@ -1,6 +1,9 @@
 /*
  * ELSOL — GOLD CAPTION READER  (caption-reader.js)
- * build 20261117-cr3 · 2026-11-17
+ * build 20261117-cr4 · 2026-11-17
+ *   cr4: 최초 진입 레이아웃 근본 수정 — 리더 전체가 스크롤되던 구조(상단 막대 sticky)를
+ *        "고정 상단 막대 + 독립 세로 스크롤 본문"으로 바꾸고, 리더 위치·크기를 실제 보이는 화면(visualViewport)에 맞춤
+ *        (iOS 손가락 확대·키보드·주소창·Stage Manager로 레이아웃 뷰포트와 보이는 화면이 어긋나도 상단 조작 영역이 화면 안에 있음)
  *   cr2: 화면이 백그라운드여도 버튼이 늦게 붙지 않게 setTimeout 보조
  *   cr3: 목록(FILTER 아래) 버튼 제거 — 작품 상세 버튼만, 돋보기(+) 32/36px·터치 48px, 처음/마지막에서 멈춤(순환 없음),
  *        닫기·뒤로가기 = 마지막으로 읽은 작품의 상세 이미지로 복귀(작품 ID 기준), 설정 패널 접기·펼치기, 듀얼스크린 힌지 회피
@@ -24,7 +27,7 @@
   "use strict";
   if (window.DZ_CAPTION_READER) return;
 
-  var BUILD = "20261117-cr3";
+  var BUILD = "20261117-cr4";
   var STORE_KEY = "dz.captionReader.v1";
   var SCALES = [100, 150, 200, 300, 400];
   var DEFAULT_SCALE = 300;
@@ -299,14 +302,17 @@
 
     var live = el("p", "dzcr-sr", { "aria-live": "polite", role: "status" });
 
+    // cr4: 상단 막대는 스크롤 영역 밖(항상 보임), 설정·본문·하단 버튼은 독립 세로 스크롤 영역 안
+    var scroll = el("div", "dzcr-scroll", { "data-independent-scroll": "true" });
     var inner = el("div", "dzcr-inner");
-    inner.appendChild(bar); inner.appendChild(settings); inner.appendChild(body); inner.appendChild(foot); inner.appendChild(live);
-    root.appendChild(inner);
+    inner.appendChild(settings); inner.appendChild(body); inner.appendChild(foot);
+    scroll.appendChild(inner);
+    root.appendChild(bar); root.appendChild(scroll); root.appendChild(live);
     document.body.appendChild(root);
 
     R.root = root;
     R.els = {
-      inner: inner, bar: bar, close: [close, close2], prev: [prev, prev2], next: [next, next2], pos: pos, nav: nav, foot: foot,
+      inner: inner, scroll: scroll, bar: bar, close: [close, close2], prev: [prev, prev2], next: [next, next2], pos: pos, nav: nav, foot: foot,
       sizeLabel: sizeLabel, langLabel: langLabel, sizeBtns: sizeBtns, langBtns: langBtns,
       toggle: toggle, toggleText: tText, toggleMark: tMark, setBody: setBody,
       caption: caption, title: title, dl: dl, notes: notes, live: live
@@ -432,6 +438,52 @@
     document.body.style.overflow = s.bodyOverflow;
   }
 
+  // ---- cr4: 실제 보이는 화면(visualViewport)에 리더를 맞춘다 ----
+  // position:fixed 는 "레이아웃 뷰포트" 기준이다. iOS Safari·Android Chrome에서 손가락 확대(iOS는 user-scalable=no도 무시),
+  // 입력창 자동 확대, 화면 키보드, 주소창 전환 중에는 보이는 화면이 레이아웃 뷰포트의 일부만이거나 위치가 어긋나,
+  // inset:0 리더의 위쪽(상단 조작 영역)이 화면 밖에 놓일 수 있다. 이 상태는 새로고침해야 풀린다(확대·스크롤 초기화).
+  // 두 뷰포트가 같을 때는 CSS(inset:0)에 맡기고, 어긋날 때만 보이는 화면의 위치·크기를 그대로 적용한다(배율 강제 없음).
+  var vvPending = 0;
+  function clearViewport() {
+    if (!R.root) return;
+    var st = R.root.style;
+    st.top = st.left = st.width = st.height = st.right = st.bottom = "";
+    R.root.removeAttribute("data-dzcr-vv");
+  }
+  function syncViewport() {
+    vvPending = 0;
+    if (!R.open || !R.root) return;
+    var vv = window.visualViewport, de = document.documentElement;
+    if (!vv) { clearViewport(); return; }
+    var cw = de.clientWidth || window.innerWidth, ch = de.clientHeight || window.innerHeight;
+    var off = vv.offsetTop > 0.5 || vv.offsetLeft > 0.5;
+    var diff = Math.abs(vv.scale - 1) > 0.01 || Math.abs(vv.width - cw) > 1 || Math.abs(vv.height - ch) > 1;
+    if (!off && !diff) { clearViewport(); return; }
+    var st = R.root.style;
+    st.top = vv.offsetTop + "px";
+    st.left = vv.offsetLeft + "px";
+    st.width = vv.width + "px";
+    st.height = vv.height + "px";
+    st.right = "auto";
+    st.bottom = "auto";
+    R.root.setAttribute("data-dzcr-vv", "1");
+  }
+  function scheduleViewport() {
+    if (!R.open || vvPending) return;
+    // 화면 그리기 직전 1회로 묶는다(연속 resize/scroll 이벤트에도 레이아웃 계산 1회, 흔들림 없음)
+    if (window.requestAnimationFrame) vvPending = window.requestAnimationFrame(syncViewport);
+    else syncViewport();
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleViewport);
+    window.visualViewport.addEventListener("scroll", scheduleViewport);
+  }
+  window.addEventListener("resize", scheduleViewport);
+  window.addEventListener("orientationchange", scheduleViewport);
+  // 백그라운드에서 돌아왔을 때(그리기가 멈춰 있던 동안의 변화 반영) — 즉시 1회
+  window.addEventListener("pageshow", function () { if (R.open) syncViewport(); });
+  document.addEventListener("visibilitychange", function () { if (R.open && document.visibilityState === "visible") syncViewport(); });
+
   function focusables() {
     return Array.prototype.filter.call(
       R.root.querySelectorAll("button, [href], [tabindex]:not([tabindex='-1'])"),
@@ -466,7 +518,7 @@
       lockBackground();
       R.root.hidden = false;
       R.open = true;
-      R.root.scrollTop = 0;
+      syncViewport();
       try {
         var st = window.history.state;
         var next = {};
@@ -476,6 +528,7 @@
         R.pushed = true;
       } catch (e) { R.pushed = false; }
     }
+    R.els.scroll.scrollTop = 0;
     focusTitle();
     return true;
   }
@@ -507,6 +560,7 @@
   function finishClose() {
     R.open = false;
     R.root.hidden = true;
+    clearViewport();
     unlockBackground();
     var job = { cb: R.onReturn, index: R.index };
     R.onReturn = null;
@@ -540,7 +594,7 @@
     if (to < 0 || to > n - 1) { announce(uiText(to < 0 ? "firstItem" : "lastItem", R.mode)); return; }
     R.index = to;
     render();
-    R.root.scrollTop = 0;
+    R.els.scroll.scrollTop = 0;
     focusTitle();
     announce(uiText("positionSr", R.mode, { i: R.index + 1, n: n }));
   }

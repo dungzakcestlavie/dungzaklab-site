@@ -5263,6 +5263,9 @@ html.is-ipad [data-viewer-close]:hover {
   <link rel="apple-touch-icon" href="/archivepro-icon-512-v2.png?v=2" />
   <link rel="icon" type="image/png" sizes="192x192" href="/archivepro-icon-192-v2.png?v=2" />
   <link rel="icon" type="image/png" sizes="512x512" href="/archivepro-icon-512-v2.png?v=2" />
+  <!-- 2026-11-17 (cr1) 저시력 캡션 리더 — 공통 모듈(Artist Edition·COSMOS와 같은 파일) -->
+  <link rel="stylesheet" href="/archivepro/caption-reader.css?v=20261117-cr1" />
+  <script src="/archivepro/caption-reader.js?v=20261117-cr1" defer></script>
 
 
 
@@ -8393,6 +8396,22 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
       }
 
       window.closeViewer = closeViewer;
+
+      /* 2026-11-17 (cr1) 저시력 캡션 리더(caption-reader.js)용 읽기 전용 브리지 — 화면 상태를 바꾸지 않고 읽기만 한다. */
+      try {
+        window.__AP_CAPTION_BRIDGE = {
+          list: function () { return state.filtered; },
+          lang: function () { return state.lang; },
+          current: function () { return isViewerOpen() ? state.lightboxItem : null; },
+          section: function (id) { const sec = SECTION_MAP[id]; return sec ? { kr: sec.kr, en: sec.enLegacy || sec.en } : null; },
+          status: function (work) {
+            if (!work || Number(work.section_id) === 0) return null;
+            const n = normalizeStatus(work.status || 'available');
+            const L = { available: ['소장 가능', 'Available'], collected: ['소장됨', 'Collected'], reserved: ['예약 중', 'Reserved'], not_for_sale: ['비매품', 'Not for Sale'], private: ['비공개', 'Private'] }[n];
+            return L ? { kr: L[0], en: L[1] } : null;
+          }
+        };
+      } catch (_crErr) {}
 
       function applyFilterSort(sourceList = state.all) {
         let result = Array.isArray(sourceList) ? sourceList : [];

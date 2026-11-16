@@ -5264,8 +5264,8 @@ html.is-ipad [data-viewer-close]:hover {
   <link rel="icon" type="image/png" sizes="192x192" href="/archivepro-icon-192-v2.png?v=2" />
   <link rel="icon" type="image/png" sizes="512x512" href="/archivepro-icon-512-v2.png?v=2" />
   <!-- 2026-11-17 (cr1) 저시력 캡션 리더 — 공통 모듈(Artist Edition·COSMOS와 같은 파일) -->
-  <link rel="stylesheet" href="/archivepro/caption-reader.css?v=20261117-cr4" />
-  <script src="/archivepro/caption-reader.js?v=20261117-cr4" defer></script>
+  <link rel="stylesheet" href="/archivepro/caption-reader.css?v=20261117-cr6-p0" />
+  <script src="/archivepro/caption-reader.js?v=20261117-cr6-p0" defer></script>
 
 
 
@@ -5341,7 +5341,7 @@ html.is-ipad [data-viewer-close]:hover {
 .lb-collection-status__text { font-weight:650; overflow-wrap:anywhere; }
 .lb-collection-status__inquiry { min-height:44px; padding:8px 14px; border:1px solid #D4B46D; border-radius:999px; background:#111A2A; color:#F4EFE6; font:inherit; text-align:left; overflow-wrap:anywhere; cursor:pointer; }
 .lb-collection-status__inquiry:focus-visible { outline:3px solid #F4EFE6; outline-offset:2px; }
-.ap-inquiry-menu.ap-inquiry-menu--adaptive { z-index:100200; --ap-inquiry-scale:1; width:min(calc(260px * var(--ap-inquiry-scale)), calc(100vw - 16px)); max-width:calc(100vw - 16px); max-height:calc(100dvh - 16px); font-size:calc(13px * var(--ap-inquiry-scale)); overflow-wrap:anywhere; }
+.ap-inquiry-menu.ap-inquiry-menu--adaptive { z-index:2147483100; --ap-inquiry-scale:1; width:min(calc(260px * var(--ap-inquiry-scale)), calc(100vw - 16px)); max-width:calc(100vw - 16px); max-height:calc(100dvh - 16px); font-size:calc(13px * var(--ap-inquiry-scale)); overflow-wrap:anywhere; }
 .ap-inquiry-menu--adaptive .ap-inquiry-menu__title,.ap-inquiry-menu--adaptive .ap-inquiry-menu__opt,.ap-inquiry-menu--adaptive .ap-inquiry-menu__addr,.ap-inquiry-menu--adaptive .ap-inquiry-menu__msg { font-size:1em; line-height:1.45; white-space:normal; overflow-wrap:anywhere; }
 .ap-inquiry-menu--adaptive .ap-inquiry-menu__opt { min-height:44px; padding:.55em .7em; }
 .ap-inquiry-menu--adaptive .ap-inquiry-menu__x { position:sticky; float:right; top:0; z-index:2; width:max(44px,1.2em); height:max(44px,1.2em); font-size:1em; line-height:1; }
@@ -6076,10 +6076,22 @@ html.is-ipad [data-viewer-close]:hover {
       }
 
       function onInquiryMenuKey(e) {
+        if (!inquiryMenuEl) return;
         if (e.key === 'Escape') {
           e.preventDefault();
-          e.stopPropagation();
+          e.stopImmediatePropagation();
           closeInquiryMenu(true);
+          return;
+        }
+        if (e.key !== 'Tab') return;
+        const items = Array.from(inquiryMenuEl.querySelectorAll('button:not([disabled]),a[href]'))
+          .filter(el => el.getClientRects().length > 0);
+        if (!items.length) return;
+        const first = items[0], last = items[items.length - 1];
+        if (e.shiftKey && (document.activeElement === first || !inquiryMenuEl.contains(document.activeElement))) {
+          e.preventDefault(); e.stopPropagation(); last.focus();
+        } else if (!e.shiftKey && (document.activeElement === last || !inquiryMenuEl.contains(document.activeElement))) {
+          e.preventDefault(); e.stopPropagation(); first.focus();
         }
       }
 
@@ -6109,6 +6121,7 @@ html.is-ipad [data-viewer-close]:hover {
           menu.style.setProperty('--ap-inquiry-scale', String(scale / 100));
         } catch (_) { menu.style.setProperty('--ap-inquiry-scale', '3'); }
         menu.setAttribute('role', 'dialog');
+        menu.setAttribute('aria-modal', 'true');
         menu.setAttribute('aria-label', inquiryMenuText('title'));
         const appOpt = '<a class="ap-inquiry-menu__opt" data-act="app" href="' + escapeHTML(getInquiryLink(workId, work)) + '">' + escapeHTML(inquiryMenuText('app')) + '</a>';
         const gmailIsApp = !!getMobileMailOS();

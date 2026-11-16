@@ -5335,6 +5335,17 @@ html.is-ipad [data-viewer-close]:hover {
 .ap-inquiry-menu__msg{margin:4px 2px 0;min-height:16px;color:#D4B46D;font-size:12px;line-height:1.45;white-space:pre-line;word-break:keep-all}
 .ap-inquiry-menu__x{position:absolute;top:6px;right:6px;width:32px;height:32px;touch-action:manipulation;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.06);color:#D4B46D;font-size:16px;line-height:32px;cursor:pointer}
 .ap-inquiry-menu__x:hover,.ap-inquiry-menu__x:focus-visible{background:rgba(255,255,255,.14);outline:none}
+/* P0 — Viewer status and responsive inquiry surface; do not style gallery/card elements. */
+.lb-collection-status { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:8px 0 12px; color:#E9ECF1; }
+.lb-collection-status[hidden] { display:none!important; }
+.lb-collection-status__text { font-weight:650; overflow-wrap:anywhere; }
+.lb-collection-status__inquiry { min-height:44px; padding:8px 14px; border:1px solid #D4B46D; border-radius:999px; background:#111A2A; color:#F4EFE6; font:inherit; text-align:left; overflow-wrap:anywhere; cursor:pointer; }
+.lb-collection-status__inquiry:focus-visible { outline:3px solid #F4EFE6; outline-offset:2px; }
+.ap-inquiry-menu.ap-inquiry-menu--adaptive { --ap-inquiry-scale:1; width:min(calc(260px * var(--ap-inquiry-scale)), calc(100vw - 16px)); max-width:calc(100vw - 16px); max-height:calc(100dvh - 16px); font-size:calc(13px * var(--ap-inquiry-scale)); overflow-wrap:anywhere; }
+.ap-inquiry-menu--adaptive .ap-inquiry-menu__title,.ap-inquiry-menu--adaptive .ap-inquiry-menu__opt,.ap-inquiry-menu--adaptive .ap-inquiry-menu__addr,.ap-inquiry-menu--adaptive .ap-inquiry-menu__msg { font-size:1em; line-height:1.45; white-space:normal; overflow-wrap:anywhere; }
+.ap-inquiry-menu--adaptive .ap-inquiry-menu__opt { min-height:44px; padding:.55em .7em; }
+.ap-inquiry-menu--adaptive .ap-inquiry-menu__x { position:sticky; float:right; top:0; z-index:2; width:max(44px,1.2em); height:max(44px,1.2em); font-size:1em; line-height:1; }
+@media (max-width:600px) { .ap-inquiry-menu--adaptive .ap-inquiry-menu__opt { width:100%; } }
 </style>
 </head>
 <body class="archive-entered archive-filter-open">
@@ -5508,6 +5519,7 @@ html.is-ipad [data-viewer-close]:hover {
         <p class="lb-id" id="lbId">—</p>
         <h3 class="lb-title" id="lbTitle">—</h3>
         <p class="lb-section" id="lbSection">—</p>
+        <div id="lbCollectionStatus" class="lb-collection-status" hidden></div>
 
         <div class="lb-meta">
           <div class="lb-row"><div class="lb-key" id="lbKeyMaterial">재료</div><div class="lb-val" id="lbMaterial">—</div></div>
@@ -5881,22 +5893,33 @@ html.is-ipad [data-viewer-close]:hover {
          OS 언어가 아닌 화면의 KR / EN / KR+EN 선택을 따른다. 수신 주소(ART_EMAIL)는 그대로. */
       /* 2026-10-18 (apinquiry3) 작품 정보(작품명·재료·크기·연도)를 제목·본문에 포함. 같은 생성기를
          메일 앱 · Gmail · 문의 내용 복사가 함께 쓴다. 비어 있는 항목은 줄을 넣지 않는다. */
-      function getInquiryInfo(work) {
+      function getInquiryInfo(work, readerMode) {
         if (!work || Number(work.section_id) === 0) return { title: '', material: '', size: '', year: '' };
-        return { title: getTitle(work), material: getMaterial(work), size: getSize(work), year: getYear(work) };
+        // Reader-only language overrides do not mutate the surrounding gallery language.
+        const language = readerMode === 'en' || readerMode === 'kr' || readerMode === 'both' ? readerMode : state.lang;
+        const pick = (kr, en) => {
+          kr = safeText(kr); en = safeText(en);
+          if (language === 'en') return en || kr;
+          if (language === 'both') return kr && en && kr !== en ? kr + ' / ' + en : kr || en;
+          return kr || en;
+        };
+        return { title: pick(work.title_kr, work.title_en), material: pick(work.material_kr, work.material_en),
+          size: pick(work.size_kr, work.size_en), year: getYear(work) };
       }
 
-      function getInquirySubject(workId, work) {
-        const info = getInquiryInfo(work);
+      function getInquirySubject(workId, work, readerMode) {
+        const info = getInquiryInfo(work, readerMode);
+        const language = readerMode === 'en' || readerMode === 'kr' || readerMode === 'both' ? readerMode : state.lang;
         const tail = workId + (info.title ? ' · ' + info.title : '');
-        if (state.lang === 'en') return "Artwork Inquiry — " + tail;
-        if (state.lang === 'both') return "작품 문의 / Artwork Inquiry — " + tail;
+        if (language === 'en') return "Artwork Inquiry — " + tail;
+        if (language === 'both') return "작품 문의 / Artwork Inquiry — " + tail;
         return "작품 문의 — " + tail;
       }
 
-      function getInquiryBody(workId, work) {
-        const info = getInquiryInfo(work);
-        const lang = state.lang === 'en' ? 'en' : (state.lang === 'both' ? 'both' : 'kr');
+      function getInquiryBody(workId, work, readerMode) {
+        const info = getInquiryInfo(work, readerMode);
+        const mode = readerMode === 'en' || readerMode === 'kr' || readerMode === 'both' ? readerMode : state.lang;
+        const lang = mode === 'en' ? 'en' : (mode === 'both' ? 'both' : 'kr');
         const L = {
           kr:   { id: '작품 ID', title: '작품명', material: '재료', size: '크기', year: '제작 연도' },
           en:   { id: 'Artwork ID', title: 'Title', material: 'Medium', size: 'Size', year: 'Year' },
@@ -5927,9 +5950,9 @@ html.is-ipad [data-viewer-close]:hover {
           list.find((w) => String(w.id) === String(workId)) || null;
       }
 
-      function getInquiryLink(workId, work) {
-        const subject = encodeURIComponent(getInquirySubject(workId, work));
-        const body = encodeURIComponent(getInquiryBody(workId, work));
+      function getInquiryLink(workId, work, readerMode) {
+        const subject = encodeURIComponent(getInquirySubject(workId, work, readerMode));
+        const body = encodeURIComponent(getInquiryBody(workId, work, readerMode));
         return "mailto:" + ART_EMAIL + "?subject=" + subject + "&body=" + body;
       }
 
@@ -5937,10 +5960,10 @@ html.is-ipad [data-viewer-close]:hover {
          2026-10-18 (apinquiry3) 모든 기기(PC·노트북·터치 노트북·iPhone·iPad·Android)에서 이 안내를 먼저 띄운다.
          mailto는 안내의 "메일 앱에서 작성"을 직접 눌렀을 때만 실행.
          ① 메일 앱(mailto) ② Gmail 웹 작성(새 탭, 사용자 클릭 링크) ③ 주소 복사 ④ 문의 내용 복사. 발송은 방문자가 직접. */
-      function getGmailComposeLink(workId, work) {
+      function getGmailComposeLink(workId, work, readerMode) {
         return "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(ART_EMAIL) +
-          "&su=" + encodeURIComponent(getInquirySubject(workId, work)) +
-          "&body=" + encodeURIComponent(getInquiryBody(workId, work));
+          "&su=" + encodeURIComponent(getInquirySubject(workId, work, readerMode)) +
+          "&body=" + encodeURIComponent(getInquiryBody(workId, work, readerMode));
       }
 
       const INQUIRY_MENU_TEXT = {
@@ -6068,7 +6091,12 @@ html.is-ipad [data-viewer-close]:hover {
       function openInquiryMenu(anchor, workId, work) {
         closeInquiryMenu();
         const menu = document.createElement('div');
-        menu.className = 'ap-inquiry-menu';
+        menu.className = 'ap-inquiry-menu ap-inquiry-menu--adaptive';
+        try {
+          const stored = JSON.parse(localStorage.getItem('dz.captionReader.v1') || '{}');
+          const scale = [100,150,200,300,400].indexOf(Number(stored.scale)) >= 0 ? Number(stored.scale) : 300;
+          menu.style.setProperty('--ap-inquiry-scale', String(scale / 100));
+        } catch (_) { menu.style.setProperty('--ap-inquiry-scale', '3'); }
         menu.setAttribute('role', 'dialog');
         menu.setAttribute('aria-label', inquiryMenuText('title'));
         const appOpt = '<a class="ap-inquiry-menu__opt" data-act="app" href="' + escapeHTML(getInquiryLink(workId, work)) + '">' + escapeHTML(inquiryMenuText('app')) + '</a>';
@@ -6127,12 +6155,17 @@ html.is-ipad [data-viewer-close]:hover {
         inquiryMenuEl = menu;
 
         const r = anchor.getBoundingClientRect();
-        const mw = menu.offsetWidth;
-        const mh = menu.offsetHeight;
-        const left = Math.min(Math.max(8, r.left), Math.max(8, window.innerWidth - mw - 8));
+        const viewport = window.visualViewport;
+        const vx = viewport ? viewport.offsetLeft : 0, vy = viewport ? viewport.offsetTop : 0;
+        const vw = viewport ? viewport.width : window.innerWidth;
+        const vh = viewport ? viewport.height : window.innerHeight;
+        menu.style.maxWidth = Math.max(0, vw - 16) + 'px';
+        menu.style.maxHeight = Math.max(0, vh - 16) + 'px';
+        const mw = menu.offsetWidth, mh = menu.offsetHeight;
+        const left = Math.min(Math.max(vx + 8, r.left), Math.max(vx + 8, vx + vw - mw - 8));
         let top = r.bottom + 8;
-        if (top + mh > window.innerHeight - 8) top = r.top - mh - 8;
-        top = Math.max(8, Math.min(top, window.innerHeight - mh - 8)); /* (apinquiry3) 작은 화면에서도 화면 안 */
+        if (top + mh > vy + vh - 8) top = r.top - mh - 8;
+        top = Math.max(vy + 8, Math.min(top, vy + vh - mh - 8));
         menu.style.left = left + 'px';
         menu.style.top = top + 'px';
 
@@ -6144,10 +6177,35 @@ html.is-ipad [data-viewer-close]:hover {
         if (first) { try { first.focus({ preventScroll: true }); } catch (_) {} }
       }
 
+      // The viewer reads the same source status and uses the existing four-option inquiry dialog.
+      function updateViewerCollectionStatus(work) {
+        const host = document.getElementById('lbCollectionStatus');
+        if (!host) return;
+        host.textContent = '';
+        host.hidden = true;
+        if (!work || Number(work.section_id) === 0) return;
+        const status = normalizeStatus(work.status);
+        const label = getStatusLabel(status);
+        if (!label) return; // Unset/unknown is never treated as available.
+        const name = document.createElement('span');
+        name.className = 'lb-collection-status__text';
+        name.textContent = label;
+        host.appendChild(name);
+        if (status === 'available') {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'lb-collection-status__inquiry';
+          btn.textContent = getInquiryText();
+          btn.addEventListener('click', function () { openInquiryMenu(btn, safeText(work.id), work); });
+          host.appendChild(btn);
+        }
+        host.hidden = false;
+      }
+
       function renderStatusUI(work) {
         if (work.section_id === 0) return '';
 
-        const status = normalizeStatus(work.status || 'available');
+        const status = normalizeStatus(work.status);
         const label = getStatusLabel(status);
         if (!label) return '';
 
@@ -8166,6 +8224,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         els.lbId.textContent = item.id;
         setViewerTitle(item, title, isOrigin);
         els.lbSection.textContent = getSectionTextByIdLegacyEN(item.section_id);
+        updateViewerCollectionStatus(item);
         els.lbMaterialVal.textContent = material;
         els.lbSizeVal.textContent = size;
         els.lbYearVal.textContent = year;
@@ -8406,9 +8465,19 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           /* 2026-11-17 (cr3) 캡션 리더를 닫을 때 마지막으로 읽은 작품의 상세 이미지로(뷰어가 열려 있을 때만, 기존 openLightbox 그대로 사용) */
           show: function (item) { if (item && isViewerOpen()) openLightbox(item); },
           section: function (id) { const sec = SECTION_MAP[id]; return sec ? { kr: sec.kr, en: sec.enLegacy || sec.en } : null; },
+          inquiry: function (work, readerMode) {
+            if (!work || Number(work.section_id) === 0 || normalizeStatus(work.status) !== 'available') return null;
+            const id = safeText(work.id);
+            if (!id) return null;
+            const subject = getInquirySubject(id, work, readerMode);
+            const body = getInquiryBody(id, work, readerMode);
+            return { address: ART_EMAIL, mailto: getInquiryLink(id, work, readerMode),
+              gmail: getGmailComposeLink(id, work, readerMode),
+              text: 'To: ' + ART_EMAIL + '\nSubject: ' + subject + '\n\n' + body };
+          },
           status: function (work) {
             if (!work || Number(work.section_id) === 0) return null;
-            const n = normalizeStatus(work.status || 'available');
+            const n = normalizeStatus(work.status);
             const L = { available: ['소장 가능', 'Available'], collected: ['소장됨', 'Collected'], reserved: ['예약 중', 'Reserved'], not_for_sale: ['비매품', 'Not for Sale'], private: ['비공개', 'Private'] }[n];
             return L ? { kr: L[0], en: L[1] } : null;
           }

@@ -27,7 +27,7 @@
   "use strict";
   if (window.DZ_CAPTION_READER) return;
 
-  var BUILD = "20261117-cr4";
+  var BUILD = "20261117-cr5";
   var STORE_KEY = "dz.captionReader.v1";
   var SCALES = [100, 150, 200, 300, 400];
   var DEFAULT_SCALE = 300;
@@ -67,7 +67,9 @@
       settingsOpen: "설정 펼치기",
       settingsClose: "설정 접기",
       firstItem: "첫 작품입니다.",
-      lastItem: "마지막 작품입니다."
+      lastItem: "마지막 작품입니다.",
+      inquiry: "이메일 문의", mailApp: "메일 앱에서 작성", mailGmail: "Gmail 웹에서 작성",
+      mailCopy: "문의 내용 복사", mailAddress: "수신 이메일", mailCopied: "문의 내용이 복사되었습니다.", mailFailed: "복사할 수 없습니다. 메일 앱에서 작성해 주세요."
     },
     en: {
       workBtn: "Enlarge Caption",
@@ -100,7 +102,9 @@
       settingsOpen: "Show settings",
       settingsClose: "Hide settings",
       firstItem: "This is the first work.",
-      lastItem: "This is the last work."
+      lastItem: "This is the last work.",
+      inquiry: "Email inquiry", mailApp: "Write in mail app", mailGmail: "Compose in Gmail",
+      mailCopy: "Copy inquiry details", mailAddress: "Recipient", mailCopied: "Inquiry details copied.", mailFailed: "Unable to copy. Use your mail app."
     }
   };
 
@@ -223,7 +227,7 @@
   var R = {
     root: null, open: false, provider: null, index: 0, mode: "kr", scale: DEFAULT_SCALE,
     returnFocus: null, returnFocusFallback: null, pushed: false, ignorePop: false, ignoreTimer: 0,
-    saved: null, els: {}, settingsOpen: true, onReturn: null, pendingReturn: null
+    saved: null, els: {}, settingsOpen: true, onReturn: null, pendingReturn: null, inquiry: null, inquiryInfo: null
   };
 
   function el(tag, cls, attrs) {
@@ -292,6 +296,18 @@
     var dl = el("dl", "dzcr-fields");
     var notes = el("div", "dzcr-notes");
     caption.appendChild(title); caption.appendChild(dl); caption.appendChild(notes);
+    // Accessible, independently scaled mail compose panel; it never sends automatically.
+    var mailSection = el("section", "dzcr-mail", { hidden: "" });
+    var mailButton = el("button", "dzcr-btn dzcr-mail-trigger", { type: "button", "data-dzcr": "inquiry", "aria-expanded": "false", "aria-controls": "dzcrInquiryPanel" });
+    var mailPanel = el("div", "dzcr-mail-panel", { id: "dzcrInquiryPanel", hidden: "" });
+    var mailAddress = el("p", "dzcr-mail-address");
+    var mailApp = el("a", "dzcr-mail-option", { target: "_self" });
+    var mailGmail = el("a", "dzcr-mail-option", { target: "_blank", rel: "noopener noreferrer" });
+    var mailCopy = el("button", "dzcr-btn dzcr-mail-option", { type: "button", "data-dzcr": "copy-inquiry" });
+    mailPanel.appendChild(mailAddress);
+    mailPanel.appendChild(mailApp); mailPanel.appendChild(mailGmail); mailPanel.appendChild(mailCopy);
+    mailSection.appendChild(mailButton); mailSection.appendChild(mailPanel);
+    caption.appendChild(mailSection);
     body.appendChild(caption);
 
     var foot = el("div", "dzcr-foot");
@@ -315,7 +331,9 @@
       inner: inner, scroll: scroll, bar: bar, close: [close, close2], prev: [prev, prev2], next: [next, next2], pos: pos, nav: nav, foot: foot,
       sizeLabel: sizeLabel, langLabel: langLabel, sizeBtns: sizeBtns, langBtns: langBtns,
       toggle: toggle, toggleText: tText, toggleMark: tMark, setBody: setBody,
-      caption: caption, title: title, dl: dl, notes: notes, live: live
+      caption: caption, title: title, dl: dl, notes: notes, live: live,
+      mailSection: mailSection, mailButton: mailButton, mailPanel: mailPanel,
+      mailAddress: mailAddress, mailApp: mailApp, mailGmail: mailGmail, mailCopy: mailCopy
     };
     return root;
   }
@@ -364,6 +382,10 @@
     E.title.textContent = "";
     E.dl.textContent = "";
     E.notes.textContent = "";
+    E.mailSection.hidden = true;
+    E.mailPanel.hidden = true;
+    E.mailButton.setAttribute("aria-expanded", "false");
+    R.inquiryInfo = null;
     if (!item) {
       var p = el("span", "dzcr-line");
       putUi(p, "empty", m);
@@ -397,6 +419,23 @@
         p2.textContent = v.text;
         E.notes.appendChild(p2);
       });
+    }
+    if (typeof R.inquiry === "function" && R.provider) {
+      try {
+        var info = R.inquiry(R.provider.raw(R.index), R.mode);
+        if (info && info.mailto && info.address) {
+          R.inquiryInfo = info;
+          E.mailSection.hidden = false;
+          putUi(E.mailButton, "inquiry", m);
+          putUi(E.mailApp, "mailApp", m);
+          putUi(E.mailGmail, "mailGmail", m);
+          putUi(E.mailCopy, "mailCopy", m);
+          E.mailAddress.textContent = uiText("mailAddress", m) + ": " + info.address;
+          E.mailApp.href = info.mailto;
+          if (info.gmail) { E.mailGmail.hidden = false; E.mailGmail.href = info.gmail; }
+          else { E.mailGmail.hidden = true; E.mailGmail.removeAttribute("href"); }
+        }
+      } catch (_e) { R.inquiryInfo = null; E.mailSection.hidden = true; }
     }
   }
 
@@ -510,6 +549,7 @@
     R.scale = prefs.scale;
     R.settingsOpen = prefs.settingsOpen;
     R.onReturn = typeof opts.onReturn === "function" ? opts.onReturn : null;
+    R.inquiry = typeof opts.inquiry === "function" ? opts.inquiry : null;
     R.returnFocus = opts.trigger || document.activeElement;
     R.returnFocusFallback = typeof opts.fallbackFocus === "function" ? opts.fallbackFocus : null;
     var wasOpen = R.open;
@@ -565,6 +605,8 @@
     var job = { cb: R.onReturn, index: R.index };
     R.onReturn = null;
     R.provider = null;
+    R.inquiry = null;
+    R.inquiryInfo = null;
     return job;
   }
 
@@ -634,6 +676,19 @@
     else if (a === "scale") setScale(Number(b.getAttribute("data-dzcr-scale")));
     else if (a === "lang") setMode(b.getAttribute("data-dzcr-lang"));
     else if (a === "settings") toggleSettings();
+    else if (a === "inquiry") {
+      if (!R.inquiryInfo) return;
+      var expand = R.els.mailPanel.hidden;
+      R.els.mailPanel.hidden = !expand;
+      R.els.mailButton.setAttribute("aria-expanded", expand ? "true" : "false");
+      if (expand) { R.els.scroll.scrollTop = R.els.scroll.scrollHeight; }
+    }
+    else if (a === "copy-inquiry") {
+      if (!R.inquiryInfo || !R.inquiryInfo.text) return;
+      var cp = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(R.inquiryInfo.text) : Promise.reject(new Error("Clipboard unavailable"));
+      cp.then(function () { announce(uiText("mailCopied", R.mode)); })
+        .catch(function () { announce(uiText("mailFailed", R.mode)); });
+    }
   }
 
   function onKeyCapture(e) {
@@ -850,6 +905,7 @@
       var provider = at >= 0 ? sliceProvider(list, norm) : sliceProvider([cur], norm);
       return open({
         provider: provider, index: at >= 0 ? at : 0, lang: lang(), trigger: trigger,
+        inquiry: function (work, mode) { return typeof B.inquiry === "function" ? B.inquiry(work, mode) : null; },
         fallbackFocus: function () { return document.querySelector("#dzcrViewerWrap .dzcr-trigger"); },
         onReturn: function (i) {
           var item = provider.raw(i), now = B.current();

@@ -5264,8 +5264,8 @@ html.is-ipad [data-viewer-close]:hover {
   <link rel="icon" type="image/png" sizes="192x192" href="/archivepro-icon-192-v2.png?v=2" />
   <link rel="icon" type="image/png" sizes="512x512" href="/archivepro-icon-512-v2.png?v=2" />
   <!-- 2026-11-17 (cr1) 저시력 캡션 리더 — 공통 모듈(Artist Edition·COSMOS와 같은 파일) -->
-  <link rel="stylesheet" href="/archivepro/caption-reader.css?v=20261117-cr6-p0" />
-  <script src="/archivepro/caption-reader.js?v=20261117-cr6-p0" defer></script>
+  <link rel="stylesheet" href="/archivepro/caption-reader.css?v=20261117-cr7-p0" />
+  <script src="/archivepro/caption-reader.js?v=20261117-cr7-p0" defer></script>
 
 
 
@@ -5865,16 +5865,16 @@ html.is-ipad [data-viewer-close]:hover {
         return value;
       }
 
+      const COLLECTION_LABELS = new Map([
+        ['available', { kr: '소장 가능', en: 'Available' }],
+        ['collected', { kr: '소장됨', en: 'Collected' }],
+        ['reserved', { kr: '예약 중', en: 'Reserved' }],
+        ['not_for_sale', { kr: '비매품', en: 'Not for Sale' }],
+        ['private', { kr: '비공개', en: 'Private' }]
+      ]);
+
       function getStatusLabel(status) {
-        const normalized = normalizeStatus(status);
-        const labels = {
-          available: { kr: '소장 가능', en: 'Available' },
-          collected: { kr: '소장됨', en: 'Collected' },
-          reserved: { kr: '예약 중', en: 'Reserved' },
-          not_for_sale: { kr: '비매품', en: 'Not for Sale' },
-          private: { kr: '비공개', en: 'Private' }
-        };
-        const label = labels[normalized];
+        const label = COLLECTION_LABELS.get(normalizeStatus(status));
         if (!label) return '';
         if (state.lang === 'en') return label.en;
         if (state.lang === 'both') return label.kr + ' / ' + label.en;
@@ -6022,9 +6022,9 @@ html.is-ipad [data-viewer-close]:hover {
         return '';
       }
 
-      function getGmailLinkForDevice(workId, work) {
-        const subject = encodeURIComponent(getInquirySubject(workId, work));
-        const body = encodeURIComponent(getInquiryBody(workId, work));
+      function getGmailLinkForDevice(workId, work, readerMode) {
+        const subject = encodeURIComponent(getInquirySubject(workId, work, readerMode));
+        const body = encodeURIComponent(getInquiryBody(workId, work, readerMode));
         const os = getMobileMailOS();
         if (os === 'ios') {
           return "googlegmail:///co?to=" + encodeURIComponent(ART_EMAIL) + "&subject=" + subject + "&body=" + body;
@@ -6032,9 +6032,9 @@ html.is-ipad [data-viewer-close]:hover {
         if (os === 'android') {
           return "intent:mailto:" + ART_EMAIL + "?subject=" + subject + "&body=" + body +
             "#Intent;action=android.intent.action.SENDTO;package=com.google.android.gm;" +
-            "S.browser_fallback_url=" + encodeURIComponent(getGmailComposeLink(workId, work)) + ";end";
+            "S.browser_fallback_url=" + encodeURIComponent(getGmailComposeLink(workId, work, readerMode)) + ";end";
         }
-        return getGmailComposeLink(workId, work);
+        return getGmailComposeLink(workId, work, readerMode);
       }
 
       function isMobileMailDevice() {
@@ -8195,7 +8195,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         run();
       }
 
-      function openLightbox(item) {
+      function openLightbox(item, fromCaptionReader = false) {
         archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
         /* IPAD FULLSCREEN TOUCH-SCROLL-LOCK FIX 2026-08-25:
            Root cause of "swipe up/down in the iPad fullscreen viewer shifts the whole
@@ -8349,6 +8349,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         if (preload.complete && preload.naturalWidth > 0) {
           applyDisplayImage();
         } else {
+          if (fromCaptionReader) els.lightboxImage.removeAttribute('src');
           els.lightboxImage.classList.remove('is-ready');
           els.lightboxImage.classList.add('is-loading');
         }
@@ -8487,7 +8488,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           lang: function () { return state.lang; },
           current: function () { return isViewerOpen() ? state.lightboxItem : null; },
           /* 2026-11-17 (cr3) 캡션 리더를 닫을 때 마지막으로 읽은 작품의 상세 이미지로(뷰어가 열려 있을 때만, 기존 openLightbox 그대로 사용) */
-          show: function (item) { if (item && isViewerOpen()) openLightbox(item); },
+          show: function (item) { if (item && isViewerOpen()) openLightbox(item, true); },
           section: function (id) { const sec = SECTION_MAP[id]; return sec ? { kr: sec.kr, en: sec.enLegacy || sec.en } : null; },
           inquiry: function (work, readerMode) {
             if (!work || Number(work.section_id) === 0 || normalizeStatus(work.status) !== 'available') return null;
@@ -8496,14 +8497,12 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
             const subject = getInquirySubject(id, work, readerMode);
             const body = getInquiryBody(id, work, readerMode);
             return { address: ART_EMAIL, mailto: getInquiryLink(id, work, readerMode),
-              gmail: getGmailLinkForDevice(id, work),
+              gmail: getGmailLinkForDevice(id, work, readerMode),
               text: 'To: ' + ART_EMAIL + '\nSubject: ' + subject + '\n\n' + body };
           },
           status: function (work) {
             if (!work || Number(work.section_id) === 0) return null;
-            const n = normalizeStatus(work.status);
-            const L = { available: ['소장 가능', 'Available'], collected: ['소장됨', 'Collected'], reserved: ['예약 중', 'Reserved'], not_for_sale: ['비매품', 'Not for Sale'], private: ['비공개', 'Private'] }[n];
-            return L ? { kr: L[0], en: L[1] } : null;
+            return COLLECTION_LABELS.get(normalizeStatus(work.status)) || null;
           }
         };
       } catch (_crErr) {}

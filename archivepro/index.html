@@ -5341,7 +5341,7 @@ html.is-ipad [data-viewer-close]:hover {
 .lb-collection-status__text { font-weight:650; overflow-wrap:anywhere; }
 .lb-collection-status__inquiry { min-height:44px; padding:8px 14px; border:1px solid #D4B46D; border-radius:999px; background:#111A2A; color:#F4EFE6; font:inherit; text-align:left; overflow-wrap:anywhere; cursor:pointer; }
 .lb-collection-status__inquiry:focus-visible { outline:3px solid #F4EFE6; outline-offset:2px; }
-.ap-inquiry-menu.ap-inquiry-menu--adaptive { --ap-inquiry-scale:1; width:min(calc(260px * var(--ap-inquiry-scale)), calc(100vw - 16px)); max-width:calc(100vw - 16px); max-height:calc(100dvh - 16px); font-size:calc(13px * var(--ap-inquiry-scale)); overflow-wrap:anywhere; }
+.ap-inquiry-menu.ap-inquiry-menu--adaptive { z-index:100200; --ap-inquiry-scale:1; width:min(calc(260px * var(--ap-inquiry-scale)), calc(100vw - 16px)); max-width:calc(100vw - 16px); max-height:calc(100dvh - 16px); font-size:calc(13px * var(--ap-inquiry-scale)); overflow-wrap:anywhere; }
 .ap-inquiry-menu--adaptive .ap-inquiry-menu__title,.ap-inquiry-menu--adaptive .ap-inquiry-menu__opt,.ap-inquiry-menu--adaptive .ap-inquiry-menu__addr,.ap-inquiry-menu--adaptive .ap-inquiry-menu__msg { font-size:1em; line-height:1.45; white-space:normal; overflow-wrap:anywhere; }
 .ap-inquiry-menu--adaptive .ap-inquiry-menu__opt { min-height:44px; padding:.55em .7em; }
 .ap-inquiry-menu--adaptive .ap-inquiry-menu__x { position:sticky; float:right; top:0; z-index:2; width:max(44px,1.2em); height:max(44px,1.2em); font-size:1em; line-height:1; }
@@ -6046,6 +6046,7 @@ html.is-ipad [data-viewer-close]:hover {
       }
 
       let inquiryMenuEl = null;
+      let inquiryReturnFocus = null;
       let inquiryAppCheckTimer = null;
 
       /* 2026-10-18 (apinquiry4) 메일 앱 실행 확인. 메일 앱(또는 Windows 앱 선택창)이 뜨면 브라우저가 포커스를 잃는다.
@@ -6075,14 +6076,23 @@ html.is-ipad [data-viewer-close]:hover {
       }
 
       function onInquiryMenuKey(e) {
-        if (e.key === 'Escape') closeInquiryMenu();
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          closeInquiryMenu(true);
+        }
       }
 
-      function closeInquiryMenu() {
+      function closeInquiryMenu(restoreFocus) {
         if (!inquiryMenuEl) return;
         if (inquiryAppCheckTimer) { clearTimeout(inquiryAppCheckTimer); inquiryAppCheckTimer = null; }
         inquiryMenuEl.remove();
         inquiryMenuEl = null;
+        const prev = inquiryReturnFocus;
+        inquiryReturnFocus = null;
+        if (restoreFocus && prev && document.contains(prev)) {
+          try { prev.focus({ preventScroll:true }); } catch (_) { try { prev.focus(); } catch (_e) {} }
+        }
         document.removeEventListener('pointerdown', onInquiryMenuOutside, true);
         document.removeEventListener('keydown', onInquiryMenuKey, true);
         window.removeEventListener('scroll', closeInquiryMenu);
@@ -6090,6 +6100,7 @@ html.is-ipad [data-viewer-close]:hover {
 
       function openInquiryMenu(anchor, workId, work) {
         closeInquiryMenu();
+        inquiryReturnFocus = anchor;
         const menu = document.createElement('div');
         menu.className = 'ap-inquiry-menu ap-inquiry-menu--adaptive';
         try {
@@ -6116,7 +6127,7 @@ html.is-ipad [data-viewer-close]:hover {
         menu.addEventListener('click', (ev) => {
           const target = ev.target && ev.target.closest ? ev.target.closest('[data-act], .ap-inquiry-menu__x') : null;
           if (!target) return;
-          if (target.classList.contains('ap-inquiry-menu__x')) { closeInquiryMenu(); return; }
+          if (target.classList.contains('ap-inquiry-menu__x')) { closeInquiryMenu(true); return; }
           const act = target.dataset.act;
           if (act === 'gmail') {
             /* (apgmail1) 모바일은 Gmail 앱 실행 — 창을 열어두고 실행 여부를 확인. PC는 새 탭(기존) */
@@ -8472,7 +8483,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
             const subject = getInquirySubject(id, work, readerMode);
             const body = getInquiryBody(id, work, readerMode);
             return { address: ART_EMAIL, mailto: getInquiryLink(id, work, readerMode),
-              gmail: getGmailComposeLink(id, work, readerMode),
+              gmail: getGmailLinkForDevice(id, work),
               text: 'To: ' + ART_EMAIL + '\nSubject: ' + subject + '\n\n' + body };
           },
           status: function (work) {

@@ -860,7 +860,7 @@
       if (!info || info.public !== true || (info.source !== "artist-bio" && info.source !== "representative-public")) return null;
       if (str(info.status).toLowerCase() !== "available") return null;
       var address = str(info.address);
-      if (!/^[^\\s@<>]+@[^\\s@<>]+\\.[^\\s@<>]+$/.test(address)) return null;
+      if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(address)) return null;
       var mailto = str(info.mailto), gmail = str(info.gmail);
       if (mailto.indexOf("mailto:") !== 0 || !str(info.text)) return null;
       return { address:address, mailto:mailto, gmail:/^https:\/\/mail\.google\.com\/mail\//.test(gmail) ? gmail : "", text:str(info.text) };

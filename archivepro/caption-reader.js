@@ -1001,6 +1001,42 @@
         statusKr: status.kr, statusEn: status.en
       };
     }
+    // Minimal fallback: reuse the current artwork's existing public mailto link.
+    // Never guess or reuse an address from a different artist or artwork.
+    function visibleDetailInquiry(id, mode) {
+      try {
+        var route = typeof D.getRoute === "function" ? D.getRoute() : null;
+        if (!route || String(route.work) !== String(id) || !root) return null;
+        var c = D.getWorkCaption(id);
+        if (!c || str(c.status).toLowerCase() !== "available") return null;
+        var detail = root.querySelector(".ap-discover-work-detail");
+        if (!detail) return null;
+        var links = detail.querySelectorAll('a[href^="mailto:"]');
+        for (var i = 0; i < links.length; i++) {
+          var a = links[i];
+          var label = str(a.textContent) + " " + str(a.getAttribute("aria-label")) + " " + str(a.className);
+          if (!/이메일\s*문의|email[\s-]*inquiry|inquiry[\s-]*via[\s-]*email|contact[\s-]*artist|inquiry/i.test(label)) continue;
+          var href = str(a.getAttribute("href"));
+          if (!/^mailto:/i.test(href)) continue;
+          var rest = href.slice(7), qm = rest.indexOf("?");
+          var address = decodeURIComponent(qm < 0 ? rest : rest.slice(0, qm)).trim();
+          if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(address)) continue;
+          var params = new URLSearchParams(qm < 0 ? "" : rest.slice(qm + 1));
+          var code = str(c.workId) || str(id);
+          var isEn = normLang(mode) === "en";
+          var subject = params.get("subject") || ((isEn ? "Artwork Inquiry — " : "작품 문의 — ") + code);
+          var title = isEn ? str(c.title_en || c.title_kr) : str(c.title_kr || c.title_en);
+          var body = params.get("body") || [title, code, str(c.year)].filter(Boolean).join("\n");
+          var mailto = "mailto:" + address + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+          var gmail = "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(address) +
+            "&su=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+          return { address: address, mailto: mailto, gmail: gmail,
+            text: "To: " + address + "\nSubject: " + subject + "\n\n" + body };
+        }
+      } catch (e) { /* No unverified contact fallback. */ }
+      return null;
+    }
+
     function openDetail(trigger) {
       var r = D.getRoute ? D.getRoute() : null;
       if (!r || !r.work) return false;
@@ -1009,9 +1045,9 @@
       var at = ids.indexOf(r.work);
       if (at < 0) { ids = [r.work]; at = 0; }
       var provider = sliceProvider(ids, norm);
-      return open({
+      var opened = open({
         provider: provider, index: at, lang: lang(), trigger: trigger,
-        inquiry: function (id, mode) { return publicInquiry("cosmos", id, mode); },
+        inquiry: function (id, mode) { return publicInquiry("cosmos", id, mode) || visibleDetailInquiry(id, mode); },
         fallbackFocus: function () { return root.querySelector(".dzcr-trigger-work") || root; },
         onReturn: function (i) {
           var id = provider.raw(i);
@@ -1019,6 +1055,8 @@
           D.navigate(Object.assign({}, r, { work: id }));
         }
       });
+      if (opened && R.root) R.root.classList.add("dzcr-cosmos");
+      return opened;
     }
     function ensure() {
       if (!root) return;

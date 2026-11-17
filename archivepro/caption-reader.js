@@ -1,6 +1,6 @@
 /*
  * ELSOL — GOLD CAPTION READER  (caption-reader.js)
- * build 20261117-cr4 · 2026-11-17
+ * build 20261117-cr7-p0 · 2026-11-17
  *   cr4: 최초 진입 레이아웃 근본 수정 — 리더 전체가 스크롤되던 구조(상단 막대 sticky)를
  *        "고정 상단 막대 + 독립 세로 스크롤 본문"으로 바꾸고, 리더 위치·크기를 실제 보이는 화면(visualViewport)에 맞춤
  *        (iOS 손가락 확대·키보드·주소창·Stage Manager로 레이아웃 뷰포트와 보이는 화면이 어긋나도 상단 조작 영역이 화면 안에 있음)
@@ -27,7 +27,7 @@
   "use strict";
   if (window.DZ_CAPTION_READER) return;
 
-  var BUILD = "20261117-cr5";
+  var BUILD = "20261117-cr7-p0";
   var STORE_KEY = "dz.captionReader.v1";
   var SCALES = [100, 150, 200, 300, 400];
   var DEFAULT_SCALE = 300;
@@ -68,8 +68,8 @@
       settingsClose: "설정 접기",
       firstItem: "첫 작품입니다.",
       lastItem: "마지막 작품입니다.",
-      inquiry: "이메일 문의", mailApp: "메일 앱에서 작성", mailGmail: "Gmail 웹에서 작성",
-      mailCopy: "문의 내용 복사", mailAddress: "수신 이메일", mailCopied: "문의 내용이 복사되었습니다.", mailFailed: "복사할 수 없습니다. 메일 앱에서 작성해 주세요."
+      inquiry: "이메일 문의", mailClose: "문의 닫기", mailApp: "메일 앱에서 작성", mailGmail: "Gmail에서 작성",
+      mailCopy: "문의 내용 복사", mailCopyAddress: "이메일 주소 복사", mailAddressCopied: "이메일 주소가 복사되었습니다.", mailAddress: "수신 이메일", mailCopied: "문의 내용이 복사되었습니다.", mailFailed: "복사할 수 없습니다. 메일 앱에서 작성해 주세요."
     },
     en: {
       workBtn: "Enlarge Caption",
@@ -103,8 +103,8 @@
       settingsClose: "Hide settings",
       firstItem: "This is the first work.",
       lastItem: "This is the last work.",
-      inquiry: "Email inquiry", mailApp: "Write in mail app", mailGmail: "Compose in Gmail",
-      mailCopy: "Copy inquiry details", mailAddress: "Recipient", mailCopied: "Inquiry details copied.", mailFailed: "Unable to copy. Use your mail app."
+      inquiry: "Email inquiry", mailClose: "Close inquiry", mailApp: "Write in mail app", mailGmail: "Compose in Gmail",
+      mailCopy: "Copy inquiry details", mailCopyAddress: "Copy email address", mailAddressCopied: "Email address copied.", mailAddress: "Recipient", mailCopied: "Inquiry details copied.", mailFailed: "Unable to copy. Use your mail app."
     }
   };
 
@@ -149,7 +149,7 @@
   // ------------------------------------------------------------------
   // 사용자 설정(확대 비율) — 전용 키. 기존 설정 데이터와 섞지 않는다.
   // ------------------------------------------------------------------
-  // 저장 형식(같은 키 유지): { v:1, scale:300, settingsOpen:true|false } — cr1 형식({v,scale})도 그대로 읽는다.
+  // 저장 형식(같은 키 유지): { v:1, scale:300, settingsOpen:true|false, mode:"kr"|"en"|"both" } — cr1 형식({v,scale})도 그대로 읽는다.
   function loadPrefs() {
     var p = { scale: DEFAULT_SCALE, settingsOpen: true };
     try {
@@ -158,13 +158,14 @@
         var o = JSON.parse(raw);
         if (o && SCALES.indexOf(Number(o.scale)) !== -1) p.scale = Number(o.scale);
         if (o && typeof o.settingsOpen === "boolean") p.settingsOpen = o.settingsOpen;
+        if (o && ["kr", "en", "both"].indexOf(o.mode) !== -1) p.mode = o.mode;
       }
     } catch (e) { /* 저장소 사용 불가 — 기본값 */ }
     return p;
   }
   function loadScale() { return loadPrefs().scale; }
   function savePrefs() {
-    try { window.localStorage.setItem(STORE_KEY, JSON.stringify({ v: 1, scale: R.scale, settingsOpen: R.settingsOpen })); } catch (e) { /* 무시 */ }
+    try { window.localStorage.setItem(STORE_KEY, JSON.stringify({ v: 1, scale: R.scale, settingsOpen: R.settingsOpen, mode: R.preferredMode })); } catch (e) { /* 무시 */ }
   }
 
   // ------------------------------------------------------------------
@@ -226,8 +227,8 @@
   // ------------------------------------------------------------------
   var R = {
     root: null, open: false, provider: null, index: 0, mode: "kr", scale: DEFAULT_SCALE,
-    returnFocus: null, returnFocusFallback: null, pushed: false, ignorePop: false, ignoreTimer: 0,
-    saved: null, els: {}, settingsOpen: true, onReturn: null, pendingReturn: null, inquiry: null, inquiryInfo: null
+    returnFocus: null, returnFocusFallback: null, pushed: false, closing: false, closeTimer: 0,
+    saved: null, els: {}, settingsOpen: true, onReturn: null, inquiry: null, inquiryInfo: null, mailScrollTop: 0, session: 0
   };
 
   function el(tag, cls, attrs) {
@@ -303,9 +304,11 @@
     var mailAddress = el("p", "dzcr-mail-address");
     var mailApp = el("a", "dzcr-mail-option", { target: "_self" });
     var mailGmail = el("a", "dzcr-mail-option", { target: "_blank", rel: "noopener noreferrer" });
+    var mailCopyAddress = el("button", "dzcr-btn dzcr-mail-option", { type: "button", "data-dzcr": "copy-address" });
+    var mailClose = el("button", "dzcr-btn dzcr-mail-option", { type: "button", "data-dzcr": "close-inquiry" });
     var mailCopy = el("button", "dzcr-btn dzcr-mail-option", { type: "button", "data-dzcr": "copy-inquiry" });
     mailPanel.appendChild(mailAddress);
-    mailPanel.appendChild(mailApp); mailPanel.appendChild(mailGmail); mailPanel.appendChild(mailCopy);
+    mailPanel.appendChild(mailApp); mailPanel.appendChild(mailGmail); mailPanel.appendChild(mailCopyAddress); mailPanel.appendChild(mailCopy); mailPanel.appendChild(mailClose);
     mailSection.appendChild(mailButton); mailSection.appendChild(mailPanel);
     caption.appendChild(mailSection);
     body.appendChild(caption);
@@ -333,7 +336,7 @@
       toggle: toggle, toggleText: tText, toggleMark: tMark, setBody: setBody,
       caption: caption, title: title, dl: dl, notes: notes, live: live,
       mailSection: mailSection, mailButton: mailButton, mailPanel: mailPanel,
-      mailAddress: mailAddress, mailApp: mailApp, mailGmail: mailGmail, mailCopy: mailCopy
+      mailAddress: mailAddress, mailApp: mailApp, mailGmail: mailGmail, mailCopyAddress: mailCopyAddress, mailCopy: mailCopy, mailClose: mailClose
     };
     return root;
   }
@@ -429,10 +432,16 @@
           putUi(E.mailButton, "inquiry", m);
           putUi(E.mailApp, "mailApp", m);
           putUi(E.mailGmail, "mailGmail", m);
+          putUi(E.mailClose, "mailClose", m);
           putUi(E.mailCopy, "mailCopy", m);
+          putUi(E.mailCopyAddress, "mailCopyAddress", m);
           E.mailAddress.textContent = uiText("mailAddress", m) + ": " + info.address;
           E.mailApp.href = info.mailto;
-          if (info.gmail) { E.mailGmail.hidden = false; E.mailGmail.href = info.gmail; }
+          if (info.gmail) {
+            E.mailGmail.hidden = false;
+            E.mailGmail.href = info.gmail;
+            E.mailGmail.target = info.gmail.indexOf("https:") === 0 ? "_blank" : "_self";
+          }
           else { E.mailGmail.hidden = true; E.mailGmail.removeAttribute("href"); }
         }
       } catch (_e) { R.inquiryInfo = null; E.mailSection.hidden = true; }
@@ -538,14 +547,16 @@
    * opts: { provider: {count(), get(i)}, index, lang: 'kr'|'en'|'both', trigger: Element, fallbackFocus: fn → Element }
    */
   function open(opts) {
-    if (!opts || !opts.provider) return false;
+    if (!opts || !opts.provider || R.closing) return false;
     buildRoot();
     var n = opts.provider.count();
     if (!n) return false;
     R.provider = opts.provider;
     R.index = Math.max(0, Math.min(n - 1, Number(opts.index) || 0));
-    R.mode = normLang(opts.lang);
     var prefs = loadPrefs();
+    R.preferredMode = prefs.mode;
+    R.mode = prefs.mode || normLang(opts.lang);
+    R.session++;
     R.scale = prefs.scale;
     R.settingsOpen = prefs.settingsOpen;
     R.onReturn = typeof opts.onReturn === "function" ? opts.onReturn : null;
@@ -580,16 +591,13 @@
   }
 
   // 닫힌 뒤: 마지막으로 읽던 작품(R.index)의 상세 이미지로 복귀 → 포커스를 그 화면의 캡션 확대 버튼으로
-  function runReturn(job) {
-    if (!job) return;
-    try { if (job.cb) job.cb(job.index); } catch (e) { /* 복귀 실패는 닫힘 자체에 영향 없음 */ }
-    // 화면을 다시 그리는 서비스(COSMOS)는 새 상세 화면·버튼이 생길 때까지 몇 번 더(사용자가 이미 다른 곳으로 옮겼으면 건드리지 않음)
+  function restoreReturnFocus(session) {
     var tries = [0, 120, 400, 900, 1600], k = 0;
     var step = function () {
-      var a = document.activeElement;
-      var idle = !a || a === document.body || a === document.documentElement || !document.body.contains(a);
-      var onTrigger = a && a.classList && a.classList.contains("dzcr-trigger");
-      if (k === 0 || (idle && !onTrigger)) focusBack();
+      if (R.session !== session || R.open) return;
+      var active = document.activeElement;
+      var idle = !active || active === document.body || active === document.documentElement || !document.body.contains(active);
+      if (k === 0 || idle) focusBack();
       k++;
       if (k < tries.length) setTimeout(step, tries[k] - tries[k - 1]);
       else { R.returnFocus = null; R.returnFocusFallback = null; }
@@ -598,35 +606,32 @@
   }
 
   function finishClose() {
+    clearTimeout(R.closeTimer);
+    R.closing = false;
+    R.pushed = false;
+    // Update the viewer under the reader before revealing it.
+    try { if (R.onReturn) R.onReturn(R.index); } catch (e) { /* Closing still works. */ }
     R.open = false;
     R.root.hidden = true;
     clearViewport();
     unlockBackground();
-    var job = { cb: R.onReturn, index: R.index };
     R.onReturn = null;
     R.provider = null;
     R.inquiry = null;
     R.inquiryInfo = null;
-    return job;
+    restoreReturnFocus(R.session);
   }
 
   function close() {
-    if (!R.open) return;
-    var job = finishClose();
-    if (R.pushed) {
-      R.pushed = false;
-      var st = window.history.state;
-      if (st && st.dzCaptionReader) {
-        // 우리가 넣은 기록 1개만 되돌린다. 이 뒤에 오는 popstate는 리더가 소비하고(다른 화면의 뒤로가기 처리 차단),
-        // 그다음에 작품 복귀를 실행한다(COSMOS는 복귀가 새 기록을 넣으므로 순서가 중요).
-        R.ignorePop = true;
-        R.pendingReturn = job;
-        clearTimeout(R.ignoreTimer);
-        R.ignoreTimer = setTimeout(function () { R.ignorePop = false; var j = R.pendingReturn; R.pendingReturn = null; runReturn(j); }, 1500);
-        try { window.history.back(); return; } catch (e) { R.ignorePop = false; R.pendingReturn = null; clearTimeout(R.ignoreTimer); }
-      }
+    if (!R.open || R.closing) return;
+    var state = window.history.state;
+    if (R.pushed && state && state.dzCaptionReader) {
+      // COSMOS can write history during its return callback. Wait for this entry to pop first.
+      R.closing = true;
+      R.closeTimer = setTimeout(finishClose, 1500);
+      try { window.history.back(); return; } catch (e) { /* Fall through. */ }
     }
-    runReturn(job);
+    finishClose();
   }
 
   function go(delta) {
@@ -656,8 +661,17 @@
   }
 
   function setMode(m) {
-    R.mode = normLang(m);
+    R.mode = R.preferredMode = normLang(m);
+    savePrefs();
     render();
+  }
+
+  function closeInquiry() {
+    var E = R.els;
+    E.mailPanel.hidden = true;
+    E.mailButton.setAttribute("aria-expanded", "false");
+    E.mailButton.focus({ preventScroll: true });
+    E.scroll.scrollTop = R.mailScrollTop;
   }
 
   // ---- 이벤트: 리더가 열려 있을 때만, window capture 단계에서 먼저 받아 처리하고 페이지로 전파하지 않는다 ----
@@ -666,6 +680,7 @@
   function onClickCapture(e) {
     if (!R.open || !inReader(e.target)) return;
     e.stopPropagation();
+    if (R.closing) { e.preventDefault(); return; }
     var b = e.target.closest ? e.target.closest("[data-dzcr]") : null;
     if (!b || !R.root.contains(b) || b.disabled) return;
     if (b.getAttribute("aria-disabled") === "true") { var a0 = b.getAttribute("data-dzcr"); announce(uiText(a0 === "prev" ? "firstItem" : "lastItem", R.mode)); return; }
@@ -678,26 +693,55 @@
     else if (a === "settings") toggleSettings();
     else if (a === "inquiry") {
       if (!R.inquiryInfo) return;
-      var expand = R.els.mailPanel.hidden;
-      R.els.mailPanel.hidden = !expand;
-      R.els.mailButton.setAttribute("aria-expanded", expand ? "true" : "false");
-      if (expand) { R.els.scroll.scrollTop = R.els.scroll.scrollHeight; }
+      var E = R.els;
+      if (E.mailPanel.hidden) {
+        R.mailScrollTop = E.scroll.scrollTop;
+        E.mailPanel.hidden = false;
+        E.mailButton.setAttribute("aria-expanded", "true");
+        E.mailApp.focus();
+      } else closeInquiry();
     }
-    else if (a === "copy-inquiry") {
-      if (!R.inquiryInfo || !R.inquiryInfo.text) return;
-      var cp = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(R.inquiryInfo.text) : Promise.reject(new Error("Clipboard unavailable"));
-      cp.then(function () { announce(uiText("mailCopied", R.mode)); })
-        .catch(function () { announce(uiText("mailFailed", R.mode)); });
+    else if (a === "close-inquiry") closeInquiry();
+    else if (a === "copy-inquiry" || a === "copy-address") {
+      if (!R.inquiryInfo) return;
+      var addressOnly = a === "copy-address";
+      var value = addressOnly ? R.inquiryInfo.address : R.inquiryInfo.text;
+      if (!value) return;
+      copyReaderText(String(value)).then(function () {
+        announce(uiText(addressOnly ? "mailAddressCopied" : "mailCopied", R.mode));
+      }).catch(function () { announce(uiText("mailFailed", R.mode)); });
     }
+  }
+
+  function copyReaderText(text) {
+    function fallback() {
+      return new Promise(function (resolve, reject) {
+        var field = document.createElement("textarea");
+        try {
+          field.value = text; field.readOnly = true;
+          field.style.cssText = "position:fixed;top:-9999px;left:0;opacity:0";
+          document.body.appendChild(field); field.select();
+          var ok = document.execCommand("copy");
+          if (ok) resolve(); else reject(new Error("Copy unavailable"));
+        } catch (e) { reject(e); }
+        finally { if (field.parentNode) field.parentNode.removeChild(field); }
+      });
+    }
+    if (navigator.clipboard && window.isSecureContext && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(fallback);
+    }
+    return fallback();
   }
 
   function onKeyCapture(e) {
     if (!R.open) return;
+    if (R.closing) { e.preventDefault(); e.stopPropagation(); return; }
     var k = e.key;
     if (k === "Escape" || k === "Esc") {
       e.preventDefault();
       e.stopPropagation();
-      close();
+      if (!R.els.mailPanel.hidden) closeInquiry();
+      else close();
       return;
     }
     if (k === "Tab") {
@@ -725,22 +769,9 @@
   }
 
   function onPopState(e) {
-    if (R.ignorePop) {
-      R.ignorePop = false;
-      clearTimeout(R.ignoreTimer);
-      e.stopImmediatePropagation();
-      var j = R.pendingReturn;
-      R.pendingReturn = null;
-      setTimeout(function () { runReturn(j); }, 0);
-      return;
-    }
-    if (R.open) {
-      // 뒤로가기(Android 뒤로 가기 버튼·브라우저 뒤로) = 리더만 닫고, 닫기 버튼과 같게 마지막 작품으로 복귀
-      e.stopImmediatePropagation();
-      R.pushed = false;
-      var job = finishClose();
-      setTimeout(function () { runReturn(job); }, 0);
-    }
+    if (!R.open) return;
+    e.stopImmediatePropagation();
+    finishClose();
   }
 
   window.addEventListener("click", onClickCapture, true);
@@ -818,6 +849,32 @@
   }
 
   // ------------------------------------------------------------------
+  // Firebase page contract: only a VERIFIED PUBLIC representative or Artist Bio
+  // address may be used. No signed-in account email and no cross-artist fallback.
+  function statusPair(value) {
+    var labels = { "available":["소장 가능","Available"], "collected":["소장됨","Collected"],
+      "reserved":["예약 중","Reserved"], "not_for_sale":["비매품","Not for Sale"],
+      "private":["비공개","Private"] };
+    var key = str(value).toLowerCase();
+    if (key === "sold") key = "collected";
+    var pair = Object.prototype.hasOwnProperty.call(labels, key) ? labels[key] : null;
+    return { kr: pair ? pair[0] : "", en: pair ? pair[1] : "" };
+  }
+  function publicInquiry(service, work, mode) {
+    var bridge = window.DZ_PUBLIC_INQUIRY;
+    if (!bridge || typeof bridge.resolve !== "function") return null;
+    try {
+      var info = bridge.resolve({ service:service, work:work, lang:normLang(mode) });
+      if (!info || info.public !== true || (info.source !== "artist-bio" && info.source !== "representative-public")) return null;
+      if (str(info.status).toLowerCase() !== "available") return null;
+      var address = str(info.address);
+      if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(address)) return null;
+      var mailto = str(info.mailto), gmail = str(info.gmail);
+      if (mailto.indexOf("mailto:") !== 0 || !str(info.text)) return null;
+      return { address:address, mailto:mailto, gmail:/^https:\/\/mail\.google\.com\/mail\//.test(gmail) ? gmail : "", text:str(info.text) };
+    } catch (e) { return null; }
+  }
+
   // A. Artist Edition (/app/) 어댑터 — APP_FILTER(state.filtered, lang, sections) 읽기 전용
   //    탐색 범위 = 지금 화면의 검색·섹션·정렬 결과(state.filtered)와 같은 순서
   // ------------------------------------------------------------------
@@ -836,9 +893,7 @@
     function norm(w) {
       var origin = Number(w.section_id) === 0;
       var sec = sectionOf(w);
-      var S = window.APP_STATUS_LABELS;
-      var sk = !origin && S ? S.renderStatusLabel(w.status, "kr") : "";
-      var se = !origin && S ? S.renderStatusLabel(w.status, "en") : "";
+      var status = statusPair(origin ? null : w.status);
       return {
         code: str(w.artworkCode) || str(w.id),
         sectionKr: sec.kr, sectionEn: sec.en,
@@ -846,7 +901,7 @@
         materialKr: w.material_kr, materialEn: w.material_en,
         sizeKr: w.size_kr || w.size, sizeEn: w.size_en || w.size,
         year: w.year,
-        statusKr: sk, statusEn: se,
+        statusKr: status.kr, statusEn: status.en,
         noteKr: w.note_kr, noteEn: w.note_en,
         hideMeta: origin
       };
@@ -857,6 +912,7 @@
       var provider = sliceProvider(st.filtered, norm);
       return open({
         provider: provider, index: st.currentIndex || 0, lang: lang(), trigger: trigger,
+        inquiry: function (work, mode) { return publicInquiry("artist", work, mode); },
         fallbackFocus: function () { return document.querySelector("#dzcrViewerWrap .dzcr-trigger"); },
         onReturn: function (i) {
           var key = workKey(provider.raw(i));
@@ -887,6 +943,7 @@
       var st = B.status(w) || { kr: "", en: "" };
       return {
         code: str(w.id),
+        artistKr: "등작 燈酌", artistEn: "DUNGZAK CESTLAVIE",
         sectionKr: sec.kr, sectionEn: sec.en,
         titleKr: w.title_kr, titleEn: w.title_en,
         materialKr: w.material_kr, materialEn: w.material_en,
@@ -932,13 +989,16 @@
     function norm(id) {
       var c = D.getWorkCaption(id);
       if (!c) return null;
+      var status = statusPair(c.status);
       return {
         artistKr: c.artistNameKr, artistEn: c.artistNameEn,
         titleKr: c.title_kr, titleEn: c.title_en,
         materialKr: c.material_kr, materialEn: c.material_en,
         sizeKr: c.size_kr, sizeEn: c.size_en,
         year: c.year,
-        seriesKr: c.seriesKr, seriesEn: c.seriesEn
+        seriesKr: c.seriesKr, seriesEn: c.seriesEn,
+        code: str(c.workId) || str(id),
+        statusKr: status.kr, statusEn: status.en
       };
     }
     function openDetail(trigger) {
@@ -946,15 +1006,17 @@
       if (!r || !r.work) return false;
       var seq = typeof D.getWorkSequence === "function" ? D.getWorkSequence(r.work) : null;
       var ids = seq && seq.ids && seq.ids.length ? seq.ids : [r.work];
-      var at = seq && seq.ids && seq.ids.length ? seq.index : 0;
+      var at = ids.indexOf(r.work);
+      if (at < 0) { ids = [r.work]; at = 0; }
       var provider = sliceProvider(ids, norm);
       return open({
         provider: provider, index: at, lang: lang(), trigger: trigger,
+        inquiry: function (id, mode) { return publicInquiry("cosmos", id, mode); },
         fallbackFocus: function () { return root.querySelector(".dzcr-trigger-work") || root; },
         onReturn: function (i) {
-          var id = provider.raw(i), now = D.getRoute ? D.getRoute() : null;
-          if (!id || !now || now.work === id) return;
-          D.navigate({ work: id, q: null });
+          var id = provider.raw(i);
+          if (!id || r.work === id || typeof D.navigate !== "function") return;
+          D.navigate(Object.assign({}, r, { work: id }));
         }
       });
     }

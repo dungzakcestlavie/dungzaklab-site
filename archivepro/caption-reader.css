@@ -395,3 +395,7 @@
   font-size: .82em; color: #D4B46D;
   overflow-wrap: anywhere; word-break: break-word; user-select: text;
 }
+
+/* COSMOS only: gold artwork identifier and collection-inquiry action. */
+#dzCaptionReader.dzcr-cosmos .dzcr-row-code .dzcr-val { color: #D4B46D; }
+#dzCaptionReader.dzcr-cosmos .dzcr-mail-trigger { color: #F1D398; border-color: #D4B46D; }

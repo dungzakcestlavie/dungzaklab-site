@@ -1896,6 +1896,9 @@ body.menu-open .header{
   <a href="/discover">COSMOS<span class="menu-cosmos-sub">CONNECTED ART NETWORK</span></a>
   <a href="#" data-menu-view="about" onclick="openAbout(); return false;">ABOUT</a>
   <a href="https://dungzak.art" target="_blank" rel="noopener" onclick="closeMenu()">DUNGZAK.ART</a>
+  <!-- 2026-11-21 추가 — 공식 문의 및 지원 페이지(/support/). 메뉴 맨 아래 한 줄만 추가하며
+       기존 항목의 순서·문구·동작은 그대로 둔다. ?lang은 setLanguage()가 현재 언어로 맞춘다. -->
+  <a href="/support/" data-support-link>CONTACT</a>
 </div>
 
 <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
@@ -1921,6 +1924,8 @@ body.menu-open .header{
            재사용. -->
       <a href="/app/" class="selector-link">ARCHIVE PRO<span class="menu-cosmos-sub">ARTIST EDITION</span></a>
       <a href="/discover" class="selector-link">COSMOS<span class="menu-cosmos-sub">CONNECTED ART NETWORK</span></a>
+      <!-- 2026-11-21 추가 — 메뉴를 열지 않아도(모바일 포함) 첫 화면에서 같은 문의 페이지로 이동. -->
+      <a href="/support/" class="selector-link" data-support-link>CONTACT</a>
     </div>
   </div>
 </div>
@@ -2611,6 +2616,7 @@ function setLanguage(lang){
 
   document.documentElement.lang = currentLang;
   localStorage.setItem('dzlab_lang', currentLang);
+  document.querySelectorAll('[data-support-link]').forEach(a => { a.href = '/support/?lang=' + (currentLang === 'en' ? 'en' : 'kr'); });
 
   if(mainProposalLinkKo) mainProposalLinkKo.href = `/ocean-proposal.html?lang=${currentLang}`;
   if(mainProposalLinkEn) mainProposalLinkEn.href = `/ocean-proposal.html?lang=${currentLang}`;

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-O/sELgWnq8Rz+uKKXyUAyYXtkXncN20d9JYOiEZuO6A='; style-src 'unsafe-inline'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>문의 및 지원 · Contact &amp; Support — ARCHIVE PRO</title>
+<meta name="description" content="ARCHIVE PRO — Artist Edition 문의 및 지원 / Contact &amp; Support. 계정·로그인, 작품 등록·이미지·PDF, 서비스 오류 및 일반 문의.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://dungzaklab.art/support/">
+<link rel="alternate" hreflang="ko" href="https://dungzaklab.art/support/?lang=kr">
+<link rel="alternate" hreflang="en" href="https://dungzaklab.art/support/?lang=en">
+<link rel="alternate" hreflang="x-default" href="https://dungzaklab.art/support/">
+<meta name="theme-color" content="#031421">
+<link rel="icon" type="image/png" sizes="192x192" href="/archivepro-icon-192-v2.png">
+<style>
+  /* 디자인 토큰은 /privacy/ · /delete-account/ 와 동일하다(딥블루 배경 + 금빛 제목·테두리). */
+  :root {
+    --bg: #031421;
+    --panel: #071d2e;
+    --line: rgba(214, 184, 106, 0.28);
+    --gold: #d6b86a;
+    --gold-strong: #f0d79c;
+    --text: #e9eef3;
+    --muted: #a9b8c6;
+    --link: #f0d79c;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
+    font-size: 16px; line-height: 1.75; word-break: keep-all; overflow-wrap: anywhere;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: calc(24px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) calc(56px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  header.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+  .brand { color: var(--gold); letter-spacing: .14em; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
+  .langs { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .langs button { appearance: none; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px; padding: 6px 14px; cursor: pointer; min-height: 44px; min-width: 48px; }
+  .langs button[aria-pressed="true"] { background: var(--gold); color: #10202c; font-weight: 700; }
+  .langs button:focus-visible { outline: 2px solid var(--gold-strong); outline-offset: -2px; }
+  h1 { font-size: clamp(24px, 5vw, 32px); line-height: 1.35; margin: 28px 0 8px; color: #fff; font-weight: 700; }
+  h1 .sub { display: block; font-size: 15px; color: var(--gold); letter-spacing: .08em; font-weight: 600; margin-bottom: 6px; }
+  h2 { font-size: 19px; line-height: 1.45; color: var(--gold-strong); margin: 36px 0 12px; padding-top: 6px; scroll-margin-top: 16px; }
+  p, li { color: var(--text); }
+  ul { padding-left: 22px; }
+  a { color: var(--link); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible, input:focus-visible + .opt-text { outline: 2px solid var(--gold-strong); outline-offset: 3px; border-radius: 6px; }
+  .lead { margin: 0 0 8px; }
+  .note { color: var(--muted); font-size: 14px; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin: 14px 0; }
+
+  /* 공식 지원 이메일 */
+  .email-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 6px 0 4px; }
+  .email-addr { font-size: 18px; font-weight: 600; color: #fff; text-decoration: none; letter-spacing: .01em; user-select: all; -webkit-user-select: all; }
+  .email-addr:hover { text-decoration: underline; }
+  .btn { appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 8px 18px; border-radius: 999px; font: inherit; font-size: 15px; font-weight: 600; text-decoration: none; cursor: pointer; text-align: center; line-height: 1.4; }
+  .btn-ghost { background: transparent; color: var(--gold-strong); border: 1px solid var(--line); }
+  .btn-ghost:hover { border-color: var(--gold); }
+  .btn-primary { background: var(--gold); color: #10202c; border: 1px solid var(--gold); width: 100%; max-width: 420px; margin-top: 14px; }
+  .btn-primary:hover { background: var(--gold-strong); }
+  .status { min-height: 1.75em; margin: 8px 0 0; font-size: 14px; color: var(--gold-strong); }
+
+  /* 문의 유형 */
+  fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+  legend { padding: 0; margin: 0 0 10px; font-weight: 600; color: #fff; }
+  .opts { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+  .opt { position: relative; display: block; cursor: pointer; }
+  .opt input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+  .opt-text { display: block; min-height: 44px; padding: 12px 14px 12px 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); position: relative; }
+  .opt-text::before { content: ""; position: absolute; left: 14px; top: 15px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--muted); }
+  .opt input:checked + .opt-text { border-color: var(--gold); background: rgba(214, 184, 106, 0.08); }
+  .opt input:checked + .opt-text::before { border-color: var(--gold); background: radial-gradient(circle, var(--gold) 0 4px, transparent 5px); }
+  .opt-title { display: block; font-weight: 600; color: #fff; }
+  .opt-desc { display: block; font-size: 14px; color: var(--muted); line-height: 1.6; margin-top: 2px; }
+
+  .links { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
+  .links a { display: inline-flex; align-items: center; min-height: 44px; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+
+  /* 언어 표시: JS가 없으면 두 언어를 모두 보여준다(KR+EN). /privacy/ 와 같은 규칙. */
+  body.lang-kr [lang="en"] { display: none !important; }
+  body.lang-en [lang="ko"] { display: none !important; }
+  body.lang-both .bi > [lang="en"] { color: var(--muted); }
+  body.lang-both p.bi > [lang="en"], body.lang-both li.bi > [lang="en"], body.lang-both .stack > [lang="en"] { display: block; margin-top: 2px; }
+  body.lang-both h2 > [lang="en"], body.lang-both h1 > [lang="en"], body.lang-both legend > [lang="en"] { display: block; font-size: .82em; font-weight: 600; }
+  body.lang-both .btn .bi > [lang="en"] { color: inherit; }
+  body.lang-both .btn .bi > [lang="en"]::before { content: " · "; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (forced-colors: active) { .opt input:checked + .opt-text { outline: 2px solid CanvasText; } }
+</style>
+</head>
+<body class="lang-both">
+<div class="wrap">
+
+<header class="top">
+  <a class="brand" href="/">ARCHIVE PRO</a>
+  <div class="langs" role="group" aria-label="Language / 언어">
+    <button type="button" data-lang="kr" aria-pressed="false">KR</button>
+    <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    <button type="button" data-lang="both" aria-pressed="true">KR+EN</button>
+  </div>
+</header>
+
+<main>
+<h1 class="bi"><span class="sub">ARCHIVE PRO — Artist Edition</span><span lang="ko">문의 및 지원</span><span lang="en">Contact &amp; Support</span></h1>
+<p class="lead bi"><span lang="ko">ARCHIVE PRO — Artist Edition 앱(iOS·Android)과 웹 서비스를 이용하면서 도움이 필요하면 아래 공식 지원 이메일로 문의해 주세요. 로그인하지 않아도 이용할 수 있습니다.</span><span lang="en">If you need help with the ARCHIVE PRO — Artist Edition app (iOS and Android) or web service, please contact us at the official support email below. No sign-in is required.</span></p>
+
+<section aria-labelledby="h-email">
+<h2 id="h-email" class="bi"><span lang="ko">공식 지원 이메일</span><span lang="en">Official support email</span></h2>
+<div class="box">
+  <div class="email-row">
+    <a class="email-addr" id="emailAddr" href="mailto:dungzakcestlavie@gmail.com">dungzakcestlavie@gmail.com</a>
+    <button type="button" class="btn btn-ghost" id="copyBtn" hidden><span class="bi"><span lang="ko">주소 복사</span><span lang="en">Copy address</span></span></button>
+  </div>
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+  <p class="note bi"><span lang="ko">이메일 앱이 열리지 않는 기기에서는 위 주소를 복사해 사용하는 메일 서비스에서 보내 주세요.</span><span lang="en">If no email app opens on your device, copy the address above and send your message from any email service.</span></p>
+</div>
+</section>
+
+<section aria-labelledby="h-topic">
+<h2 id="h-topic" class="bi"><span lang="ko">문의 유형 선택</span><span lang="en">Choose a topic</span></h2>
+<fieldset>
+  <legend class="bi"><span lang="ko">문의하실 내용에 가장 가까운 항목을 고르세요. 이메일 제목에 반영됩니다.</span><span lang="en">Pick the topic closest to your question. It will be added to the email subject.</span></legend>
+  <div class="opts">
+    <label class="opt"><input type="radio" name="topic" value="account" checked><span class="opt-text">
+      <span class="opt-title stack bi"><span lang="ko">계정 및 로그인</span><span lang="en">Account &amp; sign-in</span></span>
+      <span class="opt-desc stack bi"><span lang="ko">이메일·Google·Apple 로그인, 비밀번호 재설정, 로그인 유지, 계정 삭제</span><span lang="en">Email, Google or Apple sign-in, password reset, staying signed in, account deletion</span></span>
+    </span></label>
+    <label class="opt"><input type="radio" name="topic" value="works"><span class="opt-text">
+      <span class="opt-title stack bi"><span lang="ko">작품 등록 · 이미지 · PDF</span><span lang="en">Artworks, images &amp; PDF</span></span>
+      <span class="opt-desc stack bi"><span lang="ko">작품 업로드, 이미지 표시·확대, 섹션, Artist Bio, 포트폴리오 PDF</span><span lang="en">Uploading works, image display and zoom, sections, Artist Bio, portfolio PDF</span></span>
+    </span></label>
+    <label class="opt"><input type="radio" name="topic" value="error"><span class="opt-text">
+      <span class="opt-title stack bi"><span lang="ko">서비스 오류</span><span lang="en">Service error</span></span>
+      <span class="opt-desc stack bi"><span lang="ko">화면 오류, 느린 로딩, 앱 실행 문제</span><span lang="en">Display errors, slow loading, problems opening the app</span></span>
+    </span></label>
+    <label class="opt"><input type="radio" name="topic" value="general"><span class="opt-text">
+      <span class="opt-title stack bi"><span lang="ko">일반 문의</span><span lang="en">General inquiry</span></span>
+      <span class="opt-desc stack bi"><span lang="ko">서비스 이용 방법, 제안, 기타 문의</span><span lang="en">How to use the Service, suggestions, other questions</span></span>
+    </span></label>
+    <label class="opt"><input type="radio" name="topic" value="report"><span class="opt-text">
+      <span class="opt-title stack bi"><span lang="ko">콘텐츠 신고</span><span lang="en">Report content</span></span>
+      <span class="opt-desc stack bi"><span lang="ko">부적절한 공개 작품·작가 정보 신고 (신고 메일은 24시간 이내에 확인합니다)</span><span lang="en">Report inappropriate public artworks or artist information (report emails are checked within 24 hours)</span></span>
+    </span></label>
+  </div>
+</fieldset>
+
+<a class="btn btn-primary" id="mailBtn" href="mailto:dungzakcestlavie@gmail.com?subject=%5BARCHIVE%20PRO%20%E2%80%94%20Artist%20Edition%5D%20Contact%20%26%20Support"><span class="bi"><span lang="ko">이메일로 문의하기</span><span lang="en">Contact by Email</span></span></a>
+<p class="note bi"><span lang="ko">버튼을 누르면 이 기기의 이메일 앱이 열리고, 메일은 직접 확인한 뒤 보내실 때만 발송됩니다. 비밀번호, 인증 코드 등 민감한 정보는 적지 마세요.</span><span lang="en">The button opens your device’s email app; nothing is sent until you review and send the message yourself. Please do not include passwords, verification codes, or other sensitive information.</span></p>
+</section>
+
+<section aria-labelledby="h-artist">
+<h2 id="h-artist" class="bi"><span lang="ko">작품 구매 · 전시 · 소장 문의</span><span lang="en">Artwork purchase, exhibition &amp; collection inquiries</span></h2>
+<p class="bi"><span lang="ko">이 창구는 ARCHIVE PRO 플랫폼 이용 지원 전용입니다. 개별 작가의 작품 구매·전시·소장 문의는 각 작품 화면의 문의 버튼 또는 해당 작가가 Artist Bio에 등록한 연락처로 작가에게 직접 보내 주세요.</span><span lang="en">This channel is for ARCHIVE PRO platform support only. For an individual artist’s works, exhibitions, or collection inquiries, please contact the artist directly using the inquiry button on the artwork page or the contact details the artist has registered in their Artist Bio.</span></p>
+</section>
+
+<section aria-labelledby="h-privacy">
+<h2 id="h-privacy" class="bi"><span lang="ko">개인정보 안내</span><span lang="en">Privacy</span></h2>
+<p class="bi"><span lang="ko">문의는 이용자가 직접 보낸 이메일로만 접수되며, 이 페이지는 입력 내용을 저장하거나 서버로 전송하지 않습니다. 보내주신 이메일 주소와 문의 내용은 문의 응대와 법령상 의무 이행을 위해서만 사용하며, 자세한 내용은 개인정보처리방침을 따릅니다.</span><span lang="en">Inquiries are received only through emails you send yourself; this page does not store or transmit anything you select. Your email address and message are used only to respond to your inquiry and to comply with legal obligations, as described in our Privacy Policy.</span></p>
+<ul class="links">
+  <li class="bi"><a href="/privacy/"><span lang="ko">개인정보처리방침</span><span lang="en">Privacy Policy</span></a></li>
+  <li class="bi"><a href="/delete-account/"><span lang="ko">계정 및 데이터 삭제 안내</span><span lang="en">Account and data deletion</span></a></li>
+  <li class="bi"><a href="/app/"><span lang="ko">ARCHIVE PRO — Artist Edition 열기</span><span lang="en">Open ARCHIVE PRO — Artist Edition</span></a></li>
+</ul>
+</section>
+</main>
+
+<footer>
+  <p class="bi"><span lang="ko">상호: 등작 DUNGZAK CESTLAVIE · 대표: 김인범 · 사업자등록번호: 370-03-03979</span><span lang="en">Business name: DUNGZAK CESTLAVIE · Representative: KIM IN BEOM · Business registration no.: 370-03-03979</span></p>
+  <p class="bi"><span lang="ko">© 등작 DUNGZAK CESTLAVIE · ARCHIVE PRO — Artist Edition</span><span lang="en">© DUNGZAK CESTLAVIE · ARCHIVE PRO — Artist Edition</span></p>
+</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var EMAIL = 'dungzakcestlavie@gmail.com';
+  var SERVICE = 'ARCHIVE PRO — Artist Edition';
+  var KEY = 'dungzaklab_support_lang';
+  var MODES = { kr: 1, en: 1, both: 1 };
+  var TOPICS = {
+    account: { kr: '계정 및 로그인 문의', en: 'Account & sign-in' },
+    works:   { kr: '작품 등록·이미지·PDF 문의', en: 'Artworks, images & PDF' },
+    error:   { kr: '서비스 오류', en: 'Service error' },
+    general: { kr: '일반 문의', en: 'General inquiry' },
+    report:  { kr: '콘텐츠 신고', en: 'Report content' }
+  };
+  var BODY = {
+    normal: {
+      kr: '문의 내용:\n\n\n사용 기기·브라우저(선택):\n\n※ 비밀번호나 인증 코드는 적지 마세요.\n',
+      en: 'Your message:\n\n\nDevice / browser (optional):\n\n* Please do not include passwords or verification codes.\n'
+    },
+    report: {
+      kr: '신고할 작품·작가 페이지 주소(URL):\n\n신고 사유:\n\n',
+      en: 'URL of the artwork or artist page:\n\nReason for reporting:\n\n'
+    }
+  };
+  var MSG = {
+    copied: { kr: '이메일 주소를 복사했습니다.', en: 'Email address copied.' },
+    manual: { kr: '자동 복사를 사용할 수 없습니다. 주소가 선택되었으니 길게 누르거나 Ctrl+C로 복사해 주세요.', en: 'Automatic copy is unavailable. The address is selected — press and hold, or use Ctrl+C, to copy it.' }
+  };
+  var body = document.body;
+  var mode = 'both';
+  var btns = document.querySelectorAll('.langs button[data-lang]');
+  var mailBtn = document.getElementById('mailBtn');
+  var copyBtn = document.getElementById('copyBtn');
+  var statusEl = document.getElementById('status');
+  var addrEl = document.getElementById('emailAddr');
+  var lastMsg = null;
+
+  function norm(v) {
+    if (!v) return null;
+    v = String(v).toLowerCase();
+    if (v === 'ko') v = 'kr';
+    if (v === 'kr+en' || v === 'kren') v = 'both';
+    return MODES[v] ? v : null;
+  }
+  function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function pick() {
+    var q = null;
+    try { q = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+    // 순서: 주소의 ?lang → 이 페이지 선택값 → Artist Edition 언어 설정 → LAB 언어 설정 → 브라우저 언어
+    return norm(q) || norm(read(KEY)) || norm(read('archiveProApp_langPref_v1')) || norm(read('dzlab_lang')) ||
+      ((navigator.language || '').toLowerCase().indexOf('ko') === 0 ? 'kr' : 'en');
+  }
+  function text(pair) {
+    if (mode === 'kr') return pair.kr;
+    if (mode === 'en') return pair.en;
+    return pair.kr + ' / ' + pair.en;
+  }
+  function topic() {
+    var r = document.querySelector('input[name="topic"]:checked');
+    var v = r ? r.value : 'general';
+    return TOPICS.hasOwnProperty(v) ? v : 'general';
+  }
+  function updateMail() {
+    var tp = topic();
+    var subject = '[' + SERVICE + '] ' + text(TOPICS[tp]);
+    var b = BODY[tp === 'report' ? 'report' : 'normal'];
+    var bodyText = mode === 'kr' ? b.kr : mode === 'en' ? b.en : b.kr + '\n' + b.en;
+    mailBtn.setAttribute('href', 'mailto:' + EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(bodyText));
+  }
+  function say(key) {
+    lastMsg = key;
+    statusEl.textContent = key ? text(MSG[key]) : '';
+  }
+  function apply(next, save) {
+    mode = next;
+    body.classList.remove('lang-kr', 'lang-en', 'lang-both');
+    body.classList.add('lang-' + mode);
+    document.documentElement.lang = mode === 'en' ? 'en' : 'ko';
+    for (var i = 0; i < btns.length; i++) btns[i].setAttribute('aria-pressed', btns[i].getAttribute('data-lang') === mode ? 'true' : 'false');
+    if (save) { try { localStorage.setItem(KEY, mode); } catch (e) {} }
+    updateMail();
+    if (lastMsg) say(lastMsg);
+  }
+  function selectAddr() {
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(addrEl);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch (e) {}
+  }
+  function legacyCopy() {
+    var ta = document.createElement('textarea');
+    ta.value = EMAIL;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+  function copy() {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(EMAIL).then(function () { say('copied'); }, function () {
+        if (legacyCopy()) say('copied'); else { selectAddr(); say('manual'); }
+      });
+      return;
+    }
+    if (legacyCopy()) say('copied'); else { selectAddr(); say('manual'); }
+  }
+
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function () { apply(this.getAttribute('data-lang'), true); });
+  }
+  var radios = document.querySelectorAll('input[name="topic"]');
+  for (var j = 0; j < radios.length; j++) radios[j].addEventListener('change', updateMail);
+  copyBtn.hidden = false;
+  copyBtn.addEventListener('click', copy);
+  apply(pick(), false);
+})();
+</script>
+</body>
+</html>

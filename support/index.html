@@ -55,9 +55,10 @@
 
   /* 공식 지원 이메일 */
   .email-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 6px 0 4px; }
-  .email-addr { font-size: 18px; font-weight: 600; color: #fff; text-decoration: none; letter-spacing: .01em; user-select: all; -webkit-user-select: all; }
+  .email-addr { display: inline-flex; align-items: center; min-height: 44px; font-size: 18px; font-weight: 600; color: #fff; text-decoration: none; letter-spacing: .01em; user-select: all; -webkit-user-select: all; }
   .email-addr:hover { text-decoration: underline; }
   .btn { appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 8px 18px; border-radius: 999px; font: inherit; font-size: 15px; font-weight: 600; text-decoration: none; cursor: pointer; text-align: center; line-height: 1.4; }
+  .btn[hidden] { display: none; }
   .btn-ghost { background: transparent; color: var(--gold-strong); border: 1px solid var(--line); }
   .btn-ghost:hover { border-color: var(--gold); }
   .btn-primary { background: var(--gold); color: #10202c; border: 1px solid var(--gold); width: 100%; max-width: 420px; margin-top: 14px; }
@@ -78,7 +79,9 @@
   .opt-desc { display: block; font-size: 14px; color: var(--muted); line-height: 1.6; margin-top: 2px; }
 
   .links { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
-  .links a { display: inline-flex; align-items: center; min-height: 44px; }
+  .links a { display: inline-block; padding: 8px 0; min-height: 44px; }
+  body.lang-both .links a > [lang="en"] { color: inherit; }
+  body.lang-both .links a > [lang="en"]::before { content: " · "; }
   footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 
   /* 언어 표시: JS가 없으면 두 언어를 모두 보여준다(KR+EN). /privacy/ 와 같은 규칙. */

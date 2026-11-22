@@ -1,0 +1,15 @@
+/* DUNGZAK LAB shared skip link and focus affordances. */
+.dz-sr-skip{
+  position:fixed;z-index:999999;top:max(8px,env(safe-area-inset-top));left:12px;
+  transform:translateY(-200%);max-width:calc(100vw - 24px);
+  padding:12px 16px;background:#06111C;color:#FFE8AD;border:2px solid #FFD75E;
+  border-radius:12px;font:700 16px/1.45 system-ui,sans-serif;
+}
+.dz-sr-skip:focus,.dz-sr-skip:focus-visible{
+  transform:none;outline:3px solid #9BC8FF;outline-offset:2px
+}
+#home[tabindex="-1"]:focus,.view[tabindex="-1"]:focus,
+#archiveMain[tabindex="-1"]:focus{outline:none}
+#grid .card[role="button"]:focus-visible{
+  outline:3px solid #9BC8FF!important;outline-offset:3px!important
+}

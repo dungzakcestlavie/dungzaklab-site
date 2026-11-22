@@ -31,13 +31,19 @@ for(const [dev,width,height] of profiles){
   await page.locator('.lang-global [data-lang="en"]').click();
   await page.waitForTimeout(800);
   await attr(page.locator('html'),'lang','en');
-  await page.locator('#menuBtn').click();
+  await page.evaluate(()=>{
+     window.__dzClickLog=[];
+     document.addEventListener('click',e=>{window.__dzClickLog.push({phase:'capture',target:e.target.id||e.target.tagName,detail:e.detail,open:document.querySelector('#menu')?.className});},true);
+     document.querySelector('#menuBtn').addEventListener('click',e=>{window.__dzClickLog.push({phase:'menu-button',target:e.target.id||e.target.tagName,detail:e.detail,open:document.querySelector('#menu')?.className});});
+   });
+   await page.locator('#menuBtn').click();
    await page.waitForTimeout(180);
   const menuState=await page.evaluate(()=>({
     menu:document.querySelector('#menu')?.className,
     aria:document.querySelector('#menuBtn')?.getAttribute('aria-expanded'),
     hidden:document.querySelector('#menu')?.getAttribute('aria-hidden'),
-    focus:document.activeElement?.id
+    focus:document.activeElement?.id,
+    clicks:window.__dzClickLog
   }));
   if(menuState.aria!=='true')throw Error('Menu did not open after click: '+JSON.stringify(menuState));
   await attr(page.locator('#menuBtn'),'aria-haspopup','dialog');

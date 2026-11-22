@@ -8398,6 +8398,9 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         }, 700);
       }
 
+      /* rf1(2026-11-23): 뷰어를 닫은 뒤 마지막으로 본 작품 카드가 화면에 정확히 오도록 잠시(최대 3초) 따라간다 — 위쪽 이미지가 늦게 로드되거나 확대(400%)로 카드 높이가 바뀌어 위치가 밀리는 문제. 사용자가 화면을 만지거나 스크롤·키를 누르면 즉시 멈춘다. 화면보다 큰 카드는 머리(상단 고정 헤더 바로 아래)에 맞춘다. */
+      function apFollow(c){if(!c||!c.getBoundingClientRect)return;var de=document.documentElement,end=Date.now()+3000,st=0,stop=!1,ev=["touchstart","wheel","keydown","pointerdown","mousedown"];function off(){stop=!0;ev.forEach(function(t){window.removeEventListener(t,off,!0)})}ev.forEach(function(t){window.addEventListener(t,off,{capture:!0,passive:!0})});function top(){var h=document.querySelector(".site-header");if(!h)return 0;var cs=getComputedStyle(h);if(cs.position!=="sticky"&&cs.position!=="fixed")return 0;var r=h.getBoundingClientRect();return r.bottom>0&&r.top<=1?r.bottom:0}function fit(){var r=c.getBoundingClientRect(),vh=window.innerHeight||de.clientHeight||0,t0=top(),room=vh-t0,d=r.height<=room*.92?r.top+r.height/2-(t0+room/2):r.top-t0-Math.min(12,room*.03);if(Math.abs(d)<=4)return!0;var sb=de.style.scrollBehavior;de.style.scrollBehavior="auto";window.scrollBy(0,d);de.style.scrollBehavior=sb;return!1}try{fit()}catch(e){}(function tick(){if(stop)return;if(!c.isConnected||Date.now()>end)return off();var ok=!1;try{ok=fit()}catch(e){return off()}var n=Date.now();ok?(st||(st=n),n-st>700&&off()):st=0;stop||requestAnimationFrame(tick)})()}
+
       function restoreArchiveScroll() {
         const item = state.lastClosedLightboxItem || state.lightboxItem || null;
 
@@ -8407,13 +8410,29 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
           if (item) {
             const key = String(item._key || '');
             const id = String(item.id || '');
-            let card = null;
+            const findCard = function() {
+              let c = null;
+              if (key) c = document.querySelector('.card[data-key="' + CSS.escape(key) + '"]');
+              if (!c && id) c = document.querySelector('.card[data-id="' + CSS.escape(id) + '"]');
+              return c;
+            };
+            let card = findCard();
 
-            if (key) card = document.querySelector('.card[data-key="' + CSS.escape(key) + '"]');
-            if (!card && id) card = document.querySelector('.card[data-id="' + CSS.escape(id) + '"]');
+            /* rf1(2026-11-23): 뷰어에서 넘겨 본 마지막 작품이 아직 그리지 않은 묶음에 있으면 그 작품까지 묶음을 이어 그린다(화면 이동 없음) */
+            if (!card) {
+              try {
+                const list = Array.isArray(state.filtered) ? state.filtered : [];
+                let idx = list.indexOf(item);
+                if (idx < 0) idx = list.findIndex(function(w) { return w && ((key && String(w._key || '') === key) || (id && String(w.id || '') === id)); });
+                let guard = 0;
+                while (idx >= 0 && idx >= (Number(state.visibleCount) || 0) && hasMoreFilteredWorks() && guard++ < 400) loadMoreWorks({ scrollToNewBatch: false });
+                card = findCard();
+              } catch (_) {}
+            }
 
             if (card && typeof card.scrollIntoView === 'function') {
               card.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+              apFollow(card);
               restored = true;
             }
           }

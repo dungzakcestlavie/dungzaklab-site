@@ -55,6 +55,9 @@
   .langs button[aria-pressed="true"]::before, .chip[aria-pressed="true"]::before { content: "\2713\00a0"; content: "\2713\00a0" / ""; }
   h1 { font-size: clamp(calc(24px * var(--s)), calc(5vw * var(--s)), calc(32px * var(--s))); line-height: 1.35; margin: 28px 0 8px; color: #fff; font-weight: 700; }
   h1 .sub { display: block; font-size: calc(15px * var(--s)); color: var(--gold); letter-spacing: .08em; font-weight: 600; margin-bottom: 6px; }
+  /* 2026-11-22 (lab-a11y1): 좁은 화면에서 크게 키운 제목이 단어 중간에서 끊기지 않게 상한(100%에서는 변화 없음) */
+  h1 { font-size: min(clamp(calc(24px * var(--s)), calc(5vw * var(--s)), calc(32px * var(--s))), max(24px, 14vw)); }
+  h1 .sub { font-size: min(calc(15px * var(--s)), max(15px, 7.4vw)); }
   h2 { font-size: calc(19px * var(--s)); line-height: 1.45; color: var(--gold-strong); margin: 36px 0 12px; padding-top: 6px; scroll-margin-top: 16px; }
   p, li { color: var(--text); }
   ul { padding-left: 22px; }

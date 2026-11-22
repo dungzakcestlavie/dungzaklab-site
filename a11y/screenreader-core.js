@@ -107,14 +107,15 @@
     }
   }
   function syncWorkCards() {
-    $$('#grid .card[role="button"][data-id]').forEach(function(c) {
-      if (c.getAttribute('data-dz-sr-title') === language()) return;
-      var id = c.getAttribute('data-id') || '';
-      var title = c.querySelector('.title');
-      var name = title && title.textContent.trim() || id;
-      c.setAttribute('aria-label',(id ? id+' · ':'')+name+' · '+
+    $('#grid .card[data-id]').forEach(function(c) {
+      var action=c.querySelector('.thumb-wrap[role="button"]') || (c.getAttribute('role')==='button'?c:null);
+      if (!action || action.getAttribute('data-dz-sr-title') === language()) return;
+      var id=c.getAttribute('data-id') || '';
+      var heading=c.querySelector('.title');
+      var name=heading && heading.textContent.trim() || id;
+      action.setAttribute('aria-label',(id ? id+' · ':'')+name+' · '+
         T('작품 상세 보기','View artwork details'));
-      c.setAttribute('data-dz-sr-title', language());
+      action.setAttribute('data-dz-sr-title', language());
     });
   }
   function initViewerFocus() {

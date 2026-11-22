@@ -5248,7 +5248,7 @@ html.is-ipad [data-viewer-close]:hover {
 </style>
 
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f14" />
   <meta name="color-scheme" content="dark" />
   <meta name="format-detection" content="telephone=no,address=no,email=no" />
@@ -5350,6 +5350,9 @@ html.is-ipad [data-viewer-close]:hover {
 <!-- 2026-11-22 (lab-a11y1): 전역 보기 설정(글자 크기 100~400%·고대비) — 앱·문의 및 지원과 같은 설정 공유. 이 3줄을 지우면 이전 상태. -->
 <link rel="stylesheet" href="/a11y/display-settings.css?v=20261122-lab1" />
 <script src="/a11y/display-settings.js?v=20261122-lab1"></script>
+<!-- Screen reader keyboard/semantic layer (no login/data behavior changes). -->
+<link rel="stylesheet" href="/a11y/screenreader-core.css?v=20261122-sr1">
+<script src="/a11y/screenreader-core.js?v=20261122-sr1" defer></script>
 </head>
 <body class="archive-entered archive-filter-open">
   <div class="site-bg" aria-hidden="true"></div>
@@ -7933,8 +7936,8 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         const key = String(work._key || (work._index + '::' + work.section_id + '::' + work.id));
 
         return [
-          '<article class="card" tabindex="0" role="button" data-render-index="', escapeHTML(index), '" data-key="', escapeHTML(key), '" data-id="', escapeHTML(work.id), '" data-section-id="', escapeHTML(work.section_id), '" aria-label="', escapeHTML(work.id), ' 작품 보기">',
-            '<div class="thumb-wrap">',
+          '<article class="card" data-render-index="', escapeHTML(index), '" data-key="', escapeHTML(key), '" data-id="', escapeHTML(work.id), '" data-section-id="', escapeHTML(work.section_id), '">',
+            '<div class="thumb-wrap" role="button" tabindex="0" aria-label="', escapeHTML(work.id), ' · ', escapeHTML(title || work.id), ' · ', escapeHTML(state.lang === 'en' ? 'View artwork details' : '작품 상세 보기'), '">',
               '<img class="thumb', loadedClass, '" src="', escapeHTML(priority ? imgSrc : SVG_PLACEHOLDER), '"', dataSrc, ' alt="', escapeHTML(title || work.id || ''), '" loading="', loading, '" decoding="async" fetchpriority="', fetchPriority, '" data-zoom="', escapeHTML(work.zoom || ''), '">',
               '<span class="detail-hover" data-kr="상세 보기 →" data-en="View Detail →">', escapeHTML(detailText), '</span>',
             '</div>',

@@ -351,3 +351,12 @@ html.dz-z #searchArea .archive-search:focus-within { box-shadow: 0 0 0 3px #f0d7
 html.dz-hc #searchArea .archive-search:focus-within { box-shadow: 0 0 0 3px #FFD75E !important; border-color: #FFD75E !important; }
 /* ⑥ LAB Archive Pro: 언어 버튼 줄의 「Aa 보기 설정」은 100%에서 언어 버튼과 같은 34px 높이(줄 높이·헤더 그대로). 확대 중에는 원래 크기 */
 html:not(.dz-z) .hero .lang-inline > .dzds-entry { height: 34px !important; min-height: 34px !important; padding-top: 0 !important; padding-bottom: 0 !important; align-self: center; }
+
+/* ⑦ par1(2026-11-23) 원조 Archive Pro 접근성 통일
+   - 「Aa 보기 설정」(100%, 34px 줄): 화면 모양·줄 높이는 그대로 두고 손가락이 닿는 영역만 위아래로 넓혀 44px
+   - 작품 보기의 소장 상태 글자(소장됨 등)도 함께 확대
+   - 작품 보기의 「캡션 크게 보기」 버튼 글자도 확대(최대 2.5배, 줄바꿈 허용 — 리더 자체 글자 크기는 리더 설정 그대로) */
+html:not(.dz-z) .hero .lang-inline > .dzds-entry { position: relative; z-index: 1; }
+html:not(.dz-z) .hero .lang-inline > .dzds-entry::after { content: ""; position: absolute; left: -1px; right: -1px; top: -6px; bottom: -6px; }
+html.dz-z .lb-collection-status { font-size: calc(16px * var(--dz-s)); }
+html.dz-z #lightbox .dzcr-trigger.dzcr-trigger { font-size: calc(16px * min(var(--dz-s), 2.5)) !important; height: auto !important; max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; line-height: 1.3; }

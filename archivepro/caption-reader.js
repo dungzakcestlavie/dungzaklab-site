@@ -154,6 +154,11 @@
     var p = { scale: DEFAULT_SCALE, settingsOpen: true };
     try {
       var raw = window.localStorage.getItem(STORE_KEY);
+      if (!raw) {
+        /* par1(2026-11-23): 캡션 리더를 처음 여는 사용자는 전역 보기 설정(글자 크기)이 리더 기본값(300%)보다 크면 그 크기로 시작. 리더에서 고른 값이 저장된 뒤에는 그 값을 그대로 쓴다. */
+        var g = JSON.parse(window.localStorage.getItem("dz.support.a11y.v1") || "null");
+        if (g && SCALES.indexOf(Number(g.scale)) !== -1 && Number(g.scale) > p.scale) p.scale = Number(g.scale);
+      }
       if (raw) {
         var o = JSON.parse(raw);
         if (o && SCALES.indexOf(Number(o.scale)) !== -1) p.scale = Number(o.scale);

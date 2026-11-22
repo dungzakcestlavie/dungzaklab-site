@@ -1880,8 +1880,12 @@ html.dz-z #home .dzds-home-entry{max-width:100%;white-space:normal;overflow-wrap
     if(wasSwipe) ignoreSwipeClickUntil = performance.now() + 650;
   }, {capture:true, passive:true});
   document.addEventListener('touchcancel', function(){
+    // A browser may cancel a tap without a scroll (notably Firefox in
+    // touch-emulated tablet layouts). Do not suppress a subsequent real click
+    // unless that cancelled gesture was actually moving.
+    const cancelledSwipe = !!(touch && touch.moved);
     touch = null;
-    ignoreSwipeClickUntil = performance.now() + 650;
+    if(cancelledSwipe) ignoreSwipeClickUntil = performance.now() + 650;
   }, {capture:true, passive:true});
   document.addEventListener('click', function(e){
     if(e.detail === 0 || performance.now() > ignoreSwipeClickUntil) return;

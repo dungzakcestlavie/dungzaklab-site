@@ -89,7 +89,9 @@
         while ((m = WORD.exec(txt))) {
           var r = document.createRange(); r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length);
           var rs = r.getClientRects(), lines = {}, k, cnt = 0, wid = 0;
-          for (k = 0; k < rs.length; k++) { if (rs[k].width < 0.5) continue; wid += rs[k].width; var key = Math.round(rs[k].top / 4); if (!lines[key]) { lines[key] = 1; cnt++; } }
+          var out = false, vw = document.documentElement.clientWidth;
+          for (k = 0; k < rs.length; k++) { if (rs[k].width < 0.5) continue; wid += rs[k].width; if (rs[k].left < -1 || rs[k].right > vw + 1) out = true; var key = Math.round(rs[k].top / 4); if (!lines[key]) { lines[key] = 1; cnt++; } }
+          if (out && cnt === 1) cnt = 2; // 줄바꿈 금지(keep-all) 때문에 화면 밖으로 삐져나간 단어도 같은 방식으로 맞춘다
           if (cnt > 1) { var a = avail(p); worst = Math.min(worst, 0.92, a > 20 ? (a * 0.96) / wid : 1); } // 폭 계산이 어긋나는 배치(flex 안 글자 등)는 한 번에 8%씩 더 줄인다
         }
         if (worst < 1) { seen.push(p); need.push([p, worst]); }
@@ -805,13 +807,14 @@
     }
     function init() {
       hdr = document.querySelector('.header');
-      if (hdr && hdr.querySelector('.lang-global')) { root.classList.add('dz-lab'); setHdr(); window.addEventListener('resize', setHdr); }
+      if (hdr && hdr.querySelector('.lang-global')) { root.classList.add('dz-lab'); if (!document.getElementById('menuBtn')) root.classList.add('dz-lab-x'); /* ocean·제안서처럼 헤더 버튼이 절대 위치인 문서 */ setHdr(); window.addEventListener('resize', setHdr); }
       menu = document.getElementById('menu'); btn = document.getElementById('menuBtn') || document.querySelector('.header .menu-btn');
       if (!menu || !btn || !menu.classList.contains('menu')) return;
       menu.setAttribute('role', 'dialog');
       menu.setAttribute('aria-modal', 'true');
       menu.setAttribute('aria-label', plain(NAME));
       menu.setAttribute('tabindex', '-1'); menu.setAttribute('data-dz-focus-self', '');
+      if (parseFloat(getComputedStyle(menu).left) < 0) root.classList.add('dz-lab-lm'); // left 값으로 숨기는 메뉴(ocean.html): 확대 때 폭이 넓어져도 삐져나오지 않게
       sync();
       try { new MutationObserver(sync).observe(menu, { attributes: true, attributeFilter: ['class'] }); } catch (e) {}
       // Esc로 닫기: 자체 Esc 처리가 없는 페이지(ocean.html 등)에만

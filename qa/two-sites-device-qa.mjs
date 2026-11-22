@@ -89,11 +89,18 @@ async function art(page,tag){
 }
 async function lab(page,tag){
  try{
-  const menu=page.locator('#menuBtn');
-  if(await menu.count())await menu.click({timeout:7000});
-  const entry=page.locator('#dzDisplayBtn');
-  await entry.waitFor({state:'visible',timeout:7000});
-  await entry.click({timeout:7000});
+  // The LAB homepage has its own prominent accessible entry.
+  // Prefer that real visible control; the slide-menu entry may be offscreen.
+  const homeEntry=page.locator('.dzds-home-entry');
+  if(await homeEntry.count() && await homeEntry.isVisible()){
+   await homeEntry.click({timeout:7000});
+  }else{
+   const menu=page.locator('#menuBtn');
+   if(await menu.count())await menu.click({timeout:7000});
+   const entry=page.locator('#dzDisplayBtn');
+   await entry.waitFor({state:'visible',timeout:7000});
+   await entry.click({timeout:7000});
+  }
   await page.locator('#dzDisplayDialog').waitFor({state:'visible',timeout:7000});
   for(const scale of ['150','200','300','400']){
    await page.locator('#dzDisplayDialog [data-dzds="scale"][data-scale="'+scale+'"]').click({timeout:7000});
@@ -139,7 +146,16 @@ for(const tag of ['iPhone-SE-old','Galaxy-Fold-open','iPad-mini-portrait','Deskt
    await navigate(page,url);
    await page.locator('#paper').waitFor({state:'attached',timeout:8000});
    for(const s of ['1.5','2','3','4']){
-    await page.locator('[data-size="'+s+'"]').click({timeout:7000});
+    // Report reader remembers the previous 400% zoom and collapses its toolbar
+    // on the next report; reveal controls through the accessible toggle.
+    const sizeBtn=page.locator('[data-size="'+s+'"]');
+    if(!await sizeBtn.isVisible()){
+     const toggle=page.locator('.toolbar .dz-tb-toggle');
+     if(!await toggle.count())throw Error('Hidden size control without accessible toolbar toggle');
+     await toggle.click({timeout:7000});
+     await sizeBtn.waitFor({state:'visible',timeout:7000});
+    }
+    await sizeBtn.click({timeout:7000});
     const cur=await page.locator('html').evaluate(e=>getComputedStyle(e).getPropertyValue('--scale').trim());
     if(cur!==s)throw Error('CSS scale not applied '+cur);
     log('dungzak.art',tag,label+'-scale-'+s,'PASS');

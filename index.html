@@ -1812,6 +1812,40 @@ body.menu-open .header{
   }
 }
 
+/* 2026-11-22 LAB 대문 보기 설정 — 기존 홈 타이틀·CTA의 100% 배치 불변 */
+#home .dzds-home-entry-row{
+  position:absolute; top:calc(var(--dz-lab-hdr, var(--header-height)) + 10px);
+  left:var(--lab-page-padding, 18px); right:var(--lab-page-padding, 18px);
+  display:flex; justify-content:flex-start; z-index:2; pointer-events:none;
+}
+#home .dzds-home-entry{
+  display:inline-flex; align-items:center; justify-content:flex-start; gap:10px;
+  min-height:44px; padding:5px 8px; border:0; border-radius:8px;
+  background:transparent; color:#a3cdf8; cursor:pointer; pointer-events:auto;
+  font:inherit; font-size:calc(15px * var(--dz-s, 1)); line-height:1.3;
+  letter-spacing:0.04em; text-align:left; -webkit-tap-highlight-color:rgba(214,184,106,.2);
+}
+#home .dzds-home-entry .dzds-entry-mark{
+  flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
+  min-width:calc(34px * min(var(--dz-s, 1), 2));
+  min-height:calc(28px * min(var(--dz-s, 1), 2));
+  padding:0 6px; border:1px solid rgba(214,184,106,.55); border-radius:8px;
+  color:var(--gold, #d6b86a); font-weight:700; letter-spacing:0;
+}
+#home .dzds-home-label-en{display:none;}
+html[lang="en"] #home .dzds-home-label-ko{display:none;}
+html[lang="en"] #home .dzds-home-label-en{display:inline;}
+#home .dzds-home-entry:hover{color:var(--gold, #d6b86a);}
+#home .dzds-home-entry:focus-visible{outline:3px solid #f0d79c; outline-offset:2px;}
+html.dz-hc #home .dzds-home-entry{color:#CFE8FF;}
+html.dz-hc #home .dzds-home-entry .dzds-entry-mark{color:#FFD75E;border:2px solid #FFD75E;}
+/* 글자 확대 시에는 정상 문서 흐름으로 전환 — 400%에서도 제목과 겹치지 않음 */
+html.dz-z #home .dzds-home-entry-row{
+  position:relative; top:auto; left:auto; right:auto;
+  flex-wrap:wrap; margin:0 0 22px;
+}
+html.dz-z #home .dzds-home-entry{max-width:100%;white-space:normal;overflow-wrap:anywhere;}
+
 </style>
 
 <script>
@@ -1907,6 +1941,15 @@ body.menu-open .header{
 <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
 
 <div class="view home active" id="home">
+  <!-- 2026-11-22: 대문 헤더 바로 아래 보기 설정 진입점. 메뉴 버튼과 동일한 공용 엔진을 연다. -->
+  <div class="dzds-home-entry-row">
+    <button type="button" class="dzds-home-entry" aria-haspopup="dialog" aria-controls="dzDisplayDialog"
+            onclick="if(window.APP_DISPLAY_SETTINGS){window.APP_DISPLAY_SETTINGS.open();}">
+      <span class="dzds-entry-mark" aria-hidden="true">Aa</span>
+      <span class="dzds-home-label dzds-home-label-ko" lang="ko">보기 설정</span>
+      <span class="dzds-home-label dzds-home-label-en" lang="en">DISPLAY SETTINGS</span>
+    </button>
+  </div>
   <div class="home-hero">
     <div class="home-title">
       <span class="home-title-line">DUNGZAK</span> <span class="home-title-line">CESTLAVIE LAB</span>

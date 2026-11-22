@@ -181,13 +181,25 @@ html.dz-z header .langs { border-radius: 14px !important; }
    Never apply height:auto to the collapsed filter state.
    ------------------------------------------------------------------------ */
 html.dz-z:not(.ap-filter-collapsed) body.archive-entered.archive-filter-open #searchArea.controls {
-  grid-template-columns: minmax(0, 1fr) !important;
   align-items: stretch !important;
   max-height: none !important;
   overflow: visible !important;
 }
-html.dz-z body.archive-entered.archive-filter-open #searchArea .field,
-html.dz-z body.archive-entered.archive-filter-open #searchArea .control-actions {
+/* Reflow by effective width (viewport / text scale), not by device brand. */
+html.dz-z.dz-ew1:not(.ap-filter-collapsed) body.archive-entered.archive-filter-open #searchArea.controls {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+html.dz-z.dz-ew2:not(.ap-filter-collapsed) body.archive-entered.archive-filter-open #searchArea.controls {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+html.dz-z.dz-ew1 body.archive-entered.archive-filter-open #searchArea .field,
+html.dz-z.dz-ew1 body.archive-entered.archive-filter-open #searchArea .control-actions {
+  min-width: 0 !important;
+  width: 100% !important;
+  grid-column: 1 / -1 !important;
+}
+html.dz-z.dz-ew2 body.archive-entered.archive-filter-open #searchArea .field-search,
+html.dz-z.dz-ew2 body.archive-entered.archive-filter-open #searchArea .control-actions {
   min-width: 0 !important;
   width: 100% !important;
   grid-column: 1 / -1 !important;
@@ -202,7 +214,7 @@ html.dz-z body.archive-entered.archive-filter-open #searchArea .input {
   min-height: max(52px, calc(18px * var(--dz-s) + 26px)) !important;
   line-height: 1.35 !important;
 }
-html.dz-z body.archive-entered.archive-filter-open #searchArea .archive-search {
+html.dz-z:is(.dz-ew1, .dz-ew2) body.archive-entered.archive-filter-open #searchArea .archive-search {
   box-sizing: border-box !important;
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) auto !important;
@@ -213,12 +225,12 @@ html.dz-z body.archive-entered.archive-filter-open #searchArea .archive-search {
   overflow: visible !important;
   padding: 12px !important;
 }
-html.dz-z body.archive-entered.archive-filter-open #searchArea .archive-search__icon {
+html.dz-z:is(.dz-ew1, .dz-ew2) body.archive-entered.archive-filter-open #searchArea .archive-search__icon {
   grid-column: 1 / -1 !important;
   font-size: calc(16px * min(var(--dz-s), 2)) !important;
   line-height: 1.1 !important;
 }
-html.dz-z body.archive-entered.archive-filter-open #searchArea .archive-search__input {
+html.dz-z:is(.dz-ew1, .dz-ew2) body.archive-entered.archive-filter-open #searchArea .archive-search__input {
   box-sizing: border-box !important;
   grid-column: 1 !important;
   min-width: 0 !important;
@@ -227,13 +239,13 @@ html.dz-z body.archive-entered.archive-filter-open #searchArea .archive-search__
   min-height: max(44px, calc(18px * var(--dz-s) + 14px)) !important;
   line-height: 1.35 !important;
 }
-html.dz-z body.archive-entered.archive-filter-open #searchArea .archive-search__clear {
+html.dz-z:is(.dz-ew1, .dz-ew2) body.archive-entered.archive-filter-open #searchArea .archive-search__clear {
   grid-column: 2 !important;
   width: max(44px, 1.25em) !important;
   height: max(44px, 1.25em) !important;
   line-height: 1.1 !important;
 }
-html.dz-z body.archive-entered.archive-filter-open #searchArea .archive-search__submit {
+html.dz-z:is(.dz-ew1, .dz-ew2) body.archive-entered.archive-filter-open #searchArea .archive-search__submit {
   grid-column: 1 / -1 !important;
   width: 100% !important;
   min-width: 0 !important;
@@ -244,7 +256,7 @@ html.dz-z body.archive-entered.archive-filter-open #searchArea .archive-search__
   line-height: 1.35 !important;
   text-align: center !important;
 }
-html.dz-z body.archive-entered.archive-filter-open #searchArea .control-actions {
+html.dz-z:is(.dz-ew1, .dz-ew2) body.archive-entered.archive-filter-open #searchArea .control-actions {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) !important;
 }

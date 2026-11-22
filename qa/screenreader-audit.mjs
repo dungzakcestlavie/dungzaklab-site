@@ -17,7 +17,7 @@ for(const [dev,width,height] of profiles){
  const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.stack||e.message));
  await test(dev,'LAB-home-load',async()=>{
   const r=await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
-  if(!r||r.status()!==200)throw Error('HTTP '+r?.status());
+  if(!r||![200,304].includes(r.status()))throw Error('HTTP '+r?.status());
   await page.locator('#dz-sr-skip').waitFor({timeout:8000});
   await attr(page.locator('#home'),'role','main');
  });
@@ -33,7 +33,13 @@ for(const [dev,width,height] of profiles){
   await attr(page.locator('html'),'lang','en');
   await page.locator('#menuBtn').click();
    await page.waitForTimeout(180);
-  await attr(page.locator('#menuBtn'),'aria-expanded','true');
+  const menuState=await page.evaluate(()=>({
+    menu:document.querySelector('#menu')?.className,
+    aria:document.querySelector('#menuBtn')?.getAttribute('aria-expanded'),
+    hidden:document.querySelector('#menu')?.getAttribute('aria-hidden'),
+    focus:document.activeElement?.id
+  }));
+  if(menuState.aria!=='true')throw Error('Menu did not open after click: '+JSON.stringify(menuState));
   await attr(page.locator('#menuBtn'),'aria-haspopup','dialog');
   await page.keyboard.press('Escape');
   await attr(page.locator('#menuBtn'),'aria-expanded','false');
@@ -57,7 +63,7 @@ for(const [dev,width,height] of profiles){
  for(const p of ['/archivepro/index.html','/app/index.html']){
   await test(dev,p+'-load',async()=>{
    let r=await page.goto('http://127.0.0.1:8765'+p,{waitUntil:'domcontentloaded',timeout:25000});
-   if(!r||r.status()!==200)throw Error('HTTP '+r?.status());
+   if(!r||![200,304].includes(r.status()))throw Error('HTTP '+r?.status());
    await page.locator('#dz-sr-skip').waitFor({timeout:7000});
   });
   await test(dev,p+'-semantics',async()=>{

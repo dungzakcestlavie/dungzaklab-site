@@ -116,6 +116,19 @@ async function lab(page,tag){
   await page.locator('#dzDisplayDialog [data-dzds="close"]').last().click();
   if(await page.locator('#dzDisplayDialog').isVisible())throw Error('close failed');
   log('dungzaklab.art',tag,'contrast-reset-close','PASS');
+  // Regression after 2026-11-22 screen-reader deployment: the desktop/tablet
+  // centered LAB menu button must not move out from under a pointer press.
+  const menuBtn=page.locator('#menuBtn');
+  if(await menuBtn.count()){
+   await menuBtn.click({timeout:7000});
+   await page.waitForTimeout(150);
+   if(await menuBtn.getAttribute('aria-expanded')!=='true')throw Error('LAB menu not opening by pointer at '+tag);
+   log('dungzaklab.art',tag,'menu-pointer-open','PASS');
+   await page.keyboard.press('Escape');
+   await page.waitForTimeout(150);
+   if(await menuBtn.getAttribute('aria-expanded')!=='false')throw Error('LAB menu not closing by Escape at '+tag);
+   log('dungzaklab.art',tag,'menu-escape-close','PASS');
+  }
  }catch(e){log('dungzaklab.art',tag,'display-controls','FAIL',issue(e));await snapFailure(page,'lab',tag)}
 }
 const browser=await browserType.launch({headless:true});

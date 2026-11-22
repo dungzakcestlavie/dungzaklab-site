@@ -14,3 +14,13 @@
 #grid .card .thumb-wrap[role="button"]:focus-visible{
   outline:3px solid #9BC8FF!important;outline-offset:3px!important
 }
+
+/* At 641px+, the LAB menu icon is vertically centered using translateY(-50%).
+   The global .is-pressing:scale() rule discarded that translation during
+   pointerdown: in Firefox pointerup then landed on the HEADER, not the button.
+   Preserve the centering while retaining its subtle pressed visual feedback. */
+@media (min-width: 641px) {
+  #menuBtn.is-pressing, #menuBtn:active {
+    transform: translateY(-50%) scale(.985) !important;
+  }
+}

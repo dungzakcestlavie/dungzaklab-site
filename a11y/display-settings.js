@@ -941,3 +941,194 @@
     rescan: function () { Gen.rescan(); }
   };
 })();
+
+/* dzsel1 (2026-11-23) — 확대(150~400%) 중 선택칸(섹션·정렬 등)의 펼친 목록을 접근성 전용 선택 창으로.
+   iOS·Android·일부 PC 브라우저의 기본 선택 팝업은 페이지 글자 크기를 따르지 않아, 바깥 글자만 크고 펼친 목록은 작게 남았다.
+   - 글자 크기 100%(html.dz-z 아님)에서는 아무것도 바꾸지 않는다(기본 선택 팝업 그대로, Golden Baseline).
+   - 확대 중에만 선택칸을 누르거나(마우스·터치) Enter·Space·Alt+↓·F4 를 누르면 이 창을 연다. ↑↓ 로 값 바꾸기 등 나머지 기본 동작은 그대로.
+   - 항목을 고르면 원래 <select> 의 값을 바꾸고 input·change 이벤트를 보낸다 → 기존 섹션·정렬·필터 처리 그대로(작품 데이터 무변경).
+   - role=dialog + listbox/option, 선택 상태 aria-selected, ↑↓·Home·End·Enter·Space·Escape·Tab 순환, 닫으면 원래 선택칸으로 초점 복귀.
+   - 제외: PDF 결과 페이지(.ap-pf-page), 여러 항목 선택칸, [data-dz-native]. */
+(function () {
+  'use strict';
+  if (window.DZ_A11Y_SELECT) return;
+  var root = document.documentElement, back = null, box = null, list = null, titleEl = null, xBtn = null, closeBtn = null;
+  var cur = null, lastOpen = 0, touch = null, opts = [];
+
+  function zoomed() { return root.classList.contains('dz-z'); }
+  function lang() {
+    var raw = window.APP_FILTER && window.APP_FILTER.state && window.APP_FILTER.state.lang;
+    if (!raw) { var a = document.querySelector('.lang-tab.active[data-lang], .lang-tab[aria-pressed="true"][data-lang]'); raw = a && a.getAttribute('data-lang'); }
+    return raw === 'en' || raw === 'both' ? raw : 'kr';
+  }
+  function tx(kr, en) { var l = lang(); return l === 'en' ? en : (l === 'both' ? kr + ' · ' + en : kr); }
+  function eligible(s) {
+    return !!(s && s.tagName === 'SELECT' && zoomed() && !s.multiple && !(s.size > 1) && !s.disabled &&
+      !(s.closest && s.closest('.ap-pf-page, [data-dz-native]')) && s.options && s.options.length);
+  }
+  function clean(t) { return String(t || '').replace(/\s+/g, ' ').trim(); }
+  function labelOf(s) {
+    var t = s.getAttribute('aria-label');
+    if (!t && s.id) { try { var l = document.querySelector('label[for="' + (window.CSS && CSS.escape ? CSS.escape(s.id) : s.id) + '"]'); t = l && l.textContent; } catch (e) {} }
+    if (!t && s.getAttribute('aria-labelledby')) { var e2 = document.getElementById(s.getAttribute('aria-labelledby').split(/\s+/)[0]); t = e2 && e2.textContent; }
+    if (!t) { var l2 = s.closest('label'); t = l2 && l2.textContent; }
+    if (!t && s.title) t = s.title;
+    return clean(t) || tx('선택', 'Select');
+  }
+
+  function css() {
+    if (document.getElementById('dzSelStyle')) return;
+    var st = document.createElement('style'); st.id = 'dzSelStyle';
+    st.textContent =
+      '.dzsel-back{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.72);display:flex;align-items:stretch;justify-content:center;padding:max(8px,env(safe-area-inset-top,0px)) max(8px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));box-sizing:border-box}' +
+      '.dzsel-back[hidden]{display:none}' +
+      '.dzsel{display:flex;flex-direction:column;width:100%;max-width:920px;max-height:100%;margin:auto;background:#0b1220;color:#f4efe6;border:1px solid rgba(212,180,109,.55);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6);box-sizing:border-box;overflow:hidden;font-family:inherit}' +
+      '.dzsel-head{flex:0 0 auto;display:flex;align-items:flex-start;gap:min(10px,2vw);padding:min(14px,1.6vh) min(16px,3vw);border-bottom:1px solid rgba(212,180,109,.25)}' +
+      '.dzsel-title{flex:1 1 0;min-width:0;margin:0;color:#d6b76f;font-weight:700;line-height:1.25;overflow-wrap:anywhere;font-size:min(calc(19px * var(--dz-s,1)),6vh,9vw);font-size:min(calc(19px * var(--dz-s,1)),6dvh,9vw)}' +
+      '.dzsel-x,.dzsel-close{min-width:44px;min-height:44px;box-sizing:border-box;border:1px solid rgba(214,183,111,.6);border-radius:999px;background:rgba(212,180,109,.08);color:#f0d79c;font:inherit;font-weight:700;cursor:pointer;line-height:1.15;padding:4px 14px;touch-action:manipulation}' +
+      '.dzsel-x{flex:0 0 auto;padding:0 10px;font-size:min(calc(22px * var(--dz-s,1)),6.5vh,10vw);font-size:min(calc(22px * var(--dz-s,1)),6.5dvh,10vw)}' +
+      '.dzsel-list{flex:1 1 auto;min-height:0;margin:0;padding:min(10px,1.2vh) min(12px,2.5vw);list-style:none;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}' +
+      '.dzsel-opt{display:flex;align-items:flex-start;gap:.4em;box-sizing:border-box;min-height:44px;margin:0 0 min(8px,1vh);padding:.35em .6em;border:2px solid rgba(214,183,111,.28);border-radius:12px;background:rgba(255,255,255,.03);color:#f4efe6;font-size:calc(17px * var(--dz-s,1));line-height:1.3;white-space:normal;overflow-wrap:anywhere;word-break:keep-all;cursor:pointer;touch-action:manipulation}' +
+      '.dzsel-opt[aria-selected="true"]{border-color:#d4b46d;background:rgba(212,180,109,.2);font-weight:800}' +
+      '.dzsel-opt[aria-disabled="true"]{opacity:.45;cursor:default}' +
+      '.dzsel-opt:focus-visible,.dzsel-x:focus-visible,.dzsel-close:focus-visible{outline:3px solid #f0d79c;outline-offset:2px}' +
+      '.dzsel-mark{flex:0 0 auto;width:1.1em;color:#d4b46d}' +
+      '.dzsel-grp{margin:min(10px,1.2vh) 0 min(6px,.8vh);color:#d6b76f;font-weight:700;font-size:calc(15px * var(--dz-s,1));overflow-wrap:anywhere}' +
+      '.dzsel-foot{flex:0 0 auto;display:flex;justify-content:flex-end;padding:min(10px,1.2vh) min(16px,3vw);border-top:1px solid rgba(212,180,109,.25)}' +
+      '.dzsel-close{font-size:min(calc(16px * var(--dz-s,1)),5.3vh,8.5vw);font-size:min(calc(16px * var(--dz-s,1)),5.3dvh,8.5vw)}' +
+      'html.dz-hc .dzsel{background:#000;color:#fff;border-color:#FFD75E}' +
+      'html.dz-hc .dzsel-title,html.dz-hc .dzsel-mark,html.dz-hc .dzsel-grp{color:#FFD75E}' +
+      'html.dz-hc .dzsel-opt{background:#000;color:#fff;border-color:#bbb}' +
+      'html.dz-hc .dzsel-opt[aria-selected="true"]{border-color:#FFD75E;background:#1a1500}' +
+      'html.dz-hc .dzsel-x,html.dz-hc .dzsel-close{background:#000;color:#FFD75E;border-color:#FFD75E}';
+    (document.head || root).appendChild(st);
+  }
+  function build() {
+    if (back) return;
+    css();
+    back = document.createElement('div'); back.className = 'dzsel-back'; back.hidden = true;
+    back.innerHTML =
+      '<div class="dzsel" role="dialog" aria-modal="true" aria-labelledby="dzSelTitle">' +
+        '<div class="dzsel-head"><h2 class="dzsel-title" id="dzSelTitle"></h2><button type="button" class="dzsel-x">&times;</button></div>' +
+        '<ul class="dzsel-list" role="listbox" aria-labelledby="dzSelTitle"></ul>' +
+        '<div class="dzsel-foot"><button type="button" class="dzsel-close"></button></div>' +
+      '</div>';
+    document.body.appendChild(back);
+    box = back.firstChild; list = back.querySelector('.dzsel-list'); titleEl = back.querySelector('.dzsel-title');
+    xBtn = back.querySelector('.dzsel-x'); closeBtn = back.querySelector('.dzsel-close');
+    xBtn.addEventListener('click', function () { close(); });
+    closeBtn.addEventListener('click', function () { close(); });
+    back.addEventListener('click', function (e) { if (e.target === back) close(); });
+    list.addEventListener('click', function (e) {
+      var li = e.target && e.target.closest ? e.target.closest('.dzsel-opt') : null;
+      if (li && list.contains(li)) choose(li);
+    });
+    back.addEventListener('keydown', onKey);
+  }
+  function items() { return Array.prototype.slice.call(list.querySelectorAll('.dzsel-opt:not([aria-disabled="true"])')); }
+  function focusItem(li) {
+    if (!li) return;
+    Array.prototype.forEach.call(list.querySelectorAll('.dzsel-opt'), function (x) { x.tabIndex = -1; });
+    li.tabIndex = 0; li.focus();
+    try { li.scrollIntoView({ block: 'nearest' }); } catch (e) {}
+  }
+  function onKey(e) {
+    var k = e.key, its = items(), i = its.indexOf(document.activeElement);
+    if (k === 'Escape' || k === 'Esc') { e.preventDefault(); e.stopPropagation(); close(); return; }
+    if (k === 'Tab') {
+      var f = [list.querySelector('.dzsel-opt[tabindex="0"]') || its[0], closeBtn, xBtn].filter(Boolean);
+      var j = f.indexOf(document.activeElement);
+      e.preventDefault();
+      f[(j + (e.shiftKey ? f.length - 1 : 1) + f.length) % f.length].focus();
+      return;
+    }
+    if (i === -1) return;
+    if (k === 'ArrowDown' || k === 'Down') { e.preventDefault(); focusItem(its[Math.min(its.length - 1, i + 1)]); }
+    else if (k === 'ArrowUp' || k === 'Up') { e.preventDefault(); focusItem(its[Math.max(0, i - 1)]); }
+    else if (k === 'Home') { e.preventDefault(); focusItem(its[0]); }
+    else if (k === 'End') { e.preventDefault(); focusItem(its[its.length - 1]); }
+    else if (k === 'Enter' || k === ' ' || k === 'Spacebar') { e.preventDefault(); choose(document.activeElement); }
+  }
+  function open(s) {
+    if (!eligible(s)) return false;
+    var now = Date.now(); if (now - lastOpen < 450 && cur === s) return true; lastOpen = now;
+    build(); cur = s;
+    titleEl.textContent = labelOf(s);
+    xBtn.setAttribute('aria-label', tx('닫기', 'Close'));
+    closeBtn.textContent = tx('닫기', 'Close');
+    list.innerHTML = ''; opts = [];
+    var n = 0, sel = null;
+    Array.prototype.forEach.call(s.children, function (ch) {
+      if (ch.tagName === 'OPTGROUP') {
+        var g = document.createElement('li'); g.className = 'dzsel-grp'; g.setAttribute('role', 'presentation'); g.textContent = clean(ch.label);
+        list.appendChild(g);
+        Array.prototype.forEach.call(ch.children, add);
+      } else add(ch);
+    });
+    function add(o) {
+      if (!o || o.tagName !== 'OPTION' || o.hidden) return;
+      var li = document.createElement('li');
+      li.className = 'dzsel-opt'; li.id = 'dzSelOpt' + (n++); li.setAttribute('role', 'option'); li.tabIndex = -1;
+      li.setAttribute('data-i', String(o.index));
+      var on = o.index === s.selectedIndex; li.setAttribute('aria-selected', on ? 'true' : 'false');
+      if (o.disabled) li.setAttribute('aria-disabled', 'true');
+      var m = document.createElement('span'); m.className = 'dzsel-mark'; m.setAttribute('aria-hidden', 'true'); m.textContent = on ? '✓' : '';
+      var t = document.createElement('span'); t.textContent = clean(o.label || o.textContent);
+      li.appendChild(m); li.appendChild(t); list.appendChild(li); opts.push(li);
+      if (on) sel = li;
+    }
+    back.hidden = false;
+    root.classList.add('dzsel-open');
+    focusItem(sel && sel.getAttribute('aria-disabled') !== 'true' ? sel : items()[0]);
+    return true;
+  }
+  function choose(li) {
+    if (!li || !cur || li.getAttribute('aria-disabled') === 'true') return;
+    var s = cur, idx = Number(li.getAttribute('data-i'));
+    close(true);
+    if (s.selectedIndex !== idx) {
+      s.selectedIndex = idx;
+      s.dispatchEvent(new Event('input', { bubbles: true }));
+      s.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+  function close(chosen) {
+    if (!back || back.hidden) return;
+    back.hidden = true; root.classList.remove('dzsel-open');
+    var s = cur; cur = null; list.innerHTML = '';
+    if (s && s.isConnected) { try { s.focus({ preventScroll: true }); } catch (e) { try { s.focus(); } catch (e2) {} } }
+  }
+  function sel(t) { return t && t.closest ? t.closest('select') : null; }
+  // 마우스(PC·태블릿 포인터): 기본 팝업 대신 이 창
+  document.addEventListener('mousedown', function (e) {
+    if (e.button !== 0) return;
+    var s = sel(e.target); if (!eligible(s)) return;
+    e.preventDefault(); open(s);
+  }, true);
+  // 터치: 손가락을 거의 움직이지 않고 뗐을 때만(목록 스크롤은 그대로)
+  document.addEventListener('touchstart', function (e) {
+    var s = sel(e.target); touch = eligible(s) && e.touches && e.touches[0] ? { s: s, x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+  }, { capture: true, passive: true });
+  document.addEventListener('touchend', function (e) {
+    var t = touch; touch = null; if (!t) return;
+    var c = e.changedTouches && e.changedTouches[0];
+    if (c && (Math.abs(c.clientX - t.x) > 10 || Math.abs(c.clientY - t.y) > 10)) return;
+    if (!eligible(t.s)) return;
+    e.preventDefault(); open(t.s);
+  }, { capture: true, passive: false });
+  // 그 밖의 클릭(화면 읽기 도구의 두 번 탭 등)
+  document.addEventListener('click', function (e) {
+    var s = sel(e.target); if (!eligible(s)) return;
+    e.preventDefault(); open(s);
+  }, true);
+  // 키보드: Enter·Space·Alt+↓·F4 로 펼치기(↑↓ 값 바꾸기는 기본 그대로)
+  document.addEventListener('keydown', function (e) {
+    var s = e.target && e.target.tagName === 'SELECT' ? e.target : null; if (!eligible(s)) return;
+    var k = e.key;
+    if (k === 'Enter' || k === ' ' || k === 'Spacebar' || k === 'F4' || (e.altKey && (k === 'ArrowDown' || k === 'Down'))) { e.preventDefault(); open(s); }
+  }, true);
+  // 확대를 끄면 열린 창을 닫는다
+  try { new MutationObserver(function () { if (!zoomed()) close(); }).observe(root, { attributes: true, attributeFilter: ['class'] }); } catch (e) {}
+
+  window.DZ_A11Y_SELECT = { open: open, close: close, isOpen: function () { return !!(back && !back.hidden); } };
+})();

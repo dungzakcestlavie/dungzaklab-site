@@ -407,8 +407,27 @@
         } else if (lab) lab.remove();
       }
     }
+    // 확대 중 선택칸(select)은 한 줄이라 고른 항목 이름이 길면 잘린다 → 같은 이름을 칸 바로 위에 보이는 글자로 표시(화면 읽기 도구는 선택칸 값을 읽으므로 aria-hidden)
+    function selLabels() {
+      var ss = document.querySelectorAll('select');
+      for (var i = 0; i < ss.length; i++) {
+        var sl = ss[i], prev = sl.previousElementSibling;
+        var lab = prev && prev.classList && prev.classList.contains('dzds-sel') ? prev : null;
+        var o = sl.options && sl.selectedIndex >= 0 ? sl.options[sl.selectedIndex] : null, txt = o ? (o.text || '').trim() : '';
+        if (!root.classList.contains('dz-z') || !txt || !sl.getClientRects().length || sl.closest('.ap-pf-page, .dzcr-root, .dzds-panel')) { if (lab) lab.remove(); continue; }
+        var c = getComputedStyle(sl);
+        if (!meas) meas = document.createElement('canvas').getContext('2d');
+        meas.font = c.fontWeight + ' ' + c.fontSize + ' ' + c.fontFamily;
+        var avail = sl.clientWidth - parseFloat(c.paddingLeft) - parseFloat(c.paddingRight);
+        if (meas.measureText(txt).width > avail + 1) {
+          if (!lab) { lab = document.createElement('span'); lab.className = 'dzds-sel'; lab.setAttribute('aria-hidden', 'true'); sl.parentNode.insertBefore(lab, sl); }
+          if (lab.textContent !== txt) lab.textContent = txt;
+        } else if (lab) lab.remove();
+      }
+    }
     var growT = 0;
-    function laterGrow() { if (growT) clearTimeout(growT); growT = setTimeout(function () { growT = 0; growFix(); if (root.classList.contains('dz-z')) phLabels(); }, 500); }
+    function laterGrow() { if (growT) clearTimeout(growT); growT = setTimeout(function () { growT = 0; growFix(); if (root.classList.contains('dz-z')) phLabels(); selLabels(); }, 500); }
+    document.addEventListener('change', function (e) { if (e.target && e.target.tagName === 'SELECT') laterGrow(); }, true);
     var pending = 0, trackT = 0;
     function later() {
       if (pending) return;
@@ -525,10 +544,11 @@
     var g1 = group('dzdsSizeLabel', sizeBtns), g2 = group('dzdsContrastLabel', cBtns);
     var reset = el('button', 'dzds-reset', { type: 'button', 'data-dzds': 'reset' });
     var note = el('p', 'dzds-note');
-    body.appendChild(g1.g); body.appendChild(g2.g); body.appendChild(reset); body.appendChild(note);
+    body.appendChild(g1.g); body.appendChild(g2.g); body.appendChild(note);
     var foot = el('div', 'dzds-foot');
     var close = el('button', 'dzds-close', { type: 'button', 'data-dzds': 'close' });
-    foot.appendChild(close);
+    // 2026-11-22 zoomfix: 설정 초기화는 닫기와 같은 고정 아래 줄 — 400%에서도 스크롤 없이 항상 보이고 누를 수 있다
+    foot.appendChild(reset); foot.appendChild(close);
     var live = el('p', 'dzds-sr', { role: 'status', 'aria-live': 'polite' });
     panel.appendChild(head); panel.appendChild(body); panel.appendChild(foot); panel.appendChild(live);
     back.appendChild(panel);
@@ -618,6 +638,7 @@
     if (document.getElementById('dzDisplayBtn')) return;
     var host = document.querySelector('.site-header .header-actions') || document.querySelector('[data-dz-display-host]');
     var before = host ? host.firstChild : null;
+    if (!host) { var lk = document.querySelector('.site-header .header-inner > #labLink'); if (lk) { host = lk.parentNode; before = lk; } } // LAB Archive Pro: LAB 버튼 바로 왼쪽
     var inMenu = false;
     if (!host) { var lm = document.getElementById('menu'); if (lm && lm.classList.contains('menu')) { host = lm; before = lm.firstChild; inMenu = true; } } // LAB: 슬라이드 메뉴 맨 위(헤더 칸이 고정 폭이라 넣지 않음)
     if (!host && document.querySelector('.header .lang-global')) { // 메뉴 없는 LAB 문서: 헤더 바로 아래 본문 첫 줄 오른쪽

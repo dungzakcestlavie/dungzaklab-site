@@ -311,3 +311,22 @@ html.dz-z .dzds-close {
   white-space: normal !important;
   overflow-wrap: anywhere !important;
 }
+
+/* 2026-11-22 zoomfix (P0) ------------------------------------------------------
+   ① FILTER를 닫으면 확대 중에도 실제로 접힌다. 확대 보정(data-dz-grow: 높이 제한 해제)이 닫힌 상태까지 펼쳐 두어
+      보이지도 눌리지도 않는 빈 영역(870~1175px)이 생기던 문제. 앱(ap-mfilter-collapsed)·LAB(ap-filter-collapsed) 모두. */
+html.dz-z:is(.ap-filter-collapsed, .ap-mfilter-collapsed) body.archive-entered :is(#searchArea, #dzNever#dzNever#dzNever) {
+  max-height: 0 !important; height: 0 !important; min-height: 0 !important; overflow: hidden !important;
+  padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important;
+  border-top-width: 0 !important; border-bottom-width: 0 !important;
+  opacity: 0 !important; pointer-events: none !important; visibility: hidden !important;
+}
+/* ② 보기 설정 창: 설정 초기화를 닫기와 같은 고정 아래 줄에(두 버튼 모두 항상 화면 안). 좁으면 두 줄로 */
+.dzds-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.dzds-foot .dzds-reset { flex: 1 1 auto; width: auto; margin: 0; }
+.dzds-foot .dzds-close { flex: 1 1 auto; width: auto; }
+html.dz-z .dzds-foot .dzds-reset, html.dz-z .dzds-foot .dzds-close { min-height: 44px; height: auto; line-height: 1.25; white-space: normal; overflow-wrap: break-word; }
+/* ③ 확대 중 선택칸에서 잘린 항목 이름을 칸 위에 그대로 보여 준다 */
+.dzds-sel { display: none; }
+html.dz-z .dzds-sel { display: block; flex: none; width: 100%; max-width: 100%; margin: 0 0 4px; font-size: calc(15px * var(--dz-s)); line-height: 1.35; font-weight: 600; color: #f4efe6; overflow-wrap: anywhere; }
+html.dz-hc .dzds-sel { color: #fff; }

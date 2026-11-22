@@ -14,7 +14,7 @@ async function attr(e,n,w){let got=await e.getAttribute(n);if(got!==w)throw Erro
 const browser=await engine.launch({headless:true});
 for(const [dev,width,height] of profiles){
  const ctx=await browser.newContext({viewport:{width,height},isMobile:dev!=='Desktop'&&type!=='firefox',hasTouch:dev!=='Desktop'});
- const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.stack||e.message));
  await test(dev,'LAB-home-load',async()=>{
   const r=await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
   if(!r||r.status()!==200)throw Error('HTTP '+r?.status());
@@ -29,9 +29,10 @@ for(const [dev,width,height] of profiles){
  });
  await test(dev,'LAB-language-and-menu',async()=>{
   await page.locator('.lang-global [data-lang="en"]').click();
-  await page.waitForTimeout(160);
+  await page.waitForTimeout(800);
   await attr(page.locator('html'),'lang','en');
   await page.locator('#menuBtn').click();
+   await page.waitForTimeout(180);
   await attr(page.locator('#menuBtn'),'aria-expanded','true');
   await attr(page.locator('#menuBtn'),'aria-haspopup','dialog');
   await page.keyboard.press('Escape');

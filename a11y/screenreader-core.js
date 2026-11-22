@@ -8,6 +8,7 @@
   var doc = document, root = doc.documentElement;
   function $(s) { return doc.querySelector(s); }
   function $$(s, r) { return Array.prototype.slice.call((r || doc).querySelectorAll(s)); }
+  function queryAll(selector) { return Array.prototype.slice.call(doc.querySelectorAll(selector)); }
   function language() {
     var item = $('.lang-tabs [aria-pressed="true"][data-lang]') ||
       $('.lang-global button.active[data-lang]');
@@ -107,7 +108,7 @@
     }
   }
   function syncWorkCards() {
-    $('#grid .card[data-id]').forEach(function(c) {
+    queryAll('#grid .card[data-id]').forEach(function(c) {
       var action=c.querySelector('.thumb-wrap[role="button"]') || (c.getAttribute('role')==='button'?c:null);
       if (!action || action.getAttribute('data-dz-sr-title') === language()) return;
       var id=c.getAttribute('data-id') || '';

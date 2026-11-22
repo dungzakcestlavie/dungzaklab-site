@@ -33,7 +33,9 @@ for(const [dev,width,height] of profiles){
   await attr(page.locator('html'),'lang','en');
   await page.evaluate(()=>{
      window.__dzClickLog=[];
-     document.addEventListener('click',e=>{window.__dzClickLog.push({phase:'capture',target:e.target.id||e.target.tagName,detail:e.detail,open:document.querySelector('#menu')?.className});},true);
+     document.addEventListener('click',e=>{window.__dzClickLog.push({phase:'capture',target:e.target.id||e.target.tagName,html:e.target.outerHTML?.slice(0,180),path:e.composedPath().slice(0,5).map(x=>x.id||x.tagName),detail:e.detail,open:document.querySelector('#menu')?.className});},true);
+     document.addEventListener('pointerdown',e=>{window.__dzClickLog.push({phase:'pointerdown',target:e.target.id||e.target.tagName,detail:e.detail});},true);
+     document.addEventListener('pointerup',e=>{window.__dzClickLog.push({phase:'pointerup',target:e.target.id||e.target.tagName,detail:e.detail});},true);
      document.querySelector('#menuBtn').addEventListener('click',e=>{window.__dzClickLog.push({phase:'menu-button',target:e.target.id||e.target.tagName,detail:e.detail,open:document.querySelector('#menu')?.className});});
    });
    await page.locator('#menuBtn').click();

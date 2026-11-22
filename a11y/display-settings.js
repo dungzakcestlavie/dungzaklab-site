@@ -636,7 +636,7 @@
       return;
     }
     if (btn.classList.contains('dzds-entry-hero')) { // aa1(2026-11-23) 원조 Archive Pro 언어 줄: 「Aa 보기 설정」을 글자로 함께 보여 독립 기능임을 분명히(보이는 글자 = 버튼 이름)
-      var L = lang(), parts = L === 'en' ? [['en', 'Display']] : (L === 'both' ? [['ko', '보기 설정'], ['en', 'Display']] : [['ko', '보기 설정']]);
+      var L = lang(), parts = L === 'en' ? [['en', 'Display Settings']] : [['ko', '보기 설정']]; // aa2: EN 「Display Settings」, KR·KR+EN 「보기 설정」
       var tx = el('span', 'dzds-entry-text');
       parts.forEach(function (q, i) { if (i) tx.appendChild(document.createTextNode(' · ')); var sp = el('span', '', { lang: q[0] }); sp.textContent = q[1]; tx.appendChild(sp); });
       btn.appendChild(tx);

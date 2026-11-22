@@ -1894,6 +1894,9 @@ html.dz-z #home .dzds-home-entry{max-width:100%;white-space:normal;overflow-wrap
   }, true);
 
   document.addEventListener('pointerdown', function(e){
+    // A NEW genuine pointer press must not inherit swipe-click suppression
+    // from an earlier cancelled/swiped touch, including Firefox touch emulation.
+    if (e.isPrimary) ignoreSwipeClickUntil = 0;
     const t = e.target;
     if(!t || !t.closest) return;
 

@@ -10,6 +10,7 @@
 }
 #home[tabindex="-1"]:focus,.view[tabindex="-1"]:focus,
 #archiveMain[tabindex="-1"]:focus{outline:none}
-#grid .card[role="button"]:focus-visible{
+#grid .card[role="button"]:focus-visible,
+#grid .card .thumb-wrap[role="button"]:focus-visible{
   outline:3px solid #9BC8FF!important;outline-offset:3px!important
 }

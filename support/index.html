@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="format-detection" content="telephone=no">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-O/sELgWnq8Rz+uKKXyUAyYXtkXncN20d9JYOiEZuO6A='; style-src 'unsafe-inline'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-yzHwYgZug8jvalBzT+LcQ8+dV3ppX17GMcqtuWtzp5A='; style-src 'unsafe-inline'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>문의 및 지원 · Contact &amp; Support — ARCHIVE PRO</title>
 <meta name="description" content="ARCHIVE PRO — Artist Edition 문의 및 지원 / Contact &amp; Support. 계정·로그인, 작품 등록·이미지·PDF, 서비스 오류 및 일반 문의.">
@@ -26,63 +26,99 @@
     --text: #e9eef3;
     --muted: #a9b8c6;
     --link: #f0d79c;
+    /* 글자 크기 배율: DCAR 리더(--scale)·캡션 리더(--dzcr-scale)와 같은 방식. 100%일 때 1 → 기존 화면과 동일. */
+    --s: 1;
     color-scheme: dark;
   }
+  html[data-scale="150"] { --s: 1.5; }
+  html[data-scale="200"] { --s: 2; }
+  html[data-scale="300"] { --s: 3; }
+  html[data-scale="400"] { --s: 4; }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
   body {
     margin: 0; background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
-    font-size: 16px; line-height: 1.75; word-break: keep-all; overflow-wrap: anywhere;
+    font-size: calc(16px * var(--s)); line-height: 1.75; word-break: keep-all; overflow-wrap: anywhere;
   }
+  [lang="en"] { hyphens: auto; -webkit-hyphens: auto; }
   .wrap { max-width: 860px; margin: 0 auto; padding: calc(24px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) calc(56px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  html.zoomed .wrap { max-width: none; }
   header.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
-  .brand { color: var(--gold); letter-spacing: .14em; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
-  .langs { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
-  .langs button { appearance: none; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px; padding: 6px 14px; cursor: pointer; min-height: 44px; min-width: 48px; }
+  .brand { color: var(--gold); letter-spacing: .14em; font-size: calc(13px * var(--s)); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; }
+  .langs { display: inline-flex; flex-wrap: wrap; max-width: 100%; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  html.zoomed .langs { border-radius: 14px; }
+  .langs button { appearance: none; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: calc(13px * var(--s)); padding: 6px 14px; cursor: pointer; min-height: 44px; min-width: 48px; }
   .langs button[aria-pressed="true"] { background: var(--gold); color: #10202c; font-weight: 700; }
   .langs button:focus-visible { outline: 2px solid var(--gold-strong); outline-offset: -2px; }
-  h1 { font-size: clamp(24px, 5vw, 32px); line-height: 1.35; margin: 28px 0 8px; color: #fff; font-weight: 700; }
-  h1 .sub { display: block; font-size: 15px; color: var(--gold); letter-spacing: .08em; font-weight: 600; margin-bottom: 6px; }
-  h2 { font-size: 19px; line-height: 1.45; color: var(--gold-strong); margin: 36px 0 12px; padding-top: 6px; scroll-margin-top: 16px; }
+  /* 선택 상태를 색상 외의 표시(✓)로도 구별한다. 화면 읽기 도구는 aria-pressed로 상태를 읽는다. */
+  .langs button[aria-pressed="true"]::before, .chip[aria-pressed="true"]::before { content: "\2713\00a0"; content: "\2713\00a0" / ""; }
+  h1 { font-size: clamp(calc(24px * var(--s)), calc(5vw * var(--s)), calc(32px * var(--s))); line-height: 1.35; margin: 28px 0 8px; color: #fff; font-weight: 700; }
+  h1 .sub { display: block; font-size: calc(15px * var(--s)); color: var(--gold); letter-spacing: .08em; font-weight: 600; margin-bottom: 6px; }
+  h2 { font-size: calc(19px * var(--s)); line-height: 1.45; color: var(--gold-strong); margin: 36px 0 12px; padding-top: 6px; scroll-margin-top: 16px; }
   p, li { color: var(--text); }
   ul { padding-left: 22px; }
   a { color: var(--link); text-underline-offset: 3px; }
   a:focus-visible, button:focus-visible, input:focus-visible + .opt-text { outline: 2px solid var(--gold-strong); outline-offset: 3px; border-radius: 6px; }
   .lead { margin: 0 0 8px; }
-  .note { color: var(--muted); font-size: 14px; }
-  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin: 14px 0; }
+  .note { color: var(--muted); font-size: calc(14px * var(--s)); }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin: 14px 0; min-width: 0; }
+
+  /* 보기 설정(글자 크기 · 화면 대비) — DCAR 리더 도구 막대와 같은 버튼(aria-pressed) 구조 */
+  .a11y { margin: 16px 0 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+  .a11y-title { margin: 0 0 6px; font-size: calc(14px * var(--s)); font-weight: 700; color: var(--gold-strong); }
+  .a11y-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 6px 0; min-width: 0; }
+  .a11y-label { margin: 0; font-size: calc(14px * var(--s)); font-weight: 600; color: var(--text); min-width: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; max-width: 100%; }
+  .chip { appearance: none; border: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; font-size: calc(14px * var(--s)); line-height: 1.4; min-height: 44px; min-width: 48px; max-width: 100%; padding: 6px 12px; border-radius: 10px; cursor: pointer; text-align: center; }
+  .chip:hover { border-color: var(--gold); }
+  .chip[aria-pressed="true"] { background: var(--gold); color: #10202c; border-color: var(--gold); font-weight: 700; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
   /* 공식 지원 이메일 */
-  .email-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 6px 0 4px; }
-  .email-addr { display: inline-flex; align-items: center; min-height: 44px; font-size: 18px; font-weight: 600; color: #fff; text-decoration: none; letter-spacing: .01em; user-select: all; -webkit-user-select: all; }
+  .email-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 6px 0 4px; min-width: 0; }
+  .email-addr { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; min-width: 0; font-size: calc(18px * var(--s)); font-weight: 600; color: #fff; text-decoration: none; letter-spacing: .01em; overflow-wrap: anywhere; word-break: break-all; user-select: all; -webkit-user-select: all; }
   .email-addr:hover { text-decoration: underline; }
-  .btn { appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 8px 18px; border-radius: 999px; font: inherit; font-size: 15px; font-weight: 600; text-decoration: none; cursor: pointer; text-align: center; line-height: 1.4; }
+  .btn { appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; max-width: 100%; padding: 8px 18px; border-radius: 999px; font: inherit; font-size: calc(15px * var(--s)); font-weight: 600; text-decoration: none; cursor: pointer; text-align: center; line-height: 1.4; }
+  .btn > * { min-width: 0; }
+  html.zoomed .btn { border-radius: 16px; }
   .btn[hidden] { display: none; }
   .btn-ghost { background: transparent; color: var(--gold-strong); border: 1px solid var(--line); }
   .btn-ghost:hover { border-color: var(--gold); }
   .btn-primary { background: var(--gold); color: #10202c; border: 1px solid var(--gold); width: 100%; max-width: 420px; margin-top: 14px; }
+  html.zoomed .btn-primary { max-width: none; }
   .btn-primary:hover { background: var(--gold-strong); }
-  .status { min-height: 1.75em; margin: 8px 0 0; font-size: 14px; color: var(--gold-strong); }
+  .status { min-height: 1.75em; margin: 8px 0 0; font-size: calc(14px * var(--s)); color: var(--gold-strong); }
 
   /* 문의 유형 */
   fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
-  legend { padding: 0; margin: 0 0 10px; font-weight: 600; color: #fff; }
-  .opts { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
-  .opt { position: relative; display: block; cursor: pointer; }
-  .opt input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
-  .opt-text { display: block; min-height: 44px; padding: 12px 14px 12px 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); position: relative; }
-  .opt-text::before { content: ""; position: absolute; left: 14px; top: 15px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--muted); }
-  .opt input:checked + .opt-text { border-color: var(--gold); background: rgba(214, 184, 106, 0.08); }
-  .opt input:checked + .opt-text::before { border-color: var(--gold); background: radial-gradient(circle, var(--gold) 0 4px, transparent 5px); }
+  legend { padding: 0; margin: 0 0 10px; font-weight: 600; color: #fff; max-width: 100%; white-space: normal; }
+  .opts { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(260px * var(--s))), 1fr)); }
+  .opt { position: relative; display: block; cursor: pointer; min-width: 0; }
+  /* 라디오 입력을 항목 전체 크기로 둔다 → VoiceOver·TalkBack 터치 탐색 시 항목 어디를 짚어도 라디오와 상태가 읽힌다. */
+  .opt input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 1; }
+  .opt-text { display: block; min-height: 44px; padding: 12px 14px 12px calc(26px + 18px * min(var(--s), 2)); border: 1px solid var(--line); border-radius: 10px; background: var(--panel); position: relative; }
+  .opt-text::before { content: ""; position: absolute; left: 14px; top: 15px; width: calc(18px * min(var(--s), 2)); height: calc(18px * min(var(--s), 2)); border-radius: 50%; border: 2px solid var(--muted); }
+  .opt input:checked + .opt-text { border-color: var(--gold); background: rgba(214, 184, 106, 0.08); box-shadow: inset 0 0 0 1px var(--gold); }
+  .opt input:checked + .opt-text::before { border-color: var(--gold); background: radial-gradient(circle, var(--gold) 0 calc(4px * min(var(--s), 2)), transparent calc(5px * min(var(--s), 2))); }
   .opt-title { display: block; font-weight: 600; color: #fff; }
-  .opt-desc { display: block; font-size: 14px; color: var(--muted); line-height: 1.6; margin-top: 2px; }
+  .opt-desc { display: block; font-size: calc(14px * var(--s)); color: var(--muted); line-height: 1.6; margin-top: 2px; }
 
   .links { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
-  .links a { display: inline-block; padding: 8px 0; min-height: 44px; }
+  .links a { display: inline-block; padding: 8px 0; min-height: 44px; max-width: 100%; }
   body.lang-both .links a > [lang="en"] { color: inherit; }
   body.lang-both .links a > [lang="en"]::before { content: " · "; }
-  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: calc(13px * var(--s)); }
+
+  /* 고대비 모드 — 검정 바탕 · 흰 글자 · 밝은 금색 테두리(DCAR 리더 body.contrast와 같은 방식). 기본 다크 디자인은 그대로 둔다. */
+  body.contrast { --bg: #000; --panel: #000; --line: #ffd75e; --gold: #ffd75e; --gold-strong: #ffe7a3; --text: #fff; --muted: #fff; --link: #ffe7a3; }
+  body.contrast .box, body.contrast .a11y, body.contrast .chip, body.contrast .btn-ghost, body.contrast .langs, body.contrast .opt-text, body.contrast header.top, body.contrast footer { border-width: 2px; }
+  body.contrast a { text-decoration: underline; text-decoration-thickness: 2px; }
+  body.contrast .btn-primary, body.contrast .brand { text-decoration: none; }
+  body.contrast .chip[aria-pressed="true"], body.contrast .langs button[aria-pressed="true"], body.contrast .btn-primary { color: #000; }
+  body.contrast .opt input:checked + .opt-text { background: #000; box-shadow: inset 0 0 0 3px var(--gold); }
+  body.contrast .opt-text::before { border-color: #fff; }
+  body.contrast a:focus-visible, body.contrast button:focus-visible, body.contrast input:focus-visible + .opt-text { outline: 3px solid #fff; outline-offset: 3px; }
 
   /* 언어 표시: JS가 없으면 두 언어를 모두 보여준다(KR+EN). /privacy/ 와 같은 규칙. */
   body.lang-kr [lang="en"] { display: none !important; }
@@ -92,21 +128,48 @@
   body.lang-both h2 > [lang="en"], body.lang-both h1 > [lang="en"], body.lang-both legend > [lang="en"] { display: block; font-size: .82em; font-weight: 600; }
   body.lang-both .btn .bi > [lang="en"] { color: inherit; }
   body.lang-both .btn .bi > [lang="en"]::before { content: " · "; }
+  body.lang-both .chip .bi > [lang="en"], body.lang-both .a11y-label > [lang="en"], body.lang-both .a11y-title > [lang="en"] { color: inherit; }
+  body.lang-both .chip .bi > [lang="en"]::before { content: " · "; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   @media (forced-colors: active) { .opt input:checked + .opt-text { outline: 2px solid CanvasText; } }
 </style>
 </head>
 <body class="lang-both">
+<!--email_off-->
+<!-- Cloudflare 이메일 주소 난독화(Scrape Shield) 제외 구간: 이 페이지의 CSP가 Cloudflare 복원 스크립트를 막아
+     주소가 "[email protected]"로 남던 문제를 막는다. 공식 지원 이메일은 원문 그대로 내려보낸다. -->
 <div class="wrap">
 
 <header class="top">
   <a class="brand" href="/">ARCHIVE PRO</a>
-  <div class="langs" role="group" aria-label="Language / 언어">
-    <button type="button" data-lang="kr" aria-pressed="false">KR</button>
-    <button type="button" data-lang="en" aria-pressed="false">EN</button>
-    <button type="button" data-lang="both" aria-pressed="true">KR+EN</button>
+  <div class="langs" role="group" aria-label="언어 · Language">
+    <button type="button" data-lang="kr" aria-pressed="false" aria-label="KR 한국어">KR</button>
+    <button type="button" data-lang="en" aria-pressed="false" aria-label="EN English">EN</button>
+    <button type="button" data-lang="both" aria-pressed="true" aria-label="KR+EN 한국어·영어 병기 · Korean and English">KR+EN</button>
   </div>
 </header>
+
+<section class="a11y" aria-labelledby="a11yTitle">
+  <p class="a11y-title bi" id="a11yTitle"><span lang="ko">보기 설정</span><span lang="en">Display settings</span></p>
+  <div class="a11y-group" role="group" aria-labelledby="sizeLabel">
+    <p class="a11y-label bi" id="sizeLabel"><span lang="ko">글자 크기</span><span lang="en">Text size</span></p>
+    <div class="chips">
+      <button type="button" class="chip" data-scale="100" aria-pressed="true">100%</button>
+      <button type="button" class="chip" data-scale="150" aria-pressed="false">150%</button>
+      <button type="button" class="chip" data-scale="200" aria-pressed="false">200%</button>
+      <button type="button" class="chip" data-scale="300" aria-pressed="false">300%</button>
+      <button type="button" class="chip" data-scale="400" aria-pressed="false">400%</button>
+    </div>
+  </div>
+  <div class="a11y-group" role="group" aria-labelledby="contrastLabel">
+    <p class="a11y-label bi" id="contrastLabel"><span lang="ko">화면 대비</span><span lang="en">Contrast</span></p>
+    <div class="chips">
+      <button type="button" class="chip" data-contrast="off" aria-pressed="true"><span class="bi"><span lang="ko">기본</span><span lang="en">Standard</span></span></button>
+      <button type="button" class="chip" data-contrast="on" aria-pressed="false"><span class="bi"><span lang="ko">고대비</span><span lang="en">High contrast</span></span></button>
+    </div>
+  </div>
+  <p class="sr-only" id="a11yLive" role="status" aria-live="polite"></p>
+</section>
 
 <main>
 <h1 class="bi"><span class="sub">ARCHIVE PRO — Artist Edition</span><span lang="ko">문의 및 지원</span><span lang="en">Contact &amp; Support</span></h1>
@@ -179,6 +242,7 @@
   <p class="bi"><span lang="ko">© 등작 DUNGZAK CESTLAVIE · ARCHIVE PRO — Artist Edition</span><span lang="en">© DUNGZAK CESTLAVIE · ARCHIVE PRO — Artist Edition</span></p>
 </footer>
 </div>
+<!--/email_off-->
 
 <script>
 (function () {
@@ -208,14 +272,78 @@
     copied: { kr: '이메일 주소를 복사했습니다.', en: 'Email address copied.' },
     manual: { kr: '자동 복사를 사용할 수 없습니다. 주소가 선택되었으니 길게 누르거나 Ctrl+C로 복사해 주세요.', en: 'Automatic copy is unavailable. The address is selected — press and hold, or use Ctrl+C, to copy it.' }
   };
+  var LANGMSG = {
+    kr: { kr: '한국어로 표시합니다.', en: 'Showing Korean.' },
+    en: { kr: '영어로 표시합니다.', en: 'Showing English.' },
+    both: { kr: '한국어와 영어를 함께 표시합니다.', en: 'Showing Korean and English.' }
+  };
+  // 보기 설정 저장: 캡션 리더(dz.captionReader.v1)와 같은 JSON 형식 { v:1, scale } + DCAR 리더와 같은 contrast 값.
+  // 언어는 기존 키(dungzaklab_support_lang)를 그대로 쓴다.
+  var A11Y_KEY = 'dz.support.a11y.v1';
+  var SCALES = [100, 150, 200, 300, 400];
   var body = document.body;
+  var root = document.documentElement;
   var mode = 'both';
+  var scale = 100;
+  var contrast = false;
   var btns = document.querySelectorAll('.langs button[data-lang]');
+  var scaleBtns = document.querySelectorAll('.chip[data-scale]');
+  var contrastBtns = document.querySelectorAll('.chip[data-contrast]');
   var mailBtn = document.getElementById('mailBtn');
   var copyBtn = document.getElementById('copyBtn');
   var statusEl = document.getElementById('status');
+  var liveEl = document.getElementById('a11yLive');
   var addrEl = document.getElementById('emailAddr');
   var lastMsg = null;
+
+  // 공식 지원 이메일 복원: Cloudflare 난독화가 다시 적용되더라도 주소·mailto가 "[email protected]"로 남지 않게 한다.
+  function restoreEmail() {
+    addrEl.textContent = EMAIL;
+    addrEl.setAttribute('href', 'mailto:' + EMAIL);
+    var links = document.querySelectorAll('a[href*="/cdn-cgi/l/email-protection"], a.__cf_email__, span.__cf_email__');
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      if (a.tagName === 'A') a.setAttribute('href', 'mailto:' + EMAIL);
+      if (/\[email/i.test(a.textContent) || a.classList.contains('__cf_email__')) a.textContent = EMAIL;
+      a.removeAttribute('data-cfemail');
+      a.classList.remove('__cf_email__');
+    }
+  }
+  // 한·영 문장을 각각 lang 속성이 붙은 span으로 넣는다(화면 읽기 도구 발음용).
+  function putText(el, pair) {
+    el.textContent = '';
+    if (!pair) return;
+    var list = mode === 'kr' ? [['ko', pair.kr]] : mode === 'en' ? [['en', pair.en]] : [['ko', pair.kr], ['en', pair.en]];
+    for (var i = 0; i < list.length; i++) {
+      if (i) el.appendChild(document.createTextNode(' / '));
+      var s = document.createElement('span');
+      s.setAttribute('lang', list[i][0]);
+      s.textContent = list[i][1];
+      el.appendChild(s);
+    }
+  }
+  function announce(pair) {
+    // 같은 문장이 연달아 나와도 다시 읽히도록 비운 뒤 넣는다.
+    liveEl.textContent = '';
+    setTimeout(function () { putText(liveEl, pair); }, 60);
+  }
+  function loadA11y() {
+    try {
+      var o = JSON.parse(localStorage.getItem(A11Y_KEY) || '{}');
+      if (o && SCALES.indexOf(Number(o.scale)) !== -1) scale = Number(o.scale);
+      if (o && typeof o.contrast === 'boolean') contrast = o.contrast;
+    } catch (e) {}
+  }
+  function saveA11y() {
+    try { localStorage.setItem(A11Y_KEY, JSON.stringify({ v: 1, scale: scale, contrast: contrast })); } catch (e) {}
+  }
+  function applyA11y() {
+    root.setAttribute('data-scale', String(scale));
+    root.classList.toggle('zoomed', scale > 100);
+    body.classList.toggle('contrast', contrast);
+    for (var i = 0; i < scaleBtns.length; i++) scaleBtns[i].setAttribute('aria-pressed', Number(scaleBtns[i].getAttribute('data-scale')) === scale ? 'true' : 'false');
+    for (var k = 0; k < contrastBtns.length; k++) contrastBtns[k].setAttribute('aria-pressed', (contrastBtns[k].getAttribute('data-contrast') === 'on') === contrast ? 'true' : 'false');
+  }
 
   function norm(v) {
     if (!v) return null;
@@ -251,7 +379,7 @@
   }
   function say(key) {
     lastMsg = key;
-    statusEl.textContent = key ? text(MSG[key]) : '';
+    putText(statusEl, key ? MSG[key] : null);
   }
   function apply(next, save) {
     mode = next;
@@ -297,12 +425,39 @@
   }
 
   for (var i = 0; i < btns.length; i++) {
-    btns[i].addEventListener('click', function () { apply(this.getAttribute('data-lang'), true); });
+    btns[i].addEventListener('click', function () {
+      var next = this.getAttribute('data-lang');
+      apply(next, true);
+      announce(LANGMSG[next]);
+    });
+  }
+  for (var si = 0; si < scaleBtns.length; si++) {
+    scaleBtns[si].addEventListener('click', function () {
+      scale = Number(this.getAttribute('data-scale'));
+      applyA11y();
+      saveA11y();
+      announce({ kr: '글자 크기 ' + scale + '%', en: 'Text size ' + scale + '%' });
+    });
+  }
+  for (var ci = 0; ci < contrastBtns.length; ci++) {
+    contrastBtns[ci].addEventListener('click', function () {
+      contrast = this.getAttribute('data-contrast') === 'on';
+      applyA11y();
+      saveA11y();
+      announce(contrast ? { kr: '고대비 모드를 켰습니다.', en: 'High contrast on.' } : { kr: '기본 화면으로 표시합니다.', en: 'Standard contrast.' });
+    });
   }
   var radios = document.querySelectorAll('input[name="topic"]');
-  for (var j = 0; j < radios.length; j++) radios[j].addEventListener('change', updateMail);
+  for (var j = 0; j < radios.length; j++) radios[j].addEventListener('change', function () {
+    updateMail();
+    var t = TOPICS[topic()];
+    announce({ kr: '이메일 제목에 "' + t.kr + '"이(가) 반영되었습니다.', en: 'Email subject set to "' + t.en + '".' });
+  });
   copyBtn.hidden = false;
   copyBtn.addEventListener('click', copy);
+  restoreEmail();
+  loadA11y();
+  applyA11y();
   apply(pick(), false);
 })();
 </script>

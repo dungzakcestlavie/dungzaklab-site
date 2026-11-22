@@ -389,6 +389,12 @@
         var inp = ins[i], ph = inp.getAttribute('placeholder') || '', prev = inp.previousElementSibling;
         var lab = prev && prev.classList && prev.classList.contains('dzds-ph') ? prev : null;
         if (inp.closest('.ap-pf-page, .dzcr-root, .dzds-panel') || !ph.trim()) { if (lab) lab.remove(); continue; }
+        // Archive Pro already has a visible <label> above its search field.
+        // Do not duplicate a long bilingual placeholder inside the search grid.
+        if (inp.closest('.archive-search') && inp.id && document.querySelector('label[for="' + inp.id + '"]')) {
+          if (lab) lab.remove();
+          continue;
+        }
         var r = inp.getBoundingClientRect(); if (r.width < 2) continue;
         var c = getComputedStyle(inp);
         if (!meas) meas = document.createElement('canvas').getContext('2d');

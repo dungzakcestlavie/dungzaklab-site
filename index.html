@@ -2674,8 +2674,17 @@ function renderList(items, type){
 
     const a = document.createElement('a');
     a.className = type === 'dcap' && ['DCAP-02','DCAP-03','DCAP-04','DCAP-05','DCAP-06'].includes(item.id) ? 'report-item dcap-card' : 'report-item';
-    const href = item.md_path || '#';
+    // 2026-11-22 (lab-report1): LAB 안의 리포트(.md)는 dungzak.art와 같은 형식의 리더로 연다
+    const href = /^(ocean\/DCAO|archive\/DCAP)-\d{2}\.md$/.test(item.md_path || '') && item.id
+      ? '/reports/reader.html?report=' + encodeURIComponent(item.id)
+      : (item.md_path || '#');
     a.href = href;
+    if(href.indexOf('/reports/reader.html') === 0){
+      // 리더에서 「목록으로」·뒤로 가기 하면 보던 목록과 위치로 돌아오게 기억
+      a.addEventListener('click', function(){
+        try{ sessionStorage.setItem('dzlab.return', JSON.stringify({ view: type === 'dcao' ? 'ocean' : 'archive', y: window.pageYOffset || 0, t: Date.now() })); }catch(e){}
+      });
+    }
     a.target = /^https?:\/\//.test(href) ? '_blank' : '_self';
     a.rel = 'noopener';
 
@@ -2809,7 +2818,24 @@ archiveProLinks.forEach(link => {
 
 window.__DZLAB_BOOT_READY__ = true;
 
-if(window.__DZLAB_EARLY_VIEW__ === 'ocean'){
+/* 2026-11-22 (lab-report1): 리포트 리더에서 돌아올 때 OCEAN ENERGY·ARCHIVE 목록을 다시 연다
+   (?view=ocean|archive 주소, 또는 뒤로 가기 + 리포트를 열 때 기억한 화면·위치) */
+let __dzReturn = null;
+try{
+  const q = new URLSearchParams(location.search).get('view');
+  const nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
+  const saved = JSON.parse(sessionStorage.getItem('dzlab.return') || 'null');
+  if(q === 'ocean' || q === 'archive') __dzReturn = { view: q, y: 0 };
+  else if(saved && nav.type === 'back_forward' && Date.now() - saved.t < 6 * 3600 * 1000 && (saved.view === 'ocean' || saved.view === 'archive')) __dzReturn = saved;
+  if(__dzReturn) sessionStorage.removeItem('dzlab.return');
+  if(q && history.replaceState) history.replaceState(history.state, '', location.pathname + location.hash);
+}catch(e){}
+
+if(__dzReturn && !window.__DZLAB_EARLY_VIEW__){
+  (__dzReturn.view === 'ocean' ? openOcean : openArchive)();
+  const __y = Number(__dzReturn.y) || 0;
+  if(__y > 0) setTimeout(function(){ window.scrollTo(0, __y); }, 350);
+}else if(window.__DZLAB_EARLY_VIEW__ === 'ocean'){
   openOcean();
 }else if(window.__DZLAB_EARLY_VIEW__ === 'archive'){
   openArchive();

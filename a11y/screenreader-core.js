@@ -11,7 +11,7 @@
   function language() {
     var item = $('.lang-tabs [aria-pressed="true"][data-lang]') ||
       $('.lang-global button.active[data-lang]');
-    if (item && item.dataset.lang === 'en') return 'en';
+    if (item) return item.dataset.lang === 'en' ? 'en' : 'ko';
     if (root.lang === 'en') return 'en';
     return 'ko';
   }
@@ -110,7 +110,7 @@
     $$('#grid .card[role="button"][data-id]').forEach(function(c) {
       if (c.getAttribute('data-dz-sr-title') === language()) return;
       var id = c.getAttribute('data-id') || '';
-      var title = $('.title',c);
+      var title = c.querySelector('.title');
       var name = title && title.textContent.trim() || id;
       c.setAttribute('aria-label',(id ? id+' · ':'')+name+' · '+
         T('작품 상세 보기','View artwork details'));

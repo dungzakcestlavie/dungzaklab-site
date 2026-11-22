@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>DUNGZAK CESTLAVIE LAB — Report Reader</title>
+<meta name="description" content="DUNGZAK CESTLAVIE LAB · DCAO 해양 에너지 · DCAP 아카이브 구조 리포트. 한국어, English, KR+EN, 100–400% 텍스트 확대 및 고대비 접근성 리더.">
+<!-- 2026-11-22 (lab-report1): dungzak.art DCAR 리더(reports/reader.html)와 같은 형식의 LAB 리포트 리더 -->
+<style>
+:root{--bg:#f5f5f2;--fg:#171717;--muted:#505050;--border:#c8c8c5;--paper:#fff;--scale:1;color-scheme:light}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;max-width:100%}
+body{margin:0;min-width:0;max-width:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;line-height:1.75}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:12px;top:12px;padding:8px;background:#fff;color:#000;z-index:15}
+.toolbar{position:sticky;top:0;z-index:5;background:#f8f8f7f2;border-bottom:1px solid var(--border);padding:.7rem max(12px,calc((100vw - 960px)/2));display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-start;backdrop-filter:blur(12px);max-height:50dvh;overflow-y:auto;overscroll-behavior:contain}
+.toolname{font-size:.75rem;font-weight:650;color:var(--muted);letter-spacing:.04em;flex-basis:100%}
+button{font:inherit;font-size:.86rem;background:transparent;border:1px solid #b0b0b0;padding:.45rem .75rem;min-height:44px;border-radius:5px;color:var(--fg);cursor:pointer}
+button[aria-pressed="true"]{background:#21252b;color:#fff;border-color:#21252b}
+button:focus-visible,a:focus-visible{outline:3px solid #567cc9;outline-offset:3px}
+main{width:min(960px,100%);min-width:0;margin:20px auto;padding:clamp(20px,4vw,60px);background:var(--paper);border:1px solid var(--border);overflow-wrap:anywhere}
+.paper-head{border-bottom:2px solid var(--fg);padding:1rem 0 1.5rem;min-width:0}
+.over{letter-spacing:.12em;font-size:.75rem;color:var(--muted);font-weight:700}
+.paper-head h1{font-size:clamp(1.35rem,3.5vw,2.1rem);line-height:1.4;letter-spacing:-.025em;margin:.65rem 0;overflow-wrap:anywhere}
+.paper-head h1.en{font-size:clamp(1.15rem,2.8vw,1.45rem);font-weight:580;letter-spacing:-.01em}
+.authors{font-size:.9rem;color:var(--muted)}
+.report-text{min-width:0;padding:1.5rem 0}
+.passage{min-width:0;margin:0 0 .8em;font-size:calc(1rem * var(--scale));line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;hyphens:auto}
+.passage.en{color:#353535}
+.separator{border:0;border-top:1px solid var(--border);margin:1.6rem 0}
+.report-text a{color:#164ca3;text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+article[data-lang="ko"] .en,article[data-lang="en"] .kr{display:none!important}
+article[data-lang="both"] .passage.en{border-left:2px solid #c4c4c4;padding-left:.8rem}
+.status{font-size:.95rem;line-height:1.6}
+.back{font-size:.86rem;margin:1.25rem 0 0}
+.back a{color:#164ca3}
+body.contrast{--bg:#000;--fg:#fff;--muted:#eee;--border:#fff;--paper:#000}
+.contrast .toolbar{background:#000}
+.contrast button{color:#fff;border-color:#fff}
+.contrast button[aria-pressed="true"]{background:#fff;color:#000}
+.contrast .passage.en{color:#fff}
+.contrast .report-text a,.contrast .back a{color:#a5c7ff}
+@media(max-width:660px){main{margin:0;border:0;padding:18px 16px}.toolbar{gap:6px;padding:.6rem 12px}.toolbar button{padding:.4rem .6rem;font-size:.8rem}.paper-head h1{font-size:1.5rem}.paper-head h1.en{font-size:1.2rem}.passage{line-height:1.7}}
+@media print{body{background:white;color:black}main{margin:0;padding:0;border:0;width:100%}.toolbar,.skip,.back{display:none}.passage{color:black!important}}
+
+/* LAB 추가: 목록으로·이전/다음 리포트 */
+.lab-nav{width:min(960px,100%);margin:0 auto 40px;padding:0 clamp(20px,4vw,60px);display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:stretch}
+.lab-nav a,.lab-nav button{display:inline-flex;align-items:center;min-height:44px;padding:.55rem .9rem;border:1px solid #b0b0b0;border-radius:5px;color:var(--fg);text-decoration:none;font-size:calc(.9rem * var(--scale));line-height:1.4;max-width:100%;overflow-wrap:anywhere;background:transparent}
+.lab-nav .pn{display:flex;flex-wrap:wrap;gap:10px}
+.lab-nav a:hover,.lab-nav button:hover{border-color:var(--fg)}
+.contrast .lab-nav a,.contrast .lab-nav button{color:#fff;border-color:#fff}
+.lab-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-basis:100%;flex-wrap:wrap}
+.lab-top a{font-size:.78rem;color:var(--muted);text-decoration:none;letter-spacing:.06em;font-weight:650;min-height:32px;display:inline-flex;align-items:center}
+.lab-top a:hover{text-decoration:underline}
+@media(max-width:660px){.lab-nav{padding:0 16px}}
+@media print{.lab-nav,.lab-top{display:none}}
+</style>
+<style>/* DCAR accessible reading: responsive text reflow for reports 01–33 and later.
+   Typography, source content, report URLs and the existing 100–400% controls remain unchanged. */
+html, body { min-width: 0; }
+main, article, .paper-head, .report-text, .section, .passage,
+.section > div, .references, .references li { min-width: 0; }
+.paper-head h1, .passage, .report-text, .section, .section p,
+.section li, .section div.kr, .section div.en, .references li,
+.ref-link, a { overflow-wrap: anywhere; word-break: normal; }
+.passage { white-space: pre-wrap; hyphens: auto; }
+.section div.kr, .section div.en, .report-text { max-width: 100%; }
+pre, code { max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
+img, svg, video, canvas, iframe { max-width: 100%; height: auto; }
+table { display: block; max-width: 100%; overflow-x: auto; }
+.toolbar { min-width: 0; max-width: 100%; max-height: 50dvh;
+  overflow-y: auto; overscroll-behavior: contain; }
+.toolbar button { min-height: 44px; touch-action: manipulation; }
+@media (max-width: 660px) {
+  main { min-width: 0; margin: 0; border: 0; padding: 18px 16px; }
+  .toolbar { justify-content: flex-start; gap: 6px; padding: .6rem 12px; }
+  .toolbar .toolname { flex-basis: 100%; }
+  .toolbar button { padding: .4rem .6rem; font-size: .8rem; }
+}
+@media (max-width: 360px) {
+  .toolbar { gap: 5px; }
+  .toolbar button { padding-inline: .45rem; font-size: .78rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+@media print {
+  .toolbar { display: none; }
+  table { overflow: visible; }
+}
+
+/* Complete DCAR report-text magnification.
+   Scale the entire document reading surface (including front matter), not the
+   language/size controls. Keep 100% typography and the mobile reflow intact. */
+#paper .paper-head .over {
+  font-size: calc(.75rem * var(--scale));
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+#paper .paper-head h1 {
+  font-size: clamp(calc(1.4rem * var(--scale)), calc(3.5vw * var(--scale)), calc(2.1rem * var(--scale)));
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+}
+#paper .paper-head h1.en {
+  font-size: calc(1.45rem * var(--scale));
+}
+#paper .paper-head .authors {
+  font-size: calc(.9rem * var(--scale));
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+#paper .paper-head .authors strong {
+  font-size: calc(1rem * var(--scale));
+  overflow-wrap: anywhere;
+}
+#paper .section h2 {
+  font-size: clamp(calc(1.1rem * var(--scale)), calc(1.7vw * var(--scale)), calc(1.35rem * var(--scale)));
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+}
+#paper .section > p, #paper .section > ul > li, #paper .section > ol > li {
+  font-size: calc(1rem * var(--scale));
+  overflow-wrap: anywhere;
+}
+#paper .section.references li {
+  font-size: calc(.9rem * var(--scale));
+}
+#paper .status { font-size: calc(.95rem * var(--scale)); }
+#paper .back { font-size: calc(.86rem * var(--scale)); }
+@media (max-width: 660px) {
+  #paper .paper-head h1 { font-size: calc(1.5rem * var(--scale)); }
+  #paper:has(.section) .paper-head h1 { font-size: calc(1.4rem * var(--scale)); }
+  #paper .paper-head h1.en { font-size: calc(1.2rem * var(--scale)); }
+}
+/* Printed copies keep the original designed text proportions. */
+@media print {
+  #paper { --scale: 1; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#paper">본문으로 이동 / Skip to report</a>
+<div class="toolbar" role="group" aria-label="언어 및 글자 크기 / Language and text size">
+<div class="lab-top"><a href="/" id="lab-home">DUNGZAK CESTLAVIE LAB</a><a href="/" id="lab-back-top">← 목록 · List</a></div>
+<span class="toolname">언어 · Language</span>
+<button type="button" data-choose-lang="both" aria-pressed="true">KR+EN</button>
+<button type="button" data-choose-lang="ko" aria-pressed="false">한국어</button>
+<button type="button" data-choose-lang="en" aria-pressed="false">English</button>
+<span class="toolname">글자 크기 · Text size</span>
+<button type="button" data-size="1" aria-pressed="true">100%</button>
+<button type="button" data-size="1.5" aria-pressed="false">150%</button>
+<button type="button" data-size="2" aria-pressed="false">200%</button>
+<button type="button" data-size="3" aria-pressed="false">300%</button>
+<button type="button" data-size="4" aria-pressed="false">400%</button>
+<button type="button" id="contrast" aria-pressed="false">고대비 · Contrast</button>
+</div>
+<main>
+<article id="paper" data-lang="both" aria-busy="true">
+<header class="paper-head">
+<p class="over" id="report-number">DUNGZAK CESTLAVIE LAB — REPORT</p>
+<h1 class="kr" lang="ko" id="title-ko">연구 리포트</h1>
+<h1 class="en" lang="en" id="title-en">Research Report</h1>
+<p class="authors">등작 燈酌 / DUNGZAK CESTLAVIE</p>
+</header>
+<div id="status" class="status" role="status" aria-live="polite">리포트를 불러오는 중입니다. / Loading report…</div>
+<div id="report-text" class="report-text"></div>
+</article>
+</main>
+<nav class="lab-nav" id="lab-nav" aria-label="리포트 이동 / Report navigation">
+<a href="/" id="lab-back">← 목록으로 · Back to list</a>
+<span class="pn" id="lab-pn"></span>
+</nav>
+<script src="./reader.js?v=20261122-1"></script>
+</body>
+</html>

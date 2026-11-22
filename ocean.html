@@ -1000,7 +1000,10 @@ function renderList(items, type){
 
     const a = document.createElement('a');
     a.className = 'report-item';
-    a.href = item.md_path || '#';
+    // 2026-11-22 (lab-report1): LAB 안의 리포트(.md)는 dungzak.art와 같은 형식의 리더로 연다
+    a.href = /^(ocean\/DCAO|archive\/DCAP)-\d{2}\.md$/.test(item.md_path || '') && item.id
+      ? '/reports/reader.html?report=' + encodeURIComponent(item.id)
+      : (item.md_path || '#');
     a.target = '_self';
     a.rel = 'noopener';
 

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta
   name="viewport"
-  content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+  content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover"
 >
 <meta name="format-detection" content="telephone=no">
 
@@ -1880,8 +1880,12 @@ html.dz-z #home .dzds-home-entry{max-width:100%;white-space:normal;overflow-wrap
     if(wasSwipe) ignoreSwipeClickUntil = performance.now() + 650;
   }, {capture:true, passive:true});
   document.addEventListener('touchcancel', function(){
+    // A browser may cancel a tap without a scroll (notably Firefox in
+    // touch-emulated tablet layouts). Do not suppress a subsequent real click
+    // unless that cancelled gesture was actually moving.
+    const cancelledSwipe = !!(touch && touch.moved);
     touch = null;
-    ignoreSwipeClickUntil = performance.now() + 650;
+    if(cancelledSwipe) ignoreSwipeClickUntil = performance.now() + 650;
   }, {capture:true, passive:true});
   document.addEventListener('click', function(e){
     if(e.detail === 0 || performance.now() > ignoreSwipeClickUntil) return;
@@ -1894,6 +1898,9 @@ html.dz-z #home .dzds-home-entry{max-width:100%;white-space:normal;overflow-wrap
   }, true);
 
   document.addEventListener('pointerdown', function(e){
+    // A NEW genuine pointer press must not inherit swipe-click suppression
+    // from an earlier cancelled/swiped touch, including Firefox touch emulation.
+    if (e.isPrimary) ignoreSwipeClickUntil = 0;
     const t = e.target;
     if(!t || !t.closest) return;
 
@@ -1929,6 +1936,9 @@ html.dz-z #home .dzds-home-entry{max-width:100%;white-space:normal;overflow-wrap
 <!-- 2026-11-22 (lab-a11y1): 전역 보기 설정(글자 크기 100~400%·고대비) — 앱·문의 및 지원과 같은 설정 공유. 이 3줄을 지우면 이전 상태. -->
 <link rel="stylesheet" href="/a11y/display-settings.css?v=20261122-zoomfix2" />
 <script src="/a11y/display-settings.js?v=20261122-zoomfix2"></script>
+<!-- Screen reader keyboard/semantic layer (no login/data behavior changes). -->
+<link rel="stylesheet" href="/a11y/screenreader-core.css?v=20261122-sr1">
+<script src="/a11y/screenreader-core.js?v=20261122-sr1" defer></script>
 </head>
 <body>
 

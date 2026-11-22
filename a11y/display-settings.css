@@ -1,0 +1,176 @@
+/* display-settings.css — ELSOL · 2026-11-22 (a11y1 · LAB 공용판 lab1)
+   「보기 설정 / Display settings」 패널 + 확대·고대비 공통 규칙.
+   글자 확대·줄바꿈·1열 전환 규칙은 display-settings.js가 기존 CSS에서 생성한다(이 파일은 패널과 몇 가지 공통 규칙만).
+   100%·기본 대비(html에 dz-z·dz-hc 클래스 없음)에서는 아래 패널 외 규칙이 적용되지 않는다. */
+
+:root { --dz-s: 1; --dz-sb: 1; }
+
+/* ---------- 진입 버튼(헤더 · 로그인 버튼 왼쪽) — 기존 로그인 버튼과 같은 금빛 테두리 ---------- */
+.dzds-entry {
+  appearance: none; -webkit-appearance: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; padding: 0 10px;
+  border: 1px solid rgba(214, 183, 111, 0.42); border-radius: 999px;
+  background: transparent; color: #d6b76f; cursor: pointer;
+  font: inherit; font-size: calc(16px * var(--dz-s)); font-weight: 700; line-height: 1;
+  letter-spacing: .02em; -webkit-tap-highlight-color: rgba(184, 150, 62, .2);
+  vertical-align: middle;
+}
+.ap-discover-header-top .dzds-entry { margin-left: auto; margin-right: 8px; }
+.dzds-entry:hover { border-color: rgba(214, 183, 111, .7); }
+/* 헤더에 자리가 없을 때(예: 320px·KR+EN) 버튼은 「50점 PDF」 줄로 옮겨진다(display-settings.js가 실제 측정으로 결정) */
+.ap-brand-links-row .dzds-entry { margin-left: 0; }
+
+.dzds-entry:focus-visible { outline: 2px solid #f0d79c; outline-offset: 2px; }
+.dzds-entry[data-dz-active="true"] { background: rgba(212, 180, 109, .14); border-color: #d6b76f; }
+
+/* ---------- 패널 ---------- */
+html.dzds-open, html.dzds-open body { overflow: hidden !important; }
+.dzds-backdrop {
+  position: fixed; inset: 0; z-index: 2147483000;
+  display: flex; align-items: center; justify-content: center;
+  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  background: rgba(3, 6, 10, .78);
+}
+.dzds-backdrop[hidden] { display: none !important; }
+.dzds-panel {
+  display: flex; flex-direction: column;
+  width: min(100%, calc(560px * min(var(--dz-s), 2)));
+  max-height: 100%; overflow: hidden;
+  background: #0b0f14; color: #f4efe6;
+  border: 1px solid rgba(212, 180, 109, .45); border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
+  font-size: calc(16px * var(--dz-s)); line-height: 1.5; word-break: keep-all; overflow-wrap: anywhere;
+}
+.dzds-head { flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 14px 14px 10px 18px; border-bottom: 1px solid rgba(212, 180, 109, .22); }
+.dzds-title { margin: 6px 0 0; min-width: 0; font-size: calc(19px * var(--dz-s)); line-height: 1.3; color: #d4b46d; font-weight: 700; outline: none; }
+.dzds-x, .dzds-close, .dzds-chip, .dzds-reset {
+  appearance: none; -webkit-appearance: none; font: inherit; cursor: pointer;
+  min-width: 44px; min-height: 44px; max-width: 100%;
+  border-radius: 12px; border: 1px solid rgba(212, 180, 109, .42);
+  background: transparent; color: #f4efe6; line-height: 1.3; text-align: center;
+}
+.dzds-x { flex: 0 0 auto; font-size: calc(22px * var(--dz-s)); padding: 0 12px; color: #d6b76f; border-radius: 999px; }
+.dzds-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 12px 18px 6px; }
+.dzds-group { margin: 0 0 14px; }
+.dzds-label { margin: 0 0 8px; font-weight: 700; color: #f4efe6; font-size: calc(15px * var(--dz-s)); }
+.dzds-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.dzds-chip { padding: 6px 14px; font-size: calc(15px * var(--dz-s)); }
+.dzds-chip[aria-pressed="true"] { background: #d4b46d; border-color: #d4b46d; color: #10151c; font-weight: 800; }
+.dzds-chip[aria-pressed="true"]::before { content: "\2713\00a0"; content: "\2713\00a0" / ""; }
+.dzds-reset { width: 100%; padding: 8px 14px; margin: 2px 0 10px; color: #d6b76f; font-size: calc(15px * var(--dz-s)); }
+.dzds-note { margin: 0 0 8px; color: #D5D8DF; font-size: calc(14px * var(--dz-s)); }
+.dzds-foot { flex: 0 0 auto; padding: 10px 18px 14px; border-top: 1px solid rgba(212, 180, 109, .22); }
+.dzds-close { width: 100%; padding: 8px 14px; background: #d4b46d; border-color: #d4b46d; color: #10151c; font-weight: 800; font-size: calc(16px * var(--dz-s)); }
+.dzds-x:focus-visible, .dzds-close:focus-visible, .dzds-chip:focus-visible, .dzds-reset:focus-visible { outline: 3px solid #f0d79c; outline-offset: 2px; }
+.dzds-sr { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0 0 0 0) !important; white-space: nowrap !important; border: 0 !important; }
+.dzds-settings-row { width: 100%; text-align: left; font: inherit; }
+/* 「한국어」 패널에서 영어를 함께 쓰면 줄을 나눠 읽기 쉽게 */
+.dzds-panel [lang="en"] { hyphens: auto; -webkit-hyphens: auto; }
+
+/* ---------- 선택 상태: 색 외의 표시(밑줄·✓) ---------- */
+.lang-tab[aria-pressed="true"][data-lang] { text-decoration: underline 2px !important; text-underline-offset: 4px; }
+.ap-discover-lang-btn.is-active { text-decoration: underline 2px; text-underline-offset: 4px; }
+
+/* ---------- 확대(150~400%) 공통 ---------- */
+html.dz-z body { overflow-wrap: anywhere; }
+/* Portfolio PDF 페이지: 확대·고대비와 무관하게 100%와 같은 상속값(글자 크기·줄바꿈)을 받는다 → PDF 결과물 보존 */
+html:is(.dz-z, .dz-hc) .ap-pf-page { font-size: 16px; overflow-wrap: normal; }
+html.dz-z [data-dz-track] { flex-wrap: nowrap !important; }
+.dzds-ph { display: none; }
+html.dz-z .dzds-ph { display: block; flex: none; width: 100%; max-width: 100%; margin: 0 0 4px; font-size: calc(14px * var(--dz-s)); line-height: 1.35; font-weight: 600; color: #D5D8DF; overflow-wrap: anywhere; }
+html.dz-hc .dzds-ph { color: #fff; }
+/* :is(… , #a#b) — ID 2개 수준 우선순위로 기존 고정 높이(!important 포함)를 확대 중에만 푼다 */
+html.dz-z :is([data-dz-grow], #dzNever#dzNever) { height: auto !important; max-height: none !important; overflow: visible !important; flex-shrink: 0 !important; }
+/* 우선순위 0 — 기존에 max-width가 있는 버튼(로그인 등)은 그 값을 그대로 쓴다 */
+:where(html.dz-z) :where(button, [role="button"], input, select, textarea, label):where(:not(.ap-pf-page *)) { max-width: 100%; }
+html.dz-z :is(input[type="checkbox"], input[type="radio"]) { width: calc(18px * min(var(--dz-s), 2)); height: calc(18px * min(var(--dz-s), 2)); }
+html.dz-z :is([lang="en"], .ap-cms-bi-label-en, .ap-cms-bi-rdesc-en):not(.ap-pf-page *) { hyphens: auto; -webkit-hyphens: auto; }
+/* 작품 카드: 좁은 실효 폭은 1열, 중간은 2열(이미지 비율·작품 정보는 그대로) */
+html.dz-z.dz-ew1 .grid { grid-template-columns: minmax(0, 1fr) !important; }
+html.dz-z.dz-ew2 .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+/* 헤더: 확대 시 줄바꿈 허용(로그인·보기 설정 버튼이 화면 밖으로 나가지 않게) */
+html.dz-z .header-inner { grid-template-columns: minmax(0, 1fr) !important; }
+html.dz-z .site-header .header-actions { justify-content: flex-start; row-gap: 8px; }
+html.dz-z .site-header { position: relative !important; } /* 400%에서 고정 헤더가 화면 대부분을 가리지 않게 */
+html.dz-z .brand-row h1 { white-space: normal; }
+
+/* ---------- 고대비 ---------- */
+html.dz-hc {
+  --bg: #000000; --panel: #000000; --line: #FFD75E; --line-strong: #FFD75E;
+  --text: #FFFFFF; --muted: #FFFFFF; --soft: #FFFFFF; --gold: #FFD75E;
+  --ap-gold-x: #FFD75E; --ap-gold-x-hover: #FFE7A3;
+}
+html.dz-hc, html.dz-hc body { background: #000 !important; }
+html.dz-hc .site-bg { background: #000 !important; }
+html.dz-hc a:focus-visible, html.dz-hc button:focus-visible, html.dz-hc input:focus-visible, html.dz-hc select:focus-visible, html.dz-hc textarea:focus-visible, html.dz-hc [tabindex]:focus-visible { outline: 3px solid #FFFFFF !important; outline-offset: 2px !important; }
+html.dz-hc input, html.dz-hc select, html.dz-hc textarea { background-color: #000 !important; color: #fff !important; border-color: #FFD75E !important; }
+html.dz-hc input::placeholder, html.dz-hc textarea::placeholder { color: #E6E6E6 !important; opacity: 1 !important; }
+html.dz-hc .card { border-color: rgba(255, 215, 94, .7) !important; background: #000 !important; }
+html.dz-hc .dzds-panel { background: #000; border: 2px solid #FFD75E; }
+html.dz-hc .dzds-title, html.dz-hc .dzds-x, html.dz-hc .dzds-reset { color: #FFD75E; }
+html.dz-hc .dzds-label, html.dz-hc .dzds-note, html.dz-hc .dzds-chip { color: #fff; }
+html.dz-hc .dzds-chip, html.dz-hc .dzds-x, html.dz-hc .dzds-reset { border: 2px solid #FFD75E; }
+html.dz-hc .dzds-chip[aria-pressed="true"], html.dz-hc .dzds-close { background: #FFD75E; border-color: #FFD75E; color: #000; }
+html.dz-hc .dzds-entry { color: #FFD75E; border: 2px solid #FFD75E; }
+@media (forced-colors: active) { .dzds-chip[aria-pressed="true"] { outline: 2px solid CanvasText; } }
+@media (prefers-reduced-motion: reduce) { .dzds-backdrop, .dzds-panel { transition: none !important; animation: none !important; } }
+
+/* ---------- 기존 결함 보정(모든 모드) — 2026-11-22 감사에서 100%에서도 확인된 잘림·작은 터치 영역만, 해당 요소에 한정 ---------- */
+/* 로그인: KR+EN일 때 Google 버튼 두 번째 줄이 잘리던 문제(고정 높이) → 글자 높이만큼 늘어남. 한 줄일 때는 그대로 */
+.ap-auth-panel .ap-auth-btn.ap-auth-google { height: auto !important; min-height: 56px; flex-shrink: 0; }
+/* 로그인: 「아이디 찾기 · 비밀번호 재설정」이 두 줄일 때 버튼 밖으로 넘치던 문제 */
+.ap-auth-panel .ap-auth-link-btn.ap-auth-reset { height: auto !important; min-height: 44px; flex-shrink: 0; }
+
+/* ---------- LAB(dungzaklab.art) — 확대 중 헤더·메뉴·내부 화면 재배치(100%에서는 적용되지 않음) ---------- */
+.header .lang-global .dzds-entry { margin-right: 2px; }
+/* 메뉴 없는 LAB 문서: 헤더 아래 본문 첫 줄 오른쪽(고정 헤더 높이만큼 내려서) */
+.dzds-entry-row { position: absolute; top: calc(var(--header-height, 64px) + 10px); right: max(16px, env(safe-area-inset-right)); z-index: 5; display: flex; }
+html.dz-z .dzds-entry-row { position: relative; top: auto; right: auto; justify-content: flex-end; padding: calc(var(--dz-lab-hdr, var(--header-height, 64px)) + 10px) max(16px, env(safe-area-inset-right)) 0 16px; margin-bottom: calc(-1 * var(--dz-lab-hdr, var(--header-height, 64px))); }
+/* LAB 슬라이드 메뉴 맨 위 「Aa 보기 설정」 — 메뉴 글자와 같은 서체·색, Aa 표시만 금빛 테두리 */
+.menu .dzds-entry-menu { display: flex; align-items: center; justify-content: flex-start; gap: 10px; word-break: keep-all; width: 100%; min-height: 44px; margin: 0 0 18px; padding: 0; border: 0; border-radius: 0; background: transparent; color: #a3cdf8; font-family: inherit; font-size: calc(15px * var(--dz-s)); font-weight: 400; letter-spacing: 1px; text-align: left; line-height: 1.3; }
+.menu .dzds-entry-menu .dzds-entry-mark { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-width: calc(34px * min(var(--dz-s), 2)); min-height: calc(28px * min(var(--dz-s), 2)); padding: 0 6px; border: 1px solid rgba(214, 184, 106, 0.55); border-radius: 8px; color: #d6b76f; font-weight: 700; letter-spacing: 0; }
+.menu .dzds-entry-menu:hover { color: var(--gold, #d6b86a); }
+.menu .dzds-entry-menu:focus-visible { outline: 2px solid #f0d79c; outline-offset: 2px; }
+html.dz-hc .menu .dzds-entry-menu { color: #CFE8FF; }
+html.dz-hc .menu .dzds-entry-menu .dzds-entry-mark { color: #FFD75E; border: 2px solid #FFD75E; }
+/* 헤더: 고정 높이·고정 열 너비를 풀고 줄바꿈(메뉴 버튼 · 보기 설정 · KR/EN 은 한 줄, 사이트명은 다음 줄) */
+html.dz-lab.dz-z { --header-height: var(--dz-lab-hdr, calc(var(--header-bar, 64px) + var(--safe-top, 0px))); } /* 확대로 높아진 헤더 높이를 문서 전체 여백 계산에 그대로 쓴다 */
+html.dz-lab.dz-z .header { height: auto !important; min-height: calc(var(--header-bar, 64px) + var(--safe-top, 0px)); display: flex !important; flex-wrap: wrap; align-items: center; justify-content: space-between; row-gap: 6px; padding-top: calc(var(--safe-top, 0px) + 6px); padding-bottom: 6px; }
+html.dz-lab.dz-z .header .logo { order: 3; flex: 1 1 100%; text-align: center; white-space: normal; }
+html.dz-lab.dz-z .header .lang-global { flex-wrap: wrap; justify-content: flex-end; }
+/* ocean.html·제안서: 메뉴 버튼·언어 버튼이 절대 위치라 확대하면 로고와 겹친다 → 확대 중에만 같은 줄 흐름으로 */
+html.dz-lab.dz-z .header .menu-btn, html.dz-lab.dz-z .header .lang-global { position: relative !important; top: auto !important; right: auto !important; left: auto !important; transform: none !important; }
+html.dz-lab.dz-z .header .lang-global { margin-left: auto; }
+html.dz-lab.dz-z .header .logo { max-width: 100% !important; overflow: visible !important; text-overflow: clip !important; white-space: normal !important; word-break: keep-all; overflow-wrap: normal; line-height: 1.2 !important; padding: 0 !important; }
+/* 첫 화면 큰 제목: 단어가 가운데서 끊기지 않도록 화면 폭에 맞춘 크기(100%보다 큼) */
+/* 첫 화면 보조 문구(단어를 &nbsp;로 붙여 씀): 화면 폭에 맞춘 크기·자간으로 단어 중간에서 끊기지 않게 */
+html.dz-lab.dz-z .home-kicker { font-size: clamp(14px, 6.2vw, 44px) !important; letter-spacing: 0.06em !important; overflow-wrap: normal !important; word-break: keep-all !important; line-height: 1.5 !important; }
+html.dz-lab.dz-z .home-title { font-size: clamp(34px, 12.5vw, 140px) !important; overflow-wrap: normal !important; word-break: keep-all !important; line-height: 1.12 !important; }
+/* 메뉴: 실제 헤더 아래에서 시작, 화면 전체 폭, 독립 세로 스크롤 → 배경 페이지와 겹치지 않고 × (메뉴 버튼)은 항상 보인다 */
+html.dz-lab.dz-z .menu { top: var(--dz-lab-hdr, var(--header-height)); height: calc(100dvh - var(--dz-lab-hdr, var(--header-height))); width: 100%; padding-top: 18px; border-right: 0; }
+html.dz-lab.dz-z .menu { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+html.dz-lab-lm.dz-z .menu:not(.open) { left: -110vw !important; }
+html.dz-lab.dz-z .menu-overlay { top: var(--dz-lab-hdr, var(--header-height)); }
+html.dz-lab.dz-z .menu a { line-height: 1.3; margin-bottom: 0.9em; min-height: 44px; }
+html.dz-lab.dz-z .menu a .menu-cosmos-sub { line-height: 1.3; margin-bottom: 0; }
+/* 내부 화면(OCEAN ENERGY · ARCHIVE · BOOKS · ABOUT): 첫 줄과 닫기 버튼이 커진 헤더 아래에 오도록 */
+html.dz-lab.dz-z .view { padding-top: calc(var(--dz-lab-hdr, var(--header-height)) + 24px) !important; }
+html.dz-lab.dz-z .view:not(.home) { padding-top: calc(var(--dz-lab-hdr, var(--header-height)) + 72px) !important; }
+html.dz-lab.dz-z #home:not(.active) ~ .view-close { top: calc(var(--dz-lab-hdr, var(--header-height)) + 8px) !important; }
+/* 고대비: LAB 청색 메뉴 글자는 밝은 하늘색, 보조 문구는 밝은 금색 */
+html.dz-hc .menu { background: #000 !important; border-right-color: #FFD75E; }
+html.dz-hc .menu a { color: #CFE8FF !important; }
+html.dz-hc .menu a .menu-cosmos-sub { color: #FFD75E !important; opacity: 1 !important; }
+html.dz-hc .header { background: #000 !important; border-bottom-color: #FFD75E !important; }
+/* 개인정보·계정 삭제 문서 헤더: 100%에서는 언어 버튼 묶음 높이(38px)에 맞춰 헤더 높이를 그대로 둔다(24px 이상 기준 충족) */
+html:not(.dz-z) header .dzds-entry:has(+ .langs) { width: 38px; height: 38px; min-width: 38px; min-height: 38px; }
+/* ARCHIVE PRO 작품 카드 「이메일 문의」: 누르는 영역만 24px 이상으로(안쪽 여백 + 같은 크기의 음수 바깥 여백 → 배치는 그대로) */
+.work-status .status-inquiry { padding-top: 5px; padding-bottom: 5px; margin-top: -4px; margin-bottom: -5px; }
+
+/* LAB 슬라이드 메뉴: 열릴 때 메뉴 상자 자체로 초점이 들어간다(테두리는 그리지 않음 — 다음 Tab부터 항목에 초점 표시) */
+.menu[data-dz-focus-self]:focus { outline: none; }
+html.dz-lab-x.dz-z .header { padding-left: max(12px, env(safe-area-inset-left)) !important; padding-right: max(12px, env(safe-area-inset-right)) !important; column-gap: 8px; }
+/* 개인정보·계정 삭제 문서: 확대로 언어 버튼이 여러 줄이 되면 알약 모양 대신 둥근 사각형(모서리에 글자가 잘리지 않게) */
+html.dz-z header .langs { border-radius: 14px !important; }

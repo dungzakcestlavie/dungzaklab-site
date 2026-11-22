@@ -1,4 +1,4 @@
-const BUILD = '16';
+const BUILD = '17';
 
 const CACHE_NAME =
 `archive-pro-pwa-v${BUILD}`;

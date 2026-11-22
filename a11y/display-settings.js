@@ -635,6 +635,14 @@
       btn.removeAttribute('aria-label'); btn.removeAttribute('title');
       return;
     }
+    if (btn.classList.contains('dzds-entry-hero')) { // aa1(2026-11-23) 원조 Archive Pro 언어 줄: 「Aa 보기 설정」을 글자로 함께 보여 독립 기능임을 분명히(보이는 글자 = 버튼 이름)
+      var L = lang(), parts = L === 'en' ? [['en', 'Display']] : (L === 'both' ? [['ko', '보기 설정'], ['en', 'Display']] : [['ko', '보기 설정']]);
+      var tx = el('span', 'dzds-entry-text');
+      parts.forEach(function (q, i) { if (i) tx.appendChild(document.createTextNode(' · ')); var sp = el('span', '', { lang: q[0] }); sp.textContent = q[1]; tx.appendChild(sp); });
+      btn.appendChild(tx);
+      btn.removeAttribute('aria-label'); btn.removeAttribute('title');
+      return;
+    }
     btn.setAttribute('aria-label', plain(T.entry));
     btn.setAttribute('title', plain(T.entry));
   }
@@ -656,7 +664,8 @@
       if (!tg) return;
       host = tg.parentNode; before = tg;
     }
-    var b = el('button', 'dzds-entry' + (inMenu ? ' dzds-entry-menu' : ''), { id: 'dzDisplayBtn', type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-controls': 'dzDisplayDialog' });
+    var hero = !!(host && host.classList && host.classList.contains('lang-inline') && host.closest('.hero'));
+    var b = el('button', 'dzds-entry' + (inMenu ? ' dzds-entry-menu' : '') + (hero ? ' dzds-entry-hero' : ''), { id: 'dzDisplayBtn', type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-controls': 'dzDisplayDialog' });
     entryLabel(b);
     b.addEventListener('click', function () { openDlg(b); });
     host.insertBefore(b, before);

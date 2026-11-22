@@ -43,8 +43,9 @@
     var s = state.scale / 100;
     var w = (window.visualViewport && window.visualViewport.width) || window.innerWidth || root.clientWidth || 1024;
     var ew = w / s;
-    root.classList.toggle('dz-ew1', s > 1 && ew < 480);
-    root.classList.toggle('dz-ew2', s > 1 && ew >= 480 && ew < 820);
+    // 560 미만 = 1열(1920px 화면 400%의 실효 폭 480px도 1열 — 여러 열이면 「SEARCH」 같은 단어가 중간에서 잘림)
+    root.classList.toggle('dz-ew1', s > 1 && ew < 560);
+    root.classList.toggle('dz-ew2', s > 1 && ew >= 560 && ew < 820);
   }
   function apply() {
     var s = state.scale / 100;
@@ -250,7 +251,10 @@
       if (/px$/.test(lh)) {
         var lhv = px(lh), fsv = px(fs);
         var r = lhv && fsv ? lhv / fsv : 0;
-        Z.push('line-height:' + (r && r <= 1.6 ? r.toFixed(3) : '1.35') + I('line-height'));
+        Z.push('line-height:' + (r && r <= 1.6 ? Math.max(r, 1.2).toFixed(3) : '1.35') + I('line-height'));
+      } else if (/^(0?\.\d+|1(\.[01]\d*)?)$/.test(lh)) {
+        // 줄 간격 1.0~1.1(한 줄 전제)은 확대되어 두 줄이 되면 윗줄·아랫줄 글자가 겹친다(예: 섹션/SECTION) → 1.2
+        Z.push('line-height:1.2' + I('line-height'));
       }
       if (textRule) {
         var h = P('height'), hv = px(h);
@@ -638,7 +642,7 @@
     if (document.getElementById('dzDisplayBtn')) return;
     var host = document.querySelector('.site-header .header-actions') || document.querySelector('[data-dz-display-host]');
     var before = host ? host.firstChild : null;
-    if (!host) { var lk = document.querySelector('.site-header .header-inner > #labLink'); if (lk) { host = lk.parentNode; before = lk; } } // LAB Archive Pro: LAB 버튼 바로 왼쪽
+    if (!host) { var li = document.querySelector('.hero .lang-inline'); if (li) { host = li; before = document.getElementById('heroModeLine'); if (before && before.parentNode !== li) before = null; } } // LAB Archive Pro: 언어 버튼 줄(헤더 높이·제목 그대로 — 100% 화면 무변경)
     var inMenu = false;
     if (!host) { var lm = document.getElementById('menu'); if (lm && lm.classList.contains('menu')) { host = lm; before = lm.firstChild; inMenu = true; } } // LAB: 슬라이드 메뉴 맨 위(헤더 칸이 고정 폭이라 넣지 않음)
     if (!host && document.querySelector('.header .lang-global')) { // 메뉴 없는 LAB 문서: 헤더 바로 아래 본문 첫 줄 오른쪽
@@ -666,11 +670,13 @@
     var b = document.getElementById('dzDisplayBtn'), hdr = document.querySelector('.site-header .header-actions');
     var row = document.querySelector('.ap-brand-links-row'), h1 = document.querySelector('.site-header .brand-row h1'), wrap = document.querySelector('.site-header .brand-wrap');
     if (!b || !hdr || !h1 || !wrap) return;
-    if (b.parentNode !== hdr) hdr.insertBefore(b, hdr.firstChild); // 먼저 헤더에 두고 잰다
+    if (b.parentNode !== hdr) { var hf = document.activeElement === b; hdr.insertBefore(b, hdr.firstChild); if (hf) { try { b.focus({ preventScroll: true }); } catch (e) { b.focus(); } } } // 먼저 헤더에 두고 잰다(초점 유지)
     if (root.classList.contains('dz-z') || !row) return;
     if (h1.scrollWidth > wrap.clientWidth + 1 || h1.scrollWidth > h1.clientWidth + 1) {
       var mode = document.getElementById('heroModeLine');
+      var hadFocus = document.activeElement === b; // 옮기면 초점이 풀리므로(보기 설정 닫은 직후 등) 그대로 돌려준다
       row.insertBefore(b, mode && mode.parentNode === row ? mode : null);
+      if (hadFocus) { try { b.focus({ preventScroll: true }); } catch (e) { b.focus(); } }
     }
   }
   function laterPlace() { if (placing) return; placing = setTimeout(function () { placing = 0; placeEntry(); }, 120); }

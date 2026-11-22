@@ -10,6 +10,10 @@ const matrix=[
 ['iPhone-X-old',375,812,3,1],['iPhone-12-mini',375,812,3,1],
 ['iPhone-13-14',390,844,3,1],['iPhone-16-Pro',402,874,3,1],
 ['iPhone-new-large-class',440,956,3,1],['iPhone-landscape',874,402,3,1],
+/* iPhone Duo 2026: Safari 27.1 WebKit viewport range, representative poses. */
+['iPhone-Duo-outer-Safari',382,678,3,1],['iPhone-Duo-outer-app',466,678,3,1],
+['iPhone-Duo-inner-portrait',669,869,3,1],['iPhone-Duo-inner-landscape',951,669,3,1],
+['iPhone-Duo-inner-split',445,626,3,1],
 ['Galaxy-S8-old',360,740,3,1],['Galaxy-S21',360,800,3,1],
 ['Android-small-old',320,640,2,1],['Galaxy-new',384,854,3,1],
 ['Pixel-6',412,915,2.6,1],['Android-large',480,1040,3,1],
@@ -26,7 +30,7 @@ const matrix=[
 ['MacBook-class',1440,900,2,0],['Desktop-FHD',1920,1080,1,0],
 ['Desktop-4K-class',2560,1440,1,0]
 ];
-const deep=new Set(['iPhone-SE-old','iPhone-16-Pro','iPhone-new-large-class',
+const deep=new Set(['iPhone-SE-old','iPhone-16-Pro','iPhone-new-large-class','iPhone-Duo-outer-Safari','iPhone-Duo-inner-portrait',
 'Galaxy-S21','Galaxy-Fold-closed','Galaxy-Fold-open','iPad-mini-portrait',
 'iPad-Split-View','Android-Tab-portrait','Laptop-small','Desktop-FHD']);
 const sites=[['dungzak.art','https://dungzak.art/'],['dungzaklab.art','https://dungzaklab.art/']];

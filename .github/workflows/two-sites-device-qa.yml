@@ -1,0 +1,38 @@
+name: DUNGZAK two-site device simulation
+on:
+  push:
+    branches:
+      - qa/two-sites-device-matrix-20261122
+  workflow_dispatch:
+jobs:
+  simulated-device-qa:
+    name: ${{ matrix.engine }} device viewport QA
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit, firefox]
+    steps:
+      - name: Checkout QA branch
+        uses: actions/checkout@v4
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.56.1
+      - name: Install browser engine
+        run: npx playwright install --with-deps ${{ matrix.engine }}
+      - name: Test public sites
+        env:
+          QA_ENGINE: ${{ matrix.engine }}
+        run: node qa/two-sites-device-qa.mjs
+      - name: Upload QA logs and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dungzak-qa-${{ matrix.engine }}
+          path: qa-results/${{ matrix.engine }}/
+          if-no-files-found: warn
+          retention-days: 14

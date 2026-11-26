@@ -141,6 +141,11 @@ var series=m[1].toLowerCase();
 var folder=series==='dcao'?'ocean':'archive';
 var entry=null;
 ['lab-back','lab-back-top'].forEach(function(i){var a=document.getElementById(i);if(a)a.href='/?view='+(series==='dcao'?'ocean':'archive');});
+var expectedPath=folder+'/'+id+'.md';
+// Fetch both public resources now, then verify the exact listed path before rendering.
+var textResult=fetch('../'+expectedPath,{cache:'no-cache'})
+  .then(function(r){if(!r.ok)throw Error('Report text: HTTP '+r.status);return r.text();})
+  .then(function(raw){return {raw:raw};},function(failure){return {failure:failure};});
 fetch('../data/'+series+'.json',{cache:'no-cache'})
 .then(function(r){if(!r.ok)throw Error('Report index: HTTP '+r.status);return r.json();})
 .then(function(data){
@@ -148,16 +153,16 @@ fetch('../data/'+series+'.json',{cache:'no-cache'})
   var local=all.filter(function(d){return typeof d.md_path==='string'&&new RegExp('^'+folder+'/'+m[1]+'-\\d{2}\\.md$').test(d.md_path);});
   var idx=-1;local.forEach(function(d,i){if(d.id===id)idx=i;});
   entry=local[idx];
-  if(!entry||entry.md_path!==folder+'/'+id+'.md')throw Error('Report not listed: '+id);
+  if(!entry||entry.md_path!==expectedPath)throw Error('Report not listed: '+id);
   document.getElementById('report-number').textContent=id+' · '+entry.year+' · '+(entry.category||'Research');
   document.getElementById('title-ko').textContent=entry.title_kr||entry.title_ko||id;
   document.getElementById('title-en').textContent=entry.title_en||id;
   document.title=id+' · '+(entry.title_kr||id)+' / '+(entry.title_en||'DUNGZAK CESTLAVIE LAB');
   var canonical=document.createElement('link');canonical.rel='canonical';canonical.href=location.origin+'/reports/reader.html?report='+encodeURIComponent(id);document.head.appendChild(canonical);
   pnLinks(local,idx);
-  return fetch('../'+entry.md_path,{cache:'no-cache'});
+  return textResult;
 })
-.then(function(r){if(!r.ok)throw Error('Report text: HTTP '+r.status);return r.text();})
+.then(function(result){if(result.failure)throw result.failure;return result.raw;})
 .then(function(raw){if(!raw.trim())throw Error('Report text is empty');renderMarkdown(raw,entry);status.hidden=true;paper.setAttribute('aria-busy','false');})
 .catch(function(e){console.error('LAB report reader',e);error('리포트를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요. / Unable to load this report. Please try again.');});
 })();

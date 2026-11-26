@@ -26,11 +26,6 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/archivepro-icon-192-v2.png?v=2">
 <link rel="icon" type="image/png" sizes="512x512" href="/archivepro-icon-512-v2.png?v=2">
 
-<link rel="preconnect" href="https://dungzak.art" crossorigin>
-<link rel="dns-prefetch" href="//dungzak.art">
-<link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
-<link rel="dns-prefetch" href="//raw.githubusercontent.com">
-
 
 <meta property="og:title" content="ARCHIVE PRO — Artist Edition">
 <meta property="og:description" content="A digital art archive platform for artists — artworks, portfolios, PDF, QR public viewing, Discover and COSMOS.">
@@ -1944,6 +1939,7 @@ html.dz-lab.dz-z .header #menuBtn{transform:translateZ(0) !important;}
 <script src="/a11y/screenreader-core.js?v=20261127-lab1" defer></script>
 </head>
 <body>
+<a id="dz-sr-skip" class="dz-sr-skip" href="#home">본문으로 이동 / Skip to content</a>
 
 <div class="header">
   <div class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="menu" role="button" tabindex="0">
@@ -2408,10 +2404,10 @@ const fallbackDCAP = {
   ]
 };
 
-let dcaoLoaded = false;
-let dcapLoaded = false;
-let dcaoData = fallbackDCAO;
-let dcapData = fallbackDCAP;
+const reportLists = {
+  dcao: { fallback: fallbackDCAO.dcao },
+  dcap: { fallback: fallbackDCAP.dcap }
+};
 
 const additionalDCAPCases = [
   {
@@ -2608,6 +2604,7 @@ function activeViewId(){
 }
 
 function rememberView(nextId){
+  document.getElementById('dz-sr-skip').href = '#' + nextId;
   if(viewRestoring) return;
   if(nextId === 'home'){ viewStack.length = 0; return; }
   const current = activeViewId();
@@ -2619,6 +2616,14 @@ function rememberView(nextId){
   });
   if(viewStack.length > 12) viewStack.shift();
 }
+
+document.getElementById('dz-sr-skip').addEventListener('click', function(event){
+  event.preventDefault();
+  const target = document.getElementById(activeViewId());
+  target.setAttribute('tabindex', '-1');
+  target.focus({ preventScroll: true });
+  target.scrollIntoView({ block: 'start', behavior: 'auto' });
+});
 
 function closeView(){
   if(activeViewId() === 'home') return;
@@ -2662,7 +2667,7 @@ function openOcean(){
   clearViews();
   ocean.classList.add('active');
   closeMenu();
-  loadDCAO();
+  loadReports('dcao');
 }
 
 function openArchive(){
@@ -2670,7 +2675,7 @@ function openArchive(){
   clearViews();
   archive.classList.add('active');
   closeMenu();
-  loadDCAP();
+  loadReports('dcap');
 }
 
 function openBooks(){
@@ -2737,22 +2742,21 @@ function setLanguage(lang){
   }
 
   if(ocean.classList.contains('active')){
-    renderList(dcaoData.dcao || [], 'dcao');
+    renderReportList('dcao');
   }
 
   if(archive.classList.contains('active')){
-    renderList(withAdditionalDCAP(dcapData.dcap || []), 'dcap');
+    renderReportList('dcap');
   }
 }
 
-async function fetchJSON(path, fallback){
-  try{
-    const res = await fetch(path, { cache: 'default' });
-    if(!res.ok) throw new Error('fetch fail');
-    return await res.json();
-  }catch(e){
-    return fallback;
-  }
+function renderReportList(type){
+  const state = reportLists[type];
+  const items = state.items || state.fallback;
+  if(state.renderedItems === items && state.renderedLang === currentLang) return;
+  renderList(type === 'dcap' ? withAdditionalDCAP(items) : items, type);
+  state.renderedItems = items;
+  state.renderedLang = currentLang;
 }
 
 function renderList(items, type){
@@ -2819,21 +2823,25 @@ function renderList(items, type){
   listEl.appendChild(frag);
 }
 
-async function loadDCAO(){
-  if(!dcaoLoaded){
-    dcaoData = await fetchJSON('data/dcao.json', fallbackDCAO);
-    dcaoLoaded = true;
+async function loadReports(type){
+  const state = reportLists[type];
+  if(!state.items){
+    if(!state.pending){
+      state.pending = fetch('data/' + type + '.json', { cache: 'no-cache' })
+        .then(function(response){
+          if(!response.ok) throw new Error('Report index HTTP ' + response.status);
+          return response.json();
+        })
+        .then(function(data){
+          if(Array.isArray(data?.[type])) state.items = data[type];
+        })
+        .catch(function(){ /* Keep the existing local fallback; retry on reopening. */ })
+        .finally(function(){ state.pending = null; });
+    }
+    await state.pending;
   }
-  renderList(dcaoData.dcao || [], 'dcao');
-}
-
-async function loadDCAP(){
-  if(!dcapLoaded){
-    dcapData = await fetchJSON('data/dcap.json', fallbackDCAP);
-    dcapData.dcap = withAdditionalDCAP(dcapData.dcap || []);
-    dcapLoaded = true;
-  }
-  renderList(withAdditionalDCAP(dcapData.dcap || []), 'dcap');
+  const view = type === 'dcao' ? ocean : archive;
+  if(view.classList.contains('active')) renderReportList(type);
 }
 
 function escapeHtml(str){

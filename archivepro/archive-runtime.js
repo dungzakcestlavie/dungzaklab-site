@@ -825,6 +825,7 @@ untitled: '무제 / 캡션 없음',
           openZoom: '전체보기',
           offlineNotice: '오프라인에서는\nA 기원 섹션과 확대 이미지를\n제외했습니다.',
           zoomOffline: '오프라인에서는 확대 이미지를 사용할 수 없습니다.',
+          captionMore: '작품 캡션 아래로 스크롤',
           sortOptions: [
             '기본순',
             '번호 늦은순',
@@ -872,6 +873,7 @@ untitled: 'Untitled / No Caption',
           openZoom: 'View Full',
           offlineNotice: 'Origins section and zoom images\nare unavailable offline.',
           zoomOffline: 'Zoom images are unavailable offline.',
+          captionMore: 'Scroll artwork caption down',
           sortOptions: [
             'Default order',
             'Latest ID first',
@@ -919,6 +921,7 @@ untitled: '무제 / Untitled',
           openZoom: '전체보기 / View Full',
           offlineNotice: '오프라인에서는\nA 기원 섹션과 확대 이미지를\n제외했습니다.\nOrigins section and zoom images\nare unavailable offline.',
           zoomOffline: '오프라인에서는 확대 이미지를 사용할 수 없습니다.\nZoom images are unavailable offline.',
+          captionMore: '작품 캡션 아래로 스크롤 / Scroll artwork caption down',
           sortOptions: [
             '기본순 · Default',
             '번호 늦은순 · Latest ID',
@@ -990,6 +993,8 @@ lightbox: document.getElementById('lightbox'),
         lightboxNext: document.getElementById('lightboxNext'),
         lightboxImage: document.getElementById('lightboxImage'),
         lightboxStage: document.querySelector('.lightbox-stage'),
+        lightboxCaption: document.getElementById('lightboxCaption'),
+        lightboxCaptionMore: document.getElementById('lightboxCaptionMore'),
         lbId: document.getElementById('lbId'),
         lbTitle: document.getElementById('lbTitle'),
         lbSection: document.getElementById('lbSection'),
@@ -2670,7 +2675,60 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         run();
       }
 
+      let captionCueFrame = 0;
+
+      function queueCaptionCue() {
+        if (captionCueFrame || !isViewerOpen()) return;
+        captionCueFrame = requestAnimationFrame(() => {
+          captionCueFrame = 0;
+          if (!isViewerOpen()) return;
+          const panel = els.lightboxCaption;
+          const button = els.lightboxCaptionMore;
+          const rect = panel.getBoundingClientRect();
+          const bottom = rect.top + panel.clientTop + panel.clientHeight;
+          // Ignore the extra safe-area padding after the last readable item.
+          const last = Array.from(panel.children).reverse().find(child => child.offsetHeight > 0);
+          const more = last && last.getBoundingClientRect().bottom > bottom + 1;
+          if (!more) {
+            if (document.activeElement === button) panel.focus({ preventScroll: true });
+            button.hidden = true;
+            return;
+          }
+          button.hidden = false;
+        });
+      }
+
+      function bindViewerCaption() {
+        const panel = els.lightboxCaption;
+        const button = els.lightboxCaptionMore;
+        button.addEventListener('pointerdown', event => {
+          if (event.isPrimary && button.setPointerCapture) button.setPointerCapture(event.pointerId);
+        });
+        button.addEventListener('click', () => {
+          panel.scrollTop += Math.max(1, panel.clientHeight - button.offsetHeight);
+          queueCaptionCue();
+        });
+        panel.addEventListener('scroll', queueCaptionCue, { passive: true });
+        window.addEventListener('resize', queueCaptionCue, { passive: true });
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', queueCaptionCue, { passive: true });
+
+        const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(queueCaptionCue) : null;
+        function observeCaption() {
+          if (observer) {
+            observer.disconnect();
+            observer.observe(panel);
+            for (const child of panel.children) observer.observe(child);
+          }
+          queueCaptionCue();
+        }
+        new MutationObserver(observeCaption).observe(panel, { childList: true });
+        observeCaption();
+      }
+
       function openLightbox(item, fromCaptionReader = false) {
+        const wasOpen = isViewerOpen();
+        const previous = state.lightboxItem;
+        const resetCaption = !wasOpen || !previous || previous.id !== item.id || previous.section_id !== item.section_id;
         archiveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
         /* IPAD FULLSCREEN TOUCH-SCROLL-LOCK FIX 2026-08-25:
            Root cause of "swipe up/down in the iPad fullscreen viewer shifts the whole
@@ -2688,7 +2746,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
            function runs on every navigation, not just the first open). archiveScrollY
            and restoreArchiveScroll() above/below are completely unchanged and still own
            restoring the actual gallery scroll position on close. */
-        if (!isViewerOpen() && !bodyScrollLockActive) {
+        if (!wasOpen && !bodyScrollLockActive) {
           bodyScrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
           bodyScrollLockActive = true;
           document.body.style.position = 'fixed';
@@ -2836,6 +2894,11 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
         document.documentElement.classList.add('viewer-open');
         document.body.classList.add('viewer-open');
         document.body.style.overflow = 'hidden';
+
+        // Reset on navigation, not from image load/decode or viewer zoom.
+        if (resetCaption) els.lightboxCaption.scrollTop = 0;
+        els.lightboxCaptionMore.setAttribute('aria-label', t('captionMore'));
+        queueCaptionCue();
 
         scheduleNeighborPreload(item);
       }
@@ -3783,6 +3846,7 @@ els.lbKeyMaterial.textContent = t('lbMaterial');
       }
 
       function bindEvents() {
+        bindViewerCaption();
         if (bindEvents._bound) return;
         bindEvents._bound = true;
         /* 2026-10-14 (apsearch2) 앱 search.js와 같게: 한글 조합 중에는 검색하지 않고, 조합이 끝나면 검색 */
@@ -3953,7 +4017,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
            scrolling is completely unaffected. */
         document.addEventListener('touchmove', (e) => {
           if (!isViewerOpen()) return;
-          if (e.target && e.target.closest && e.target.closest('.lightbox-side')) return;
+          if (els.lightboxCaption.contains(e.target)) return;
           if (e.cancelable) e.preventDefault();
         }, { capture:true, passive:false });
 
@@ -4067,7 +4131,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
         let wheelSwipeArmed = true;
         let wheelSwipeIdleTimer = null;
         els.lightbox.addEventListener('wheel', (e) => {
-          if (!isViewerOpen()) return;
+          if (!isViewerOpen() || els.lightboxCaption.contains(e.target)) return;
           e.preventDefault();
 
           const isHorizontalSwipe = Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 8;
@@ -4214,7 +4278,7 @@ if (Date.now() <= closeClickBlockUntil) blockEvent(e);
         }, { passive:false });
 
         els.lightbox.addEventListener('mousedown', (e) => {
-          if (!isViewerOpen() || viewerScale <= 1 || e.button !== 0) return;
+          if (!isViewerOpen() || viewerScale <= 1 || e.button !== 0 || els.lightboxCaption.contains(e.target)) return;
           e.preventDefault();
           viewerMouseDragging = true;
           viewerLastX = e.clientX;

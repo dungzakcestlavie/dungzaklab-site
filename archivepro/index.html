@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<link rel="preload" href="/archivepro/archive-runtime.js?v=21" as="script">
+<link rel="preload" href="/archivepro/archive-runtime.js?v=22" as="script">
 <script id="ap-tablet-ux-detect">
 (function(){
   try {
@@ -198,7 +198,7 @@ html.ap-tablet-ui .ap-stats-tablet.ap-has-results .ap-stats-tablet-results{displ
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
 <link rel="preconnect" href="https://dungzak.art" crossorigin>
 <link rel="dns-prefetch" href="https://dungzak.art">
-<link rel="stylesheet" href="/archivepro/archive-shell.css?v=21">
+<link rel="stylesheet" href="/archivepro/archive-shell.css?v=22">
 
   <meta name="theme-color" content="#0b0f14" />
   <meta name="color-scheme" content="dark" />
@@ -473,7 +473,7 @@ html.ap-tablet-ui .ap-stats-tablet.ap-has-results .ap-stats-tablet-results{displ
         <img id="lightboxImage" alt="" />
       </div>
 
-      <aside class="lightbox-side">
+      <aside id="lightboxCaption" class="lightbox-side" aria-labelledby="lbTitle" tabindex="-1">
         <p class="lb-id" id="lbId">—</p>
         <h3 class="lb-title" id="lbTitle">—</h3>
         <p class="lb-section" id="lbSection">—</p>
@@ -491,10 +491,13 @@ html.ap-tablet-ui .ap-stats-tablet.ap-has-results .ap-stats-tablet-results{displ
           <a id="lbOpenImage" class="lb-link" href="#" target="_blank" rel="noopener noreferrer">이미지 열기</a>
           <a id="lbOpenZoom" class="lb-link mobile-hide-fullview" href="#" target="_blank" rel="noopener noreferrer">줌 열기</a>
         </div>
+        <div class="lb-caption-cue">
+          <button id="lightboxCaptionMore" class="lb-caption-more" type="button" aria-controls="lightboxCaption" aria-label="작품 캡션 아래로 스크롤" hidden></button>
+        </div>
       </aside>
     </div>
   </div>
-<script src="/archivepro/archive-runtime.js?v=21"></script>
+<script src="/archivepro/archive-runtime.js?v=22"></script>
 
 
 <!-- Archive Pro PWA Install UX: Android native install + iPhone Safari guide -->

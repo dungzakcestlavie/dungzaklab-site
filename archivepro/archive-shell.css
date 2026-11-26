@@ -5061,3 +5061,76 @@ html.is-ipad [data-viewer-close]:hover {
       object-fit:contain !important;
     }
 
+    #lightbox .lightbox-side {
+      overflow-anchor: none;
+      scroll-behavior: auto;
+      touch-action: pan-y !important;
+    }
+
+    #lightbox .lb-caption-cue {
+      position: sticky;
+      bottom: 0;
+      height: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    #lightbox .lb-caption-more:not([hidden]) {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--gold);
+      transform: translateX(-50%);
+      cursor: pointer;
+      pointer-events: auto;
+      touch-action: manipulation;
+    }
+
+    #lightbox .lb-caption-more::after {
+      content: "";
+      width: 11px;
+      height: 11px;
+      margin-top: -6px;
+      border-right: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: rotate(45deg);
+      filter: drop-shadow(0 1px 2px #000);
+    }
+
+    #lightbox .lb-caption-more:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: -4px;
+    }
+
+    /* Keep the viewer frame separate from the generated Aa text reflow rules. */
+    @layer archive-viewer-frame {
+      @media (min-width: 881px) {
+        #lightbox .lightbox-inner {
+          grid-template-columns: minmax(0, 1fr) 360px !important;
+          grid-template-rows: minmax(0, 1fr) !important;
+        }
+      }
+
+      @media (max-height: 620px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+        #lightbox .lightbox-inner {
+          flex-direction: row !important;
+          flex-wrap: nowrap !important;
+          align-items: center !important;
+        }
+        #lightbox .lightbox-side { min-height: 0 !important; }
+      }
+
+      @media (min-width: 881px) and (max-height: 620px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+        /* The phone's auto-height stage must not inherit desktop size containment. */
+        #lightbox .lightbox-stage { contain: layout paint !important; }
+      }
+    }
+

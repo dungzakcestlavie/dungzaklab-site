@@ -1,4 +1,4 @@
-const BUILD = '21';
+const BUILD = '22';
 const SHELL = 'archive-pro-pwa-v' + BUILD;
 const DATA = 'archive-pro-data-v1';
 const IMAGES = 'archive-pro-standard-images-v1';
@@ -6,8 +6,8 @@ const PAGE = '/archivepro/index.html';
 const CORE = [
   PAGE,
   '/archivepro/manifest.json',
-  '/archivepro/archive-shell.css?v=21',
-  '/archivepro/archive-runtime.js?v=21',
+  '/archivepro/archive-shell.css?v=22',
+  '/archivepro/archive-runtime.js?v=22',
   '/archivepro/caption-reader.css?v=20261123-par1',
   '/archivepro/caption-reader.js?v=20261123-par1',
   '/a11y/display-settings.css?v=20261123-aa2',

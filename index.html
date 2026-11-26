@@ -22,22 +22,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Archive Pro">
-<link rel="apple-touch-icon" href="/icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+<link rel="apple-touch-icon" href="/archivepro-icon-192-v2.png?v=2">
+<link rel="icon" type="image/png" sizes="192x192" href="/archivepro-icon-192-v2.png?v=2">
+<link rel="icon" type="image/png" sizes="512x512" href="/archivepro-icon-512-v2.png?v=2">
 
 <link rel="preconnect" href="https://dungzak.art" crossorigin>
 <link rel="dns-prefetch" href="//dungzak.art">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="//raw.githubusercontent.com">
-<link rel="prefetch" href="/archivepro/index.html" as="document">
-<link rel="prefetch" href="https://dungzak.art/data/works.json" as="fetch" crossorigin>
-<script type="speculationrules">
-{
-  "prefetch": [{ "source": "list", "urls": ["/archivepro/index.html"] }],
-  "prerender": [{ "source": "list", "urls": ["/archivepro/index.html"] }]
-}
-</script>
 
 
 <meta property="og:title" content="ARCHIVE PRO — Artist Edition">
@@ -1934,19 +1926,23 @@ html.dz-z #home .dzds-home-entry{max-width:100%;white-space:normal;overflow-wrap
 })();
 </script>
 <!-- 2026-11-22 (lab-a11y1): 전역 보기 설정(글자 크기 100~400%·고대비) — 앱·문의 및 지원과 같은 설정 공유. 이 3줄을 지우면 이전 상태. -->
+<style>
+#menuBtn span{pointer-events:none;}
+html.dz-lab.dz-z .header #menuBtn{transform:translateZ(0) !important;}
+</style>
 <link rel="stylesheet" href="/a11y/display-settings.css?v=20261123-aa2" />
-<script src="/a11y/display-settings.js?v=20261123-aa2"></script>
+<script src="/a11y/display-settings.js?v=20261127-lab1"></script>
 <!-- Screen reader keyboard/semantic layer (no login/data behavior changes). -->
 <link rel="stylesheet" href="/a11y/screenreader-core.css?v=20261122-sr1">
-<script src="/a11y/screenreader-core.js?v=20261122-sr1" defer></script>
+<script src="/a11y/screenreader-core.js?v=20261127-lab1" defer></script>
 </head>
 <body>
 
 <div class="header">
   <div class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="menu" role="button" tabindex="0">
-    <span></span>
-    <span></span>
-    <span></span>
+    <span aria-hidden="true"></span>
+    <span aria-hidden="true"></span>
+    <span aria-hidden="true"></span>
   </div>
 
   <a href="#" class="logo" onclick="openHome(); return false;">
@@ -1954,8 +1950,8 @@ html.dz-z #home .dzds-home-entry{max-width:100%;white-space:normal;overflow-wrap
   </a>
 
   <div class="lang-global">
-    <button type="button" data-lang="ko">KR</button>
-    <button type="button" data-lang="en">EN</button>
+    <button type="button" data-lang="ko" lang="ko" aria-label="KR 한국어" aria-pressed="true">KR</button>
+    <button type="button" data-lang="en" lang="en" aria-label="EN English" aria-pressed="false">EN</button>
   </div>
 </div>
 
@@ -2001,7 +1997,7 @@ html.dz-z #home .dzds-home-entry{max-width:100%;white-space:normal;overflow-wrap
     </button>
   </div>
   <div class="home-hero">
-    <div class="home-title">
+    <div class="home-title" role="heading" aria-level="1" lang="en">
       <span class="home-title-line">DUNGZAK</span> <span class="home-title-line">CESTLAVIE LAB</span>
     </div>
 
@@ -2526,7 +2522,9 @@ function restoreMenuScroll(){
 function syncMenuButton(isOpen){
   menuBtn.classList.toggle('is-open', isOpen);
   menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-  menuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+  menuBtn.setAttribute('aria-label', currentLang === 'en'
+    ? (isOpen ? 'Close menu' : 'Open menu')
+    : (isOpen ? '메뉴 닫기' : '메뉴 열기'));
 }
 
 function markCurrentMenuItem(){
@@ -2551,7 +2549,10 @@ function openMenu(){
 }
 
 function closeMenu(){
-  if(menu.classList.contains('open')) saveMenuScroll();
+  if(menu.classList.contains('open')){
+    saveMenuScroll();
+    menuBtn.focus({ preventScroll:true });
+  }
   menu.classList.remove('open');
   menuOverlay.classList.remove('show');
   menu.setAttribute('aria-hidden', 'true');
@@ -2695,8 +2696,12 @@ function setLanguage(lang){
   currentLang = lang === 'en' ? 'en' : 'ko';
 
   globalLangBtns.forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+    const isCurrent = btn.dataset.lang === currentLang;
+    btn.classList.toggle('active', isCurrent);
+    btn.setAttribute('aria-pressed', String(isCurrent));
   });
+  document.getElementById('viewClose').setAttribute('aria-label', currentLang === 'en' ? 'Close' : '닫기');
+  syncMenuButton(menu.classList.contains('open'));
 
   homeLangContents.forEach(content => {
     content.classList.toggle('active', content.dataset.langContent === currentLang);
@@ -2849,6 +2854,8 @@ menuBtn.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
+  const settings = document.getElementById('dzDisplayDialog');
+  if(e.key === 'Escape' && settings && !settings.hidden) return;
   if(e.key === 'Escape' && menu.classList.contains('open')){
     closeMenu();
   }else if(e.key === 'Escape' && activeViewId() !== 'home'){
@@ -2901,6 +2908,7 @@ archiveProLinks.forEach(link => {
   });
 
   link.addEventListener('mouseenter', warmArchivePro, { once: true });
+  link.addEventListener('focus', warmArchivePro, { once: true });
   link.addEventListener('touchstart', warmArchivePro, { once: true, passive: true });
 });
 
@@ -2933,18 +2941,6 @@ if(__dzReturn && !window.__DZLAB_EARLY_VIEW__){
   openAbout();
 }else{
   openHome();
-}
-
-
-/* ARCHIVE PRO APP CACHE — Service Worker registration only */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function(){
-    navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' }).then(function(registration){
-      registration.update();
-    }).catch(function(error){
-      console.warn('Service Worker registration failed:', error);
-    });
-  });
 }
 
 

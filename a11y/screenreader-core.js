@@ -66,7 +66,8 @@
     var trigger = $('#menuBtn');
     var menu = $('#menu');
     if (!trigger || !menu) return;
-    trigger.setAttribute('aria-haspopup','dialog');
+    if (menu.getAttribute('role') === 'navigation') trigger.removeAttribute('aria-haspopup');
+    else trigger.setAttribute('aria-haspopup','dialog');
     trigger.setAttribute('aria-controls','menu');
     trigger.setAttribute('aria-expanded',String(menu.classList.contains('open')));
     // The existing LAB menu a11y module owns modal/inert/focus/ESC behavior.

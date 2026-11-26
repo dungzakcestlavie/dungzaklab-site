@@ -834,6 +834,7 @@
   // ------------------------------------------------------------------ LAB 슬라이드 메뉴(#menu) 보강 — 기존 열기/닫기 함수·순서·문구는 그대로
   var LabMenu = (function () {
     var menu = null, btn = null, hdr = null;
+    var labHome = false, wasOpen = false, disabledBackground = [];
     var NAME = { kr: '메뉴', en: 'Menu' };
     function setHdr() {
       if (!hdr) return;
@@ -846,14 +847,29 @@
       if ('inert' in menu) menu.inert = !open; else if (!open) menu.setAttribute('aria-hidden', 'true');
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
       if (!btn.hasAttribute('aria-controls')) btn.setAttribute('aria-controls', 'menu');
+      if (!labHome || open === wasOpen) return;
+      wasOpen = open;
+      if (open) {
+        disabledBackground = Array.from(document.querySelectorAll('.view, #viewClose, #dz-sr-skip')).filter(function (el) {
+          return !el.inert;
+        });
+        disabledBackground.forEach(function (el) { el.inert = true; });
+        menu.focus({ preventScroll: true });
+      } else {
+        disabledBackground.forEach(function (el) { el.inert = false; });
+        disabledBackground = [];
+        btn.focus({ preventScroll: true });
+      }
     }
     function init() {
       hdr = document.querySelector('.header');
       if (hdr && hdr.querySelector('.lang-global')) { root.classList.add('dz-lab'); if (!document.getElementById('menuBtn')) root.classList.add('dz-lab-x'); /* ocean·제안서처럼 헤더 버튼이 절대 위치인 문서 */ setHdr(); window.addEventListener('resize', setHdr); }
       menu = document.getElementById('menu'); btn = document.getElementById('menuBtn') || document.querySelector('.header .menu-btn');
       if (!menu || !btn || !menu.classList.contains('menu')) return;
-      menu.setAttribute('role', 'dialog');
-      menu.setAttribute('aria-modal', 'true');
+      labHome = !!document.querySelector('#home.home') && !!document.getElementById('viewClose');
+      menu.setAttribute('role', labHome ? 'navigation' : 'dialog');
+      if (!labHome) menu.setAttribute('aria-modal', 'true');
+      if (labHome) Array.from(menu.querySelectorAll(':scope > a')).forEach(function (link) { link.lang = 'en'; });
       menu.setAttribute('aria-label', plain(NAME));
       menu.setAttribute('tabindex', '-1'); menu.setAttribute('data-dz-focus-self', '');
       if (parseFloat(getComputedStyle(menu).left) < 0) root.classList.add('dz-lab-lm'); // left 값으로 숨기는 메뉴(ocean.html): 확대 때 폭이 넓어져도 삐져나오지 않게
@@ -869,13 +885,16 @@
       // 열린 동안 Tab은 메뉴 버튼(×)과 메뉴 항목 사이에서만 돈다
       document.addEventListener('keydown', function (e) {
         if (e.key !== 'Tab' || !menu.classList.contains('open')) return;
-        var items = [btn].concat(Array.prototype.slice.call(menu.querySelectorAll('a[href], button:not([disabled])')));
+        var settings = document.getElementById('dzDisplayDialog');
+        if (labHome && settings && !settings.hidden) return;
+        var headerControls = labHome ? Array.from(hdr.querySelectorAll('.lang-global button:not([disabled])')) : [];
+        var items = [btn].concat(headerControls, Array.from(menu.querySelectorAll('a[href], button:not([disabled])')));
         items = items.filter(function (x) { return x && x.getClientRects().length; });
         if (!items.length) return;
         // 순서를 직접 정한다(헤더 로고·언어 버튼 등 메뉴 밖으로 새지 않게)
         var i = items.indexOf(document.activeElement), n = items.length;
         e.preventDefault();
-        if (document.activeElement === menu) { items[e.shiftKey ? n - 1 : Math.min(1, n - 1)].focus(); return; }
+        if (document.activeElement === menu) { items[e.shiftKey ? n - 1 : Math.min(1 + headerControls.length, n - 1)].focus(); return; }
         items[i === -1 ? (e.shiftKey ? n - 1 : 0) : (i + (e.shiftKey ? n - 1 : 1)) % n].focus();
       }, true);
     }

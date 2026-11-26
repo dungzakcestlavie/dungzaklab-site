@@ -35,4 +35,46 @@ html.dz-hc .date-kind,html.dz-hc .undated-heading,html.dz-hc .lead{color:#fff}
 <section aria-labelledby="y2025"><h2 id="y2025">2025</h2><ol><li><article><p class="meta">2025 · <span class="kr" lang="ko">대한민국</span><span class="en" lang="en">Republic of Korea</span></p><p class="media">우먼스토리 / Woman Story</p><h3><span class="kr" lang="ko">등작 관련 기사</span><span class="en" lang="en">Dungzak-related coverage</span></h3><p class="external-http-note" id="http-note-8593"><span class="kr" lang="ko">외부 언론사 사이트는 HTTP 연결을 사용합니다. 원문을 열면 브라우저 보안 안내가 표시될 수 있습니다.</span><span class="en" lang="en">The publisher uses HTTP. Opening the original article may display a browser security warning.</span></p><a href="http://www.woman-story.co.kr/news/articleView.html?idxno=8593" hreflang="ko" class="article-link" target="_blank" rel="noopener noreferrer" aria-describedby="http-note-8593"><span class="kr" lang="ko">기사 원문 읽기</span><span class="en" lang="en">Read original article</span> <span aria-hidden="true">↗</span><span class="sr-only"> — 우먼스토리 / Woman Story: Dungzak-related coverage</span></a></article></li></ol></section>
 <section aria-labelledby="y2024"><h2 id="y2024">2024</h2><ol><li><article><p class="meta">2024 · <span class="kr" lang="ko">대한민국</span><span class="en" lang="en">Republic of Korea</span></p><p class="media">우먼스토리 / Woman Story</p><h3><span class="kr" lang="ko">등작 관련 기사</span><span class="en" lang="en">Dungzak-related coverage</span></h3><p class="external-http-note" id="http-note-6171"><span class="kr" lang="ko">외부 언론사 사이트는 HTTP 연결을 사용합니다. 원문을 열면 브라우저 보안 안내가 표시될 수 있습니다.</span><span class="en" lang="en">The publisher uses HTTP. Opening the original article may display a browser security warning.</span></p><a href="http://www.woman-story.co.kr/news/articleView.html?idxno=6171" hreflang="ko" class="article-link" target="_blank" rel="noopener noreferrer" aria-describedby="http-note-6171"><span class="kr" lang="ko">기사 원문 읽기</span><span class="en" lang="en">Read original article</span> <span aria-hidden="true">↗</span><span class="sr-only"> — 우먼스토리 / Woman Story: Dungzak-related coverage</span></a></article></li></ol></section></main><script>
 (function(){var buttons=document.querySelectorAll('.langs button');function apply(l,save){l=l==='en'?'en':'kr';document.body.classList.toggle('lang-kr',l==='kr');document.body.classList.toggle('lang-en',l==='en');document.documentElement.lang=l==='en'?'en':'ko';buttons.forEach(function(btn){btn.setAttribute('aria-pressed',String(btn.dataset.lang===l));});if(save){try{localStorage.setItem('dzlab_lang',l==='en'?'en':'ko')}catch(e){}}}var l='kr';try{l=new URLSearchParams(location.search).get('lang')||localStorage.getItem('dzlab_lang')||'kr'}catch(e){}apply(l,false);buttons.forEach(function(btn){btn.addEventListener('click',function(){apply(btn.dataset.lang,true)})})})();
+</script><script>
+/* PRESS-only cache revalidation; no image or accessibility cache is cleared. */
+(function(){
+  function signature(doc){
+    var root=doc.querySelector('main');
+    if(!root||!root.querySelector('article'))return null;
+    var values=Array.from(root.querySelectorAll('article')).map(function(article){
+      return Array.from(article.querySelectorAll('p.meta,p.media,h3,p.note,p.external-http-note,a.article-link')).map(function(el){
+        return [el.textContent.replace(/\s+/g,' ').trim(),el.getAttribute('href')||''];
+      });
+    });
+    var style=doc.querySelector('head > style');
+    var raw=JSON.stringify(values)+'|'+(style?style.textContent:'');
+    var h=2166136261;
+    for(var i=0;i<raw.length;i++){h=Math.imul(h^raw.charCodeAt(i),16777619);}
+    return (h>>>0).toString(16);
+  }
+  var loaded=signature(document),checking=false,lastCheck=0;
+  async function checkLatest(){
+    if(!loaded||checking||document.visibilityState==='hidden'||Date.now()-lastCheck<15000)return;
+    checking=true;lastCheck=Date.now();
+    try{
+      var checkUrl=new URL('/press/',location.origin);
+      checkUrl.searchParams.set('_refresh',String(Date.now()));
+      var response=await fetch(checkUrl,{cache:'no-store',credentials:'same-origin'});
+      if(!response.ok||new URL(response.url).origin!==location.origin)return;
+      var latest=new DOMParser().parseFromString(await response.text(),'text/html');
+      var canonical=latest.querySelector('link[rel="canonical"]');
+      if(!canonical||canonical.getAttribute('href')!=='https://dungzaklab.art/press/')return;
+      var next=signature(latest);
+      if(!next||next===loaded||document.visibilityState==='hidden')return;
+      var destination=new URL(location.href);
+      if(destination.searchParams.get('_pressSig')===next)return;
+      destination.searchParams.set('_refresh',String(Date.now()));
+      destination.searchParams.set('_pressSig',next);
+      location.replace(destination.href);
+    }catch(error){/* Keep the currently displayed article list if offline. */}
+    finally{checking=false;}
+  }
+  window.addEventListener('pageshow',checkLatest);
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')checkLatest();});
+})();
 </script></body></html>

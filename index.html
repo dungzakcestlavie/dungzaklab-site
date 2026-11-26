@@ -1850,6 +1850,11 @@ html.dz-z #home .dzds-home-entry{max-width:100%;white-space:normal;overflow-wrap
   // but preserve a fresh tap, keyboard activation and screen-reader clicks.
   let touch = null;
   let ignoreSwipeClickUntil = 0;
+  const pressedElements = new Set();
+  function markPress(el){
+    el.classList.add('is-pressing');
+    pressedElements.add(el);
+  }
   document.addEventListener('touchstart', function(e){
     ignoreSwipeClickUntil = 0;
     if(e.touches.length !== 1){ touch = null; return; }
@@ -1904,20 +1909,22 @@ html.dz-z #home .dzds-home-entry{max-width:100%;white-space:normal;overflow-wrap
     const btn = t.closest('#menuBtn');
     if(btn){
       // Visual press feedback only. The menu toggles on a completed click below.
-      btn.classList.add('is-pressing');
+      markPress(btn);
       return;
     }
 
     const clickable = t.closest('a, button, .menu-btn, .selector-link, .proposal-link, .report-item, .book-item');
     if(clickable){
-      clickable.classList.add('is-pressing');
+      markPress(clickable);
     }
   }, {capture:true, passive:false});
 
   function releasePress(){
-    document.querySelectorAll('.is-pressing').forEach(function(el){
+    if(!pressedElements.size) return;
+    pressedElements.forEach(function(el){
       el.classList.remove('is-pressing');
     });
+    pressedElements.clear();
   }
 
   document.addEventListener('pointerup', releasePress, {capture:true, passive:true});
@@ -3042,8 +3049,17 @@ window.addEventListener('load', function(){
       hint.classList.toggle('is-hidden', next);
     }
   }
-  window.addEventListener('scroll', update, { passive:true });
-  window.addEventListener('resize', update, { passive:true });
+  var framePending = false;
+  function scheduleUpdate(){
+    if(framePending) return;
+    framePending = true;
+    window.requestAnimationFrame(function(){
+      framePending = false;
+      update();
+    });
+  }
+  window.addEventListener('scroll', scheduleUpdate, { passive:true });
+  window.addEventListener('resize', scheduleUpdate, { passive:true });
   btn.addEventListener('click', function(){
     var reduce = false;
     try{ reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
